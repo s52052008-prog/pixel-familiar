@@ -23,7 +23,7 @@ async def main():
             await tap_logical(page,64,80); await page.wait_for_timeout(500)
         await page.screenshot(path=f'{OUT}/02_cracked.png')
         ok('egg taps counted',(await st(page))['eggTaps']==4)
-        await tap_logical(page,64,80); await page.wait_for_timeout(1800)
+        await tap_logical(page,64,80); await page.wait_for_timeout(2300)
         ok('hatched',(await st(page))['hatched'])
         ok('rename modal opened after hatch',await page.is_visible('#nameIn'))
         await page.screenshot(path=f'{OUT}/03_rename.png')
@@ -81,16 +81,32 @@ async def main():
         await page.screenshot(path=f'{OUT}/11_evolved.png',full_page=True)
         # codex
         await page.click('#bCodex'); await page.wait_for_timeout(300); await page.screenshot(path=f'{OUT}/12_codex.png'); await page.click('#mbtns .btn')
+        # random species
+        s7=await st(page); ok('new egg has random seed',isinstance(s7.get('seed'),int))
+        ok('species name generated','獸' in await page.inner_text('#stageText'),await page.inner_text('#stageText'))
+        ok('dex records current pet',len(s7['dex'])==1 and s7['dex'][0]['route']=='ember')
+        dist=await page.evaluate("(()=>{const c=[0,0,0,0];const names=new Set();for(let i=0;i<2000;i++){const G=PF.makeGenome(i*2654435761>>>0);c[G.rarity]++;names.add(PF.genomeForm(G,null).name)}return{c,n:names.size}})()")
+        ok('rarity distribution ~75/20/5',1350<dist['c'][1]<1650 and 300<dist['c'][2]<500 and 50<dist['c'][3]<150,dist)
+        ok('many distinct species names',dist['n']>=60,dist['n'])
+        same=await page.evaluate("(()=>{const G=PF.makeGenome(12345);return PF.genomeForm(G,null).pal.b===PF.genomeForm(G,'mist').pal.b})()")
+        ok('evolution keeps body color',same)
         # menu sprite
         await page.click('#bMenu'); await page.click('#mSprite'); await page.wait_for_timeout(300); await page.screenshot(path=f'{OUT}/13_sprites.png'); await page.click('#mbtns .btn')
         # export / import
         code=await page.evaluate("PF.exportCode()"); ok('export code format',code.startswith('PF1.'))
-        await page.click('#bMenu'); await page.click('#mReset'); await page.click('#mbtns .danger'); await page.wait_for_timeout(300)
-        ok('reset to egg',not (await st(page))['hatched'])
+        await page.click('#bMenu'); await page.click('#mReset'); await page.click('#mbtns .pri'); await page.wait_for_timeout(300)
+        R=await st(page); ok('new egg after reset',not R['hatched'] and R['seed']!=s7['seed'])
+        ok('dex kept after new egg',len(R['dex'])==1)
+        for i in range(5):
+            await tap_logical(page,64,80); await page.wait_for_timeout(500)
+        await page.wait_for_timeout(1800); await page.click('#mbtns .pri'); await page.wait_for_timeout(300)
+        R2=await st(page); ok('second species hatched, dex=2',R2['hatched'] and len(R2['dex'])==2)
+        await page.screenshot(path=f'{OUT}/16_second_species.png')
+        await page.click('#bCodex'); await page.wait_for_timeout(300); await page.screenshot(path=f'{OUT}/17_dex.png'); await page.click('#mbtns .btn')
         await page.click('#bSave'); await page.fill('#impText',code[:-3]+'zzz'); await page.click('#bImp'); await page.wait_for_timeout(200)
         ok('tampered code rejected','失敗' in await page.inner_text('#impErr'))
         await page.fill('#impText',code); await page.click('#bImp'); await page.wait_for_timeout(200); await page.click('#mbtns .pri'); await page.wait_for_timeout(400)
-        s8=await st(page); ok('import restores',s8['route']=='ember' and s8['name']=='小露',(s8['route'],s8['name']))
+        s8=await st(page); ok('import restores',s8['route']=='ember' and s8['name']=='小露' and len(s8['dex'])==1,(s8['route'],s8['name']))
         # reload persistence
         await page.reload(); await page.wait_for_timeout(800); s9=await st(page)
         ok('persists after reload',s9['route']=='ember' and s9['level']==s8['level'])
@@ -136,14 +152,18 @@ async def main():
         ov=await p3.evaluate("document.documentElement.scrollWidth<=innerWidth"); ok('no horizontal overflow on iPhone SE',ov)
         # export art: sprite sheets + icons
         for k in ['egg','baby','ember','mist','sylvan']:
-            d=await p3.evaluate(f"PF.SHEETS['{k}'].cv.toDataURL()")
+            d=await p3.evaluate(f"PF.sheet('{k}').cv.toDataURL()")
             open(f'{ROOT}/art/sheet-{k}.png','wb').write(base64.b64decode(d.split(',')[1]))
         for size in [180,192,512]:
             d=await p3.evaluate("""(n)=>{const c=document.createElement('canvas');c.width=c.height=n;const x=c.getContext('2d');x.imageSmoothingEnabled=false;
               x.fillStyle='#17233b';x.fillRect(0,0,n,n);const g=x.createLinearGradient(0,0,0,n);g.addColorStop(0,'#2b4f7a');g.addColorStop(1,'#17233b');x.fillStyle=g;x.fillRect(0,0,n,n);
-              x.fillStyle='#3f8a5a';x.fillRect(0,Math.round(n*.78),n,n);const S=PF.SHEETS.baby;const sc=Math.floor(n*0.72/48);const w=48*sc;
+              x.fillStyle='#3f8a5a';x.fillRect(0,Math.round(n*.78),n,n);const S=PF.sheet('baby');const sc=Math.floor(n*0.72/48);const w=48*sc;
               x.drawImage(S.cv,S.idx.happy1*48,0,48,48,Math.round((n-w)/2),Math.round(n*.82-w*0.93),w,w);return c.toDataURL()}""",size)
             open(f'{ROOT}/icon-{size}.png','wb').write(base64.b64decode(d.split(',')[1]))
+        d=await p3.evaluate('''(()=>{const N=24,c=document.createElement('canvas');c.width=48*8;c.height=48*6;const x=c.getContext('2d');x.fillStyle='#7fb07a';x.fillRect(0,0,c.width,c.height);
+          for(let i=0;i<N;i++){const sd=(i+1)*2246822519>>>0;const rt=['ember','mist','sylvan'][i%3];const a=PF.sheet(PF.petKey(sd,null)),b=PF.sheet(PF.petKey(sd,rt)),e=PF.sheet('egg:'+sd);
+           const col=(i%8)*48,row=Math.floor(i/8)*96;x.drawImage(a.cv,a.idx.idle0*48,0,48,48,col,row,48,48);x.drawImage(b.cv,b.idx.idle0*48,0,48,48,col,row+48,48,48)}return c.toDataURL()})()''')
+        open(f'{ROOT}/art/random-species-gallery.png','wb').write(base64.b64decode(d.split(',')[1]))
         await ctx3.close(); await br.close()
     srv.terminate()
     print('\nconsole/page errors:',errors if errors else 'none')

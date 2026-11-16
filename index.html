@@ -127,7 +127,7 @@ canvas.picon{image-rendering:pixelated;image-rendering:crisp-edges;display:block
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.3.0';
+const VERSION='1.4.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -160,13 +160,55 @@ const FORMS={
 };
 const ROUTES=['ember','mist','sylvan'];
 
+/* ---------------- 隨機物種基因（V1.4） ----------------
+   每顆蛋只存一個 seed（種子數字），外觀由 makeGenome(seed) 決定。
+   ⚠️ 不要更改下面清單的順序或抽籤順序，否則舊存檔的怪獸外觀會改變。 */
+function rng(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hsl(h,s,l){h=((h%360)+360)%360;s=clamp(s)/100;l=clamp(l)/100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+ return'#'+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('')}
+const G_SIDE=['nubs','horns','leaves','ears','bunny','none'],G_TOP=['none','none','antenna','flower','crest','tuft'],
+ G_TAIL=['small','fluffy','fin','leaf','flame','none'],G_PAT=['none','none','spots','stripes','belly'],G_EYE=['open','big'];
+function makeGenome(seed){const r=rng(seed),pick=a=>a[Math.floor(r()*a.length)];
+ const q=r(),rarity=q<.05?3:q<.25?2:1,hue=Math.floor(r()*360);
+ const G={seed,rarity,hue,sat:45+Math.floor(r()*30),acc:(hue+140+Math.floor(r()*80))%360,bh:(hue+Math.floor(r()*60)-30+360)%360,
+  rx:10+Math.floor(r()*3),ry:9+Math.floor(r()*3),side:pick(G_SIDE),top:pick(G_TOP),tail:pick(G_TAIL),pattern:pick(G_PAT),eyes:pick(G_EYE),wings:r()<.15};
+ if(rarity>=2&&G.pattern==='none')G.pattern=['spots','stripes','belly'][Math.floor(r()*3)];
+ return G}
+const HUE_NAMES=[[15,'緋','Scarlet'],[40,'焰','Blaze'],[65,'琥','Amber'],[95,'苔','Moss'],[150,'翠','Jade'],[185,'湖','Lagoon'],[215,'霜','Frost'],[250,'夜','Night'],[285,'紫','Violet'],[320,'霞','Dusk'],[345,'桃','Peach'],[361,'緋','Scarlet']];
+const SIDE_NAMES={nubs:['角','Nub'],horns:['角','Horn'],leaves:['葉','Leaf'],ears:['耳','Ear'],bunny:['兔','Bun'],none:['絨','Fluff']};
+const ROUTE_NAMES={ember:['炎','Ember'],mist:['霧','Mist'],sylvan:['森','Sylvan']};
+const RARITY=['','普通','稀有','傳說'],STARS=['','★','★★','★★★'];
+function speciesName(G,route){const hn=HUE_NAMES.find(([m])=>G.hue<m),sn=SIDE_NAMES[G.side];
+ const pre=G.rarity===3?'星':'',epre=G.rarity===3?'Star ':'';
+ return route?{name:pre+hn[1]+sn[0]+ROUTE_NAMES[route][0]+'獸',en:`${epre}${hn[2]} ${sn[1]} · ${ROUTE_NAMES[route][1]}`}
+  :{name:pre+hn[1]+sn[0]+'獸',en:`${epre}${hn[2]} ${sn[1]}`}}
+function genomeForm(G,route){
+ const ah=route==='ember'?40:route==='mist'?195:route==='sylvan'?95:G.acc,gold=G.rarity===3,h=G.hue,s=G.sat;
+ const pal={o:hsl(h,35,13),b:hsl(h,s,56),d:hsl(h,s,38),l:hsl(h,s-5,75),feet:hsl(h,s-5,75),pat:hsl(h,s+10,42),
+  belly:G.pattern==='belly'?hsl(G.acc,60,86):hsl(G.bh,45,91),bellyD:G.pattern==='belly'?hsl(G.acc,50,74):hsl(G.bh,35,79),
+  horn:gold?'#ffe680':hsl(ah,70,76),hornD:gold?'#d9a441':hsl(ah,60,52),acc:gold?'#ffd34a':hsl(ah,80,68),accD:gold?'#e0902a':hsl(ah,70,48)};
+ const feat=[],add=f=>{if(f&&f!=='none'&&!feat.includes(f))feat.push(f)};
+ let side=G.side,top=G.top,tail=G.tail;
+ if(route==='ember'){if(side==='nubs'||side==='none')side='horns';if(top==='none')top='crest';tail='flame'}
+ if(route==='mist'){add('fins');if(top==='none')top='antenna';tail='fin'}
+ if(route==='sylvan'){add('wings');if(top==='none')top='flower';tail='leaf'}
+ add(side==='leaves'?'leaves':side);add(top);if(G.wings)add('wings');
+ if(G.pattern==='spots'||G.pattern==='stripes')add('pat-'+G.pattern);if(gold)add('sparkle');if(G.eyes==='big')add('bigeyes');
+ const nm=speciesName(G,route);
+ return{name:nm.name,en:nm.en,stage:route?2:1,rx:G.rx+(route?2:0),ry:G.ry+(route?2:0),feat,tail,pal,genome:G}}
+
 /* ---------------- 存檔資料 ---------------- */
-function fresh(){const t=Date.now();return{v:3,hatched:false,eggTaps:0,name:'小露',level:1,xp:0,coins:20,
+function newSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]}catch(e){return Math.floor(Math.random()*4294967295)}}
+function fresh(){const t=Date.now();return{v:4,seed:newSeed(),dex:[],hatched:false,eggTaps:0,name:'小露',level:1,xp:0,coins:20,
  hunger:80,mood:80,clean:80,energy:80,route:null,care:{feed:0,play:0,wash:0,pet:0,sleep:0},
  sleeping:false,sleepGain:0,created:t,hatchedAt:0,lastTick:t,updated:t,lastExport:0,sound:true,seen:[]}}
 function sanitize(o){
  const r=fresh();if(!o||typeof o!=='object')return r;const now=Date.now();
- r.hatched=!!o.hatched;r.eggTaps=Math.floor(num(o.eggTaps,0,0,4));
+ r.hatched=!!o.hatched;
+ const sd=Number(o.seed);r.seed=Number.isInteger(sd)&&sd>=0&&sd<=4294967295?sd:(r.hatched?null:r.seed);   // 已孵化的舊存檔沒有 seed → 經典露露獸
+ r.dex=Array.isArray(o.dex)?o.dex.filter(e=>e&&typeof e==='object').slice(-200).map(e=>({seed:Number.isInteger(e.seed)?e.seed:null,route:ROUTES.includes(e.route)?e.route:null,
+  petName:typeof e.name==='string'?chars(e.name).slice(0,10).join(''):(typeof e.petName==='string'?chars(e.petName).slice(0,10).join(''):''),at:num(e.at,now,0,now)})):[];
+ r.eggTaps=Math.floor(num(o.eggTaps,0,0,4));
  if(typeof o.name==='string'){const n=chars(o.name.trim()).slice(0,10).join('');if(n)r.name=n}
  r.level=Math.floor(num(o.level,1,1,99));r.xp=Math.floor(num(o.xp,0,0,1e6));r.coins=Math.floor(num(o.coins,20,0,9999999));
  for(const k of['hunger','mood','clean','energy'])r[k]=num(o[k],r[k],0,100);
@@ -178,7 +220,8 @@ function sanitize(o){
  r.updated=num(o.updated,now,0,now);r.lastExport=num(o.lastExport,0,0,now);r.sound=o.sound!==false;
  r.seen=Array.isArray(o.seen)?o.seen.filter(x=>typeof x==='string'&&FORMS[x]):[];
  if(!r.hatched){r.level=1;r.xp=0;r.route=null;r.sleeping=false}
- else{if(!r.seen.includes('baby'))r.seen.push('baby');if(r.route&&!r.seen.includes(r.route))r.seen.push(r.route)}
+ else{if(r.seed===null){if(!r.seen.includes('baby'))r.seen.push('baby');if(r.route&&!r.seen.includes(r.route))r.seen.push(r.route)}
+  let e=r.dex.find(x=>x.seed===r.seed);if(!e){e={seed:r.seed,route:null,petName:r.name,at:r.hatchedAt||now};r.dex.push(e)}e.route=r.route;e.petName=r.name}
  return r}
 function parse(raw){if(!raw)return null;try{const o=JSON.parse(raw);return o&&typeof o==='object'?o:null}catch(e){return null}}
 function load(){
@@ -262,9 +305,11 @@ function drawCreature(F,fr){
    for(let x=x0;x<=x1;x++)pm(x,y,x===x0?P.accD:(k%2?P.acc:P.l))}}
  const tb=[[0,0],[2,0],[4,-1],[5,-3],[5,-5],[4,-6]],wag=fr.tail?1:0;
  const tx0=Math.round(cx+rx-5),ty0=Math.round(cy+ry*.4);let tip=[0,0];
- tb.forEach(([ox,oy],i)=>{const sh=i>=3?wag:0,X=tx0+ox+sh,Y=ty0+oy-sh;tip=[X,Y];
+ const tcount=F.tail==='none'?1:F.tail==='fluffy'?3:tb.length;
+ tb.slice(0,tcount).forEach(([ox,oy],i)=>{const sh=i>=3?wag:0,X=tx0+ox+sh,Y=ty0+oy-sh;tip=[X,Y];
   for(let a=0;a<3;a++)for(let b=0;b<3;b++)px(g,X+a,Y+b,b===2?P.d:(i===tb.length-1&&F.tail==='small'?P.acc:P.b))});
  const [tx,ty]=tip;
+ if(F.tail==='fluffy')ellipse(g,tx+3,ty,4.2,4,(x,y,nx,ny)=>nx*.5+ny*.7>.5?P.d:((nx+.4)**2+(ny+.4)**2<.12?'#ffffff':P.l));
  if(F.tail==='flame'){rect(tx+1,ty-4,1,P.acc);rect(tx,ty-3,3,P.acc);rect(tx-1,ty-2,4,P.accD);rect(tx-1,ty-1,5,P.accD);px(g,tx+1,ty-2,'#fff6c8');px(g,tx+1,ty-1,P.acc);px(g,tx+2,ty-1,P.acc)}
  if(F.tail==='fin'){for(let r=0;r<5;r++)for(let x=0;x<=r+1;x++)px(g,tx+2+x,ty-3+r,x%2?P.accD:P.acc)}
  if(F.tail==='leaf'){rect(tx+2,ty-4,2,P.acc);rect(tx+1,ty-3,4,P.acc);rect(tx+1,ty-2,4,P.acc);rect(tx+2,ty-1,2,P.acc);px(g,tx+3,ty-3,P.accD);px(g,tx+2,ty-2,P.accD)}
@@ -274,6 +319,11 @@ function drawCreature(F,fr){
  // --- 身體（光源左上） ---
  ellipse(g,cx,cy,rx,ry,(x,y,nx,ny)=>nx*.55+ny*.8>.62?P.d:((nx+.42)**2+(ny+.55)**2<.08?P.l:P.b));
  ellipse(g,cx,cy+ry*.5,rx*.56,ry*.42,(x,y,nx,ny)=>ny>.45||nx>.62?P.bellyD:P.belly);
+ const onBody=(x,y)=>{const c=get(g,Math.round(x),Math.round(y));return c===P.b||c===P.d||c===P.l};
+ const pp=(x,y,c)=>{if(onBody(x,y))px(g,x,y,c)};
+ if(has('pat-spots'))[[-8,-3],[6,-5],[-5,-7],[8,2],[-9,3]].forEach(([ox,oy])=>{for(const[a,b]of[[0,0],[1,0],[0,1],[1,1]])pp(cxi+ox+a,Math.round(cy)+oy+b,P.pat)});
+ if(has('pat-stripes'))for(let k=1;k<=4;k++){pp(cxi-1,top+k,P.pat);pp(cxi,top+k,P.pat);if(k<=3){pp(cxi-5,top+k+1,P.pat);pp(2*cxi-1-(cxi-5),top+k+1,P.pat)}pp(Math.round(cx-rx)+1,Math.round(cy)+k-2,P.pat);pp(Math.round(cx+rx)-2,Math.round(cy)+k-2,P.pat)}
+ if(has('sparkle'))[[-7,-5],[6,-7],[9,1],[-9,2]].forEach(([ox,oy])=>pp(cxi+ox,Math.round(cy)+oy,'#ffffff'));
  // --- 頭部特徵 ---
  if(has('nubs')){const bx=cxi-7;[[0,-1,2],[0,-2,2],[0,-3,1]].forEach(([ox,oy,w])=>{for(let i=0;i<w;i++)pm(bx+ox+i,top+1+oy,i===w-1&&w>1?P.hornD:P.horn)})}
  if(has('horns')){const bx=cxi-9;[[0,0,3],[0,-1,3],[-1,-2,3],[-1,-3,3],[-2,-4,2],[-2,-5,2],[-3,-6,2],[-3,-7,1]].forEach(([ox,oy,w])=>{for(let i=0;i<w;i++)pm(bx+ox+i,top+1+oy,i===0?P.hornD:P.horn)})}
@@ -282,11 +332,15 @@ function drawCreature(F,fr){
   [[-6,-3,2],[-6,-2,4],[-5,-1,5],[-4,0,5],[-2,1,3]].forEach(([ox,oy,w])=>{for(let i=0;i<w;i++)pm(lx+ox+i,y0+oy,(lx+ox+i)%2?P.accD:P.acc)})}
  if(has('antenna')){for(let k=1;k<=4;k++)px(g,cxi,top-k+1,P.d);rect(cxi-1,top-5,3,P.acc);rect(cxi-1,top-4,3,P.acc);px(g,cxi-1,top-5,'#ffffff')}
  if(has('leaves')){const bx=cxi-8;[[0,0,3],[-1,-1,4],[-2,-2,4],[-3,-3,4],[-3,-4,3],[-4,-5,2],[-4,-6,1]].forEach(([ox,oy,w],i)=>{for(let k=0;k<w;k++)pm(bx+ox+k,top+1+oy,k===1&&i>0&&i<6?P.accD:P.acc)})}
+ if(has('ears')){const bx=cxi-10;[[0,0,5],[0,-1,4],[1,-2,3],[1,-3,2],[2,-4,1]].forEach(([ox,oy,w],i)=>{for(let k=0;k<w;k++)pm(bx+ox+k,top+2+oy,k>0&&k<w-1&&i<3?P.acc:(k===0?P.d:P.b))})}
+ if(has('bunny')){for(let k=0;k<9;k++){const x=cxi-8-Math.floor(k/4);for(let w=0;w<3;w++)pm(x+w,top+1-k,w===1&&k>0&&k<8?P.acc:(w===0?P.d:P.b))}}
+ if(has('tuft')){rect(cxi-1,top,2,P.l);rect(cxi-1,top-1,2,P.l);px(g,cxi-2,top-2,P.l);px(g,cxi+1,top-2,P.l);px(g,cxi,top-3,P.l);px(g,cxi-1,top-1,P.b)}
  if(has('flower')){rect(cxi-2,top,4,P.horn);rect(cxi-1,top-1,2,P.horn);rect(cxi-1,top+1,2,P.horn);px(g,cxi-1,top,'#ffe066');px(g,cxi,top,'#ffe066')}
  // --- 臉 ---
  const ex=Math.round(rx*.4),ey=Math.round(cy-ry*.12),L=cxi-ex-3,E=P.o,Wt='#ffffff';
  const eyeAt=(x,side)=>{
-  if(eye==='open'){for(let yy=-2;yy<=1;yy++)rect(x,ey+yy,3,E);px(g,x,ey-2,Wt);px(g,x,ey-1,Wt)}
+  if(eye==='open'&&has('bigeyes')){for(let yy=-3;yy<=1;yy++)rect(x,ey+yy,3,E);px(g,x,ey-3,Wt);px(g,x,ey-2,Wt);px(g,x+1,ey-3,Wt);px(g,x+2,ey+1,Wt)}
+  else if(eye==='open'){for(let yy=-2;yy<=1;yy++)rect(x,ey+yy,3,E);px(g,x,ey-2,Wt);px(g,x,ey-1,Wt)}
   else if(eye==='blink'){rect(x,ey,3,E)}
   else if(eye==='happy'){px(g,x,ey,E);px(g,x+1,ey-1,E);px(g,x+2,ey,E)}
   else if(eye==='sleep'){px(g,x,ey,E);px(g,x+1,ey+1,E);px(g,x+2,ey,E)}
@@ -306,31 +360,43 @@ function drawCreature(F,fr){
 
 /* ---------------- 蛋（含裂痕與左右搖晃畫格） ---------------- */
 const EGG_FRAMES=[];for(let c=0;c<4;c++)for(const l of['L','0','R'])EGG_FRAMES.push('egg'+c+l);
-function drawEgg(name){
+function drawEgg(name,C){
  const c=+name[3],lean=name[4],k=lean==='L'?-.11:lean==='R'?.11:0,g=grid(CELL,CELL),cx=24,cy=31,rx=10,ry=13;
  const spots=new Set(['19,23','20,23','19,24','20,24','28,29','29,29','28,30','29,30','30,30','21,35','22,35','26,20','27,20','16,30']);
  for(let y=cy-ry-1;y<=cy+ry+1;y++){const off=(44-y)*k;for(let x=8;x<40;x++){
   const xx=x-off,ny=(y+.5-cy)/ry,rxe=rx*(1-.16*Math.max(0,-ny)),nx=(xx+.5-cx)/rxe;if(nx*nx+ny*ny>1)continue;
-  let col=nx*.5+ny*.7>.55?'#e5c08c':((nx+.45)**2+(ny+.5)**2<.06?'#ffffff':'#fff1d0');
-  if(spots.has(Math.round(xx)+','+y))col=nx*.5+ny*.7>.5?'#3a8c8a':'#5cc2b0';px(g,x,y,col)}}
+  let col=nx*.5+ny*.7>.55?C.shellD:((nx+.45)**2+(ny+.5)**2<.06?'#ffffff':C.shell);
+  if(spots.has(Math.round(xx)+','+y))col=nx*.5+ny*.7>.5?C.spotD:C.spot;px(g,x,y,col)}}
  const crack=(pts)=>pts.forEach(([x,y])=>{const off=(44-y)*k;const X=Math.round(x+off);if(get(g,X,y))px(g,X,y,'#5a3a2a')});
  if(c>=1)crack([[17,28],[18,27],[19,28],[20,29],[21,28],[22,27],[23,28],[24,29]]);
  if(c>=2)crack([[25,28],[26,27],[27,28],[28,29],[29,28],[30,27],[31,28],[24,27],[24,26],[25,25]]);
  if(c>=3){crack([[20,26],[21,25],[22,24],[27,26],[28,25]]);for(let y=26;y<=28;y++)for(let x=22;x<=27;x++){const off=(44-y)*k;if(get(g,Math.round(x+off),y))px(g,x+off,y,'#20304e')}
-  const off=(44-27)*k;px(g,23+off,27,'#5cc2b0');px(g,26+off,27,'#5cc2b0')}
+  const off=(44-27)*k;px(g,23+off,27,C.hole);px(g,26+off,27,C.hole)}
  outline(g,'#3a2a2a');return g}
 
 /* ---------------- 建立 sprite sheet（每個型態一張橫向長條圖） ---------------- */
 const SHEETS={};
+const GCACHE={},FCACHE={};
+function genome(seed){return GCACHE[seed]||(GCACHE[seed]=makeGenome(seed))}
+function petKey(seed,route){return seed===null||seed===undefined?(route||'baby'):`g:${seed}:${route||'baby'}`}
+function eggKey(seed){return seed===null||seed===undefined?'egg':'egg:'+seed}
+function formOf(key){if(FORMS[key])return FORMS[key];if(FCACHE[key])return FCACHE[key];const m=/^g:(\d+):(\w+)$/.exec(key);
+ if(m)return FCACHE[key]=genomeForm(genome(+m[1]),m[2]==='baby'?null:m[2]);const e=/^egg:(\d+)$/.exec(key);
+ if(e){const G=genome(+e[1]);return{name:G.rarity===3?'閃著金光的蛋':G.rarity===2?'有點特別的蛋':'神秘的蛋',stage:0,genome:G}}return FORMS.egg}
+function eggColors(key){const m=/^egg:(\d+)$/.exec(key);if(!m)return{shell:'#fff1d0',shellD:'#e5c08c',spot:'#5cc2b0',spotD:'#3a8c8a',hole:'#5cc2b0'};
+ const G=genome(+m[1]);if(G.rarity===3)return{shell:'#fff3c0',shellD:'#e8c070',spot:'#ffd34a',spotD:'#e0902a',hole:hsl(G.hue,G.sat,56)};
+ const P=genomeForm(G,null).pal;return{shell:hsl(G.hue,30,94),shellD:hsl(G.hue,28,80),spot:P.b,spotD:P.d,hole:P.b}}
+function sheet(key){return SHEETS[key]||buildSheet(key)}
 function buildSheet(key){
- const names=key==='egg'?EGG_FRAMES:FRAME_NAMES,cv=document.createElement('canvas');cv.width=CELL*names.length;cv.height=CELL;
+ const isEgg=key.startsWith('egg'),EC=isEgg?eggColors(key):null,F=isEgg?null:formOf(key);
+ const names=isEgg?EGG_FRAMES:FRAME_NAMES,cv=document.createElement('canvas');cv.width=CELL*names.length;cv.height=CELL;
  const ctx=cv.getContext('2d'),img=ctx.createImageData(cv.width,CELL);
- names.forEach((n,i)=>blit(key==='egg'?drawEgg(n):drawCreature(FORMS[key],FRAMES[n]),img,i*CELL));ctx.putImageData(img,0,0);
+ names.forEach((n,i)=>blit(isEgg?drawEgg(n,EC):drawCreature(F,FRAMES[n]),img,i*CELL));ctx.putImageData(img,0,0);
  const sil=document.createElement('canvas');sil.width=cv.width;sil.height=CELL;const sc=sil.getContext('2d');
  sc.drawImage(cv,0,0);sc.globalCompositeOperation='source-in';sc.fillStyle='#ffffff';sc.fillRect(0,0,sil.width,CELL);
  const dark=document.createElement('canvas');dark.width=cv.width;dark.height=CELL;const dc=dark.getContext('2d');
  dc.drawImage(cv,0,0);dc.globalCompositeOperation='source-in';dc.fillStyle='#0b1324';dc.fillRect(0,0,dark.width,CELL);
- SHEETS[key]={cv,sil,dark,names,idx:Object.fromEntries(names.map((n,i)=>[n,i]))}}
+ return SHEETS[key]={cv,sil,dark,names,idx:Object.fromEntries(names.map((n,i)=>[n,i]))}}
 
 /* ---------------- 小圖示（像素字串） ---------------- */
 const ICONS={
@@ -401,7 +467,7 @@ let cloudCv=null;
 const anim={once:null,t0:0,onEnd:null};let nextBlink=0,busyUntil=0,wobbleUntil=0,flashUntil=0,evo=null;
 const parts=[];
 function playAnim(name,ms){anim.once=name;anim.t0=performance.now();busyUntil=Date.now()+(ms||Math.round(ANIMS[name].f.length/ANIMS[name].fps*1000))}
-function formKey(){return!s.hatched?'egg':(s.route||'baby')}
+function formKey(){return!s.hatched?eggKey(s.seed):petKey(s.seed,s.route)}
 function baseAnim(){if(s.sleeping)return'sleep';if(s.mood<25||s.hunger<15||s.clean<10)return'sad';if(s.energy<20)return'tired';return'idle'}
 function currentFrame(now){
  if(!s.hatched){const lvl=Math.min(3,Math.max(0,s.eggTaps-1));
@@ -421,13 +487,13 @@ function draw(now){
  ctx.drawImage(bgCache,0,0);
  const ca=ph==='night'?.35:ph==='dusk'?.75:1;ctx.globalAlpha=ca;const t=now/1000;
  ctx.drawImage(cloudCv,Math.round(((t*2)%(W+60))-30),10);ctx.drawImage(cloudCv,Math.round(((t*1.3+80)%(W+60))-30),26);ctx.globalAlpha=1;
- const key=formKey(),S=SHEETS[key];let fname=currentFrame(now),fi=S.idx[fname]??0;
+ const key=formKey(),S=sheet(key);let fname=currentFrame(now),fi=S.idx[fname]??0;
  const fr=FRAMES[fname]||{};const lift=-(fr.dy||0);
- ctx.fillStyle='rgba(20,60,30,.28)';const sw=Math.max(10,(key==='egg'?22:26)-lift);ctx.fillRect(PET_X+24-sw/2,PET_Y+44,sw,2);ctx.fillRect(PET_X+24-sw/2+2,PET_Y+43,sw-4,1);
+ ctx.fillStyle='rgba(20,60,30,.28)';const sw=Math.max(10,(key.startsWith('egg')?22:26)-lift);ctx.fillRect(PET_X+24-sw/2,PET_Y+44,sw,2);ctx.fillRect(PET_X+24-sw/2+2,PET_Y+43,sw-4,1);
  if(evo){const e=(now-evo.t0)/1000;
-  if(e<2.6){const per=Math.max(.06,.32-e*.11);const useNew=Math.floor(e/per)%2===1;const SS=SHEETS[useNew?evo.to:evo.from];
+  if(e<2.6){const per=Math.max(.06,.32-e*.11);const useNew=Math.floor(e/per)%2===1;const SS=sheet(useNew?evo.to:evo.from);
    ctx.fillStyle='rgba(10,14,40,.55)';ctx.fillRect(0,0,W,H);ctx.drawImage(SS.sil,SS.idx.idle0*CELL,0,CELL,CELL,PET_X,PET_Y,CELL,CELL)}
-  else if(e<3.1){ctx.fillStyle='#ffffff';ctx.globalAlpha=1-(e-2.6)/.5;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;ctx.drawImage(SHEETS[evo.to].cv,0,0,CELL,CELL,PET_X,PET_Y,CELL,CELL)}
+  else if(e<3.1){ctx.fillStyle='#ffffff';ctx.globalAlpha=1-(e-2.6)/.5;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;ctx.drawImage(sheet(evo.to).cv,0,0,CELL,CELL,PET_X,PET_Y,CELL,CELL)}
   else{const done=evo.done;evo=null;done&&done()}}
  else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,PET_X,PET_Y,CELL,CELL);
  if(s.sleeping&&!evo){ctx.fillStyle='rgba(8,12,40,.42)';ctx.fillRect(0,0,W,H);if(Math.random()<.02)spawn('z',1,{x:76,y:62,vx:6,vy:-8,jx:2,jy:2,life:2.2,spread:4})}
@@ -470,9 +536,9 @@ function gainXP(n){if(n<=0)return;s.xp+=n;let ups=0;while(s.xp>=need(s.level)){s
 function routeScores(c){return{ember:c.play,mist:c.wash*1.15,sylvan:c.feed*.7+c.pet*.35}}
 function pickRoute(){const sc=routeScores(s.care);return ROUTES.reduce((a,b)=>sc[b]>sc[a]?b:a,'sylvan')}
 function checkEvolve(){if(!s.hatched||s.route||s.level<5||evo)return;if(s.sleeping){s.sleeping=false}
- const to=pickRoute();s.route=to;if(!s.seen.includes(to))s.seen.push(to);save();renderUI();busyUntil=Date.now()+3300;sfx('evolve');say('咦？！身體在發光…',{log:false});
- evo={from:'baby',to,t0:performance.now(),done:()=>{spawn('star',12,{y:70,vy:-34,jx:60,life:1.6});spawn('spark',8,{y:72,jx:50,life:1});playAnim('happy');
-  say(`${s.name} 進化成「${FORMS[to].name}」了！`);toast(`🎉 進化：${FORMS[to].name}（${FORMS[to].en}）`)}}}
+ const to=pickRoute(),fromK=formKey();s.route=to;if(s.seed===null&&!s.seen.includes(to))s.seen.push(to);const de=s.dex.find(x=>x.seed===s.seed);if(de)de.route=to;save();renderUI();busyUntil=Date.now()+3300;sfx('evolve');say('咦？！身體在發光…',{log:false});
+ const toK=formKey(),TF=formOf(toK);evo={from:fromK,to:toK,t0:performance.now(),done:()=>{spawn('star',12,{y:70,vy:-34,jx:60,life:1.6});spawn('spark',8,{y:72,jx:50,life:1});playAnim('happy');
+  say(`${s.name} 進化成「${TF.name}」了！`);toast(`🎉 進化：${TF.name}（${TF.en}）`)}}}
 function wake(auto){if(!s.sleeping)return;s.sleeping=false;const xp=Math.min(20,Math.round(s.sleepGain/4));s.sleepGain=0;s.care.sleep++;
  if(document.readyState==='complete'&&SHEETS.baby){playAnim('happy');sfx('wake')}
  say(auto?'睡飽了！精神滿滿 ☀️':(xp?'醒來了～':'醒來了…還有點睏'));gainXP(xp)}
@@ -509,9 +575,11 @@ function tapPet(){
  if(petLog.length>6){playAnim('shy');say('嘿嘿…摸太多次會害羞啦');sfx('pet');return}
  s.mood=clamp(s.mood+3);s.care.pet++;playAnim('happy');sfx('pet');spawn('heart',3,{y:70,life:1.1,stagger:.12});
  say(['呼嚕～好舒服 💕','最喜歡你了！','嘿嘿～','再摸一下嘛～'][Math.floor(Math.random()*4)]);save();renderUI()}
-function hatch(){s.hatched=true;s.eggTaps=0;s.hatchedAt=Date.now();s.lastTick=Date.now();if(!s.seen.includes('baby'))s.seen.push('baby');
+function hatch(){s.hatched=true;s.eggTaps=0;s.hatchedAt=Date.now();s.lastTick=Date.now();if(s.seed===null&&!s.seen.includes('baby'))s.seen.push('baby');
+ if(!s.dex.find(x=>x.seed===s.seed))s.dex.push({seed:s.seed,route:null,petName:s.name,at:s.hatchedAt});const HF=formOf(formKey());
  flashUntil=performance.now()+700;sfx('hatch');buzz(40);playAnim('happy',1400);spawn('star',10,{y:70,vy:-30,jx:60,life:1.5});spawn('spark',6,{y:74,jx:50});
- say('啾！我出生了！🐣');save();renderUI();setTimeout(()=>renameDialog(true),1500)}
+ say(HF.genome?`啾！我是新物種「${HF.name}」！${HF.genome.rarity>1?'（'+STARS[HF.genome.rarity]+' '+RARITY[HF.genome.rarity]+'）':''}`:'啾！我出生了！🐣');
+ if(HF.genome&&HF.genome.rarity>1){spawn('star',10,{y:60,vy:-40,jx:80,life:1.8})}save();renderUI();setTimeout(()=>renameDialog(true),1900)}
 
 /* =========================================================
    介面更新
@@ -521,9 +589,9 @@ function buildStats(){$('stats').innerHTML=STATS.map(([k,l,ic,c])=>`<div class="
 function dayCount(){return Math.floor((Date.now()-s.hatchedAt)/86400000)+1}
 function renderUI(){
  $('coins').textContent=s.coins;
- const F=FORMS[formKey()];
- $('petname').textContent=s.hatched?`${s.name}　Lv.${s.level}`:'神秘幻獸蛋';
- $('stageText').textContent=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）`:(s.route?`成長期 · ${F.name} ${F.en} · 第 ${dayCount()} 天`:`幼年期 · ${F.name} · 第 ${dayCount()} 天 · Lv.5 進化`);
+ const F=formOf(formKey()),rar=F.genome&&F.genome.rarity>1?` · ${STARS[F.genome.rarity]}${RARITY[F.genome.rarity]}`:'';
+ $('petname').textContent=s.hatched?`${s.name}　Lv.${s.level}`:F.name;
+ $('stageText').textContent=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome?' · 會孵出什麼新物種呢？':''}`:(s.route?`成長期 · ${F.name}${rar} · 第 ${dayCount()} 天`:`幼年期 · ${F.name}${rar} · 第 ${dayCount()} 天 · Lv.5 進化`);
  for(const[k]of STATS){const v=s.hatched?s[k]:0;$('sv-'+k).textContent=s.hatched?Math.round(v)+'%':'--';$('sb-'+k).style.width=v+'%';$('st-'+k).classList.toggle('low',s.hatched&&v<20)}
  document.querySelectorAll('.act').forEach(b=>b.disabled=!s.hatched);
  $('sleepLabel').textContent=s.sleeping?'叫醒':'睡覺';$('sleepBtn').classList.toggle('on',s.sleeping);
@@ -546,7 +614,7 @@ function renameDialog(first){
  if(!s.hatched){say('先把蛋孵出來吧！');return}
  openModal(first?'🐣 為牠取個名字吧！':'✏️ 改名字',`<p class="small">最多 10 個字，可用中文、英文或 emoji。</p><input type="text" id="nameIn" maxlength="20" autocomplete="off" enterkeyhint="done"><div class="err" id="nameErr"></div>`,
   [{t:first?'就叫小露':'取消'},{t:'確定',cls:'pri',fn:()=>{const n=chars($('nameIn').value.trim()).slice(0,10).join('');if(!n){$('nameErr').textContent='名字不能是空白喔';return false}
-   s.name=n;save();renderUI();say(`我是「${n}」！請多指教～`);return true}}]);
+   s.name=n;const de=s.dex.find(x=>x.seed===s.seed);if(de)de.petName=n;save();renderUI();say(`我是「${n}」！請多指教～`);return true}}]);
  const inp=$('nameIn');inp.value=s.name;inp.addEventListener('keydown',e=>{if(e.key==='Enter')document.querySelector('#mbtns .pri').click()})}
 
 function helpDialog(){openModal('❔ 遊戲說明',`
@@ -565,13 +633,19 @@ function helpDialog(){openModal('❔ 遊戲說明',`
 <p><b>加入主畫面：</b>Safari 下方「分享」⬆️ →「加入主畫面」→「加入」。</p>`)}
 
 function codexDialog(){
- const list=['baby',...ROUTES];
- const cards=list.map(k=>{const F=FORMS[k],seen=s.seen.includes(k);return`<div class="card"><canvas data-form="${k}" data-seen="${seen?1:0}" width="48" height="48"></canvas><b>${seen?F.name:'？？？'}</b><div class="small">${seen?F.en:''}</div><div>${k==='baby'?'幼年期':'成長期'}</div><div class="small">${F.hint}</div></div>`}).join('');
+ const dex=s.dex.slice().reverse();
+ const cards=dex.length?dex.map((e,i)=>{const k=petKey(e.seed,e.route),F=formOf(k),G=F.genome,cur=e.seed===s.seed&&s.hatched;
+  return`<div class="card"><canvas data-key="${k}" width="48" height="48"></canvas><b>${esc(F.name)}</b><div class="small">${esc(F.en)}</div>
+  <div>${G?STARS[G.rarity]+' '+RARITY[G.rarity]:'經典種'} · ${e.route?'成長期':'幼年期'}</div><div class="small">${cur?'🏠 現在的夥伴：':'回憶：'}${esc(e.petName||'')} · ${fmtTime(e.at).split(' ')[0]}</div></div>`}).join('')
+  :'<p class="small">還沒有任何物種。孵化第一顆蛋吧！</p>';
  let lean='';
  if(s.hatched&&!s.route){const sc=routeScores(s.care),tot=Math.max(1,sc.ember+sc.mist+sc.sylvan);
-  lean=`<p style="margin-top:12px"><b>目前進化傾向</b>（Lv.5 時決定）</p><div class="lean">${ROUTES.map(r=>`<span>${{ember:'🔥',mist:'💧',sylvan:'🌿'}[r]} ${s.seen.includes(r)?FORMS[r].name:FORMS[r].hint.replace(/[「」]/g,'')}</span><div class="b"><i style="width:${Math.round(sc[r]/tot*100)}%;background:${{ember:'#ff7a4a',mist:'#5fb4f0',sylvan:'#7ccc5a'}[r]}"></i></div><span>${Math.round(sc[r]/tot*100)}%</span>`).join('')}</div>`}
- openModal('📖 幻獸圖鑑',`<div class="codex">${cards}</div>${lean}<p class="small" style="margin-top:10px">第三階段「完全體」預計在 V1.4 加入。</p>`);
- document.querySelectorAll('.card canvas').forEach(c=>{const S=SHEETS[c.dataset.form],x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(c.dataset.seen==='1'?S.cv:S.dark,S.idx.idle0*CELL,0,CELL,CELL,0,0,48,48)})}
+  lean=`<p style="margin-top:12px"><b>目前進化傾向</b>（Lv.5 時決定，會保留現在的外觀特色）</p><div class="lean">${ROUTES.map(r=>`<span>${{ember:'🔥 炎系',mist:'💧 霧系',sylvan:'🌿 森系'}[r]}</span><div class="b"><i style="width:${Math.round(sc[r]/tot*100)}%;background:${{ember:'#ff7a4a',mist:'#5fb4f0',sylvan:'#7ccc5a'}[r]}"></i></div><span>${Math.round(sc[r]/tot*100)}%</span>`).join('')}</div>
+  <p class="small">🔥 多玩耍 → 長出角與火焰尾　💧 多洗澡 → 長出鰭　🌿 多餵食、摸摸 → 長出翅膀與葉尾</p>`}
+ const n=s.dex.length,rare=s.dex.filter(e=>e.seed!==null&&genome(e.seed).rarity>1).length;
+ openModal('📖 物種圖鑑',`<p class="small">每顆蛋都會隨機孵出獨一無二的新物種（約 75% 普通、20% 稀有、5% 傳說）。已發現 <b>${n}</b> 種，其中稀有以上 <b>${rare}</b> 種。</p><div class="codex">${cards}</div>${lean}
+ <p class="small" style="margin-top:10px">想收集更多？選單 →「🥚 迎接新的蛋」。目前一次照顧一隻；同時養多隻預計之後加入。</p>`);
+ document.querySelectorAll('.card canvas').forEach(c=>{const S=sheet(c.dataset.key),x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(S.cv,S.idx.happy1*CELL,0,CELL,CELL,0,0,48,48)})}
 
 /* ---------------- 存檔匯出／匯入 ---------------- */
 function checksum(t){let h=0;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))>>>0;return h.toString(36)}
@@ -608,17 +682,18 @@ function menuDialog(){
  openModal('⚙️ 選單',`
 <div class="row" style="margin-top:0"><button class="btn" id="mHelp">❔ 遊戲說明</button><button class="btn" id="mSound">${s.sound?'🔊 音效：開':'🔇 音效：關'}</button></div>
 <div class="row"><button class="btn" id="mSprite">🎞️ 查看 Sprite Sheet</button><button class="btn" id="mUpdate">🔄 檢查更新</button></div>
-<div class="row"><button class="btn danger" id="mReset">🗑️ 重新開始</button></div>
+<div class="row"><button class="btn pri" id="mReset">🥚 迎接新的蛋（重新開始）</button></div>
 <p class="small" style="margin-top:12px">版本 V${VERSION}｜存檔位置：${standalone()?'主畫面 App':'瀏覽器'}（${location.host||'本機'}）${store.ok?'':'｜⚠️ 無法寫入'}</p>`);
  $('mHelp').onclick=helpDialog;
  $('mSound').onclick=()=>{s.sound=!s.sound;save();unlockAudio();sfx('tap');$('mSound').textContent=s.sound?'🔊 音效：開':'🔇 音效：關'};
  $('mSprite').onclick=spriteDialog;
  $('mUpdate').onclick=async()=>{try{const r=await navigator.serviceWorker?.getRegistration();if(r){await r.update()}}catch(e){}toast('正在重新載入最新版本…');setTimeout(()=>location.reload(),600)};
- $('mReset').onclick=()=>confirmBox('⚠️ 重新開始？','目前的幻獸與進度會被刪除（會先留一份備份，可再匯出備份）。建議先到「存檔」匯出存檔碼。','確定刪除',()=>{
-  store.set(BACKUP_KEY,JSON.stringify(s));const snd=s.sound;s=fresh();s.sound=snd;lastBackup=Date.now();save();renderUI();say('新的旅程開始了！');setTimeout(()=>say('輕點蛋看看？',{q:true}),100)},'danger')}
+ $('mReset').onclick=()=>confirmBox('🥚 迎接新的蛋？','目前的幻獸會告別（等級、金幣、數值重新開始），但牠會永遠留在「📖 圖鑑」裡。你會得到一顆隨機的新蛋。<br><br>建議先到「存檔」匯出存檔碼備份。','迎接新蛋',()=>{const dex=s.dex;
+  store.set(BACKUP_KEY,JSON.stringify(s));const snd=s.sound;s=fresh();s.sound=snd;s.dex=dex;lastBackup=Date.now();evo=null;save();renderUI();say('一顆新的蛋來了！');setTimeout(()=>say('會孵出什麼呢？輕點看看！',{q:true}),100)})}
 function spriteDialog(){
  openModal('🎞️ Sprite Sheet（實際遊戲用）',`<p class="small">以下是遊戲執行時由程式產生的逐格像素圖（每格 48×48 px，放大 2 倍顯示）。角色動畫就是逐格切換這些畫格。</p><div class="sprites" id="spr"></div>`);
- const box=$('spr');for(const k of['egg','baby',...ROUTES]){const S=SHEETS[k];if(!s.seen.includes(k)&&k!=='egg'&&k!=='baby'){const p=document.createElement('p');p.className='small';p.textContent=`${FORMS[k].name}：尚未解鎖（劇透保護）`;box.appendChild(p);continue}
+ const keys=[eggKey(s.seed)];if(s.hatched){keys.push(petKey(s.seed,null));if(s.route)keys.push(petKey(s.seed,s.route))}
+ const box=$('spr');for(const k of keys){const S=sheet(k),lab=document.createElement('p');lab.className='small';lab.textContent=formOf(k).name;box.appendChild(lab);
   const c=document.createElement('canvas');c.width=S.cv.width;c.height=CELL;c.style.width=S.cv.width*2+'px';c.getContext('2d').drawImage(S.cv,0,0);box.appendChild(c)}}
 
 /* =========================================================
@@ -644,7 +719,7 @@ $('homeTipX').onclick=()=>{$('homeTip').classList.add('hidden');store.set(TIP_KE
 /* ---------------- 啟動 ---------------- */
 function init(){
  $('ver').textContent=VERSION;
- buildIcons();for(const k of['egg','baby',...ROUTES])buildSheet(k);cloudCv=gridCanvas(CLOUD);
+ buildIcons();cloudCv=gridCanvas(CLOUD);
  buildStats();document.querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));
  const L=load();s=L.s;
  tick();
@@ -661,7 +736,7 @@ function init(){
  if(!inFrame&&'serviceWorker'in navigator&&(location.protocol==='https:'||location.hostname==='localhost')&&!/claude|anthropic/.test(location.hostname))
   navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{});
 }
-window.PF={get state(){return s},SHEETS,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
+window.PF={get state(){return s},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
  debug:{skip(min){s.lastTick-=min*60000;tick();renderUI();save()},xp(n){gainXP(n);renderUI();save()},set(o){Object.assign(s,o);renderUI();save()}}};
 try{init()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<div style="padding:12px;background:#a8394c;color:#fff">啟動錯誤：${esc(e.message)}</div>`);throw e}
 </script>
