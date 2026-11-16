@@ -35,6 +35,8 @@ const CONFIG = {
   harvestsForOldTree: 10,
   bossStages: { volcano: 15, oldtree: 20 },
   breed: { cost: 20, cooldownH: 6, minMood: 50, basket: 6 },
+  farm: { plots: 3, growHours: 2, food: 2, xp: 5, forest: 3, seedPrice: 3 },     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
+  goals: { perDay: 3, reward: { coins: 8 } },
   start: { coins: 50, food: 3, seeds: 2, stat: 80 }
 };
 const ROUTES = ['flame', 'tide', 'forest'];
@@ -116,6 +118,8 @@ function fresh(now = Date.now()) {
     path: { flame: 0, tide: 0, forest: 0 },
     care: { petLastRewardAt: 0, bathLastAt: 0, playXpAt: [], gatherAt: 0 },
     inv: { food: S.food, seeds: S.seeds }, harvests: 0,
+    plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
+    goals: { date: '', list: [] },
     events: { volcano: false, moonspring: false, oldtree: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
@@ -161,6 +165,9 @@ function sanitize(o, now = Date.now()) {
   const iv = o.inv && typeof o.inv === 'object' ? o.inv : {};
   r.inv.food = int(iv.food, CONFIG.start.food, 0, 9999); r.inv.seeds = int(iv.seeds, CONFIG.start.seeds, 0, 9999);
   r.harvests = int(o.harvests, 0, 0, 1e7);
+  if (Array.isArray(o.plots)) r.plots = r.plots.map((p, i) => ({ at: num(o.plots[i] && o.plots[i].at, 0, 0, 9e15) }));
+  const gl = o.goals && typeof o.goals === 'object' ? o.goals : {};
+  if (/^\d{4}-\d\d-\d\d$/.test(gl.date) && Array.isArray(gl.list)) r.goals = { date: gl.date, list: gl.list.filter(g => g && GOALS[g.id]).slice(0, 5).map(g => ({ id: g.id, n: int(g.n, 0, 0, 1e6), claimed: g.claimed === true })) };
   const ev = o.events && typeof o.events === 'object' ? o.events : {};
   for (const k in r.events) r.events[k] = ev[k] === true;
   const dl = o.daily && typeof o.daily === 'object' ? o.daily : {};
@@ -210,7 +217,7 @@ function journal(st, now, t) { st.journal.push({ at: now, t }); if (st.journal.l
 function claimDaily(st, now = Date.now()) {
   const k = dayKey(now);
   if (st.daily.date && k <= st.daily.date) return null;     // 同一天、或時間倒退／切換時區造成的「過去日期」都不能再領
-  st.daily = { date: k, adv: 0, gift: false };
+  st.daily = { date: k, adv: 0, gift: false }; ensureGoals(st, now);
   st.coins += CONFIG.daily.coins; st.inv.food += CONFIG.daily.food;
   return { coins: CONFIG.daily.coins, food: CONFIG.daily.food };
 }
@@ -244,6 +251,7 @@ function act(st, a, now = Date.now()) {
     else if (st.coins >= C.price) { st.coins -= C.price; paid = `花 ${C.price} 金幣買食物`; }
     else return { ok: false, code: 'nofood', msg: '沒有食物也沒有金幣了…可以去「採集」', tm };
     st.hunger = clamp(st.hunger + C.hunger); st.path.tide += C.tide;
+    track(st, 'feed', now);
     return { ok: true, anim: 'eat', sfx: 'eat', xp: addXP(st, C.xp), msg: `好吃！（${paid}）`, tm };
   }
   if (a === 'play') {
@@ -252,14 +260,14 @@ function act(st, a, now = Date.now()) {
     st.care.playXpAt = st.care.playXpAt.filter(t => now - t < C.xpWindowMin * MIN && t <= now);
     let xp = 0;
     if (st.care.playXpAt.length < C.xpPerWindow) { st.care.playXpAt.push(now); xp = addXP(st, C.xp); }
-    st.mood = clamp(st.mood + C.mood); st.energy = clamp(st.energy + C.energy);
+    st.mood = clamp(st.mood + C.mood); st.energy = clamp(st.energy + C.energy); track(st, 'play', now);
     return { ok: true, anim: 'play', sfx: 'play', xp, msg: xp ? '玩得好開心！' : '玩得好開心！（玩太多次了，暫時沒有經驗）', tm };
   }
   if (a === 'wash') {
     const C = CONFIG.wash, wait = st.care.bathLastAt + C.cooldownMin * MIN - now;
     if (st.clean >= F) return { ok: false, msg: '已經很乾淨了！', tm };
     if (wait > 0) return { ok: false, msg: `剛洗過澡，${Math.ceil(wait / MIN)} 分鐘後再洗吧`, tm };
-    st.care.bathLastAt = now; st.clean = clamp(st.clean + C.clean);
+    st.care.bathLastAt = now; st.clean = clamp(st.clean + C.clean); track(st, 'wash', now);
     return { ok: true, anim: 'wash', sfx: 'wash', xp: addXP(st, C.xp), msg: '洗得香噴噴～', tm };
   }
   return { ok: false, msg: '未知動作', tm };
@@ -273,7 +281,7 @@ function pet(st, now = Date.now()) {
   if (now - st.care.petLastRewardAt >= C.cooldownMin * MIN) {
     const t0 = bondTier(st.bond);
     st.care.petLastRewardAt = now; st.bond = clamp(st.bond + C.bond); st.mood = clamp(st.mood + C.mood); st.path.tide += C.tide;
-    out.reward = true; const t1 = bondTier(st.bond);
+    out.reward = true; track(st, 'pet', now); const t1 = bondTier(st.bond);
     if (t1 > t0) { out.bondUp = CONFIG.bondTiers[t1 - 1]; journal(st, now, `親密度達到 ${out.bondUp}！`); }
     // 親密度 50：每天一次，牠會撿東西送你
     if (st.bond >= 50 && !st.daily.gift && st.daily.date === dayKey(now)) { st.daily.gift = true; st.inv.food++; out.gift = true; }
@@ -352,6 +360,7 @@ function creditSteps(st, raw, date, now = Date.now()) {
   const k = Math.floor(st.steps.rem / C.per); st.steps.rem -= k * C.per;
   const f = Math.floor(st.steps.forestRem / C.forestEvery); st.steps.forestRem -= f * C.forestEvery;
   let xp = 0; if (st.hatched) { xp = addXP(st, k * C.xpPer); st.path.forest += f; }
+  if (date === td) track(st, 'steps', now, delta);
   const up = Math.floor(st.steps.total / C.tier) - tier0; if (up > 0) { st.coins += up * C.tierCoins; journal(st, now, `累積 ${Math.floor(st.steps.total / C.tier) * C.tier} 步，突破！`); }
   const keys = Object.keys(st.steps.days).sort(); while (keys.length > 30) delete st.steps.days[keys.shift()];
   return { delta, v, xp, forest: st.hatched ? f : 0, up };
@@ -370,7 +379,7 @@ function canAdventure(st, n) {
 function startAdventure(st, n, now = Date.now()) {
   applyTime(st, now); claimDaily(st, now);
   const why = canAdventure(st, n); if (why) return { ok: false, msg: why };
-  st.energy = clamp(st.energy + CONFIG.adventure.energy); st.daily.adv++;
+  st.energy = clamp(st.energy + CONFIG.adventure.energy); st.daily.adv++; track(st, 'adv', now);
   return { ok: true, full: st.daily.adv <= CONFIG.adventure.dailyFull };
 }
 function mkFighter(name, key, lvl, route, tierN, mood, bond) {
@@ -399,7 +408,7 @@ function damage(a, d, special, r = Math.random) {
 function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random) {
   const A = CONFIG.adventure, out = { xp: 0, coins: 0, food: 0, seeds: 0, unlocked: 0, events: [] };
   if (result === 'win') {
-    st.adv.wins++;
+    st.adv.wins++; track(st, 'win', now);
     const xp = A.xp + CONFIG.battleWin.xp;
     if (full) { out.xp = addXP(st, xp); out.coins = A.coins + CONFIG.battleWin.coins; st.coins += out.coins; st.path.flame += A.flame + CONFIG.battleWin.flame; }
     else out.xp = addXP(st, Math.round(xp * A.overCapXpRate));
@@ -411,6 +420,75 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
     }
   } else if (result === 'loss') { st.adv.losses++; out.xp = addXP(st, CONFIG.battleLoss.xp); }
   return out;
+}
+
+/* ---------------- 家園種植（GDD 第 3 節） ---------------- */
+function plotState(st, i, now = Date.now()) {
+  const p = st.plots[i]; if (!p) return null;
+  if (!p.at) return { empty: true, progress: 0, left: 0 };
+  const grow = CONFIG.farm.growHours * H, el = Math.max(0, now - p.at);   // 時間倒退時不會變成負的
+  return { empty: false, progress: Math.min(1, el / grow), ripe: el >= grow, left: Math.max(0, grow - el) };
+}
+function plant(st, i, now = Date.now()) {
+  const q = plotState(st, i, now); if (!q) return { ok: false, msg: '沒有這塊田' };
+  if (!q.empty) return { ok: false, msg: '這塊田已經種了東西' };
+  if (st.inv.seeds < 1) return { ok: false, code: 'noseed', msg: '沒有種子了（冒險有機會撿到，或花金幣買）' };
+  st.inv.seeds--; st.plots[i].at = now; track(st, 'plant', now);
+  return { ok: true, msg: '種下一顆種子 🌱（2 小時後可以收成）' };
+}
+function harvest(st, i, now = Date.now()) {
+  const q = plotState(st, i, now); if (!q || q.empty) return { ok: false, msg: '這塊田是空的' };
+  if (!q.ripe) return { ok: false, msg: `還沒成熟，再等 ${Math.ceil(q.left / MIN)} 分鐘` };
+  const F = CONFIG.farm; st.plots[i].at = 0; st.inv.food += F.food; st.harvests++;
+  let xp = 0; if (st.hatched) { xp = addXP(st, F.xp); st.path.forest += F.forest; }
+  track(st, 'harvest', now);
+  if (st.harvests === CONFIG.harvestsForOldTree) journal(st, now, `收成第 ${st.harvests} 次了！`);
+  return { ok: true, food: F.food, xp, forest: st.hatched ? F.forest : 0, msg: `收成！食物 +${F.food}` + (xp ? `、經驗 +${xp}、🌿 森 +${F.forest}` : '') };
+}
+function buySeed(st) {
+  const P = CONFIG.farm.seedPrice; if (st.coins < P) return { ok: false, msg: `金幣不足（種子 ${P} 金幣）` };
+  st.coins -= P; st.inv.seeds++; return { ok: true, msg: `買了 1 顆種子（−${P} 金幣）` };
+}
+
+/* ---------------- 每日小目標（GDD 第 5 節：3 個任選，不強迫全清） ---------------- */
+const GOALS = {
+  feed:    { t: '餵食 1 次', ev: 'feed', need: 1, item: 'food' },
+  play:    { t: '陪牠玩耍 2 次', ev: 'play', need: 2, item: 'coins' },
+  wash:    { t: '幫牠洗澡 1 次', ev: 'wash', need: 1, item: 'seeds' },
+  pet:     { t: '摸摸牠（有親密度的那種）1 次', ev: 'pet', need: 1, item: 'food' },
+  adv:     { t: '出發冒險 1 次', ev: 'adv', need: 1, item: 'seeds' },
+  win:     { t: '打贏 1 場戰鬥', ev: 'win', need: 1, item: 'coins' },
+  plant:   { t: '種下 1 顆種子', ev: 'plant', need: 1, item: 'food' },
+  harvest: { t: '收成 1 次', ev: 'harvest', need: 1, item: 'seeds' },
+  steps:   { t: '走 3,000 步', ev: 'steps', need: 3000, item: 'coins' }
+};
+const GOAL_IDS = Object.keys(GOALS);
+function goalsFor(key) {   // 用日期當亂數種子：同一天每次打開都一樣
+  let h = 0; for (const c of key) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const r = rng(h), pool = GOAL_IDS.slice(), out = [];
+  while (out.length < CONFIG.goals.perDay) out.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
+  return out;
+}
+function ensureGoals(st, now = Date.now()) {
+  const k = dayKey(now);
+  if (st.goals.date === k) return false;
+  if (st.goals.date && k < st.goals.date) return false;            // 時間倒退：不換新目標
+  st.goals = { date: k, list: goalsFor(k).map(id => ({ id, n: 0, claimed: false })) };
+  return true;
+}
+function track(st, ev, now = Date.now(), amount = 1) {
+  ensureGoals(st, now);
+  for (const g of st.goals.list) if (GOALS[g.id].ev === ev && !g.claimed) g.n = Math.min(GOALS[g.id].need, g.n + amount);
+}
+function claimGoal(st, idx, now = Date.now()) {
+  ensureGoals(st, now); const g = st.goals.list[idx];
+  if (!g) return { ok: false, msg: '沒有這個目標' };
+  if (g.claimed) return { ok: false, msg: '已經領過了' };
+  if (g.n < GOALS[g.id].need) return { ok: false, msg: '還沒完成' };
+  g.claimed = true; const it = GOALS[g.id].item;
+  if (it === 'coins') { st.coins += CONFIG.goals.reward.coins; return { ok: true, msg: `金幣 +${CONFIG.goals.reward.coins}` }; }
+  if (it === 'food') { st.inv.food++; return { ok: true, msg: '食物 +1' }; }
+  st.inv.seeds++; return { ok: true, msg: '種子 +1' };
 }
 
 /* ---------------- 配對 ---------------- */
@@ -436,6 +514,7 @@ function breed(st, friend, now = Date.now(), r = Math.random) {
 const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars, dayKey, hourIn, level, rng, makeGenome, CLASSIC_G, encodeGenome, decodeGenome, breedGenome,
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
+  plotState, plant, harvest, buySeed, GOALS, goalsFor, ensureGoals, track, claimGoal,
   ELEM, BEATS, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

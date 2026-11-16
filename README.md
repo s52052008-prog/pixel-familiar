@@ -1,4 +1,4 @@
-# 🐲 幻獸日記 Pixel Familiar（V1.6.0）
+# 🐲 幻獸日記 Pixel Familiar（V1.7.0）
 
 原創 16-bit 像素風奇幻生物養成遊戲（電子雞 Tamagotchi 類型）。每顆蛋都會隨機孵出獨一無二的新物種。iPhone Safari 優先。
 
@@ -24,7 +24,7 @@ art/stages-gallery.png 各成長階段外觀（幼年／少年／成年三路線
 所有遊戲檔案都在**倉庫根目錄**，不再有 V1.2 的 `www/` 路徑問題。
 
 ## 🧪 測試狀態
-見 [docs/TESTING.md](docs/TESTING.md)。規則單元測試 42/42、端對端測試 35/35 通過（Chromium 模擬 iPhone），**尚未在真實 iPhone Safari 上驗收**。
+見 [docs/TESTING.md](docs/TESTING.md)。規則單元測試 50/50、端對端測試 41/41 通過（Chromium 模擬 iPhone），**尚未在真實 iPhone Safari 上驗收**。
 
 ## 🗺️ 後續規劃
 見 [docs/ROADMAP.md](docs/ROADMAP.md)、[docs/CHANGELOG.md](docs/CHANGELOG.md)。

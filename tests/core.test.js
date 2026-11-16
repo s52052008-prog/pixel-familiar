@@ -133,5 +133,36 @@ t('null / 非物件 → 全新存檔', () => { assert.equal(C.sanitize(null, T0)
 t('基因碼編碼／解碼可逆，非法碼被拒絕', () => { const G = C.makeGenome(42); const D = C.decodeGenome(C.encodeGenome(G)); delete G.seed; assert.deepEqual(D, G); assert.equal(C.decodeGenome('9.9.9'), null); });
 t('日期以台北時區計算', () => { assert.equal(C.dayKey(Date.parse('2026-11-16T16:30:00Z')), '2026-11-17'); assert.equal(C.dayKey(Date.parse('2026-11-16T15:59:00Z')), '2026-11-16'); });
 
+// 家園種植
+t('種植：用掉種子，2 小時前不能收成，2 小時整可以', () => {
+  const s = hatched(); assert.ok(C.plant(s, 0, T0).ok); assert.equal(s.inv.seeds, 1); assert.ok(!C.plant(s, 0, T0).ok);
+  assert.ok(!C.harvest(s, 0, T0 + 2 * H - 1).ok); const r = C.harvest(s, 0, T0 + 2 * H); assert.ok(r.ok);
+  assert.equal(s.inv.food, 5); assert.equal(s.xp, 5); assert.equal(s.path.forest, 3); assert.equal(s.harvests, 1); assert.ok(C.plotState(s, 0, T0).empty);
+});
+t('種植：沒種子不能種；每格只能一株；金幣買種子', () => { const s = hatched(); s.inv.seeds = 0; assert.equal(C.plant(s, 1, T0).code, 'noseed'); assert.ok(C.buySeed(s).ok); assert.equal(s.coins, 47); assert.ok(C.plant(s, 1, T0).ok); assert.ok(!C.plant(s, 9, T0).ok); });
+t('種植：時間倒退不會變成負進度', () => { const s = hatched(); C.plant(s, 0, T0); const q = C.plotState(s, 0, T0 - H); assert.equal(q.progress, 0); assert.ok(!q.ripe); });
+t('種植：存檔往返保留田地', () => { const s = hatched(); C.plant(s, 2, T0); const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(r.plots[2].at, T0); assert.equal(r.plots.length, 3); });
+t('森系高階：收成 10 次＋古樹事件', () => {
+  const s = hatched(); s.xp = 2000; s.path.forest = 99; s.events.oldtree = true; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult');
+  s.inv.seeds = 20; let now = T0; for (let i = 0; i < 10; i++) { C.plant(s, 0, now); now += 2 * H; C.harvest(s, 0, now); }
+  assert.equal(s.harvests, 10); C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
+});
+// 每日小目標
+t('每日目標：每天 3 個、同一天固定、隔天換新', () => {
+  const s = hatched(); C.ensureGoals(s, T0); const a = s.goals.list.map(g => g.id).join(); assert.equal(s.goals.list.length, 3);
+  assert.equal(new Set(s.goals.list.map(g => g.id)).size, 3); C.ensureGoals(s, T0 + H); assert.equal(s.goals.list.map(g => g.id).join(), a);
+  assert.deepEqual(C.goalsFor(C.dayKey(T0)), C.goalsFor(C.dayKey(T0)));
+  C.ensureGoals(s, T0 + 86400000); assert.notEqual(s.goals.date, C.dayKey(T0));
+});
+t('每日目標：完成才能領、只能領一次、時間倒退不重置', () => {
+  const s = hatched(); C.ensureGoals(s, T0); s.goals.list = [{ id: 'feed', n: 0, claimed: false }, { id: 'steps', n: 0, claimed: false }, { id: 'plant', n: 0, claimed: false }];
+  assert.ok(!C.claimGoal(s, 0, T0).ok); s.hunger = 10; C.act(s, 'feed', T0); assert.equal(s.goals.list[0].n, 1);
+  const f = s.inv.food; assert.ok(C.claimGoal(s, 0, T0).ok); assert.equal(s.inv.food, f + 1); assert.ok(!C.claimGoal(s, 0, T0).ok);
+  C.creditSteps(s, 3500, null, T0); assert.equal(s.goals.list[1].n, 3000); const c = s.coins; C.claimGoal(s, 1, T0); assert.equal(s.coins, c + 8);
+  C.plant(s, 0, T0); assert.equal(s.goals.list[2].n, 1);
+  C.ensureGoals(s, T0 - 3 * 86400000); assert.equal(s.goals.date, C.dayKey(T0));
+});
+t('每日目標：存檔亂碼目標被過濾', () => { const r = C.sanitize({ v: 6, goals: { date: '2026-11-16', list: [{ id: 'hack', n: 9 }, { id: 'feed', n: -3 }] } }, T0); assert.equal(r.goals.list.length, 1); assert.equal(r.goals.list[0].n, 0); });
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);
