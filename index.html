@@ -591,6 +591,7 @@ function saveDialog(){
 <textarea id="impText" placeholder="在這裡貼上存檔碼（PF1. 開頭）"></textarea>
 <div class="row" style="margin-top:6px"><button class="btn pri" id="bImp">匯入存檔碼</button><label class="btn" style="text-align:center">從檔案匯入<input type="file" id="impFile" accept=".json,.txt,application/json,text/plain" style="display:none"></label></div>
 <div class="err" id="impErr"></div>`);
+ if(inFrame)$('bFile').classList.add('hidden');
  $('bCopy').onclick=async()=>{const code=exportCode();let ok=false;try{await navigator.clipboard.writeText(code);ok=true}catch(e){}
   if(!ok){const ta=$('impText');ta.value=code;ta.focus();ta.select();try{ok=document.execCommand('copy')}catch(e){}}
   s.lastExport=Date.now();save();toast(ok?'✅ 已複製存檔碼，請貼到備忘錄保存':'已把存檔碼放進下方文字框，請長按全選後複製')};
@@ -624,6 +625,7 @@ function spriteDialog(){
    iPhone 相關：主畫面提示、持久化儲存、生命週期
    ========================================================= */
 function standalone(){return navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)}
+let inFrame=false;try{inFrame=window.self!==window.top}catch(e){inFrame=true}
 const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 let persistAsked=false;function requestPersist(){if(persistAsked)return;persistAsked=true;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{})}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){tick();save()}else{tick();renderUI();startLoop()}});
@@ -651,11 +653,12 @@ function init(){
  if(L.src==='legacy')toast('✅ 已自動搬移 V1.x 舊存檔');
  else if(L.src==='backup-corrupt')toast('⚠️ 主存檔損壞，已從備份還原');
  if(!store.ok)$('saveWarn').classList.remove('hidden');
- if(isIOS&&!standalone()&&!store.get(TIP_KEY))$('homeTip').classList.remove('hidden');
+ if(inFrame){const tp=$('homeTip');tp.innerHTML='🧪 這是 Claude 內的<b>快速試玩版</b>。存檔只留在這個頁面，可能被清除；正式遊玩請用 GitHub Pages 網址，並用「存檔」搬移進度。<button id="homeTipX" aria-label="關閉">✕</button>';tp.classList.remove('hidden');$('homeTipX').onclick=()=>tp.classList.add('hidden')}
+ else if(isIOS&&!standalone()&&!store.get(TIP_KEY))$('homeTip').classList.remove('hidden');
  setTimeout(()=>say(s.hatched?(s.sleeping?'Zzz…':`${s.name}：歡迎回來！`):'輕點蛋看看？',{log:false}),400);
  setInterval(()=>{if(document.hidden)return;tick();renderUI();if(Date.now()-lastSave>15000)save();
   if(Date.now()>nextChat&&!msgTimer&&$('modal').classList.contains('hidden'))say(chatter(),{log:false})},1000);
- if('serviceWorker'in navigator&&(location.protocol==='https:'||location.hostname==='localhost')&&!/claude|anthropic/.test(location.hostname))
+ if(!inFrame&&'serviceWorker'in navigator&&(location.protocol==='https:'||location.hostname==='localhost')&&!/claude|anthropic/.test(location.hostname))
   navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{});
 }
 window.PF={get state(){return s},SHEETS,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
