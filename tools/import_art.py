@@ -19,6 +19,7 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CELL = 48
 MODE = os.environ.get('MODE', 'center')
+KEEP_FRAC = 0.04           # 比最大塊小很多的碎點（閃光、水花）不算進角色
 DARK = 0.42                # 區塊裡深色超過這個比例才畫成線條
 GROUND = 46               # 腳底所在的列
 FIT = {1: (35, 33), 2: (39, 39), 3: (44, 43), 4: (48, 45)}   # 各階段最大 寬、高
@@ -26,9 +27,26 @@ STAGES = {1: 'juvenile', 2: 'teen', 3: 'adult', 4: 'ascended'}
 
 
 def mask_of(a):
+    """前景遮罩：背景（綠底或白底，看四個角）只算跟邊緣相連的部分，再去掉飄在旁邊的小碎點。"""
+    from scipy import ndimage
     r, g, b = a[..., 0].astype(int), a[..., 1].astype(int), a[..., 2].astype(int)
-    green = (g > 150) & (g - r > 70) & (g - b > 70)
-    return ~green
+    corner = a[:8, :8].reshape(-1, 3).mean(0)
+    if corner[1] > 150 and corner[1] - corner[0] > 70:          # 綠底
+        bg = (g > 150) & (g - r > 70) & (g - b > 70)
+    else:                                                        # 白底（或其他淺色底）
+        bg = (np.abs(a.astype(int) - corner).sum(-1) < 45)
+    lab, n = ndimage.label(bg)
+    border = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
+    bg_conn = np.isin(lab, list(border))
+    if (g > 150).any():                                          # 綠色溢色：被包住的純綠也算背景
+        bg_conn |= (g > 200) & (g - r > 120) & (g - b > 120)
+    fg = ~bg_conn
+    lab, n = ndimage.label(fg)
+    if n > 1:
+        sizes = ndimage.sum(fg, lab, range(1, n + 1))
+        keep = [i + 1 for i, s in enumerate(sizes) if s >= sizes.max() * KEEP_FRAC]
+        fg = np.isin(lab, keep)
+    return fg
 
 
 def load(path):
@@ -112,21 +130,24 @@ def process(el):
         for eye in ('open', 'closed'):
             p = os.path.join(src, f'{el}_{st}_{name}_{eye}.png')
             pair[eye] = load(p)
-        boxes = [bbox(m) for _, m in pair.values()]
-        box = (min(b[0] for b in boxes), min(b[1] for b in boxes), max(b[2] for b in boxes), max(b[3] for b in boxes))
-        bw, bh = box[2] - box[0], box[3] - box[1]
+        # 每張各自裁切、縮放（AI 畫的睜眼／閉眼兩張大小常常不一樣），再以腳底中央對齊
+        imgs, sizes = [], []
         mw, mh = FIT[st]
-        k = min(mw / bw, mh / bh)
-        tw, th = max(1, round(bw * k)), max(1, round(bh * k))
-        ox, oy = (CELL - tw) // 2, GROUND - th
-        imgs = [downsample(a, m, box, tw, th, ox, oy) for a, m in pair.values()]
+        for a, m in pair.values():
+            box = bbox(m)
+            bw, bh = box[2] - box[0], box[3] - box[1]
+            k = min(mw / bw, mh / bh)
+            tw, th = max(1, round(bw * k)), max(1, round(bh * k))
+            imgs.append(downsample(a, m, box, tw, th, (CELL - tw) // 2, GROUND - th))
+            sizes.append(f'{tw}x{th}')
+        tw, th, bw, bh = sizes, '', '', ''
         imgs, pal = quantize(imgs)
         outline_col = min(pal.tolist(), key=lambda c: lum(c))
         imgs = [add_outline(im, outline_col) for im in imgs]
         for eye, im in zip(pair.keys(), imgs):
             Image.fromarray(im, 'RGBA').save(os.path.join(outdir, f'{el}_{st}_{eye}.png'), optimize=True)
             previews.append(im)
-        print(f'{el} {st} {name}: {tw}x{th} 原圖 {bw}x{bh}')
+        print(f'{el} {st} {name}: {tw}')
     # 預覽：8 張排一列，放大 6 倍，棋盤底
     sc = 6
     pv = Image.new('RGBA', (CELL * sc * len(previews), CELL * sc), (40, 52, 70, 255))
