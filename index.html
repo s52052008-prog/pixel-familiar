@@ -246,7 +246,7 @@ function breedGenome(A,B,r=Math.random){const pick=(a,b)=>r()<.5?a:b,mut=.08,any
 /* ---------------- 存檔資料 ---------------- */
 function newSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]}catch(e){return Math.floor(Math.random()*4294967295)}}
 function today(d=new Date()){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function fresh(){const t=Date.now();return{v:5,seed:newSeed(),genes:null,dex:[],eggs:[],breedAt:0,steps:{days:{},total:0,rem:0},adv:{pts:3,day:'',stage:1,wins:0,losses:0},hatched:false,eggTaps:0,name:'小露',level:1,xp:0,coins:20,
+function fresh(){const t=Date.now();return{v:5,rev:0,seed:newSeed(),genes:null,dex:[],eggs:[],breedAt:0,steps:{days:{},total:0,rem:0},adv:{pts:3,day:'',stage:1,wins:0,losses:0},hatched:false,eggTaps:0,name:'小露',level:1,xp:0,coins:20,
  hunger:80,mood:80,clean:80,energy:80,route:null,care:{feed:0,play:0,wash:0,pet:0,sleep:0},
  sleeping:false,sleepGain:0,created:t,hatchedAt:0,lastTick:t,updated:t,lastExport:0,sound:true,seen:[]}}
 function sanitize(o){
@@ -258,7 +258,7 @@ function sanitize(o){
  r.dex=Array.isArray(o.dex)?o.dex.filter(e=>e&&typeof e==='object').slice(-200).map(e=>({id:okId(e.id)?e.id:(Number.isInteger(e.seed)?'g:'+e.seed:'classic'),route:ROUTES.includes(e.route)?e.route:null,
   petName:typeof e.name==='string'?chars(e.name).slice(0,10).join(''):(typeof e.petName==='string'?chars(e.petName).slice(0,10).join(''):''),at:num(e.at,now,0,now)})):[];
  r.eggs=Array.isArray(o.eggs)?o.eggs.filter(e=>e&&okId(e.id)).slice(0,6).map(e=>({id:e.id,from:typeof e.from==='string'?chars(e.from).slice(0,40).join(''):'',at:num(e.at,now,0,now)})):[];
- r.breedAt=num(o.breedAt,0,0,now);
+ r.breedAt=num(o.breedAt,0,0,now);r.rev=Math.floor(num(o.rev,0,0,1e12));
  const st=o.steps&&typeof o.steps==='object'?o.steps:{};r.steps.total=Math.floor(num(st.total,0,0,1e9));r.steps.rem=num(st.rem,0,0,999);
  if(st.days&&typeof st.days==='object')for(const k in st.days)if(/^\d{4}-\d\d-\d\d$/.test(k))r.steps.days[k]=Math.floor(num(st.days[k],0,0,200000));
  const av=o.adv&&typeof o.adv==='object'?o.adv:{};r.adv={pts:Math.floor(num(av.pts,3,0,99)),day:typeof av.day==='string'?av.day:'',stage:Math.floor(num(av.stage,1,1,999)),wins:Math.floor(num(av.wins,0,0,1e7)),losses:Math.floor(num(av.losses,0,0,1e7))};
@@ -284,8 +284,10 @@ function load(){
  o=parse(store.get(LEGACY_KEY));if(o)return{s:sanitize(o),src:'legacy'};
  return{s:fresh(),src:'new'}}
 let s,lastBackup=0,lastSave=0;
+/* 多分頁保護：如果別的分頁（例如捷徑開啟的新分頁）已經存了更新的進度，就採用它，不用舊資料覆蓋 */
 function save(){
- s.updated=Date.now();lastSave=s.updated;
+ const cur=parse(store.get(SAVE_KEY));if(cur&&Number(cur.rev)>s.rev){s=sanitize(cur);lastSave=Date.now();renderUI();return}
+ s.rev++;s.updated=Date.now();lastSave=s.updated;
  if(s.updated-lastBackup>60000){const prev=store.get(SAVE_KEY);if(prev&&parse(prev))store.set(BACKUP_KEY,prev);lastBackup=s.updated}
  const ok=store.set(SAVE_KEY,JSON.stringify(s));$('saveWarn').classList.toggle('hidden',ok)}
 
@@ -737,7 +739,7 @@ function saveDialog(){
   try{const f=new File([code],name,{type:'text/plain'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'幻獸日記存檔'});return}}catch(e){if(e&&e.name==='AbortError')return}
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([code],{type:'text/plain'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);toast('已下載存檔檔案')};
  const doImport=(text)=>{try{const o=sanitize(decodeCode(text));
-   confirmBox('確定匯入？',`將以「${esc(o.hatched?o.name+' Lv.'+o.level:'未孵化的蛋')}」取代目前進度。目前進度會先保留為備份。`,'匯入',()=>{store.set(BACKUP_KEY,JSON.stringify(s));s=o;s.lastTick=Math.min(s.lastTick,Date.now());lastBackup=Date.now();save();tick();renderUI();evo=null;toast('✅ 匯入成功！');say(s.hatched?`${s.name}回來了！`:'蛋回來了！')})
+   confirmBox('確定匯入？',`將以「${esc(o.hatched?o.name+' Lv.'+o.level:'未孵化的蛋')}」取代目前進度。目前進度會先保留為備份。`,'匯入',()=>{store.set(BACKUP_KEY,JSON.stringify(s));o.rev=s.rev;s=o;s.lastTick=Math.min(s.lastTick,Date.now());lastBackup=Date.now();save();tick();renderUI();evo=null;toast('✅ 匯入成功！');say(s.hatched?`${s.name}回來了！`:'蛋回來了！')})
   }catch(e){$('impErr').textContent='❌ 匯入失敗：'+(e.message||'無法讀取')}};
  $('bImp').onclick=()=>doImport($('impText').value);
  $('impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>doImport(r.result);r.readAsText(f)}}
@@ -755,7 +757,7 @@ function menuDialog(){
  $('mUpdate').onclick=async()=>{try{const r=await navigator.serviceWorker?.getRegistration();if(r){await r.update()}}catch(e){}toast('正在重新載入最新版本…');setTimeout(()=>location.reload(),600)};
  $('mReset').onclick=()=>confirmBox('🥚 迎接新的蛋？','目前的幻獸會告別（等級、金幣、數值重新開始），但牠會永遠留在「📖 圖鑑」裡。你會得到一顆隨機的新蛋。<br><br>建議先到「存檔」匯出存檔碼備份。','迎接新蛋',()=>newPet(null))}
 /* 換新的蛋：保留玩家層級的資料（圖鑑、蛋籃、步數、冒險進度、音效設定） */
-function newPet(genes,from){store.set(BACKUP_KEY,JSON.stringify(s));const keep={sound:s.sound,dex:s.dex,eggs:s.eggs,steps:s.steps,adv:s.adv,breedAt:s.breedAt,lastExport:s.lastExport};
+function newPet(genes,from){store.set(BACKUP_KEY,JSON.stringify(s));const keep={rev:s.rev,sound:s.sound,dex:s.dex,eggs:s.eggs,steps:s.steps,adv:s.adv,breedAt:s.breedAt,lastExport:s.lastExport};
  s=fresh();Object.assign(s,keep);if(genes){s.genes=genes;s.seed=null}lastBackup=Date.now();evo=null;save();renderUI();
  say(from?'配對寶寶的蛋來了！':'一顆新的蛋來了！');setTimeout(()=>say('會孵出什麼呢？輕點看看！',{q:true}),100)}
 function spriteDialog(){
@@ -944,7 +946,7 @@ const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='M
 let persistAsked=false;function requestPersist(){if(persistAsked)return;persistAsked=true;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{})}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){tick();save()}else{tick();renderUI();startLoop()}});
 window.addEventListener('pagehide',()=>{tick();save()});
-window.addEventListener('storage',e=>{if(e.key===SAVE_KEY&&e.newValue){const o=parse(e.newValue);if(o){s=sanitize(o);renderUI()}}});
+window.addEventListener('storage',e=>{if(e.key===SAVE_KEY&&e.newValue){const o=parse(e.newValue);if(o&&Number(o.rev)>s.rev){s=sanitize(o);renderUI()}}});
 
 /* ---------------- 輸入 ---------------- */
 cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
@@ -979,7 +981,7 @@ function init(){
   navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{});
 }
 window.PF={get state(){return s},creditSteps,mateCode,decodeMate,breedGenome,encodeGenome,decodeGenome,startBattle,onMove,get B(){return B},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
- debug:{skip(min){s.lastTick-=min*60000;tick();renderUI();save()},xp(n){gainXP(n);renderUI();save()},set(o){Object.assign(s,o);renderUI();save()}}};
+ debug:{info(){return{busy:busyUntil-Date.now(),evo:!!evo,modal:!$('modal').classList.contains('hidden'),taps:s.eggTaps,h:s.hatched,battle:!!B}},skip(min){s.lastTick-=min*60000;tick();renderUI();save()},xp(n){gainXP(n);renderUI();save()},set(o){Object.assign(s,o);renderUI();save()}}};
 try{init()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<div style="padding:12px;background:#a8394c;color:#fff">啟動錯誤：${esc(e.message)}</div>`);throw e}
 </script>
 </body>

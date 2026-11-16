@@ -5,6 +5,7 @@ errors=[]; results=[]
 def ok(name,cond,detail=''):
     results.append((name,bool(cond),detail)); print(('PASS ' if cond else 'FAIL ')+name+(' — '+str(detail) if detail else ''))
 async def tap_logical(page,x,y):
+    await page.locator('#scene').scroll_into_view_if_needed()
     b=await page.locator('#scene').bounding_box()
     await page.mouse.click(b['x']+x/128*b['width'], b['y']+y/112*b['height'])
 async def st(page): return await page.evaluate('JSON.parse(JSON.stringify(PF.state))')
@@ -99,7 +100,7 @@ async def main():
         ok('dex kept after new egg',len(R['dex'])==1)
         for i in range(5):
             await tap_logical(page,64,80); await page.wait_for_timeout(500)
-        await page.wait_for_timeout(1800); await page.click('#mbtns .pri'); await page.wait_for_timeout(300)
+        await page.wait_for_timeout(1800); await page.click('#mbtns .pri',timeout=5000); await page.wait_for_timeout(300)
         R2=await st(page); ok('second species hatched, dex=2',R2['hatched'] and len(R2['dex'])==2)
         await page.screenshot(path=f'{OUT}/16_second_species.png')
         await page.click('#bCodex'); await page.wait_for_timeout(300); await page.screenshot(path=f'{OUT}/17_dex.png'); await page.click('#mbtns .btn')
