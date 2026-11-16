@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111a30">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="幻獸日記">
+<meta name="format-detection" content="telephone=no">
+<title>幻獸日記 Pixel Familiar</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+:root{--bg:#0e1528;--panel:#1d2c4a;--line:#0a1020;--hi:#3f5a88;--text:#fff3d5;--muted:#b9c8e6;--gold:#f2c55c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{touch-action:manipulation;-webkit-text-size-adjust:100%;background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;overscroll-behavior:none}
+button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
+#app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;gap:9px;
+ padding:calc(env(safe-area-inset-top) + 10px) calc(env(safe-area-inset-right) + 12px) calc(env(safe-area-inset-bottom) + 14px) calc(env(safe-area-inset-left) + 12px);
+ background:linear-gradient(#1b2a48,#111a30)}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{margin:0;font-size:20px;letter-spacing:1px;white-space:nowrap}
+.ver{font-size:10px;color:var(--muted);letter-spacing:2px}
+.coin{display:flex;align-items:center;gap:6px;background:var(--line);border:2px solid var(--hi);padding:5px 10px;font-weight:800;font-variant-numeric:tabular-nums}
+.tip{background:#2b3f66;border:2px solid var(--line);box-shadow:inset 0 0 0 2px #5a76a8;padding:8px 34px 8px 10px;font-size:12.5px;line-height:1.45;position:relative}
+.tip button{position:absolute;right:4px;top:4px;background:none;border:0;font-size:16px;padding:4px 8px}
+.warn{background:#5a2232;box-shadow:inset 0 0 0 2px #c0465a}
+.stagewrap{position:relative;border:3px solid var(--line);box-shadow:0 0 0 2px var(--hi),0 5px 0 2px #000c}
+#scene{display:block;width:100%;aspect-ratio:128/112;height:auto;image-rendering:pixelated;image-rendering:crisp-edges;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;cursor:pointer;background:#6fb8e8}
+#bubble{position:absolute;top:8px;left:50%;transform:translateX(-50%);max-width:90%;width:max-content;background:#fff9e8;color:#273753;border:3px solid #273753;box-shadow:3px 3px 0 #0006;padding:5px 10px;font-size:14px;font-weight:700;text-align:center;line-height:1.35;transition:opacity .25s;pointer-events:none}
+#bubble.off{opacity:0}
+.nameplate{text-align:center;line-height:1.25}
+#petname{font-size:20px;font-weight:900}
+#stageText{font-size:12px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:var(--panel);border:2px solid var(--line);box-shadow:inset 0 0 0 2px var(--hi);padding:6px 9px 8px}
+.sh{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700;margin-bottom:4px}
+.sh .v{margin-left:auto;font-variant-numeric:tabular-nums}
+.bar{height:12px;background:#0a1020;border:2px solid #0a1020}
+.bar i{display:block;height:100%;transition:width .4s steps(6);box-shadow:inset 0 3px 0 #ffffff55}
+.stat.low{animation:low 1s steps(2) infinite}
+@keyframes low{50%{box-shadow:inset 0 0 0 2px #ff5a6a}}
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.act{appearance:none;-webkit-appearance:none;border:3px solid var(--line);background:#e8c98c;color:#3a2a2a;border-radius:0;
+ box-shadow:inset 0 -5px 0 #b88a52,inset 0 3px 0 #fff3c0;padding:8px 2px 11px;font-size:14px;font-weight:900;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:70px}
+.act:active{transform:translateY(2px);box-shadow:inset 0 -2px 0 #b88a52,inset 0 3px 0 #fff3c0}
+.act:disabled{filter:grayscale(.85) brightness(.7)}
+.act.on{background:#a9c6f0;box-shadow:inset 0 -5px 0 #5f82b8,inset 0 3px 0 #e4efff}
+canvas.picon{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+.panel{background:var(--panel);border:2px solid var(--line);box-shadow:inset 0 0 0 2px var(--hi);padding:9px 11px;font-size:13px}
+.xph{display:flex;justify-content:space-between;font-weight:700}
+.xpbar{height:10px;background:#0a1020;margin-top:6px}
+.xpbar i{display:block;height:100%;background:var(--gold);transition:width .4s;box-shadow:inset 0 3px 0 #fff6}
+#log{margin:7px 0 0;color:#d8e5f8;min-height:1.4em}
+.toolbar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tool{background:#2b4264;border:2px solid var(--line);box-shadow:inset 0 0 0 2px #50698f;padding:9px 2px;font-size:13px;font-weight:700}
+.tool:active{background:#22375a}
+.hidden{display:none!important}
+/* modal */
+#modal{position:fixed;inset:0;background:#050a18cc;z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:480px;max-height:88vh;overflow:auto;-webkit-overflow-scrolling:touch;background:#1d2c4a;border-top:4px solid #5a76a8;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);font-size:14px;line-height:1.6}
+.sheet h2{margin:0 0 10px;font-size:18px}
+.sheet p{margin:6px 0}
+.sheet ul{margin:6px 0;padding-left:20px}
+.sheet .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{flex:1 1 auto;min-width:96px;background:#3a5580;border:2px solid var(--line);box-shadow:inset 0 -3px 0 #233a5e;padding:11px 10px;font-weight:800}
+.btn.pri{background:#e8c98c;color:#3a2a2a;box-shadow:inset 0 -3px 0 #b88a52}
+.btn.danger{background:#a8394c;box-shadow:inset 0 -3px 0 #6e1f30}
+.sheet input[type=text],.sheet textarea{width:100%;font:inherit;font-size:16px;padding:10px;border:2px solid var(--line);background:#fff9e8;color:#273753;border-radius:0}
+.sheet textarea{height:84px;font-size:13px;font-family:ui-monospace,Menlo,monospace}
+.err{color:#ff9aa8;min-height:1.2em;font-size:13px}
+.codex{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.card{background:#14203a;border:2px solid var(--line);box-shadow:inset 0 0 0 2px #3f5a88;padding:8px;text-align:center;font-size:12.5px;line-height:1.4}
+.card canvas{width:96px;height:96px;image-rendering:pixelated;display:block;margin:0 auto 4px}
+.card b{font-size:14px}
+.lean{display:grid;grid-template-columns:auto 1fr auto;gap:4px 8px;align-items:center;font-size:12.5px;margin-top:8px}
+.lean .b{height:9px;background:#0a1020}.lean .b i{display:block;height:100%}
+.sprites{overflow-x:auto;background:#7fb07a;padding:6px;border:2px solid var(--line)}
+.sprites canvas{display:block;height:96px;image-rendering:pixelated;margin-bottom:4px}
+.small{font-size:12px;color:var(--muted)}
+#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 12px);transform:translateX(-50%);background:#fff3d5;color:#273753;border:3px solid #273753;box-shadow:3px 3px 0 #0008;padding:8px 14px;font-size:14px;font-weight:700;z-index:30;max-width:90%;text-align:center;transition:opacity .3s}
+#toast.off{opacity:0;pointer-events:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+ <header>
+  <div><h1>幻獸日記</h1><div class="ver">PIXEL FAMILIAR · V<span id="ver"></span></div></div>
+  <div class="coin" aria-label="金幣"><canvas class="picon" data-icon="coin" data-s="2"></canvas><span id="coins">0</span></div>
+ </header>
+ <div id="saveWarn" class="tip warn hidden">⚠️ 目前無法寫入存檔（可能開啟了「私密瀏覽」）。請改用一般分頁，或到「存檔」匯出存檔碼保存。</div>
+ <div id="homeTip" class="tip hidden">📲 想玩得像 App？點 Safari 下方的「分享」⬆️ →「加入主畫面」。<br><span class="small">提醒：主畫面版與 Safari 版的存檔彼此獨立，可用「存檔」功能搬移。</span><button id="homeTipX" aria-label="關閉">✕</button></div>
+ <div class="stagewrap">
+  <canvas id="scene" width="128" height="112" role="button" tabindex="0" aria-label="遊戲畫面，點擊幻獸互動"></canvas>
+  <div id="bubble" class="off"></div>
+ </div>
+ <div class="nameplate"><div id="petname"></div><div id="stageText"></div></div>
+ <div class="stats" id="stats"></div>
+ <div class="actions">
+  <button class="act" data-act="feed"><canvas class="picon" data-icon="apple"></canvas>餵食</button>
+  <button class="act" data-act="play"><canvas class="picon" data-icon="ball"></canvas>玩耍</button>
+  <button class="act" data-act="wash"><canvas class="picon" data-icon="bubble"></canvas>洗澡</button>
+  <button class="act" data-act="sleep" id="sleepBtn"><canvas class="picon" data-icon="moon" id="sleepIcon"></canvas><span id="sleepLabel">睡覺</span></button>
+ </div>
+ <section class="panel">
+  <div class="xph"><span>⭐ 成長經驗</span><span id="xptext"></span></div>
+  <div class="xpbar"><i id="xpbar"></i></div>
+  <p id="log">照顧幻獸，陪伴牠成長！</p>
+ </section>
+ <nav class="toolbar">
+  <button class="tool" id="bRename">✏️ 改名</button>
+  <button class="tool" id="bCodex">📖 圖鑑</button>
+  <button class="tool" id="bSave">💾 存檔</button>
+  <button class="tool" id="bMenu">⚙️ 選單</button>
+ </nav>
+</div>
+<div id="modal" class="hidden" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
+<div id="toast" class="off"></div>
+<script>
+'use strict';
+/* =========================================================
+   幻獸日記 Pixel Familiar — V1.3
+   單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
+   ========================================================= */
+const VERSION='1.3.0';
+const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
+const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=100)=>Math.max(a,Math.min(b,x));
+const num=(v,d,a,b)=>{v=Number(v);return Number.isFinite(v)?clamp(v,a,b):d};
+const chars=t=>Array.from(String(t));
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------------- 安全儲存（失敗時退回記憶體，不讓遊戲當掉） ---------------- */
+const store={ok:true,mem:{},
+ get(k){try{return localStorage.getItem(k)}catch(e){this.ok=false;return k in this.mem?this.mem[k]:null}},
+ set(k,v){try{localStorage.setItem(k,v);return true}catch(e){this.ok=false;this.mem[k]=v;return false}},
+ del(k){try{localStorage.removeItem(k)}catch(e){}delete this.mem[k]}};
+
+/* ---------------- 幻獸型態資料（進化路線） ---------------- */
+const FORMS={
+ egg:{name:'神秘的蛋',stage:0},
+ baby:{name:'露露獸',en:'Lulu',stage:1,rx:11,ry:10,feat:['nubs'],tail:'small',
+  pal:{o:'#1b2a44',b:'#5cc2b0',d:'#3a8c8a',l:'#a4ecd4',belly:'#e2f8e4',bellyD:'#b4e3c9',feet:'#8fd8c0',horn:'#f2c55c',hornD:'#c48a3a',acc:'#f2c55c',accD:'#c48a3a'},
+  hint:'孵化後的幼年型態'},
+ ember:{name:'焰角獸',en:'Ember Horn',stage:2,rx:13,ry:12,feat:['horns','crest'],tail:'flame',
+  pal:{o:'#2a1820',b:'#e8673e',d:'#a83a2e',l:'#ffab72',belly:'#ffe2aa',bellyD:'#f2b878',feet:'#ffab72',horn:'#fff0c0',hornD:'#d9a441',acc:'#ffd34a',accD:'#ff7a2a'},
+  hint:'常常陪牠「玩耍」'},
+ mist:{name:'霧鰭獸',en:'Mist Fin',stage:2,rx:13,ry:12,feat:['fins','antenna'],tail:'fin',
+  pal:{o:'#14223e',b:'#4f9ee0',d:'#2f62a8',l:'#94d4f6',belly:'#e6f7ff',bellyD:'#b8def2',feet:'#94d4f6',horn:'#bff4ff',hornD:'#5fc4e8',acc:'#aef0ff',accD:'#4fb4dc'},
+  hint:'常常幫牠「洗澡」'},
+ sylvan:{name:'森羽獸',en:'Sylvan Wing',stage:2,rx:13,ry:12,feat:['wings','leaves','flower'],tail:'leaf',
+  pal:{o:'#1a2a1e',b:'#62b85c',d:'#3a7f45',l:'#a6e283',belly:'#f6f0c4',bellyD:'#ddd39a',feet:'#a6e283',horn:'#f7a8c0',hornD:'#d9709a',acc:'#c8f08a',accD:'#6fb84a'},
+  hint:'常常「餵食」和「摸摸」'}
+};
+const ROUTES=['ember','mist','sylvan'];
+
+/* ---------------- 存檔資料 ---------------- */
+function fresh(){const t=Date.now();return{v:3,hatched:false,eggTaps:0,name:'小露',level:1,xp:0,coins:20,
+ hunger:80,mood:80,clean:80,energy:80,route:null,care:{feed:0,play:0,wash:0,pet:0,sleep:0},
+ sleeping:false,sleepGain:0,created:t,hatchedAt:0,lastTick:t,updated:t,lastExport:0,sound:true,seen:[]}}
+function sanitize(o){
+ const r=fresh();if(!o||typeof o!=='object')return r;const now=Date.now();
+ r.hatched=!!o.hatched;r.eggTaps=Math.floor(num(o.eggTaps,0,0,4));
+ if(typeof o.name==='string'){const n=chars(o.name.trim()).slice(0,10).join('');if(n)r.name=n}
+ r.level=Math.floor(num(o.level,1,1,99));r.xp=Math.floor(num(o.xp,0,0,1e6));r.coins=Math.floor(num(o.coins,20,0,9999999));
+ for(const k of['hunger','mood','clean','energy'])r[k]=num(o[k],r[k],0,100);
+ r.route=ROUTES.includes(o.route)?o.route:null;
+ const c=o.care&&typeof o.care==='object'?o.care:{};for(const k in r.care)r.care[k]=Math.floor(num(c[k],0,0,1e7));
+ r.sleeping=r.hatched&&o.sleeping===true;r.sleepGain=num(o.sleepGain,0,0,100);
+ r.created=num(o.created,now,0,now);r.hatchedAt=num(o.hatchedAt,r.hatched?r.created:0,0,now);
+ r.lastTick=num(o.lastTick!==undefined?o.lastTick:o.updated,now,0,now);   // V1.x 用 updated 計算衰減
+ r.updated=num(o.updated,now,0,now);r.lastExport=num(o.lastExport,0,0,now);r.sound=o.sound!==false;
+ r.seen=Array.isArray(o.seen)?o.seen.filter(x=>typeof x==='string'&&FORMS[x]):[];
+ if(!r.hatched){r.level=1;r.xp=0;r.route=null;r.sleeping=false}
+ else{if(!r.seen.includes('baby'))r.seen.push('baby');if(r.route&&!r.seen.includes(r.route))r.seen.push(r.route)}
+ return r}
+function parse(raw){if(!raw)return null;try{const o=JSON.parse(raw);return o&&typeof o==='object'?o:null}catch(e){return null}}
+function load(){
+ const main=store.get(SAVE_KEY);let o=parse(main);if(o)return{s:sanitize(o),src:'main'};
+ o=parse(store.get(BACKUP_KEY));if(o)return{s:sanitize(o),src:main?'backup-corrupt':'backup'};
+ o=parse(store.get(LEGACY_KEY));if(o)return{s:sanitize(o),src:'legacy'};
+ return{s:fresh(),src:'new'}}
+let s,lastBackup=0,lastSave=0;
+function save(){
+ s.updated=Date.now();lastSave=s.updated;
+ if(s.updated-lastBackup>60000){const prev=store.get(SAVE_KEY);if(prev&&parse(prev))store.set(BACKUP_KEY,prev);lastBackup=s.updated}
+ const ok=store.set(SAVE_KEY,JSON.stringify(s));$('saveWarn').classList.toggle('hidden',ok)}
+
+/* ---------------- 時間與數值衰減 ---------------- */
+const RATE={hunger:.12,clean:.06,energy:.04,mood:.07,sleepEnergy:15,sleepHunger:.05,sleepClean:.02}; // 每分鐘
+function applyDecay(m){
+ if(!s.hatched||!(m>0))return;
+ if(s.sleeping){
+  const t=Math.min(m,Math.max(0,(100-s.energy)/RATE.sleepEnergy));
+  s.energy=clamp(s.energy+t*RATE.sleepEnergy);s.sleepGain=clamp(s.sleepGain+t*RATE.sleepEnergy);
+  s.hunger=clamp(s.hunger-t*RATE.sleepHunger);s.clean=clamp(s.clean-t*RATE.sleepClean);m-=t;
+  if(s.energy>=99.9)wake(true);if(m<=0)return}
+ s.hunger=clamp(s.hunger-m*RATE.hunger);s.clean=clamp(s.clean-m*RATE.clean);s.energy=clamp(s.energy-m*RATE.energy);
+ let md=RATE.mood;if(s.hunger<20)md+=.08;if(s.clean<20)md+=.05;if(s.energy<15)md+=.04;s.mood=clamp(s.mood-m*md)}
+function tick(){const now=Date.now();const m=(now-s.lastTick)/60000;s.lastTick=now;if(m>0)applyDecay(Math.min(m,1440))}
+
+/* =========================================================
+   像素繪圖核心：grid → 自動描邊 → ImageData
+   ========================================================= */
+function grid(w,h){return{w,h,a:new Array(w*h).fill(0)}}
+function px(g,x,y,c){x=Math.round(x);y=Math.round(y);if(x>=0&&y>=0&&x<g.w&&y<g.h)g.a[y*g.w+x]=c}
+function get(g,x,y){return x>=0&&y>=0&&x<g.w&&y<g.h?g.a[y*g.w+x]:0}
+function ellipse(g,cx,cy,rx,ry,fn){
+ for(let y=Math.floor(cy-ry);y<=Math.ceil(cy+ry);y++)for(let x=Math.floor(cx-rx);x<=Math.ceil(cx+rx);x++){
+  const nx=(x+.5-cx)/rx,ny=(y+.5-cy)/ry;if(nx*nx+ny*ny<=1){const c=fn(x,y,nx,ny);if(c)px(g,x,y,c)}}}
+function outline(g,col){const b=g.a.slice();for(let y=0;y<g.h;y++)for(let x=0;x<g.w;x++){if(b[y*g.w+x])continue;
+ if((x>0&&b[y*g.w+x-1])||(x<g.w-1&&b[y*g.w+x+1])||(y>0&&b[(y-1)*g.w+x])||(y<g.h-1&&b[(y+1)*g.w+x]))g.a[y*g.w+x]=col}}
+const rgbCache={};
+function rgb(h){if(rgbCache[h])return rgbCache[h];const n=parseInt(h.slice(1),16);return rgbCache[h]=[n>>16&255,n>>8&255,n&255]}
+function blit(g,img,ox,oy=0){for(let y=0;y<g.h;y++)for(let x=0;x<g.w;x++){const c=g.a[y*g.w+x];if(!c)continue;
+ const i=((oy+y)*img.width+ox+x)*4,[r,gg,b]=rgb(c);img.data[i]=r;img.data[i+1]=gg;img.data[i+2]=b;img.data[i+3]=255}}
+function gridCanvas(g){const cv=document.createElement('canvas');cv.width=g.w;cv.height=g.h;const ctx=cv.getContext('2d');const img=ctx.createImageData(g.w,g.h);blit(g,img,0);ctx.putImageData(img,0,0);return cv}
+
+/* ---------------- 角色逐格畫格定義 ---------------- */
+const FRAMES={
+ idle0:{},idle1:{sx:1.04,sy:.94},blink:{eye:'blink'},
+ eat0:{mouth:'open'},eat1:{mouth:'chew',eye:'happy',sx:1.05,sy:.95},eat2:{mouth:'o',eye:'happy'},
+ jump0:{sx:1.14,sy:.84,eye:'happy'},jump1:{sx:.92,sy:1.1,dy:-6,eye:'happy',mouth:'open',feet:'tuck',wing:1},
+ jump2:{sx:.96,sy:1.04,dy:-11,eye:'happy',mouth:'open',feet:'tuck',tail:1,wing:1},
+ wash0:{dx:-1,eye:'squint',mouth:'o',tail:1},wash1:{dx:1,eye:'squint',mouth:'o'},
+ sleep0:{eye:'sleep',mouth:'flat',sx:1.05,sy:.93},sleep1:{eye:'sleep',mouth:'flat',sx:1.09,sy:.89},
+ happy0:{eye:'happy',mouth:'open',blush:1,tail:1,wing:1},happy1:{eye:'happy',blush:1,sx:1.04,sy:.95},
+ sad0:{eye:'sad',mouth:'flat'},sad1:{eye:'sad',mouth:'flat',sx:1.04,sy:.95},
+ tired0:{eye:'tired',mouth:'flat',sx:1.04,sy:.95},tired1:{eye:'tired',mouth:'o',sx:1.07,sy:.92},
+ shy0:{eye:'happy',mouth:'flat',blush:2,dx:-1}
+};
+const FRAME_NAMES=Object.keys(FRAMES);
+const ANIMS={
+ idle:{f:['idle0','idle0','idle1','idle1'],fps:2.5},
+ sleep:{f:['sleep0','sleep0','sleep1','sleep1'],fps:1.5},
+ sad:{f:['sad0','sad0','sad1','sad1'],fps:2},
+ tired:{f:['tired0','tired0','tired1','tired0'],fps:1.5},
+ eat:{f:['eat0','eat1','eat2','eat1','eat2','eat1','eat2','happy0','happy1'],fps:7},
+ play:{f:['jump0','jump1','jump2','jump2','jump1','jump0','idle0','jump0','jump1','jump2','jump2','jump1','jump0','happy0','happy1'],fps:11},
+ wash:{f:['wash0','wash1','wash0','wash1','wash0','wash1','wash0','wash1','happy0','happy1'],fps:8},
+ happy:{f:['happy0','happy1','happy0','happy1','happy0'],fps:6},
+ shy:{f:['shy0','happy1','shy0','happy1'],fps:4},
+ no:{f:['sad0','idle0','sad0','idle0'],fps:5}
+};
+
+/* ---------------- 程式化像素角色繪製 ---------------- */
+function drawCreature(F,fr){
+ const g=grid(CELL,CELL),P=F.pal,has=k=>F.feat.includes(k);
+ const sx=fr.sx||1,sy=fr.sy||1,dx=fr.dx||0,dy=fr.dy||0,eye=fr.eye||'open',mouth=fr.mouth||'smile';
+ const rx=F.rx*sx,ry=F.ry*sy,ground=44+dy,cxi=24+dx,cx=cxi,cy=ground-3-ry+1,top=Math.round(cy-ry);
+ const pm=(x,y,c)=>{px(g,x,y,c);px(g,2*cxi-1-x,y,c)};          // 左右鏡射
+ const rect=(x,y,w,c,m)=>{for(let i=0;i<w;i++)(m?pm:(a,b,cc)=>px(g,a,b,cc))(x+i,y,c)};
+ // --- 身體後方：翅膀、尾巴 ---
+ if(has('wings')){const up=fr.wing?-3:0;
+  for(let k=0;k<7;k++){const y=Math.round(cy-1-k+up*(k/6));const x0=Math.round(cx-rx-1-k*.9),x1=Math.round(cx-rx+4);
+   for(let x=x0;x<=x1;x++)pm(x,y,x===x0?P.accD:(k%2?P.acc:P.l))}}
+ const tb=[[0,0],[2,0],[4,-1],[5,-3],[5,-5],[4,-6]],wag=fr.tail?1:0;
+ const tx0=Math.round(cx+rx-5),ty0=Math.round(cy+ry*.4);let tip=[0,0];
+ tb.forEach(([ox,oy],i)=>{const sh=i>=3?wag:0,X=tx0+ox+sh,Y=ty0+oy-sh;tip=[X,Y];
+  for(let a=0;a<3;a++)for(let b=0;b<3;b++)px(g,X+a,Y+b,b===2?P.d:(i===tb.length-1&&F.tail==='small'?P.acc:P.b))});
+ const [tx,ty]=tip;
+ if(F.tail==='flame'){rect(tx+1,ty-4,1,P.acc);rect(tx,ty-3,3,P.acc);rect(tx-1,ty-2,4,P.accD);rect(tx-1,ty-1,5,P.accD);px(g,tx+1,ty-2,'#fff6c8');px(g,tx+1,ty-1,P.acc);px(g,tx+2,ty-1,P.acc)}
+ if(F.tail==='fin'){for(let r=0;r<5;r++)for(let x=0;x<=r+1;x++)px(g,tx+2+x,ty-3+r,x%2?P.accD:P.acc)}
+ if(F.tail==='leaf'){rect(tx+2,ty-4,2,P.acc);rect(tx+1,ty-3,4,P.acc);rect(tx+1,ty-2,4,P.acc);rect(tx+2,ty-1,2,P.acc);px(g,tx+3,ty-3,P.accD);px(g,tx+2,ty-2,P.accD)}
+ // --- 腳 ---
+ const fy=fr.feet==='tuck'?ground-3:ground-1,fxo=Math.round(rx*.5);
+ ellipse(g,cx-fxo,fy,3.2,2.2,(x,y,nx,ny)=>ny>.3?P.d:P.feet);ellipse(g,cx+fxo,fy,3.2,2.2,(x,y,nx,ny)=>ny>.3?P.d:P.feet);
+ // --- 身體（光源左上） ---
+ ellipse(g,cx,cy,rx,ry,(x,y,nx,ny)=>nx*.55+ny*.8>.62?P.d:((nx+.42)**2+(ny+.55)**2<.08?P.l:P.b));
+ ellipse(g,cx,cy+ry*.5,rx*.56,ry*.42,(x,y,nx,ny)=>ny>.45||nx>.62?P.bellyD:P.belly);
+ // --- 頭部特徵 ---
+ if(has('nubs')){const bx=cxi-7;[[0,-1,2],[0,-2,2],[0,-3,1]].forEach(([ox,oy,w])=>{for(let i=0;i<w;i++)pm(bx+ox+i,top+1+oy,i===w-1&&w>1?P.hornD:P.horn)})}
+ if(has('horns')){const bx=cxi-9;[[0,0,3],[0,-1,3],[-1,-2,3],[-1,-3,3],[-2,-4,2],[-2,-5,2],[-3,-6,2],[-3,-7,1]].forEach(([ox,oy,w])=>{for(let i=0;i<w;i++)pm(bx+ox+i,top+1+oy,i===0?P.hornD:P.horn)})}
+ if(has('crest')){rect(cxi-2,top,4,P.accD);rect(cxi-2,top-1,4,P.acc);rect(cxi-1,top-2,2,P.acc);px(g,cxi-1,top-3,P.acc);px(g,cxi,top-1,'#fff6c8')}
+ if(has('fins')){const lx=Math.round(cx-rx),y0=Math.round(cy-ry*.35);
+  [[-6,-3,2],[-6,-2,4],[-5,-1,5],[-4,0,5],[-2,1,3]].forEach(([ox,oy,w])=>{for(let i=0;i<w;i++)pm(lx+ox+i,y0+oy,(lx+ox+i)%2?P.accD:P.acc)})}
+ if(has('antenna')){for(let k=1;k<=4;k++)px(g,cxi,top-k+1,P.d);rect(cxi-1,top-5,3,P.acc);rect(cxi-1,top-4,3,P.acc);px(g,cxi-1,top-5,'#ffffff')}
+ if(has('leaves')){const bx=cxi-8;[[0,0,3],[-1,-1,4],[-2,-2,4],[-3,-3,4],[-3,-4,3],[-4,-5,2],[-4,-6,1]].forEach(([ox,oy,w],i)=>{for(let k=0;k<w;k++)pm(bx+ox+k,top+1+oy,k===1&&i>0&&i<6?P.accD:P.acc)})}
+ if(has('flower')){rect(cxi-2,top,4,P.horn);rect(cxi-1,top-1,2,P.horn);rect(cxi-1,top+1,2,P.horn);px(g,cxi-1,top,'#ffe066');px(g,cxi,top,'#ffe066')}
+ // --- 臉 ---
+ const ex=Math.round(rx*.4),ey=Math.round(cy-ry*.12),L=cxi-ex-3,E=P.o,Wt='#ffffff';
+ const eyeAt=(x,side)=>{
+  if(eye==='open'){for(let yy=-2;yy<=1;yy++)rect(x,ey+yy,3,E);px(g,x,ey-2,Wt);px(g,x,ey-1,Wt)}
+  else if(eye==='blink'){rect(x,ey,3,E)}
+  else if(eye==='happy'){px(g,x,ey,E);px(g,x+1,ey-1,E);px(g,x+2,ey,E)}
+  else if(eye==='sleep'){px(g,x,ey,E);px(g,x+1,ey+1,E);px(g,x+2,ey,E)}
+  else if(eye==='squint'){if(side<0){px(g,x,ey-1,E);px(g,x+1,ey,E);px(g,x,ey+1,E);px(g,x+2,ey,E)}else{px(g,x+2,ey-1,E);px(g,x+1,ey,E);px(g,x+2,ey+1,E);px(g,x,ey,E)}}
+  else if(eye==='sad'){for(let yy=-1;yy<=1;yy++)rect(x,ey+yy,3,E);px(g,x,ey-1,Wt);
+   if(side<0){px(g,x,ey-3,E);px(g,x+1,ey-3,E);px(g,x+2,ey-4,E)}else{px(g,x,ey-4,E);px(g,x+1,ey-3,E);px(g,x+2,ey-3,E)}}
+  else if(eye==='tired'){rect(x,ey-1,3,P.d);rect(x,ey,3,E);rect(x,ey+1,3,E);px(g,x,ey,Wt)}};
+ eyeAt(L,-1);eyeAt(2*cxi-1-L-2,1);
+ if(fr.blush||eye==='open'||eye==='happy'){const ch=fr.blush===2?'#ff6a8a':'#f59ab0';rect(L-1,ey+2,2,ch,1);if(fr.blush)rect(L-1,ey+3,2,ch,1)}
+ const my=ey+3,M='#6a2433';
+ if(mouth==='smile'){px(g,cxi-3,my,M);px(g,cxi-2,my+1,M);px(g,cxi-1,my,M);px(g,cxi,my,M);px(g,cxi+1,my+1,M);px(g,cxi+2,my,M)}
+ else if(mouth==='open'){rect(cxi-2,my,4,M);rect(cxi-2,my+1,4,M);rect(cxi-1,my+2,2,'#f07a8a')}
+ else if(mouth==='o'){rect(cxi-1,my,2,M);rect(cxi-1,my+1,2,M)}
+ else if(mouth==='chew'){rect(cxi-2,my+1,4,M)}
+ else if(mouth==='flat'){rect(cxi-1,my+1,2,M)}
+ outline(g,P.o);return g}
+
+/* ---------------- 蛋（含裂痕與左右搖晃畫格） ---------------- */
+const EGG_FRAMES=[];for(let c=0;c<4;c++)for(const l of['L','0','R'])EGG_FRAMES.push('egg'+c+l);
+function drawEgg(name){
+ const c=+name[3],lean=name[4],k=lean==='L'?-.11:lean==='R'?.11:0,g=grid(CELL,CELL),cx=24,cy=31,rx=10,ry=13;
+ const spots=new Set(['19,23','20,23','19,24','20,24','28,29','29,29','28,30','29,30','30,30','21,35','22,35','26,20','27,20','16,30']);
+ for(let y=cy-ry-1;y<=cy+ry+1;y++){const off=(44-y)*k;for(let x=8;x<40;x++){
+  const xx=x-off,ny=(y+.5-cy)/ry,rxe=rx*(1-.16*Math.max(0,-ny)),nx=(xx+.5-cx)/rxe;if(nx*nx+ny*ny>1)continue;
+  let col=nx*.5+ny*.7>.55?'#e5c08c':((nx+.45)**2+(ny+.5)**2<.06?'#ffffff':'#fff1d0');
+  if(spots.has(Math.round(xx)+','+y))col=nx*.5+ny*.7>.5?'#3a8c8a':'#5cc2b0';px(g,x,y,col)}}
+ const crack=(pts)=>pts.forEach(([x,y])=>{const off=(44-y)*k;const X=Math.round(x+off);if(get(g,X,y))px(g,X,y,'#5a3a2a')});
+ if(c>=1)crack([[17,28],[18,27],[19,28],[20,29],[21,28],[22,27],[23,28],[24,29]]);
+ if(c>=2)crack([[25,28],[26,27],[27,28],[28,29],[29,28],[30,27],[31,28],[24,27],[24,26],[25,25]]);
+ if(c>=3){crack([[20,26],[21,25],[22,24],[27,26],[28,25]]);for(let y=26;y<=28;y++)for(let x=22;x<=27;x++){const off=(44-y)*k;if(get(g,Math.round(x+off),y))px(g,x+off,y,'#20304e')}
+  const off=(44-27)*k;px(g,23+off,27,'#5cc2b0');px(g,26+off,27,'#5cc2b0')}
+ outline(g,'#3a2a2a');return g}
+
+/* ---------------- 建立 sprite sheet（每個型態一張橫向長條圖） ---------------- */
+const SHEETS={};
+function buildSheet(key){
+ const names=key==='egg'?EGG_FRAMES:FRAME_NAMES,cv=document.createElement('canvas');cv.width=CELL*names.length;cv.height=CELL;
+ const ctx=cv.getContext('2d'),img=ctx.createImageData(cv.width,CELL);
+ names.forEach((n,i)=>blit(key==='egg'?drawEgg(n):drawCreature(FORMS[key],FRAMES[n]),img,i*CELL));ctx.putImageData(img,0,0);
+ const sil=document.createElement('canvas');sil.width=cv.width;sil.height=CELL;const sc=sil.getContext('2d');
+ sc.drawImage(cv,0,0);sc.globalCompositeOperation='source-in';sc.fillStyle='#ffffff';sc.fillRect(0,0,sil.width,CELL);
+ const dark=document.createElement('canvas');dark.width=cv.width;dark.height=CELL;const dc=dark.getContext('2d');
+ dc.drawImage(cv,0,0);dc.globalCompositeOperation='source-in';dc.fillStyle='#0b1324';dc.fillRect(0,0,dark.width,CELL);
+ SHEETS[key]={cv,sil,dark,names,idx:Object.fromEntries(names.map((n,i)=>[n,i]))}}
+
+/* ---------------- 小圖示（像素字串） ---------------- */
+const ICONS={
+ apple:{o:'#3a1a1a',p:{r:'#e8433f',R:'#ff9a8a',d:'#a8282e',G:'#5fbf4a',s:'#7a4a2a'},m:['....s....','....sGG..','.rrrsrrr.','rRRrrrrrr','rRrrrrrrr','rrrrrrrrd','rrrrrrrrd','.rrrrrrd.','..rrdrd..']},
+ heart:{o:'#3a1a2a',p:{r:'#f2668a',R:'#ffc0d0',d:'#c23a62'},m:['.rr...rr.','rRrr.rrrr','rRrrrrrrr','rrrrrrrrr','.rrrrrrd.','..rrrrd..','...rrd...','....d....']},
+ star:{o:'#4a3010',p:{y:'#ffd34a',Y:'#fff3a6',d:'#e0a020'},m:['....y....','...yYy...','...yYy...','yyyyYyyyy','.yyyyyyy.','..yyyyy..','..yyyyy..','.yyd.dyy.','.yd...dy.']},
+ bubble:{o:'#2f6f98',p:{b:'#8fd8f5',w:'#ffffff',c:'#d9f4ff'},m:['..bbbb..','.bccccb.','bcwwcccb','bcwccccb','bccccccb','bccccccb','.bccccb.','..bbbb..']},
+ z:{o:'#2a3a6a',p:{z:'#ffffff'},m:['zzzzzz','....z.','...z..','..z...','.z....','zzzzzz']},
+ ball:{o:'#4a2010',p:{b:'#ff8a3a',w:'#fff2c0',d:'#c85a20',l:'#ffb070'},m:['..bbbbb..','.bwlbbbb.','bwlbbbbbb','blbbbbbbd','bbbbbbbbd','bbbbbbbbd','bbbbbbbdd','.bbbbbdd.','..ddddd..']},
+ moon:{o:'#3a3010',p:{y:'#ffe58a',d:'#e0b84a'},m:['...yyyy..','..yyy....','.yyy.....','.yyy.....','.yyy.....','.yyd.....','.yydd....','..yyddy..','...yyyy..']},
+ sun:{o:'#5a3010',p:{y:'#ffd34a',o:'#ff9a3a'},m:['....o....','.o..y..o.','...yyy...','..yyyyy..','oyyyyyyyo','..yyyyy..','...yyy...','.o..y..o.','....o....']},
+ coin:{o:'#4a3010',p:{y:'#ffd34a',Y:'#fff3a6',d:'#d99a20'},m:['..yyyy..','.yYYYYy.','yYyddyyy','yYydyyyd','yYydyyyd','yYyddyyd','.yyyyyd.','..dddd..']},
+ drop:{o:'#163a5a',p:{b:'#5fc4f0',w:'#ffffff',d:'#2f8ac0'},m:['...b...','...b...','..bbb..','.bwbbb.','.bwbbb.','bbbbbbd','bbbbbbd','.bbbbd.','..ddd..']},
+ bolt:{o:'#4a3010',p:{y:'#ffd34a',d:'#e0a020'},m:['....yy','...yy.','..yy..','.yyyyy','...yy.','..yd..','.yd...','yd....']},
+ spark:{o:null,p:{w:'#ffffff',y:'#fff3a6'},m:['..w..','..w..','wwyww','..w..','..w..']},
+ note:{o:'#2a1a3a',p:{n:'#ffffff'},m:['..nnn','..n.n','..n.n','nnn..','nnn..']}
+};
+const ICV={};
+function buildIcons(){for(const k in ICONS){const I=ICONS[k],h=I.m.length,w=I.m[0].length,g=grid(w+2,h+2);
+ I.m.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!=='.')px(g,x+1,y+1,I.p[ch])}));if(I.o)outline(g,I.o);ICV[k]=gridCanvas(g)}}
+function paintIcon(cv,name){const src=ICV[name];if(!src)return;const sc=+(cv.dataset.s||3);cv.width=src.width;cv.height=src.height;
+ cv.style.width=src.width*sc+'px';cv.style.height=src.height*sc+'px';const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);c.drawImage(src,0,0)}
+
+/* =========================================================
+   場景背景（依現實時間切換：白天／黃昏／夜晚）
+   ========================================================= */
+function phase(){const h=new Date().getHours();return h>=6&&h<17?'day':(h>=17&&h<19)||(h>=5&&h<6)?'dusk':'night'}
+let bgCache=null,bgKey='';
+function makeBg(ph){
+ const cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+ const sky={day:['#5aa6e0','#76bdea','#94d0f0','#b8e4f4'],dusk:['#3b3f7a','#7a4f8f','#d9767a','#f4b07a'],night:['#0c1430','#132042','#1a2b55','#233a68']}[ph];
+ const band=16;for(let y=0;y<66;y++){const i=Math.min(3,Math.floor(y/band)),j=Math.min(3,i+1),r=y%band;
+  for(let x=0;x<W;x++){const useNext=r>=band-3&&((x+y)%2===0)&&(r>=band-1||(r===band-2&&x%2===0)||(r===band-3&&x%4===0));c.fillStyle=useNext?sky[j]:sky[i];c.fillRect(x,y,1,1)}}
+ if(ph==='night'){let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;c.fillStyle='#ffffff';for(let i=0;i<34;i++){c.globalAlpha=.5+rnd()*.5;c.fillRect(Math.floor(rnd()*W),Math.floor(rnd()*48),1,1)}c.globalAlpha=1}
+ // 太陽／月亮
+ const orb=grid(17,17),oc=ph==='night'?'#f3f0d0':ph==='dusk'?'#ffb35a':'#fff3a6';
+ ellipse(orb,8.5,8.5,7,7,(x,y,nx,ny)=>ph==='night'&&((x===6&&y===6)||(x===10&&y===9)||(x===7&&y===11))?'#d8d2a8':(nx*.5+ny*.6>.55?(ph==='night'?'#ddd7b0':'#ffd36a'):oc));
+ outline(orb,ph==='night'?'#b8b490':'#f2a84a');c.drawImage(gridCanvas(orb),ph==='dusk'?94:100,ph==='dusk'?34:8);
+ // 遠山、近丘
+ const far=ph==='night'?'#24405a':ph==='dusk'?'#5a4a7a':'#6aa898',near=ph==='night'?'#1f4a3a':ph==='dusk'?'#4f6a5a':'#4f9a62';
+ for(let x=0;x<W;x++){const y1=Math.round(50+4*Math.sin(x/9)+2*Math.sin(x/4.3));c.fillStyle=far;c.fillRect(x,y1,1,66-y1)}
+ for(let x=0;x<W;x++){const y2=Math.round(58+3*Math.sin(x/13+1));c.fillStyle=near;c.fillRect(x,y2,1,66-y2)}
+ // 小屋
+ const night=ph==='night';
+ c.fillStyle='#2a1e1e';c.fillRect(9,46,26,19);c.fillStyle=night?'#9a8a78':'#ecd6aa';c.fillRect(10,47,24,17);c.fillStyle=night?'#7a6a5a':'#d0b07e';c.fillRect(10,60,24,4);
+ for(let i=0;i<9;i++){c.fillStyle='#2a1e1e';c.fillRect(7+i,46-i,30-2*i,1);c.fillStyle=night?'#7a3a3a':'#c0584a';c.fillRect(8+i,46-i,28-2*i,1)}
+ c.fillStyle=night?'#5a2a2a':'#9a3a34';c.fillRect(8,45,28,1);
+ c.fillStyle='#2a1e1e';c.fillRect(14,52,7,12);c.fillStyle='#8a5a3a';c.fillRect(15,53,5,11);c.fillStyle='#ffd34a';c.fillRect(18,58,1,1);
+ c.fillStyle='#2a1e1e';c.fillRect(24,51,8,7);c.fillStyle=night||ph==='dusk'?'#ffe07a':'#a8dcf0';c.fillRect(25,52,6,5);c.fillStyle='#2a1e1e';c.fillRect(27,52,1,5);c.fillRect(25,54,6,1);
+ // 樹
+ c.fillStyle='#3a2416';c.fillRect(108,44,6,22);c.fillStyle='#6a4428';c.fillRect(109,44,4,22);
+ const tree=grid(30,26);ellipse(tree,15,13,14,12,(x,y,nx,ny)=>nx*.5+ny*.7>.45?(night?'#1e5a3a':'#2f8a4a'):((x*7+y*3)%11===0?(night?'#3a7a4a':'#7ccc5a'):(night?'#2a6a42':'#45a85a')));outline(tree,'#163a24');c.drawImage(gridCanvas(tree),96,22);
+ // 草地
+ const g1=night?'#2f6a3a':ph==='dusk'?'#5a8a4a':'#6fbf5a',g2=night?'#285a32':ph==='dusk'?'#4a7a42':'#5fae4f',g3=night?'#3a7a46':ph==='dusk'?'#6a9a5a':'#86d06a';
+ c.fillStyle=g1;c.fillRect(0,66,W,H-66);c.fillStyle=g2;for(let y=84;y<H;y++)for(let x=(y%2);x<W;x+=2)if(y>90||((x+y)%4===0))c.fillRect(x,y,1,1);
+ c.fillStyle=g3;for(let x=0;x<W;x++)if(x%3!==1)c.fillRect(x,66,1,1);
+ let sd=3;const r2=()=>(sd=(sd*48271)%2147483647)/2147483647;
+ for(let i=0;i<40;i++){const x=Math.floor(r2()*W),y=68+Math.floor(r2()*42);c.fillStyle=g3;c.fillRect(x,y,1,2);c.fillRect(x+1,y-1,1,2);c.fillStyle=g2;c.fillRect(x-1,y+1,1,1)}
+ const fl=night?['#c8c8e8','#d8a8c8','#e8e0a0']:['#ffffff','#ff9ac0','#ffe066'];for(let i=0;i<14;i++){const x=Math.floor(r2()*W),y=70+Math.floor(r2()*38);if(x>34&&x<94&&y>90)continue;c.fillStyle=fl[i%3];c.fillRect(x,y,1,1);c.fillRect(x-1,y+1,1,1);c.fillRect(x+1,y+1,1,1);c.fillRect(x,y+2,1,1);c.fillStyle='#e8b830';c.fillRect(x,y+1,1,1)}
+ return cv}
+const CLOUD=(()=>{const g=grid(26,12);ellipse(g,8,7,6,4,()=> '#ffffff');ellipse(g,15,5,7,5,()=> '#ffffff');ellipse(g,20,8,5,3.5,()=> '#ffffff');
+ for(let i=0;i<g.a.length;i++)if(g.a[i]&&Math.floor(i/g.w)>=8)g.a[i]='#dfeef8';outline(g,'#a8c8e0');return g})();
+let cloudCv=null;
+
+/* =========================================================
+   遊戲狀態、動畫播放器、粒子
+   ========================================================= */
+const anim={once:null,t0:0,onEnd:null};let nextBlink=0,busyUntil=0,wobbleUntil=0,flashUntil=0,evo=null;
+const parts=[];
+function playAnim(name,ms){anim.once=name;anim.t0=performance.now();busyUntil=Date.now()+(ms||Math.round(ANIMS[name].f.length/ANIMS[name].fps*1000))}
+function formKey(){return!s.hatched?'egg':(s.route||'baby')}
+function baseAnim(){if(s.sleeping)return'sleep';if(s.mood<25||s.hunger<15||s.clean<10)return'sad';if(s.energy<20)return'tired';return'idle'}
+function currentFrame(now){
+ if(!s.hatched){const lvl=Math.min(3,Math.max(0,s.eggTaps-1));
+  const seq=['L','0','R','0'];let l='0';if(now<wobbleUntil)l=seq[Math.floor(now/70)%4];else if(now%3200<360)l=seq[Math.floor(now/90)%4];return'egg'+lvl+l}
+ if(anim.once){const A=ANIMS[anim.once],i=Math.floor((now-anim.t0)/1000*A.fps);if(i<A.f.length)return A.f[i];anim.once=null}
+ const b=baseAnim(),A=ANIMS[b];
+ if(b==='idle'){if(!nextBlink)nextBlink=now+2500;if(now>nextBlink){if(now<nextBlink+150)return'blink';nextBlink=now+1800+Math.random()*3800}}
+ return A.f[Math.floor(now/1000*A.fps)%A.f.length]}
+function spawn(icon,n,o={}){for(let i=0;i<n;i++)parts.push({ic:icon,x:(o.x??64)+(Math.random()-.5)*(o.spread??26),y:(o.y??74)+(Math.random()-.5)*(o.sy??10),
+ vx:(o.vx??0)+(Math.random()-.5)*(o.jx??14),vy:(o.vy??-22)-Math.random()*(o.jy??10),g:o.g??0,life:o.life??1.2,t:-(i*(o.stagger??.06)),bounce:o.bounce})}
+
+/* ---------------- 畫面繪製 ---------------- */
+const cv=$('scene'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+let lastFrameT=0;
+function draw(now){
+ const ph=phase();if(ph!==bgKey){bgKey=ph;bgCache=makeBg(ph)}
+ ctx.drawImage(bgCache,0,0);
+ const ca=ph==='night'?.35:ph==='dusk'?.75:1;ctx.globalAlpha=ca;const t=now/1000;
+ ctx.drawImage(cloudCv,Math.round(((t*2)%(W+60))-30),10);ctx.drawImage(cloudCv,Math.round(((t*1.3+80)%(W+60))-30),26);ctx.globalAlpha=1;
+ const key=formKey(),S=SHEETS[key];let fname=currentFrame(now),fi=S.idx[fname]??0;
+ const fr=FRAMES[fname]||{};const lift=-(fr.dy||0);
+ ctx.fillStyle='rgba(20,60,30,.28)';const sw=Math.max(10,(key==='egg'?22:26)-lift);ctx.fillRect(PET_X+24-sw/2,PET_Y+44,sw,2);ctx.fillRect(PET_X+24-sw/2+2,PET_Y+43,sw-4,1);
+ if(evo){const e=(now-evo.t0)/1000;
+  if(e<2.6){const per=Math.max(.06,.32-e*.11);const useNew=Math.floor(e/per)%2===1;const SS=SHEETS[useNew?evo.to:evo.from];
+   ctx.fillStyle='rgba(10,14,40,.55)';ctx.fillRect(0,0,W,H);ctx.drawImage(SS.sil,SS.idx.idle0*CELL,0,CELL,CELL,PET_X,PET_Y,CELL,CELL)}
+  else if(e<3.1){ctx.fillStyle='#ffffff';ctx.globalAlpha=1-(e-2.6)/.5;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;ctx.drawImage(SHEETS[evo.to].cv,0,0,CELL,CELL,PET_X,PET_Y,CELL,CELL)}
+  else{const done=evo.done;evo=null;done&&done()}}
+ else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,PET_X,PET_Y,CELL,CELL);
+ if(s.sleeping&&!evo){ctx.fillStyle='rgba(8,12,40,.42)';ctx.fillRect(0,0,W,H);if(Math.random()<.02)spawn('z',1,{x:76,y:62,vx:6,vy:-8,jx:2,jy:2,life:2.2,spread:4})}
+ const dt=Math.min(.1,(now-lastFrameT)/1000||0);lastFrameT=now;
+ for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=dt;if(p.t<0)continue;if(p.t>p.life){parts.splice(i,1);continue}
+  p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;if(p.bounce&&p.y>96){p.y=96;p.vy*=-.55}
+  const ic=ICV[p.ic];ctx.globalAlpha=p.t>p.life-.3?Math.max(0,(p.life-p.t)/.3):1;ctx.drawImage(ic,Math.round(p.x-ic.width/2),Math.round(p.y-ic.height/2));ctx.globalAlpha=1}
+ if(now<flashUntil){ctx.fillStyle='#ffffff';ctx.globalAlpha=Math.min(1,(flashUntil-now)/400);ctx.fillRect(0,0,W,H);ctx.globalAlpha=1}}
+let rafOn=false,lastDraw=0;
+function loop(now){if(document.hidden){rafOn=false;return}if(now-lastDraw>=45){lastDraw=now;draw(now)}requestAnimationFrame(loop)}
+function startLoop(){if(!rafOn){rafOn=true;requestAnimationFrame(loop)}}
+
+/* =========================================================
+   對話泡泡與訊息
+   ========================================================= */
+const msgQ=[];let msgTimer=0,nextChat=Date.now()+9000;
+function say(t,{log=true,q=false}={}){if(log)$('log').textContent=t;if(!q)msgQ.length=0;msgQ.push(t);if(msgQ.length>3)msgQ.shift();if(!q||!msgTimer){clearTimeout(msgTimer);nextMsg()}nextChat=Date.now()+12000}
+function nextMsg(){const t=msgQ.shift();if(t===undefined){msgTimer=0;$('bubble').classList.add('off');return}const b=$('bubble');b.textContent=t;b.classList.remove('off');msgTimer=setTimeout(nextMsg,Math.max(1700,t.length*120))}
+function chatter(){if(!s.hatched){return['裡面好像有東西在動…','輕輕點蛋看看？'][Math.floor(Math.random()*2)]}
+ if(s.sleeping)return'Zzz…';if(s.hunger<25)return'肚子咕嚕咕嚕…';if(s.clean<25)return'身上黏黏的…';if(s.energy<20)return'好睏喔…';if(s.mood<30)return'陪我玩嘛…';
+ const ph=phase();return ph==='night'?['星星好漂亮✨','晚上好安靜～','月亮出來了'][Math.floor(Math.random()*3)]:['今天天氣真好！','嗯哼～♪','摸摸我嘛！','我會長得很大喔！',`${s.name}在這裡！`][Math.floor(Math.random()*5)]}
+let toastT=0;function toast(t,ms=2600){const el=$('toast');el.textContent=t;el.classList.remove('off');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.add('off'),ms)}
+
+/* ---------------- 音效（8-bit 方波；可在選單關閉） ---------------- */
+let actx=null;
+function unlockAudio(){try{if(!actx){const AC=window.AudioContext||window.webkitAudioContext;if(AC)actx=new AC()}if(actx&&actx.state==='suspended')actx.resume()}catch(e){}}
+const SFX={tap:[[880,.04]],eat:[[440,.06],[523,.06],[440,.06],[587,.08]],play:[[523,.07],[659,.07],[784,.1]],wash:[[880,.04],[988,.04],[880,.04],[1046,.06]],
+ sleep:[[392,.15],[330,.22]],wake:[[523,.08],[659,.08],[784,.12]],level:[[523,.08],[659,.08],[784,.08],[1046,.22]],hatch:[[392,.08],[523,.08],[659,.08],[784,.08],[1046,.28]],
+ no:[[220,.1],[185,.14]],pet:[[988,.05],[1318,.08]],evolve:[[523,.1],[587,.1],[659,.1],[698,.1],[784,.1],[880,.1],[988,.1],[1046,.4]],crack:[[300,.05],[240,.06]]};
+function sfx(n){if(!s.sound||!actx)return;try{let t=actx.currentTime+.01;for(const[f,d]of SFX[n]||[]){const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=f;
+ g.gain.setValueAtTime(.05,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+d+.02);t+=d}}catch(e){}}
+function buzz(ms){try{if(navigator.vibrate)navigator.vibrate(ms)}catch(e){}}   // iOS Safari 不支援時自動略過
+
+/* =========================================================
+   照顧動作
+   ========================================================= */
+const need=l=>l*50;
+function gainXP(n){if(n<=0)return;s.xp+=n;let ups=0;while(s.xp>=need(s.level)){s.xp-=need(s.level);s.level++;s.coins+=15;ups++}
+ if(ups){say(`升級到 Lv.${s.level}！獲得 ${15*ups} 金幣 🎉`,{q:true});sfx('level');spawn('star',8,{y:70,vy:-30,jx:40,life:1.4});setTimeout(checkEvolve,1200)}}
+function routeScores(c){return{ember:c.play,mist:c.wash*1.15,sylvan:c.feed*.7+c.pet*.35}}
+function pickRoute(){const sc=routeScores(s.care);return ROUTES.reduce((a,b)=>sc[b]>sc[a]?b:a,'sylvan')}
+function checkEvolve(){if(!s.hatched||s.route||s.level<5||evo)return;if(s.sleeping){s.sleeping=false}
+ const to=pickRoute();s.route=to;if(!s.seen.includes(to))s.seen.push(to);save();renderUI();busyUntil=Date.now()+3300;sfx('evolve');say('咦？！身體在發光…',{log:false});
+ evo={from:'baby',to,t0:performance.now(),done:()=>{spawn('star',12,{y:70,vy:-34,jx:60,life:1.6});spawn('spark',8,{y:72,jx:50,life:1});playAnim('happy');
+  say(`${s.name} 進化成「${FORMS[to].name}」了！`);toast(`🎉 進化：${FORMS[to].name}（${FORMS[to].en}）`)}}}
+function wake(auto){if(!s.sleeping)return;s.sleeping=false;const xp=Math.min(20,Math.round(s.sleepGain/4));s.sleepGain=0;s.care.sleep++;
+ if(document.readyState==='complete'&&SHEETS.baby){playAnim('happy');sfx('wake')}
+ say(auto?'睡飽了！精神滿滿 ☀️':(xp?'醒來了～':'醒來了…還有點睏'));gainXP(xp)}
+function act(a){
+ if(!s.hatched||evo)return;if(Date.now()<busyUntil)return;unlockAudio();tick();
+ const deny=(t)=>{say(t);playAnim('no');sfx('no');renderUI()};
+ if(a==='sleep'){
+  if(s.sleeping){wake(false);save();renderUI();return}
+  if(s.energy>=90)return deny('還不睏，晚點再睡吧～');
+  s.sleeping=true;s.sleepGain=0;say('晚安～💤（再按一次可叫醒）');sfx('sleep');spawn('z',2,{x:76,y:62,vx:6,vy:-8,jx:2,jy:2,life:2,spread:4});busyUntil=Date.now()+500;save();renderUI();return}
+ if(s.sleeping)return deny('噓…牠在睡覺，先叫醒牠吧');
+ if(a==='feed'){
+  if(s.hunger>=95)return deny('飽飽的，吃不下了～');
+  if(s.coins<5)return deny('金幣不夠了！玩耍可以賺金幣');
+  const xp=s.hunger<70?10:4;s.coins-=5;s.hunger=clamp(s.hunger+28);s.mood=clamp(s.mood+2);s.care.feed++;
+  playAnim('eat');sfx('eat');spawn('apple',1,{x:64,y:66,vy:-4,jx:0,jy:0,life:.6,spread:0});spawn('heart',3,{y:70,life:1.1,stagger:.25});say('好吃！飽飽的～');gainXP(xp)}
+ if(a==='play'){
+  if(s.energy<15)return deny('太累了…先讓牠睡一下吧');
+  if(s.hunger<10)return deny('肚子好餓，玩不動…');
+  const xp=s.mood<90?12:5;s.energy=clamp(s.energy-12);s.hunger=clamp(s.hunger-5);s.clean=clamp(s.clean-6);s.mood=clamp(s.mood+18);s.coins+=4;s.care.play++;
+  playAnim('play');sfx('play');spawn('ball',1,{x:30,y:70,vx:40,vy:-50,g:110,jx:0,jy:0,life:1.4,spread:0,bounce:1});spawn('star',3,{y:66,life:1,stagger:.3});say('玩得好開心！+4 金幣');gainXP(xp)}
+ if(a==='wash'){
+  if(s.clean>=95)return deny('已經很乾淨了！');
+  const xp=s.clean<70?8:3;s.clean=clamp(s.clean+35);s.mood=clamp(s.mood+3);s.care.wash++;
+  playAnim('wash');sfx('wash');spawn('bubble',9,{y:80,vy:-18,jx:10,spread:40,sy:20,life:1.4,stagger:.08});say('洗得香噴噴～');gainXP(xp)}
+ buzz(15);save();renderUI()}
+const petLog=[];
+function tapPet(){
+ unlockAudio();requestPersist();if(evo||Date.now()<busyUntil)return;tick();
+ if(!s.hatched){s.eggTaps++;wobbleUntil=performance.now()+450;sfx(s.eggTaps>=2?'crack':'tap');buzz(10);
+  if(s.eggTaps>=5){hatch();return}say(['蛋動了一下！','喀…出現裂痕了！','裂得更大了！','快出來了！再一下！'][s.eggTaps-1]);save();return}
+ if(s.sleeping){say('Zzz…（睡得好熟）');return}
+ const now=Date.now();while(petLog.length&&now-petLog[0]>60000)petLog.shift();petLog.push(now);
+ if(petLog.length>6){playAnim('shy');say('嘿嘿…摸太多次會害羞啦');sfx('pet');return}
+ s.mood=clamp(s.mood+3);s.care.pet++;playAnim('happy');sfx('pet');spawn('heart',3,{y:70,life:1.1,stagger:.12});
+ say(['呼嚕～好舒服 💕','最喜歡你了！','嘿嘿～','再摸一下嘛～'][Math.floor(Math.random()*4)]);save();renderUI()}
+function hatch(){s.hatched=true;s.eggTaps=0;s.hatchedAt=Date.now();s.lastTick=Date.now();if(!s.seen.includes('baby'))s.seen.push('baby');
+ flashUntil=performance.now()+700;sfx('hatch');buzz(40);playAnim('happy',1400);spawn('star',10,{y:70,vy:-30,jx:60,life:1.5});spawn('spark',6,{y:74,jx:50});
+ say('啾！我出生了！🐣');save();renderUI();setTimeout(()=>renameDialog(true),1500)}
+
+/* =========================================================
+   介面更新
+   ========================================================= */
+const STATS=[['hunger','飽食','apple','#f19a6a'],['mood','心情','heart','#f18fae'],['clean','清潔','drop','#73c9e6'],['energy','體力','bolt','#f2cc6e']];
+function buildStats(){$('stats').innerHTML=STATS.map(([k,l,ic,c])=>`<div class="stat" id="st-${k}"><div class="sh"><canvas class="picon" data-icon="${ic}" data-s="2"></canvas>${l}<span class="v" id="sv-${k}"></span></div><div class="bar"><i id="sb-${k}" style="background:${c}"></i></div></div>`).join('')}
+function dayCount(){return Math.floor((Date.now()-s.hatchedAt)/86400000)+1}
+function renderUI(){
+ $('coins').textContent=s.coins;
+ const F=FORMS[formKey()];
+ $('petname').textContent=s.hatched?`${s.name}　Lv.${s.level}`:'神秘幻獸蛋';
+ $('stageText').textContent=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）`:(s.route?`成長期 · ${F.name} ${F.en} · 第 ${dayCount()} 天`:`幼年期 · ${F.name} · 第 ${dayCount()} 天 · Lv.5 進化`);
+ for(const[k]of STATS){const v=s.hatched?s[k]:0;$('sv-'+k).textContent=s.hatched?Math.round(v)+'%':'--';$('sb-'+k).style.width=v+'%';$('st-'+k).classList.toggle('low',s.hatched&&v<20)}
+ document.querySelectorAll('.act').forEach(b=>b.disabled=!s.hatched);
+ $('sleepLabel').textContent=s.sleeping?'叫醒':'睡覺';$('sleepBtn').classList.toggle('on',s.sleeping);
+ const want=s.sleeping?'sun':'moon';if($('sleepIcon').dataset.icon!==want){$('sleepIcon').dataset.icon=want;paintIcon($('sleepIcon'),want)}
+ $('xptext').textContent=s.hatched?`${s.xp} / ${need(s.level)} XP`:'—';$('xpbar').style.width=(s.hatched?s.xp/need(s.level)*100:0)+'%'}
+
+/* =========================================================
+   對話框（取代 prompt / alert / confirm）
+   ========================================================= */
+let modalOnClose=null;
+function openModal(title,html,buttons=[{t:'關閉'}]){
+ const sh=$('sheet');sh.innerHTML=`<h2>${title}</h2><div>${html}</div><div class="row" id="mbtns"></div>`;
+ const row=$('mbtns');buttons.forEach(b=>{const el=document.createElement('button');el.className='btn '+(b.cls||'');el.textContent=b.t;el.onclick=()=>{if(b.fn&&b.fn()===false)return;closeModal()};row.appendChild(el)});
+ $('modal').classList.remove('hidden');sh.scrollTop=0}
+function closeModal(){$('modal').classList.add('hidden');$('sheet').innerHTML='';const f=modalOnClose;modalOnClose=null;f&&f()}
+$('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+function confirmBox(title,text,okText,fn,cls='pri'){openModal(title,`<p>${text}</p>`,[{t:'取消'},{t:okText,cls,fn}])}
+
+function renameDialog(first){
+ if(!s.hatched){say('先把蛋孵出來吧！');return}
+ openModal(first?'🐣 為牠取個名字吧！':'✏️ 改名字',`<p class="small">最多 10 個字，可用中文、英文或 emoji。</p><input type="text" id="nameIn" maxlength="20" autocomplete="off" enterkeyhint="done"><div class="err" id="nameErr"></div>`,
+  [{t:first?'就叫小露':'取消'},{t:'確定',cls:'pri',fn:()=>{const n=chars($('nameIn').value.trim()).slice(0,10).join('');if(!n){$('nameErr').textContent='名字不能是空白喔';return false}
+   s.name=n;save();renderUI();say(`我是「${n}」！請多指教～`);return true}}]);
+ const inp=$('nameIn');inp.value=s.name;inp.addEventListener('keydown',e=>{if(e.key==='Enter')document.querySelector('#mbtns .pri').click()})}
+
+function helpDialog(){openModal('❔ 遊戲說明',`
+<p><b>目標：</b>照顧幻獸、累積經驗值，Lv.5 時依照你的照顧方式進化。</p>
+<ul>
+<li>🍎 <b>餵食</b>：花 5 金幣，飽食 +28。吃飽（95% 以上）時吃不下。</li>
+<li>🎾 <b>玩耍</b>：心情 +18、賺 4 金幣，但會消耗體力、飽食與清潔。</li>
+<li>🫧 <b>洗澡</b>：清潔 +35。已經很乾淨時不能洗。</li>
+<li>🌙 <b>睡覺</b>：會真的睡著，體力每分鐘約 +15，睡飽自動起床；可按「叫醒」。睡覺時不能餵食和玩耍。</li>
+<li>👆 <b>摸摸</b>：點畫面上的幻獸，心情 +3（摸太多會害羞）。</li>
+</ul>
+<p><b>經驗值：</b>數值越需要照顧時，獲得的經驗越多；已經很滿時只拿到少量經驗。升級可得 15 金幣。</p>
+<p><b>時間：</b>離開遊戲時數值也會慢慢下降（最多補算 24 小時）。數值太低時牠會難過。</p>
+<p><b>進化：</b>到「📖 圖鑑」可以查看三條進化路線與目前傾向。</p>
+<p><b>存檔：</b>自動存在這台裝置的瀏覽器裡。Safari 版與主畫面版的存檔彼此獨立；換裝置、清除 Safari 資料前，請先到「💾 存檔」匯出存檔碼。</p>
+<p><b>加入主畫面：</b>Safari 下方「分享」⬆️ →「加入主畫面」→「加入」。</p>`)}
+
+function codexDialog(){
+ const list=['baby',...ROUTES];
+ const cards=list.map(k=>{const F=FORMS[k],seen=s.seen.includes(k);return`<div class="card"><canvas data-form="${k}" data-seen="${seen?1:0}" width="48" height="48"></canvas><b>${seen?F.name:'？？？'}</b><div class="small">${seen?F.en:''}</div><div>${k==='baby'?'幼年期':'成長期'}</div><div class="small">${F.hint}</div></div>`}).join('');
+ let lean='';
+ if(s.hatched&&!s.route){const sc=routeScores(s.care),tot=Math.max(1,sc.ember+sc.mist+sc.sylvan);
+  lean=`<p style="margin-top:12px"><b>目前進化傾向</b>（Lv.5 時決定）</p><div class="lean">${ROUTES.map(r=>`<span>${{ember:'🔥',mist:'💧',sylvan:'🌿'}[r]} ${s.seen.includes(r)?FORMS[r].name:FORMS[r].hint.replace(/[「」]/g,'')}</span><div class="b"><i style="width:${Math.round(sc[r]/tot*100)}%;background:${{ember:'#ff7a4a',mist:'#5fb4f0',sylvan:'#7ccc5a'}[r]}"></i></div><span>${Math.round(sc[r]/tot*100)}%</span>`).join('')}</div>`}
+ openModal('📖 幻獸圖鑑',`<div class="codex">${cards}</div>${lean}<p class="small" style="margin-top:10px">第三階段「完全體」預計在 V1.4 加入。</p>`);
+ document.querySelectorAll('.card canvas').forEach(c=>{const S=SHEETS[c.dataset.form],x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(c.dataset.seen==='1'?S.cv:S.dark,S.idx.idle0*CELL,0,CELL,CELL,0,0,48,48)})}
+
+/* ---------------- 存檔匯出／匯入 ---------------- */
+function checksum(t){let h=0;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))>>>0;return h.toString(36)}
+function exportCode(){const b64=btoa(unescape(encodeURIComponent(JSON.stringify({app:'pixel-familiar',ver:VERSION,at:Date.now(),save:s}))));return'PF1.'+b64+'.'+checksum(b64)}
+function decodeCode(code){code=String(code||'').replace(/\s+/g,'');
+ if(code.startsWith('{')){const o=parse(code);return o&&(o.save||o)}
+ const m=/^PF1\.([A-Za-z0-9+/=]+)\.([a-z0-9]+)$/.exec(code);if(!m)throw new Error('格式不正確');if(checksum(m[1])!==m[2])throw new Error('存檔碼不完整或被修改過');
+ const o=JSON.parse(decodeURIComponent(escape(atob(m[1]))));if(!o||o.app!=='pixel-familiar'||!o.save)throw new Error('這不是幻獸日記的存檔');return o.save}
+function fmtTime(t){if(!t)return'從未';const d=new Date(t);return`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
+function saveDialog(){
+ openModal('💾 存檔管理',`
+<p class="small">自動存檔：每次照顧後立即儲存。上次儲存 ${fmtTime(s.updated)}，上次匯出 ${fmtTime(s.lastExport)}。${store.ok?'':'<br><b style="color:#ff9aa8">⚠️ 目前無法寫入瀏覽器儲存空間。</b>'}</p>
+<p><b>① 匯出（備份）</b></p>
+<div class="row" style="margin-top:4px"><button class="btn pri" id="bCopy">複製存檔碼</button><button class="btn" id="bFile">儲存成檔案</button></div>
+<p class="small">複製後可貼到「備忘錄」保存。「儲存成檔案」會存到「檔案」App。</p>
+<p style="margin-top:12px"><b>② 匯入（還原）</b></p>
+<textarea id="impText" placeholder="在這裡貼上存檔碼（PF1. 開頭）"></textarea>
+<div class="row" style="margin-top:6px"><button class="btn pri" id="bImp">匯入存檔碼</button><label class="btn" style="text-align:center">從檔案匯入<input type="file" id="impFile" accept=".json,.txt,application/json,text/plain" style="display:none"></label></div>
+<div class="err" id="impErr"></div>`);
+ $('bCopy').onclick=async()=>{const code=exportCode();let ok=false;try{await navigator.clipboard.writeText(code);ok=true}catch(e){}
+  if(!ok){const ta=$('impText');ta.value=code;ta.focus();ta.select();try{ok=document.execCommand('copy')}catch(e){}}
+  s.lastExport=Date.now();save();toast(ok?'✅ 已複製存檔碼，請貼到備忘錄保存':'已把存檔碼放進下方文字框，請長按全選後複製')};
+ $('bFile').onclick=async()=>{const code=exportCode(),name=`pixel-familiar-${new Date().toISOString().slice(0,10)}.txt`;s.lastExport=Date.now();save();
+  try{const f=new File([code],name,{type:'text/plain'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'幻獸日記存檔'});return}}catch(e){if(e&&e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([code],{type:'text/plain'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);toast('已下載存檔檔案')};
+ const doImport=(text)=>{try{const o=sanitize(decodeCode(text));
+   confirmBox('確定匯入？',`將以「${esc(o.hatched?o.name+' Lv.'+o.level:'未孵化的蛋')}」取代目前進度。目前進度會先保留為備份。`,'匯入',()=>{store.set(BACKUP_KEY,JSON.stringify(s));s=o;s.lastTick=Math.min(s.lastTick,Date.now());lastBackup=Date.now();save();tick();renderUI();evo=null;toast('✅ 匯入成功！');say(s.hatched?`${s.name}回來了！`:'蛋回來了！')})
+  }catch(e){$('impErr').textContent='❌ 匯入失敗：'+(e.message||'無法讀取')}};
+ $('bImp').onclick=()=>doImport($('impText').value);
+ $('impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>doImport(r.result);r.readAsText(f)}}
+
+function menuDialog(){
+ openModal('⚙️ 選單',`
+<div class="row" style="margin-top:0"><button class="btn" id="mHelp">❔ 遊戲說明</button><button class="btn" id="mSound">${s.sound?'🔊 音效：開':'🔇 音效：關'}</button></div>
+<div class="row"><button class="btn" id="mSprite">🎞️ 查看 Sprite Sheet</button><button class="btn" id="mUpdate">🔄 檢查更新</button></div>
+<div class="row"><button class="btn danger" id="mReset">🗑️ 重新開始</button></div>
+<p class="small" style="margin-top:12px">版本 V${VERSION}｜存檔位置：${standalone()?'主畫面 App':'瀏覽器'}（${location.host||'本機'}）${store.ok?'':'｜⚠️ 無法寫入'}</p>`);
+ $('mHelp').onclick=helpDialog;
+ $('mSound').onclick=()=>{s.sound=!s.sound;save();unlockAudio();sfx('tap');$('mSound').textContent=s.sound?'🔊 音效：開':'🔇 音效：關'};
+ $('mSprite').onclick=spriteDialog;
+ $('mUpdate').onclick=async()=>{try{const r=await navigator.serviceWorker?.getRegistration();if(r){await r.update()}}catch(e){}toast('正在重新載入最新版本…');setTimeout(()=>location.reload(),600)};
+ $('mReset').onclick=()=>confirmBox('⚠️ 重新開始？','目前的幻獸與進度會被刪除（會先留一份備份，可再匯出備份）。建議先到「存檔」匯出存檔碼。','確定刪除',()=>{
+  store.set(BACKUP_KEY,JSON.stringify(s));const snd=s.sound;s=fresh();s.sound=snd;lastBackup=Date.now();save();renderUI();say('新的旅程開始了！');setTimeout(()=>say('輕點蛋看看？',{q:true}),100)},'danger')}
+function spriteDialog(){
+ openModal('🎞️ Sprite Sheet（實際遊戲用）',`<p class="small">以下是遊戲執行時由程式產生的逐格像素圖（每格 48×48 px，放大 2 倍顯示）。角色動畫就是逐格切換這些畫格。</p><div class="sprites" id="spr"></div>`);
+ const box=$('spr');for(const k of['egg','baby',...ROUTES]){const S=SHEETS[k];if(!s.seen.includes(k)&&k!=='egg'&&k!=='baby'){const p=document.createElement('p');p.className='small';p.textContent=`${FORMS[k].name}：尚未解鎖（劇透保護）`;box.appendChild(p);continue}
+  const c=document.createElement('canvas');c.width=S.cv.width;c.height=CELL;c.style.width=S.cv.width*2+'px';c.getContext('2d').drawImage(S.cv,0,0);box.appendChild(c)}}
+
+/* =========================================================
+   iPhone 相關：主畫面提示、持久化儲存、生命週期
+   ========================================================= */
+function standalone(){return navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)}
+const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+let persistAsked=false;function requestPersist(){if(persistAsked)return;persistAsked=true;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{})}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){tick();save()}else{tick();renderUI();startLoop()}});
+window.addEventListener('pagehide',()=>{tick();save()});
+window.addEventListener('storage',e=>{if(e.key===SAVE_KEY&&e.newValue){const o=parse(e.newValue);if(o){s=sanitize(o);renderUI()}}});
+
+/* ---------------- 輸入 ---------------- */
+cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
+ if(x>=PET_X-2&&x<=PET_X+CELL+2&&y>=PET_Y-6&&y<=PET_Y+CELL+2)tapPet();else{unlockAudio();spawn('spark',1,{x,y,vy:-6,jx:0,jy:0,life:.5,spread:0})}});
+cv.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tapPet()}});
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+document.querySelectorAll('.act').forEach(b=>b.addEventListener('click',()=>act(b.dataset.act)));
+$('bRename').onclick=()=>renameDialog(false);$('bCodex').onclick=codexDialog;$('bSave').onclick=saveDialog;$('bMenu').onclick=menuDialog;
+$('homeTipX').onclick=()=>{$('homeTip').classList.add('hidden');store.set(TIP_KEY,'1')};
+
+/* ---------------- 啟動 ---------------- */
+function init(){
+ $('ver').textContent=VERSION;
+ buildIcons();for(const k of['egg','baby',...ROUTES])buildSheet(k);cloudCv=gridCanvas(CLOUD);
+ buildStats();document.querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));
+ const L=load();s=L.s;
+ tick();
+ if(s.hatched&&!s.route&&s.level>=5)setTimeout(checkEvolve,1500);
+ save();renderUI();startLoop();
+ if(L.src==='legacy')toast('✅ 已自動搬移 V1.x 舊存檔');
+ else if(L.src==='backup-corrupt')toast('⚠️ 主存檔損壞，已從備份還原');
+ if(!store.ok)$('saveWarn').classList.remove('hidden');
+ if(isIOS&&!standalone()&&!store.get(TIP_KEY))$('homeTip').classList.remove('hidden');
+ setTimeout(()=>say(s.hatched?(s.sleeping?'Zzz…':`${s.name}：歡迎回來！`):'輕點蛋看看？',{log:false}),400);
+ setInterval(()=>{if(document.hidden)return;tick();renderUI();if(Date.now()-lastSave>15000)save();
+  if(Date.now()>nextChat&&!msgTimer&&$('modal').classList.contains('hidden'))say(chatter(),{log:false})},1000);
+ if('serviceWorker'in navigator&&(location.protocol==='https:'||location.hostname==='localhost')&&!/claude|anthropic/.test(location.hostname))
+  navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{});
+}
+window.PF={get state(){return s},SHEETS,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
+ debug:{skip(min){s.lastTick-=min*60000;tick();renderUI();save()},xp(n){gainXP(n);renderUI();save()},set(o){Object.assign(s,o);renderUI();save()}}};
+try{init()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<div style="padding:12px;background:#a8394c;color:#fff">啟動錯誤：${esc(e.message)}</div>`);throw e}
+</script>
+</body>
+</html>
