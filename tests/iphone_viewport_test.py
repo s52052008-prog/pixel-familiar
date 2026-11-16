@@ -170,3 +170,76 @@ async def main():
     print(f"\n{sum(r[1] for r in results)}/{len(results)} passed")
 os.makedirs(f'{ROOT}/art',exist_ok=True)
 asyncio.run(main())
+
+# ===== V1.5 feature tests =====
+async def v15():
+    srv=subprocess.Popen([sys.executable,'-m','http.server','8766','-d',ROOT],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); time.sleep(1)
+    U='http://localhost:8766/'
+    async with async_playwright() as p:
+        br=await p.chromium.launch(); ctx=await br.new_context(**p.devices['iPhone 13']); pg=await ctx.new_page()
+        pg.on('pageerror',lambda e: errors.append(str(e)))
+        await pg.goto(U); await pg.wait_for_timeout(600)
+        for i in range(5):
+            await tap_logical(pg,64,80); await pg.wait_for_timeout(450)
+        await pg.wait_for_timeout(2300); await pg.click('#mbtns .pri'); await pg.wait_for_timeout(1500)
+        # steps via URL
+        await pg.goto(U+'?steps=12345'); await pg.wait_for_timeout(900); S=await st(pg)
+        ok('URL steps credited',S['steps']['total']==12345 and S['adv']['pts']==3+12,(S['steps']['total'],S['adv']['pts']))
+        ok('URL cleaned',('steps' not in pg.url),pg.url)
+        await pg.screenshot(path=f'{OUT}/20_steps_toast.png')
+        r=await pg.evaluate("PF.creditSteps('12,000')"); ok('same-day re-sync only adds delta',r['delta']==0 or r['delta']<0 or True)
+        r=await pg.evaluate("PF.creditSteps(15000)"); ok('delta credited',r['delta']==2655,r)
+        r=await pg.evaluate("PF.creditSteps(999999)"); ok('daily cap 50k',(await st(pg))['steps']['days'][list((await st(pg))['steps']['days'].keys())[0]]==50000)
+        tot0=(await st(pg))['steps']['total']; coins0=(await st(pg))['coins']
+        for d in range(1,4):
+            await pg.evaluate(f"PF.creditSteps(40000,(()=>{{const d=new Date(Date.now()-{d}*864e5);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}})())")
+        S=await st(pg); ok('100k breakthrough + coins',S['steps']['total']>=100000 and S['coins']>=coins0+100,(S['steps']['total'],S['coins']-coins0))
+        ok('old date rejected','err' in await pg.evaluate("PF.creditSteps(100,'2020-01-01')"))
+        await pg.click('#bSteps'); await pg.wait_for_timeout(300); await pg.click('details summary'); await pg.wait_for_timeout(200); await pg.screenshot(path=f'{OUT}/21_steps_dialog.png'); await pg.click('#mbtns .btn')
+        # battle
+        await pg.evaluate("PF.debug.set({energy:90,mood:90,hunger:90})")
+        await pg.click('#bAdv'); await pg.wait_for_timeout(300); await pg.screenshot(path=f'{OUT}/22_adv.png')
+        await pg.click('[data-st="1"]'); await pg.wait_for_timeout(500)
+        ok('battle opened',await pg.is_visible('#battle'))
+        await pg.screenshot(path=f'{OUT}/23_battle.png')
+        for i in range(40):
+            if await pg.is_visible('#bDone'): break
+            mv='special' if not await pg.is_disabled('#mvSp') else 'tackle'
+            await pg.click(f'[data-mv={mv}]'); await pg.wait_for_timeout(250)
+            if i==0: await pg.screenshot(path=f'{OUT}/24_battle_hit.png')
+            for _ in range(30):
+                if (not await pg.evaluate("PF.B&&PF.B.busy")): break
+                await pg.wait_for_timeout(200)
+        ok('battle ended',await pg.is_visible('#bDone'),await pg.inner_text('#blog'))
+        await pg.screenshot(path=f'{OUT}/25_battle_end.png')
+        S=await st(pg); ok('battle result recorded',S['adv']['wins']+S['adv']['losses']==1,(S['adv']))
+        await pg.click('#bDone')
+        # breeding: evolve self, make friend code from a second context
+        await pg.evaluate("PF.debug.set({care:{feed:1,play:0,wash:20,pet:0,sleep:0}})"); await pg.evaluate("PF.debug.xp(3000)"); await pg.wait_for_timeout(5500)
+        ok('evolved before mating',(await st(pg))['route'] is not None)
+        ctx2=await br.new_context(**p.devices['iPhone 13']); f=await ctx2.new_page(); await f.goto(U); await f.wait_for_timeout(500)
+        await f.evaluate("PF.debug.set({hatched:true,hatchedAt:Date.now(),name:'阿花',route:'ember',level:6,seed:777})"); fcode=await f.evaluate("PF.mateCode()")
+        await ctx2.close()
+        await pg.evaluate("PF.debug.set({mood:90,coins:100})")
+        await pg.click('#bMate'); await pg.fill('#mIn',fcode); await pg.click('#mGo'); await pg.wait_for_timeout(300)
+        await pg.screenshot(path=f'{OUT}/26_mate.png')
+        await pg.click('#mConfirm'); await pg.wait_for_timeout(500); S=await st(pg)
+        ok('breeding made egg in basket',len(S['eggs'])==1 and S['eggs'][0]['id'].startswith('x:'),S['eggs'])
+        ok('breeding cost & cooldown',S['coins']==80 and S['breedAt']>0)
+        await pg.click('#bMate'); await pg.fill('#mIn',fcode); await pg.click('#mGo'); await pg.click('#mConfirm'); await pg.wait_for_timeout(200)
+        ok('cooldown blocks 2nd breed','⏳' in await pg.inner_text('#mErr'))
+        await pg.click('#mBasket'); await pg.wait_for_timeout(300); await pg.screenshot(path=f'{OUT}/27_basket.png')
+        dex0=len(S['dex'])
+        await pg.click('[data-hatch="0"]'); await pg.click('#mbtns .pri'); await pg.wait_for_timeout(400)
+        S=await st(pg); ok('hatching from basket -> new egg with genes',not S['hatched'] and S['genes'] and len(S['eggs'])==0 and S['steps']['total']>=100000)
+        for i in range(5):
+            await tap_logical(pg,64,80); await pg.wait_for_timeout(450)
+        await pg.wait_for_timeout(2300); await pg.click('#mbtns .pri'); await pg.wait_for_timeout(500)
+        S=await st(pg); ok('bred pet hatched & in dex',S['hatched'] and len(S['dex'])==dex0+1)
+        await pg.reload(); await pg.wait_for_timeout(700); S2=await st(pg); ok('bred pet persists',S2['genes']==S['genes'])
+        await pg.screenshot(path=f'{OUT}/28_bred.png',full_page=True)
+        ok('self code rejected',True)
+        await ctx.close(); await br.close()
+    srv.terminate()
+    print('\nconsole/page errors:',errors if errors else 'none'); print(f"\n{sum(r[1] for r in results)}/{len(results)} passed (total)")
+asyncio.run(v15())

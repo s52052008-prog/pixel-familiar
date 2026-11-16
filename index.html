@@ -57,6 +57,18 @@ canvas.picon{image-rendering:pixelated;image-rendering:crisp-edges;display:block
 .xpbar i{display:block;height:100%;background:var(--gold);transition:width .4s;box-shadow:inset 0 3px 0 #fff6}
 #log{margin:7px 0 0;color:#d8e5f8;min-height:1.4em}
 .toolbar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.toolbar.three{grid-template-columns:repeat(3,1fr)}.tool.big{background:#5a3f78;box-shadow:inset 0 0 0 2px #8a6ab0;font-size:14px;padding:11px 2px}
+#battle{position:fixed;inset:0;z-index:15;background:#0e1528;overflow:auto;-webkit-overflow-scrolling:touch}
+#battle .in{max-width:480px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 14px);display:flex;flex-direction:column;gap:8px}
+#bcv{display:block;width:100%;aspect-ratio:128/112;image-rendering:pixelated;image-rendering:crisp-edges;border:3px solid var(--line);box-shadow:0 0 0 2px var(--hi)}
+.hp{background:var(--panel);border:2px solid var(--line);box-shadow:inset 0 0 0 2px var(--hi);padding:6px 9px;font-size:13px}
+.hp .t{display:flex;justify-content:space-between;font-weight:700}.hp .bar i{background:#6ad06a}.hp.foe .bar i{background:#e86a6a}
+.moves{display:grid;grid-template-columns:1fr 1fr;gap:8px}.moves .act{min-height:54px;font-size:14px}
+#blog{min-height:2.8em;background:#fff9e8;color:#273753;border:3px solid #273753;padding:7px 10px;font-weight:700;font-size:14px;line-height:1.4}
+.stagebtn{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;margin-top:6px}
+.eggrow{display:flex;gap:10px;align-items:center;background:#14203a;border:2px solid var(--line);padding:6px;margin-top:6px}.eggrow canvas{width:72px;height:72px;image-rendering:pixelated}
+.prog{height:9px;background:#0a1020;margin:4px 0 8px}.prog i{display:block;height:100%;background:#7ccc5a}
+ol.howto{padding-left:22px;margin:6px 0}ol.howto li{margin:4px 0}code{background:#0a1020;padding:1px 5px;word-break:break-all;font-size:12px}
 .tool{background:#2b4264;border:2px solid var(--line);box-shadow:inset 0 0 0 2px #50698f;padding:9px 2px;font-size:13px;font-weight:700}
 .tool:active{background:#22375a}
 .hidden{display:none!important}
@@ -111,7 +123,13 @@ canvas.picon{image-rendering:pixelated;image-rendering:crisp-edges;display:block
   <div class="xph"><span>⭐ 成長經驗</span><span id="xptext"></span></div>
   <div class="xpbar"><i id="xpbar"></i></div>
   <p id="log">照顧幻獸，陪伴牠成長！</p>
+  <div class="small" id="stepInfo"></div>
  </section>
+ <nav class="toolbar three">
+  <button class="tool big" id="bAdv">⚔️ 冒險</button>
+  <button class="tool big" id="bSteps">👟 步數</button>
+  <button class="tool big" id="bMate">💞 配對</button>
+ </nav>
  <nav class="toolbar">
   <button class="tool" id="bRename">✏️ 改名</button>
   <button class="tool" id="bCodex">📖 圖鑑</button>
@@ -119,6 +137,19 @@ canvas.picon{image-rendering:pixelated;image-rendering:crisp-edges;display:block
   <button class="tool" id="bMenu">⚙️ 選單</button>
  </nav>
 </div>
+<div id="battle" class="hidden"><div class="in">
+ <div class="hp foe"><div class="t"><span id="fName"></span><span id="fHp"></span></div><div class="bar"><i id="fBar"></i></div></div>
+ <canvas id="bcv" width="128" height="112"></canvas>
+ <div class="hp"><div class="t"><span id="mName"></span><span id="mHp"></span></div><div class="bar"><i id="mBar"></i></div></div>
+ <div id="blog"></div>
+ <div class="moves" id="moves">
+  <button class="act" data-mv="tackle">💥 撞擊</button>
+  <button class="act" data-mv="special" id="mvSp">✨ 屬性技</button>
+  <button class="act" data-mv="guard">🛡️ 防禦</button>
+  <button class="act" data-mv="run">🏃 逃跑</button>
+ </div>
+ <button class="btn pri hidden" id="bDone">返回</button>
+</div></div>
 <div id="modal" class="hidden" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
 <div id="toast" class="off"></div>
 <script>
@@ -127,7 +158,7 @@ canvas.picon{image-rendering:pixelated;image-rendering:crisp-edges;display:block
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.4.0';
+const VERSION='1.5.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -197,17 +228,40 @@ function genomeForm(G,route){
  const nm=speciesName(G,route);
  return{name:nm.name,en:nm.en,stage:route?2:1,rx:G.rx+(route?2:0),ry:G.ry+(route?2:0),feat,tail,pal,genome:G}}
 
+const CLASSIC_G={rarity:1,hue:168,sat:45,acc:42,bh:130,rx:11,ry:10,side:'nubs',top:'none',tail:'small',pattern:'none',eyes:'open',wings:false};
+function encodeGenome(G){return[G.rarity,G.hue,G.sat,G.acc,G.bh,G.rx,G.ry,G_SIDE.indexOf(G.side),G_TOP.indexOf(G.top),G_TAIL.indexOf(G.tail),G_PAT.indexOf(G.pattern),G_EYE.indexOf(G.eyes),G.wings?1:0].join('.')}
+const G_LIM=[[1,3],[0,359],[30,90],[0,359],[0,359],[9,13],[8,12],[0,5],[0,5],[0,5],[0,4],[0,1],[0,1]];
+function decodeGenome(c){const a=String(c).split('.').map(Number);if(a.length!==13||a.some((v,i)=>!Number.isInteger(v)||v<G_LIM[i][0]||v>G_LIM[i][1]))return null;
+ return{rarity:a[0],hue:a[1],sat:a[2],acc:a[3],bh:a[4],rx:a[5],ry:a[6],side:G_SIDE[a[7]],top:G_TOP[a[8]],tail:G_TAIL[a[9]],pattern:G_PAT[a[10]],eyes:G_EYE[a[11]],wings:!!a[12]}}
+/* 配對：兩隻的基因各取一半，8% 機率突變，稀有父母更容易生出稀有寶寶 */
+function breedGenome(A,B,r=Math.random){const pick=(a,b)=>r()<.5?a:b,mut=.08,any=arr=>arr[Math.floor(r()*arr.length)];
+ const d=((B.hue-A.hue+540)%360)-180;
+ const G={rarity:1,hue:r()<mut?Math.floor(r()*360):(r()<.35?Math.round((A.hue+d/2+360)%360):pick(A.hue,B.hue)),
+  sat:Math.round(clamp(pick(A.sat,B.sat)+(r()-.5)*10,40,80)),acc:pick(A.acc,B.acc),bh:pick(A.bh,B.bh),rx:pick(A.rx,B.rx),ry:pick(A.ry,B.ry),
+  side:r()<mut?any(G_SIDE):pick(A.side,B.side),top:r()<mut?any(G_TOP):pick(A.top,B.top),tail:r()<mut?any(G_TAIL):pick(A.tail,B.tail),
+  pattern:r()<mut?any(G_PAT):pick(A.pattern,B.pattern),eyes:pick(A.eyes,B.eyes),wings:r()<mut?r()<.5:pick(A.wings,B.wings)};
+ const best=Math.max(A.rarity,B.rarity),q=r();G.rarity=q<(best===3?.15:best===2?.08:.05)?3:q<(best>=2?.45:.25)?2:1;
+ if(G.rarity>=2&&G.pattern==='none')G.pattern=any(['spots','stripes','belly']);return G}
+
 /* ---------------- 存檔資料 ---------------- */
 function newSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]}catch(e){return Math.floor(Math.random()*4294967295)}}
-function fresh(){const t=Date.now();return{v:4,seed:newSeed(),dex:[],hatched:false,eggTaps:0,name:'小露',level:1,xp:0,coins:20,
+function today(d=new Date()){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function fresh(){const t=Date.now();return{v:5,seed:newSeed(),genes:null,dex:[],eggs:[],breedAt:0,steps:{days:{},total:0,rem:0},adv:{pts:3,day:'',stage:1,wins:0,losses:0},hatched:false,eggTaps:0,name:'小露',level:1,xp:0,coins:20,
  hunger:80,mood:80,clean:80,energy:80,route:null,care:{feed:0,play:0,wash:0,pet:0,sleep:0},
  sleeping:false,sleepGain:0,created:t,hatchedAt:0,lastTick:t,updated:t,lastExport:0,sound:true,seen:[]}}
 function sanitize(o){
  const r=fresh();if(!o||typeof o!=='object')return r;const now=Date.now();
  r.hatched=!!o.hatched;
  const sd=Number(o.seed);r.seed=Number.isInteger(sd)&&sd>=0&&sd<=4294967295?sd:(r.hatched?null:r.seed);   // 已孵化的舊存檔沒有 seed → 經典露露獸
- r.dex=Array.isArray(o.dex)?o.dex.filter(e=>e&&typeof e==='object').slice(-200).map(e=>({seed:Number.isInteger(e.seed)?e.seed:null,route:ROUTES.includes(e.route)?e.route:null,
+ r.genes=typeof o.genes==='string'&&decodeGenome(o.genes)?o.genes:null;
+ const okId=id=>typeof id==='string'&&(id==='classic'||/^g:\d+$/.test(id)||(/^x:[\d.]+$/.test(id)&&!!decodeGenome(id.slice(2))));
+ r.dex=Array.isArray(o.dex)?o.dex.filter(e=>e&&typeof e==='object').slice(-200).map(e=>({id:okId(e.id)?e.id:(Number.isInteger(e.seed)?'g:'+e.seed:'classic'),route:ROUTES.includes(e.route)?e.route:null,
   petName:typeof e.name==='string'?chars(e.name).slice(0,10).join(''):(typeof e.petName==='string'?chars(e.petName).slice(0,10).join(''):''),at:num(e.at,now,0,now)})):[];
+ r.eggs=Array.isArray(o.eggs)?o.eggs.filter(e=>e&&okId(e.id)).slice(0,6).map(e=>({id:e.id,from:typeof e.from==='string'?chars(e.from).slice(0,40).join(''):'',at:num(e.at,now,0,now)})):[];
+ r.breedAt=num(o.breedAt,0,0,now);
+ const st=o.steps&&typeof o.steps==='object'?o.steps:{};r.steps.total=Math.floor(num(st.total,0,0,1e9));r.steps.rem=num(st.rem,0,0,999);
+ if(st.days&&typeof st.days==='object')for(const k in st.days)if(/^\d{4}-\d\d-\d\d$/.test(k))r.steps.days[k]=Math.floor(num(st.days[k],0,0,200000));
+ const av=o.adv&&typeof o.adv==='object'?o.adv:{};r.adv={pts:Math.floor(num(av.pts,3,0,99)),day:typeof av.day==='string'?av.day:'',stage:Math.floor(num(av.stage,1,1,999)),wins:Math.floor(num(av.wins,0,0,1e7)),losses:Math.floor(num(av.losses,0,0,1e7))};
  r.eggTaps=Math.floor(num(o.eggTaps,0,0,4));
  if(typeof o.name==='string'){const n=chars(o.name.trim()).slice(0,10).join('');if(n)r.name=n}
  r.level=Math.floor(num(o.level,1,1,99));r.xp=Math.floor(num(o.xp,0,0,1e6));r.coins=Math.floor(num(o.coins,20,0,9999999));
@@ -221,7 +275,7 @@ function sanitize(o){
  r.seen=Array.isArray(o.seen)?o.seen.filter(x=>typeof x==='string'&&FORMS[x]):[];
  if(!r.hatched){r.level=1;r.xp=0;r.route=null;r.sleeping=false}
  else{if(r.seed===null){if(!r.seen.includes('baby'))r.seen.push('baby');if(r.route&&!r.seen.includes(r.route))r.seen.push(r.route)}
-  let e=r.dex.find(x=>x.seed===r.seed);if(!e){e={seed:r.seed,route:null,petName:r.name,at:r.hatchedAt||now};r.dex.push(e)}e.route=r.route;e.petName=r.name}
+  const id=gidOf(r);let e=r.dex.find(x=>x.id===id);if(!e){e={id,route:null,petName:r.name,at:r.hatchedAt||now};r.dex.push(e)}e.route=r.route;e.petName=r.name}
  return r}
 function parse(raw){if(!raw)return null;try{const o=JSON.parse(raw);return o&&typeof o==='object'?o:null}catch(e){return null}}
 function load(){
@@ -378,13 +432,16 @@ function drawEgg(name,C){
 const SHEETS={};
 const GCACHE={},FCACHE={};
 function genome(seed){return GCACHE[seed]||(GCACHE[seed]=makeGenome(seed))}
-function petKey(seed,route){return seed===null||seed===undefined?(route||'baby'):`g:${seed}:${route||'baby'}`}
-function eggKey(seed){return seed===null||seed===undefined?'egg':'egg:'+seed}
-function formOf(key){if(FORMS[key])return FORMS[key];if(FCACHE[key])return FCACHE[key];const m=/^g:(\d+):(\w+)$/.exec(key);
- if(m)return FCACHE[key]=genomeForm(genome(+m[1]),m[2]==='baby'?null:m[2]);const e=/^egg:(\d+)$/.exec(key);
- if(e){const G=genome(+e[1]);return{name:G.rarity===3?'閃著金光的蛋':G.rarity===2?'有點特別的蛋':'神秘的蛋',stage:0,genome:G}}return FORMS.egg}
-function eggColors(key){const m=/^egg:(\d+)$/.exec(key);if(!m)return{shell:'#fff1d0',shellD:'#e5c08c',spot:'#5cc2b0',spotD:'#3a8c8a',hole:'#5cc2b0'};
- const G=genome(+m[1]);if(G.rarity===3)return{shell:'#fff3c0',shellD:'#e8c070',spot:'#ffd34a',spotD:'#e0902a',hole:hsl(G.hue,G.sat,56)};
+/* 每隻幻獸的 id：classic（經典露露獸）／g:種子（隨機蛋）／x:基因碼（配對生出的蛋） */
+function gidOf(st){return st.genes?'x:'+st.genes:(st.seed===null||st.seed===undefined?'classic':'g:'+st.seed)}
+function genomeFromId(id){if(id==='classic')return CLASSIC_G;if(id.startsWith('g:'))return genome(+id.slice(2));if(id.startsWith('x:'))return decodeGenome(id.slice(2))||CLASSIC_G;return CLASSIC_G}
+function petKey(id,route){return id==='classic'?(route||'baby'):`${id}|${route||'baby'}`}
+function eggKey(id){return id==='classic'?'egg':'egg|'+id}
+function formOf(key){if(FORMS[key])return FORMS[key];if(FCACHE[key])return FCACHE[key];
+ if(key.startsWith('egg|')){const G=genomeFromId(key.slice(4));return FCACHE[key]={name:G.rarity===3?'閃著金光的蛋':G.rarity===2?'有點特別的蛋':'神秘的蛋',stage:0,genome:G}}
+ const[id,rt]=key.split('|');return FCACHE[key]=genomeForm(genomeFromId(id),rt==='baby'?null:rt)}
+function eggColors(key){if(!key.startsWith('egg|'))return{shell:'#fff1d0',shellD:'#e5c08c',spot:'#5cc2b0',spotD:'#3a8c8a',hole:'#5cc2b0'};
+ const G=genomeFromId(key.slice(4));if(G.rarity===3)return{shell:'#fff3c0',shellD:'#e8c070',spot:'#ffd34a',spotD:'#e0902a',hole:hsl(G.hue,G.sat,56)};
  const P=genomeForm(G,null).pal;return{shell:hsl(G.hue,30,94),shellD:hsl(G.hue,28,80),spot:P.b,spotD:P.d,hole:P.b}}
 function sheet(key){return SHEETS[key]||buildSheet(key)}
 function buildSheet(key){
@@ -412,6 +469,9 @@ const ICONS={
  drop:{o:'#163a5a',p:{b:'#5fc4f0',w:'#ffffff',d:'#2f8ac0'},m:['...b...','...b...','..bbb..','.bwbbb.','.bwbbb.','bbbbbbd','bbbbbbd','.bbbbd.','..ddd..']},
  bolt:{o:'#4a3010',p:{y:'#ffd34a',d:'#e0a020'},m:['....yy','...yy.','..yy..','.yyyyy','...yy.','..yd..','.yd...','yd....']},
  spark:{o:null,p:{w:'#ffffff',y:'#fff3a6'},m:['..w..','..w..','wwyww','..w..','..w..']},
+ leaf:{o:'#1a3a1a',p:{g:'#7ccc5a',d:'#3a8a3a'},m:['....gg','..gggd','.ggggd','gggdd.','gdd...','d.....']},
+ fire:{o:'#5a1a10',p:{y:'#ffe066',o:'#ff8a2a'},m:['...o...','..oo...','..ooo.o','.ooyoo.','.oyyyoo','oyyyyyo','.oyyyo.','..ooo..']},
+ shoe:{o:'#2a1a10',p:{w:'#ffffff',r:'#e8433f',g:'#c8c8d0'},m:['..rrr....','..rwr....','..rrrr...','.rrrrrrr.','rrrrrrrrr','ggggggggg']},
  note:{o:'#2a1a3a',p:{n:'#ffffff'},m:['..nnn','..n.n','..n.n','nnn..','nnn..']}
 };
 const ICV={};
@@ -467,7 +527,7 @@ let cloudCv=null;
 const anim={once:null,t0:0,onEnd:null};let nextBlink=0,busyUntil=0,wobbleUntil=0,flashUntil=0,evo=null;
 const parts=[];
 function playAnim(name,ms){anim.once=name;anim.t0=performance.now();busyUntil=Date.now()+(ms||Math.round(ANIMS[name].f.length/ANIMS[name].fps*1000))}
-function formKey(){return!s.hatched?eggKey(s.seed):petKey(s.seed,s.route)}
+function formKey(){const id=gidOf(s);return!s.hatched?eggKey(id):petKey(id,s.route)}
 function baseAnim(){if(s.sleeping)return'sleep';if(s.mood<25||s.hunger<15||s.clean<10)return'sad';if(s.energy<20)return'tired';return'idle'}
 function currentFrame(now){
  if(!s.hatched){const lvl=Math.min(3,Math.max(0,s.eggTaps-1));
@@ -476,7 +536,7 @@ function currentFrame(now){
  const b=baseAnim(),A=ANIMS[b];
  if(b==='idle'){if(!nextBlink)nextBlink=now+2500;if(now>nextBlink){if(now<nextBlink+150)return'blink';nextBlink=now+1800+Math.random()*3800}}
  return A.f[Math.floor(now/1000*A.fps)%A.f.length]}
-function spawn(icon,n,o={}){for(let i=0;i<n;i++)parts.push({ic:icon,x:(o.x??64)+(Math.random()-.5)*(o.spread??26),y:(o.y??74)+(Math.random()-.5)*(o.sy??10),
+function spawn(icon,n,o={},arr=parts){for(let i=0;i<n;i++)arr.push({ic:icon,x:(o.x??64)+(Math.random()-.5)*(o.spread??26),y:(o.y??74)+(Math.random()-.5)*(o.sy??10),
  vx:(o.vx??0)+(Math.random()-.5)*(o.jx??14),vy:(o.vy??-22)-Math.random()*(o.jy??10),g:o.g??0,life:o.life??1.2,t:-(i*(o.stagger??.06)),bounce:o.bounce})}
 
 /* ---------------- 畫面繪製 ---------------- */
@@ -503,7 +563,7 @@ function draw(now){
   const ic=ICV[p.ic];ctx.globalAlpha=p.t>p.life-.3?Math.max(0,(p.life-p.t)/.3):1;ctx.drawImage(ic,Math.round(p.x-ic.width/2),Math.round(p.y-ic.height/2));ctx.globalAlpha=1}
  if(now<flashUntil){ctx.fillStyle='#ffffff';ctx.globalAlpha=Math.min(1,(flashUntil-now)/400);ctx.fillRect(0,0,W,H);ctx.globalAlpha=1}}
 let rafOn=false,lastDraw=0;
-function loop(now){if(document.hidden){rafOn=false;return}if(now-lastDraw>=45){lastDraw=now;draw(now)}requestAnimationFrame(loop)}
+function loop(now){if(document.hidden){rafOn=false;return}if(now-lastDraw>=45){lastDraw=now;if(B)drawBattle(now);else draw(now)}requestAnimationFrame(loop)}
 function startLoop(){if(!rafOn){rafOn=true;requestAnimationFrame(loop)}}
 
 /* =========================================================
@@ -536,7 +596,7 @@ function gainXP(n){if(n<=0)return;s.xp+=n;let ups=0;while(s.xp>=need(s.level)){s
 function routeScores(c){return{ember:c.play,mist:c.wash*1.15,sylvan:c.feed*.7+c.pet*.35}}
 function pickRoute(){const sc=routeScores(s.care);return ROUTES.reduce((a,b)=>sc[b]>sc[a]?b:a,'sylvan')}
 function checkEvolve(){if(!s.hatched||s.route||s.level<5||evo)return;if(s.sleeping){s.sleeping=false}
- const to=pickRoute(),fromK=formKey();s.route=to;if(s.seed===null&&!s.seen.includes(to))s.seen.push(to);const de=s.dex.find(x=>x.seed===s.seed);if(de)de.route=to;save();renderUI();busyUntil=Date.now()+3300;sfx('evolve');say('咦？！身體在發光…',{log:false});
+ const to=pickRoute(),fromK=formKey();s.route=to;if(s.seed===null&&!s.seen.includes(to))s.seen.push(to);const de=s.dex.find(x=>x.id===gidOf(s));if(de)de.route=to;save();renderUI();busyUntil=Date.now()+3300;sfx('evolve');say('咦？！身體在發光…',{log:false});
  const toK=formKey(),TF=formOf(toK);evo={from:fromK,to:toK,t0:performance.now(),done:()=>{spawn('star',12,{y:70,vy:-34,jx:60,life:1.6});spawn('spark',8,{y:72,jx:50,life:1});playAnim('happy');
   say(`${s.name} 進化成「${TF.name}」了！`);toast(`🎉 進化：${TF.name}（${TF.en}）`)}}}
 function wake(auto){if(!s.sleeping)return;s.sleeping=false;const xp=Math.min(20,Math.round(s.sleepGain/4));s.sleepGain=0;s.care.sleep++;
@@ -576,7 +636,7 @@ function tapPet(){
  s.mood=clamp(s.mood+3);s.care.pet++;playAnim('happy');sfx('pet');spawn('heart',3,{y:70,life:1.1,stagger:.12});
  say(['呼嚕～好舒服 💕','最喜歡你了！','嘿嘿～','再摸一下嘛～'][Math.floor(Math.random()*4)]);save();renderUI()}
 function hatch(){s.hatched=true;s.eggTaps=0;s.hatchedAt=Date.now();s.lastTick=Date.now();if(s.seed===null&&!s.seen.includes('baby'))s.seen.push('baby');
- if(!s.dex.find(x=>x.seed===s.seed))s.dex.push({seed:s.seed,route:null,petName:s.name,at:s.hatchedAt});const HF=formOf(formKey());
+ if(!s.dex.find(x=>x.id===gidOf(s)))s.dex.push({id:gidOf(s),route:null,petName:s.name,at:s.hatchedAt});const HF=formOf(formKey());
  flashUntil=performance.now()+700;sfx('hatch');buzz(40);playAnim('happy',1400);spawn('star',10,{y:70,vy:-30,jx:60,life:1.5});spawn('spark',6,{y:74,jx:50});
  say(HF.genome?`啾！我是新物種「${HF.name}」！${HF.genome.rarity>1?'（'+STARS[HF.genome.rarity]+' '+RARITY[HF.genome.rarity]+'）':''}`:'啾！我出生了！🐣');
  if(HF.genome&&HF.genome.rarity>1){spawn('star',10,{y:60,vy:-40,jx:80,life:1.8})}save();renderUI();setTimeout(()=>renameDialog(true),1900)}
@@ -590,10 +650,11 @@ function dayCount(){return Math.floor((Date.now()-s.hatchedAt)/86400000)+1}
 function renderUI(){
  $('coins').textContent=s.coins;
  const F=formOf(formKey()),rar=F.genome&&F.genome.rarity>1?` · ${STARS[F.genome.rarity]}${RARITY[F.genome.rarity]}`:'';
- $('petname').textContent=s.hatched?`${s.name}　Lv.${s.level}`:F.name;
+ $('petname').textContent=s.hatched?`${s.name}　Lv.${s.level}${tier()?' '+'✦'.repeat(Math.min(5,tier())):''}`:F.name;
+ $('stepInfo').textContent=`👟 今日 ${fmtN(s.steps.days[today()]||0)} 步 · ⚔️ 冒險點 ${s.adv.pts} · 第 ${s.adv.stage} 關${s.eggs.length?' · 🧺 蛋 '+s.eggs.length:''}`;
  $('stageText').textContent=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome?' · 會孵出什麼新物種呢？':''}`:(s.route?`成長期 · ${F.name}${rar} · 第 ${dayCount()} 天`:`幼年期 · ${F.name}${rar} · 第 ${dayCount()} 天 · Lv.5 進化`);
  for(const[k]of STATS){const v=s.hatched?s[k]:0;$('sv-'+k).textContent=s.hatched?Math.round(v)+'%':'--';$('sb-'+k).style.width=v+'%';$('st-'+k).classList.toggle('low',s.hatched&&v<20)}
- document.querySelectorAll('.act').forEach(b=>b.disabled=!s.hatched);
+ document.querySelectorAll('[data-act]').forEach(b=>b.disabled=!s.hatched);
  $('sleepLabel').textContent=s.sleeping?'叫醒':'睡覺';$('sleepBtn').classList.toggle('on',s.sleeping);
  const want=s.sleeping?'sun':'moon';if($('sleepIcon').dataset.icon!==want){$('sleepIcon').dataset.icon=want;paintIcon($('sleepIcon'),want)}
  $('xptext').textContent=s.hatched?`${s.xp} / ${need(s.level)} XP`:'—';$('xpbar').style.width=(s.hatched?s.xp/need(s.level)*100:0)+'%'}
@@ -614,7 +675,7 @@ function renameDialog(first){
  if(!s.hatched){say('先把蛋孵出來吧！');return}
  openModal(first?'🐣 為牠取個名字吧！':'✏️ 改名字',`<p class="small">最多 10 個字，可用中文、英文或 emoji。</p><input type="text" id="nameIn" maxlength="20" autocomplete="off" enterkeyhint="done"><div class="err" id="nameErr"></div>`,
   [{t:first?'就叫小露':'取消'},{t:'確定',cls:'pri',fn:()=>{const n=chars($('nameIn').value.trim()).slice(0,10).join('');if(!n){$('nameErr').textContent='名字不能是空白喔';return false}
-   s.name=n;const de=s.dex.find(x=>x.seed===s.seed);if(de)de.petName=n;save();renderUI();say(`我是「${n}」！請多指教～`);return true}}]);
+   s.name=n;const de=s.dex.find(x=>x.id===gidOf(s));if(de)de.petName=n;save();renderUI();say(`我是「${n}」！請多指教～`);return true}}]);
  const inp=$('nameIn');inp.value=s.name;inp.addEventListener('keydown',e=>{if(e.key==='Enter')document.querySelector('#mbtns .pri').click()})}
 
 function helpDialog(){openModal('❔ 遊戲說明',`
@@ -629,20 +690,23 @@ function helpDialog(){openModal('❔ 遊戲說明',`
 <p><b>經驗值：</b>數值越需要照顧時，獲得的經驗越多；已經很滿時只拿到少量經驗。升級可得 15 金幣。</p>
 <p><b>時間：</b>離開遊戲時數值也會慢慢下降（最多補算 24 小時）。數值太低時牠會難過。</p>
 <p><b>進化：</b>到「📖 圖鑑」可以查看三條進化路線與目前傾向。</p>
+<p><b>👟 步數：</b>用 iPhone「捷徑」把健康 App 的步數送進遊戲。每 1,000 步：經驗 +10、冒險點 +1；每 10 萬步「突破」一次，戰鬥能力 +10%。</p>
+<p><b>⚔️ 冒險：</b>花冒險點挑戰關卡，回合制對戰野生幻獸，勝利拿金幣和經驗。屬性：🔥剋🌿、🌿剋💧、💧剋🔥。</p>
+<p><b>💞 配對：</b>進化後可以和朋友交換「配對碼」，生出混合雙方基因的蛋，放進蛋籃。</p>
 <p><b>存檔：</b>自動存在這台裝置的瀏覽器裡。Safari 版與主畫面版的存檔彼此獨立；換裝置、清除 Safari 資料前，請先到「💾 存檔」匯出存檔碼。</p>
 <p><b>加入主畫面：</b>Safari 下方「分享」⬆️ →「加入主畫面」→「加入」。</p>`)}
 
 function codexDialog(){
  const dex=s.dex.slice().reverse();
- const cards=dex.length?dex.map((e,i)=>{const k=petKey(e.seed,e.route),F=formOf(k),G=F.genome,cur=e.seed===s.seed&&s.hatched;
+ const cards=dex.length?dex.map((e,i)=>{const k=petKey(e.id,e.route),F=formOf(k),G=F.genome,cur=e.id===gidOf(s)&&s.hatched;
   return`<div class="card"><canvas data-key="${k}" width="48" height="48"></canvas><b>${esc(F.name)}</b><div class="small">${esc(F.en)}</div>
-  <div>${G?STARS[G.rarity]+' '+RARITY[G.rarity]:'經典種'} · ${e.route?'成長期':'幼年期'}</div><div class="small">${cur?'🏠 現在的夥伴：':'回憶：'}${esc(e.petName||'')} · ${fmtTime(e.at).split(' ')[0]}</div></div>`}).join('')
+  <div>${e.id!=='classic'?STARS[G.rarity]+' '+RARITY[G.rarity]:'經典種'} · ${e.route?'成長期':'幼年期'}</div><div class="small">${cur?'🏠 現在的夥伴：':'回憶：'}${esc(e.petName||'')} · ${fmtTime(e.at).split(' ')[0]}</div></div>`}).join('')
   :'<p class="small">還沒有任何物種。孵化第一顆蛋吧！</p>';
  let lean='';
  if(s.hatched&&!s.route){const sc=routeScores(s.care),tot=Math.max(1,sc.ember+sc.mist+sc.sylvan);
   lean=`<p style="margin-top:12px"><b>目前進化傾向</b>（Lv.5 時決定，會保留現在的外觀特色）</p><div class="lean">${ROUTES.map(r=>`<span>${{ember:'🔥 炎系',mist:'💧 霧系',sylvan:'🌿 森系'}[r]}</span><div class="b"><i style="width:${Math.round(sc[r]/tot*100)}%;background:${{ember:'#ff7a4a',mist:'#5fb4f0',sylvan:'#7ccc5a'}[r]}"></i></div><span>${Math.round(sc[r]/tot*100)}%</span>`).join('')}</div>
   <p class="small">🔥 多玩耍 → 長出角與火焰尾　💧 多洗澡 → 長出鰭　🌿 多餵食、摸摸 → 長出翅膀與葉尾</p>`}
- const n=s.dex.length,rare=s.dex.filter(e=>e.seed!==null&&genome(e.seed).rarity>1).length;
+ const n=s.dex.length,rare=s.dex.filter(e=>e.id!=='classic'&&genomeFromId(e.id).rarity>1).length;
  openModal('📖 物種圖鑑',`<p class="small">每顆蛋都會隨機孵出獨一無二的新物種（約 75% 普通、20% 稀有、5% 傳說）。已發現 <b>${n}</b> 種，其中稀有以上 <b>${rare}</b> 種。</p><div class="codex">${cards}</div>${lean}
  <p class="small" style="margin-top:10px">想收集更多？選單 →「🥚 迎接新的蛋」。目前一次照顧一隻；同時養多隻預計之後加入。</p>`);
  document.querySelectorAll('.card canvas').forEach(c=>{const S=sheet(c.dataset.key),x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(S.cv,S.idx.happy1*CELL,0,CELL,CELL,0,0,48,48)})}
@@ -682,19 +746,194 @@ function menuDialog(){
  openModal('⚙️ 選單',`
 <div class="row" style="margin-top:0"><button class="btn" id="mHelp">❔ 遊戲說明</button><button class="btn" id="mSound">${s.sound?'🔊 音效：開':'🔇 音效：關'}</button></div>
 <div class="row"><button class="btn" id="mSprite">🎞️ 查看 Sprite Sheet</button><button class="btn" id="mUpdate">🔄 檢查更新</button></div>
+<div class="row"><button class="btn" id="mBasketM">🧺 蛋籃（${s.eggs.length}）</button></div>
 <div class="row"><button class="btn pri" id="mReset">🥚 迎接新的蛋（重新開始）</button></div>
 <p class="small" style="margin-top:12px">版本 V${VERSION}｜存檔位置：${standalone()?'主畫面 App':'瀏覽器'}（${location.host||'本機'}）${store.ok?'':'｜⚠️ 無法寫入'}</p>`);
- $('mHelp').onclick=helpDialog;
+ $('mHelp').onclick=helpDialog;$('mBasketM').onclick=basketDialog;
  $('mSound').onclick=()=>{s.sound=!s.sound;save();unlockAudio();sfx('tap');$('mSound').textContent=s.sound?'🔊 音效：開':'🔇 音效：關'};
  $('mSprite').onclick=spriteDialog;
  $('mUpdate').onclick=async()=>{try{const r=await navigator.serviceWorker?.getRegistration();if(r){await r.update()}}catch(e){}toast('正在重新載入最新版本…');setTimeout(()=>location.reload(),600)};
- $('mReset').onclick=()=>confirmBox('🥚 迎接新的蛋？','目前的幻獸會告別（等級、金幣、數值重新開始），但牠會永遠留在「📖 圖鑑」裡。你會得到一顆隨機的新蛋。<br><br>建議先到「存檔」匯出存檔碼備份。','迎接新蛋',()=>{const dex=s.dex;
-  store.set(BACKUP_KEY,JSON.stringify(s));const snd=s.sound;s=fresh();s.sound=snd;s.dex=dex;lastBackup=Date.now();evo=null;save();renderUI();say('一顆新的蛋來了！');setTimeout(()=>say('會孵出什麼呢？輕點看看！',{q:true}),100)})}
+ $('mReset').onclick=()=>confirmBox('🥚 迎接新的蛋？','目前的幻獸會告別（等級、金幣、數值重新開始），但牠會永遠留在「📖 圖鑑」裡。你會得到一顆隨機的新蛋。<br><br>建議先到「存檔」匯出存檔碼備份。','迎接新蛋',()=>newPet(null))}
+/* 換新的蛋：保留玩家層級的資料（圖鑑、蛋籃、步數、冒險進度、音效設定） */
+function newPet(genes,from){store.set(BACKUP_KEY,JSON.stringify(s));const keep={sound:s.sound,dex:s.dex,eggs:s.eggs,steps:s.steps,adv:s.adv,breedAt:s.breedAt,lastExport:s.lastExport};
+ s=fresh();Object.assign(s,keep);if(genes){s.genes=genes;s.seed=null}lastBackup=Date.now();evo=null;save();renderUI();
+ say(from?'配對寶寶的蛋來了！':'一顆新的蛋來了！');setTimeout(()=>say('會孵出什麼呢？輕點看看！',{q:true}),100)}
 function spriteDialog(){
  openModal('🎞️ Sprite Sheet（實際遊戲用）',`<p class="small">以下是遊戲執行時由程式產生的逐格像素圖（每格 48×48 px，放大 2 倍顯示）。角色動畫就是逐格切換這些畫格。</p><div class="sprites" id="spr"></div>`);
- const keys=[eggKey(s.seed)];if(s.hatched){keys.push(petKey(s.seed,null));if(s.route)keys.push(petKey(s.seed,s.route))}
+ const id=gidOf(s),keys=[eggKey(id)];if(s.hatched){keys.push(petKey(id,null));if(s.route)keys.push(petKey(id,s.route))}
  const box=$('spr');for(const k of keys){const S=sheet(k),lab=document.createElement('p');lab.className='small';lab.textContent=formOf(k).name;box.appendChild(lab);
   const c=document.createElement('canvas');c.width=S.cv.width;c.height=CELL;c.style.width=S.cv.width*2+'px';c.getContext('2d').drawImage(S.cv,0,0);box.appendChild(c)}}
+
+/* =========================================================
+   👟 步數（透過 iPhone「捷徑」App 傳入）
+   ========================================================= */
+const HOME_URL='https://s52052008-prog.github.io/pixel-familiar/',STEP_DAY_CAP=50000,STEP_TIER=100000;
+const fmtN=n=>Math.round(n).toLocaleString('en-US');
+function dailyFree(){const d=today();if(s.adv.day!==d){s.adv.day=d;if(s.adv.pts<3)s.adv.pts=3}}
+function tier(){return Math.floor(s.steps.total/STEP_TIER)}
+function creditSteps(raw,date){
+ const n=Math.floor(Number(String(raw).replace(/[,，\s]/g,'')));if(!Number.isFinite(n)||n<0)return{err:'步數格式不正確'};
+ date=date&&/^\d{4}-\d\d-\d\d$/.test(date)?date:today();
+ const age=(new Date(today())-new Date(date))/86400000;if(age<0||age>7)return{err:'只能登記最近 7 天的步數'};
+ const v=Math.min(n,STEP_DAY_CAP),prev=s.steps.days[date]||0,delta=v-prev;
+ if(delta<=0)return{delta:0,prev,v};
+ const t0=tier();s.steps.days[date]=v;s.steps.total+=delta;s.steps.rem+=delta;
+ const k=Math.floor(s.steps.rem/1000);s.steps.rem-=k*1000;
+ if(k>0){s.adv.pts=Math.min(30,s.adv.pts+k);if(s.hatched)gainXP(k*10)}
+ const up=tier()-t0;if(up>0){s.coins+=100*up}
+ const keys=Object.keys(s.steps.days).sort();while(keys.length>30)delete s.steps.days[keys.shift()];
+ save();renderUI();return{delta,k,up,v}}
+function stepResultMsg(r){if(r.err)return'❌ '+r.err;if(!r.delta)return`今天已登記 ${fmtN(r.v)} 步，沒有新增的步數`;
+ return`👟 新增 ${fmtN(r.delta)} 步！`+(r.k?`冒險點 +${r.k}${s.hatched?`、經驗 +${r.k*10}`:''}`:'（滿 1,000 步可換獎勵）')+(r.up?`\n🌟 累積 ${fmtN(tier()*STEP_TIER)} 步，突破成功！金幣 +${100*r.up}`:'')}
+function stepsDialog(){
+ const td=s.steps.days[today()]||0,tot=s.steps.total,nx=(tier()+1)*STEP_TIER,url=(inFrame?HOME_URL:location.origin+location.pathname)+'?steps=';
+ openModal('👟 步數冒險',`
+<p>今天：<b>${fmtN(td)}</b> 步　累積：<b>${fmtN(tot)}</b> 步</p>
+<p class="small">突破 ${'✦'.repeat(tier())||'0'}（每 10 萬步突破一次，戰鬥能力 +10%）距離下一次：${fmtN(nx-tot)} 步</p>
+<div class="prog"><i style="width:${(tot%STEP_TIER)/STEP_TIER*100}%"></i></div>
+<p class="small">每 1,000 步 → 經驗 +10、冒險點 +1（冒險點上限 30；每天另外免費補到 3 點）。每天最多計算 5 萬步。</p>
+<div class="row"><button class="btn pri" id="sPaste">📋 從剪貼簿貼上步數</button></div>
+<div class="row"><input type="text" id="sIn" inputmode="numeric" placeholder="或手動輸入今天的步數" style="flex:1 1 60%"><button class="btn" id="sOk" style="min-width:70px;flex:0 0 auto">登記</button></div>
+<div class="err" id="sErr"></div>
+<details style="margin-top:8px"><summary><b>📱 設定「捷徑」自動讀取健康步數（第一次請看）</b></summary>
+<ol class="howto">
+<li>打開 iPhone 內建的「<b>捷徑</b>」App → 右上「＋」新增捷徑，命名為「幻獸步數」。</li>
+<li>搜尋並加入動作「<b>尋找健康樣本</b>」：類型選「<b>步數</b>」，加入篩選條件「開始日期」「是今天」。（第一次會詢問健康權限，請允許）</li>
+<li>加入「<b>計算統計資料</b>」：選「<b>總和</b>」，輸入是上一步的「健康樣本」。</li>
+<li>加入「<b>四捨五入數字</b>」（取到個位）。</li>
+<li>加入「<b>拷貝到剪貼板</b>」，內容是四捨五入後的數字。</li>
+<li>加入「<b>URL</b>」，貼上下面這串網址，最後面再插入變數「四捨五入的數字」：<br><code>${esc(url)}</code><br><button class="btn" id="sCopyUrl" style="margin-top:6px">複製這串網址</button></li>
+<li>加入「<b>打開 URL</b>」。完成！</li>
+<li>（可選）「自動化」分頁 →「＋」→「特定時間」每天 21:30 →「立即執行」→ 選「幻獸步數」。</li>
+</ol>
+<p class="small">動作名稱依 iOS 版本可能略有不同。<br>• 在 <b>Safari</b> 玩：執行捷徑會自動開啟遊戲並登記步數。<br>• 在<b>主畫面 App</b> 玩：執行捷徑後回到遊戲，按「📋 從剪貼簿貼上步數」。</p>
+</details>`);
+ const done=r=>{const m=stepResultMsg(r);if(r.err){$('sErr').textContent=m;return}closeModal();toast(m,4000);say(m.split('\n')[0]);if(r.delta)spawn('shoe',3,{y:70,life:1.2,stagger:.2})};
+ $('sOk').onclick=()=>done(creditSteps($('sIn').value));
+ $('sCopyUrl').onclick=async()=>{try{await navigator.clipboard.writeText(url);toast('✅ 已複製網址')}catch(e){toast('請長按網址手動複製')}};
+ if(inFrame||!navigator.clipboard||!navigator.clipboard.readText)$('sPaste').classList.add('hidden');
+ $('sPaste').onclick=async()=>{try{const txt=await navigator.clipboard.readText();const m=/\d[\d,]*/.exec(txt||'');if(!m){$('sErr').textContent='剪貼簿裡沒有步數數字';return}done(creditSteps(m[0]))}catch(e){$('sErr').textContent='無法讀取剪貼簿，請改用手動輸入'}}}
+
+/* =========================================================
+   💞 配對（配對碼交換，不需伺服器）
+   ========================================================= */
+const BREED_COST=20,BREED_CD=6*3600000;
+function curGenome(){return genomeFromId(gidOf(s))}
+function mateCode(){const b=btoa(unescape(encodeURIComponent(JSON.stringify({app:'pf-mate',v:1,petName:s.name,gene:encodeGenome(curGenome()),route:s.route,level:s.level}))));return'PFM1.'+b+'.'+checksum(b)}
+function decodeMate(code){const m=/^PFM1\.([A-Za-z0-9+/=]+)\.([a-z0-9]+)$/.exec(String(code||'').replace(/\s+/g,''));if(!m)throw new Error('這不是配對碼（應該是 PFM1. 開頭）');
+ if(checksum(m[1])!==m[2])throw new Error('配對碼不完整，請請朋友重新傳一次');const o=JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+ const G=o&&o.app==='pf-mate'&&decodeGenome(o.gene);if(!G)throw new Error('配對碼內容錯誤');
+ return{G,gene:o.gene,name:typeof o.petName==='string'?chars(o.petName).slice(0,10).join(''):'朋友的幻獸',route:ROUTES.includes(o.route)?o.route:null,level:Math.floor(num(o.level,1,1,99))}}
+function thumb(cvEl,key,frame='happy1'){const S=sheet(key),x=cvEl.getContext('2d');x.imageSmoothingEnabled=false;x.clearRect(0,0,48,48);x.drawImage(S.cv,S.idx[frame]*CELL,0,CELL,CELL,0,0,48,48)}
+function mateDialog(){
+ const ready=s.hatched&&s.route,wait=Math.max(0,s.breedAt+BREED_CD-Date.now());
+ openModal('💞 配對',`
+<p class="small">兩隻<b>成長期（已進化）</b>的幻獸可以配對，生出<b>混合雙方基因</b>的蛋（有機率突變或更稀有）。蛋會放進「蛋籃」，你可以決定什麼時候孵。</p>
+<p><b>① 把你的配對碼傳給朋友</b></p>
+${ready?`<div class="row" style="margin-top:4px"><button class="btn pri" id="mCopy">複製我的配對碼</button>${!inFrame&&navigator.share?'<button class="btn" id="mShare">用 LINE 等分享</button>':''}</div>`:'<p class="small" style="color:#ff9aa8">你的幻獸要先進化（Lv.5）才能配對。</p>'}
+<p style="margin-top:12px"><b>② 貼上朋友的配對碼</b></p>
+<textarea id="mIn" placeholder="貼上朋友傳來的配對碼（PFM1. 開頭）"></textarea>
+<div class="row" style="margin-top:6px"><button class="btn pri" id="mGo">查看並配對（${BREED_COST} 金幣）</button></div>
+<div class="err" id="mErr"></div><div id="mPrev"></div>
+<p class="small">條件：心情 50% 以上、${BREED_COST} 金幣、每 6 小時可配對一次、蛋籃最多 6 顆。${wait?`<br>⏳ 還要 ${Math.ceil(wait/60000)} 分鐘才能再配對。`:''}</p>
+<div class="row"><button class="btn" id="mBasket">🧺 打開蛋籃（${s.eggs.length}）</button></div>`);
+ if(ready){$('mCopy').onclick=async()=>{const c=mateCode();try{await navigator.clipboard.writeText(c);toast('✅ 已複製配對碼，貼到 LINE 傳給朋友')}catch(e){$('mIn').value=c;$('mIn').select();toast('配對碼放在下方框框，請長按複製')}};
+  if($('mShare'))$('mShare').onclick=()=>navigator.share({title:'幻獸日記配對碼',text:`來跟我的「${s.name}」配對吧！在《幻獸日記》按「💞 配對」貼上：\n${mateCode()}\n遊戲網址：${HOME_URL}`}).catch(()=>{})}
+ $('mBasket').onclick=basketDialog;
+ $('mGo').onclick=()=>{let f;try{f=decodeMate($('mIn').value)}catch(e){$('mErr').textContent='❌ '+e.message;return}
+  if(!f.route){$('mErr').textContent='❌ 朋友的幻獸還沒進化，進化後才能配對';return}
+  if(!ready){$('mErr').textContent='❌ 你的幻獸要先進化（Lv.5）';return}
+  if(f.gene===encodeGenome(curGenome())&&f.name===s.name){$('mErr').textContent='❌ 這是你自己的配對碼喔，請貼朋友的';return}
+  const fk=petKey('x:'+f.gene,f.route),FF=formOf(fk);
+  $('mErr').textContent='';$('mPrev').innerHTML=`<div class="eggrow"><canvas id="mT1" width="48" height="48"></canvas><div style="font-size:22px">💞</div><canvas id="mT2" width="48" height="48"></canvas></div>
+   <p>${esc(s.name)} × ${esc(f.name)}（${esc(FF.name)} Lv.${f.level}）</p><div class="row"><button class="btn pri" id="mConfirm">確定配對！</button></div>`;
+  thumb($('mT1'),formKey());thumb($('mT2'),fk);
+  $('mConfirm').onclick=()=>{
+   if(Date.now()<s.breedAt+BREED_CD){$('mErr').textContent=`⏳ 還要 ${Math.ceil((s.breedAt+BREED_CD-Date.now())/60000)} 分鐘才能再配對`;return}
+   if(s.mood<50){$('mErr').textContent='❌ 心情要 50% 以上（先陪牠玩或摸摸）';return}
+   if(s.coins<BREED_COST){$('mErr').textContent=`❌ 金幣不足（需要 ${BREED_COST}）`;return}
+   if(s.eggs.length>=6){$('mErr').textContent='❌ 蛋籃滿了（最多 6 顆）';return}
+   const G=breedGenome(curGenome(),f.G);s.coins-=BREED_COST;s.breedAt=Date.now();s.mood=clamp(s.mood+10);
+   s.eggs.push({id:'x:'+encodeGenome(G),from:`${s.name} × ${f.name}`,at:Date.now()});save();renderUI();closeModal();
+   playAnim('happy');spawn('heart',8,{y:70,vy:-30,jx:50,life:1.6});sfx('hatch');toast(`🥚 得到一顆蛋${G.rarity===3?'（閃著金光！）':G.rarity===2?'（有點特別）':''}！在蛋籃裡`,3500);say('有新的蛋了！💕')}}}
+function basketDialog(){
+ openModal('🧺 蛋籃',s.eggs.length?`<p class="small">孵化其中一顆蛋時，目前的夥伴會告別（留在圖鑑），由新蛋開始。</p>${s.eggs.map((e,i)=>`<div class="eggrow"><canvas data-i="${i}" width="48" height="48"></canvas><div style="flex:1"><b>${esc(formOf(eggKey(e.id)).name)}</b><div class="small">來自：${esc(e.from)}<br>${fmtTime(e.at)}</div></div><button class="btn pri" data-hatch="${i}" style="min-width:64px;flex:0 0 auto">孵這顆</button></div>`).join('')}`
+  :'<p>蛋籃是空的。到「💞 配對」跟朋友的幻獸配對，就會得到蛋。</p>');
+ document.querySelectorAll('.eggrow canvas[data-i]').forEach(c=>thumb(c,eggKey(s.eggs[+c.dataset.i].id),'egg00'));
+ document.querySelectorAll('[data-hatch]').forEach(b=>b.onclick=()=>{const i=+b.dataset.hatch,e=s.eggs[i];
+  confirmBox('🥚 孵這顆蛋？',`目前的${s.hatched?'夥伴「'+esc(s.name)+'」會告別（永遠留在圖鑑）':'蛋會被換掉'}，改由這顆蛋開始。`,'孵這顆',()=>{s.eggs.splice(i,1);newPet(e.id.slice(2),e.from)})})}
+
+/* =========================================================
+   ⚔️ 冒險：關卡制回合戰鬥
+   ========================================================= */
+const ELEM={ember:'fire',mist:'water',sylvan:'leaf'},EL_NAME={fire:'🔥火',water:'💧水',leaf:'🌿森',none:'⭐無'},BEATS={fire:'leaf',leaf:'water',water:'fire'};
+const SP_NAME={fire:'火球術',water:'泡泡砲',leaf:'飛葉刃',none:'星星衝撞'},SP_ICON={fire:'fire',water:'bubble',leaf:'leaf',none:'star'};
+const AREAS=['青草原','迷霧湖','火山口','古森林','星之塔'];
+function areaName(n){return AREAS[Math.min(4,Math.floor((n-1)/5))]+' '+(n>20?n-20:((n-1)%5)+1)}
+function mkFighter(name,key,level,route,tierN,cond){const k=1+.1*tierN;
+ return{name,key,level,el:ELEM[route]||'none',max:Math.round((30+level*6)*k),hp:Math.round((30+level*6)*k),atk:(8+level*2)*k*cond,def:(6+level*1.5)*k,spd:5+level+tierN,cd:0,guard:false}}
+function foeFor(n){const seed=(Math.imul(n,2654435761)^0x9e3779b9)>>>0,G=makeGenome(seed),boss=n%5===0;if(boss)G.rarity=3;
+ const route=n>=4?ROUTES[seed%3]:null,id='x:'+encodeGenome(G),F=formOf(petKey(id,route));
+ const f=mkFighter((boss?'Boss ':'野生的 ')+F.name,petKey(id,route),Math.max(1,Math.round(n*.9)+(boss?2:0)),route,0,1);if(boss){f.max=f.hp=Math.round(f.max*1.4)}return f}
+let B=null;const bparts=[];const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function advDialog(){dailyFree();
+ const can=s.hatched&&!s.sleeping;let list='';const top=s.adv.stage;
+ for(let n=top;n>=Math.max(1,top-5);n--){const f=foeFor(n);list+=`<button class="btn stagebtn ${n===top?'pri':''}" data-st="${n}"><span>${n%5===0?'👑 ':''}第 ${n} 關 · ${areaName(n)}</span><span class="small" style="color:inherit">Lv.${f.level} ${EL_NAME[f.el]}</span></button>`}
+ openModal('⚔️ 冒險',`<p>冒險點：<b>${s.adv.pts}</b> / 30　戰績：${s.adv.wins} 勝 ${s.adv.losses} 敗</p>
+<p class="small">每次挑戰花 1 冒險點、10 體力。走路可以賺冒險點（每 1,000 步 +1），每天也會免費補到 3 點。<br>屬性相剋：🔥 剋 🌿、🌿 剋 💧、💧 剋 🔥（傷害 1.5 倍）。每 5 關有 Boss。</p>
+${can?'':'<p class="err">'+(s.hatched?'牠在睡覺，先叫醒牠吧':'先孵化幻獸才能冒險')+'</p>'}${list}`);
+ document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{if(!can)return;
+  if(s.adv.pts<1){toast('冒險點不夠了！去走走路或明天再來 👟');return}if(s.energy<15){toast('體力不夠，先讓牠睡一下');return}
+  closeModal();startBattle(+b.dataset.st)})}
+function startBattle(n){tick();s.adv.pts--;s.energy=clamp(s.energy-10);s.hunger=clamp(s.hunger-5);save();renderUI();
+ const cond=s.mood<30?.85:1,me=mkFighter(s.name,formKey(),s.level,s.route,tier(),cond),foe=foeFor(n);
+ B={n,me,foe,busy:false,over:false,fx:{me:{dx:0,dy:0,flash:0,faint:0,anim:null,t0:0},foe:{dx:0,dy:0,flash:0,faint:0,anim:null,t0:0}}};bparts.length=0;
+ $('battle').classList.remove('hidden');$('bDone').classList.add('hidden');$('moves').classList.remove('hidden');
+ $('mvSp').textContent='✨ '+SP_NAME[me.el];blog(`${foe.name} 出現了！（${EL_NAME[foe.el]} Lv.${foe.level}）`);bUI();sfx('play')}
+function blog(t){$('blog').textContent=t}
+function bUI(){const{me,foe}=B;$('fName').textContent=`${foe.name}  Lv.${foe.level} ${EL_NAME[foe.el]}`;$('fHp').textContent=`${foe.hp}/${foe.max}`;$('fBar').style.width=foe.hp/foe.max*100+'%';
+ $('mName').textContent=`${me.name}  Lv.${me.level} ${EL_NAME[me.el]}${tier()?' '+'✦'.repeat(tier()):''}`;$('mHp').textContent=`${me.hp}/${me.max}`;$('mBar').style.width=me.hp/me.max*100+'%';
+ $('mvSp').disabled=me.cd>0;$('mvSp').textContent='✨ '+SP_NAME[me.el]+(me.cd>0?`（${me.cd}）`:'');document.querySelectorAll('#moves .act').forEach(b=>{if(b!==$('mvSp'))b.disabled=B.busy;else b.disabled=B.busy||me.cd>0})}
+function aiMove(f){if(f.hp<f.max*.3&&Math.random()<.35)return'guard';if(f.cd===0&&Math.random()<.5)return'special';return'tackle'}
+async function doMove(a,d,mv,side){
+ const A=B.fx[side],D=B.fx[side==='me'?'foe':'me'];
+ if(mv==='guard'){a.guard=true;const h=Math.round(a.max*.08);a.hp=Math.min(a.max,a.hp+h);blog(`${a.name} 擺出防禦姿勢！（回復 ${h}）`);A.anim='happy';A.t0=performance.now();sfx('pet');bUI();await sleep(900);return}
+ const sp=mv==='special',pow=sp?(a.el==='none'?1.15:1.3):1;if(sp)a.cd=3;
+ let mult=1;if(sp&&a.el!=='none'&&d.el!=='none'){if(BEATS[a.el]===d.el)mult=1.5;else if(BEATS[d.el]===a.el)mult=.67}
+ let dmg=Math.max(1,Math.round(a.atk*pow*(a.atk/(a.atk+d.def))*1.6*mult*(.85+Math.random()*.3)));if(d.guard){dmg=Math.max(1,Math.round(dmg*.5));d.guard=false}
+ const crit=Math.random()<.08;if(crit)dmg=Math.round(dmg*1.5);
+ blog(`${a.name} 使出${sp?'「'+SP_NAME[a.el]+'」':'撞擊'}！`);A.anim='jump';A.t0=performance.now();const dir=side==='me'?1:-1;A.dx=10*dir;A.dy=-6*dir;sfx(sp?'evolve':'tap');await sleep(220);A.dx=0;A.dy=0;
+ d.hp=Math.max(0,d.hp-dmg);D.flash=performance.now()+500;buzz(20);
+ const tx=side==='me'?94:34,ty=side==='me'?50:82;spawn(sp?SP_ICON[a.el]:'spark',sp?6:3,{x:tx,y:ty,vy:-20,jx:30,life:.8,spread:16},bparts);sfx('crack');bUI();
+ await sleep(450);blog(`${crit?'會心一擊！':''}造成 ${dmg} 點傷害${mult>1?'，效果絕佳！':mult<1?'，效果不太好…':''}`);await sleep(750)}
+async function onMove(mv){if(!B||B.busy||B.over)return;unlockAudio();
+ if(mv==='run'){B.busy=true;bUI();blog(`${B.me.name} 逃跑了…`);await sleep(800);endBattle(null);return}
+ if(mv==='special'&&B.me.cd>0)return;B.busy=true;bUI();
+ const{me,foe}=B,fm=aiMove(foe),meFirst=me.spd>foe.spd||(me.spd===foe.spd&&Math.random()<.5)||mv==='guard';
+ const order=fm==='guard'&&mv!=='guard'?[['foe',fm],['me',mv]]:meFirst?[['me',mv],['foe',fm]]:[['foe',fm],['me',mv]];
+ for(const[side,m]of order){const a=side==='me'?me:foe,d=side==='me'?foe:me;if(a.hp<=0)break;await doMove(a,d,m,side);if(d.hp<=0)break}
+ me.cd=Math.max(0,me.cd-1);foe.cd=Math.max(0,foe.cd-1);
+ if(foe.hp<=0){B.fx.foe.faint=performance.now();blog(`${foe.name} 倒下了！`);await sleep(900);endBattle(true);return}
+ if(me.hp<=0){B.fx.me.faint=performance.now();blog(`${me.name} 沒力氣了…`);await sleep(900);endBattle(false);return}
+ B.busy=false;bUI()}
+function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('bDone').classList.remove('hidden');const n=B.n;
+ if(win){const c=8+n*2,x=15+n*3;s.coins+=c;s.adv.wins++;s.mood=clamp(s.mood+5);if(n===s.adv.stage)s.adv.stage++;
+  blog(`🎉 勝利！金幣 +${c}、經驗 +${x}${n===s.adv.stage-1?`，解鎖第 ${s.adv.stage} 關！`:''}`);sfx('level');spawn('star',10,{x:40,y:70,vy:-30,jx:50,life:1.4},bparts);gainXP(x)}
+ else if(win===false){s.adv.losses++;s.mood=clamp(s.mood-5);blog('輸了…讓牠休息一下，再挑戰吧！');sfx('no')}
+ else blog('順利逃走了。');save();renderUI()}
+function closeBattle(){$('battle').classList.add('hidden');B=null;renderUI();if(s.hatched)say(s.mood>60?'冒險好好玩！':'有點累了…')}
+const bcv=$('bcv'),bctx=bcv.getContext('2d');bctx.imageSmoothingEnabled=false;
+function drawBattle(now){if(!B||!bgCache)return;const c=bctx;c.drawImage(bgCache,0,0);c.fillStyle='rgba(10,20,40,.15)';c.fillRect(0,0,W,H);
+ const one=(f,FX,x,y,side)=>{const S=sheet(f.key);let fr;if(f.hp<=0)fr='sad0';else if(FX.anim==='jump'&&now-FX.t0<500)fr=['jump0','jump1','jump0'][Math.floor((now-FX.t0)/170)%3];
+  else if(FX.anim==='happy'&&now-FX.t0<800)fr='happy0';else fr=f.hp<f.max*.3?['tired0','tired1'][Math.floor(now/600)%2]:['idle0','idle0','idle1','idle1'][Math.floor(now/400)%4];
+  c.fillStyle='rgba(20,60,30,.3)';c.fillRect(x+12,y+44,24,2);
+  const fade=FX.faint?Math.max(0,1-(now-FX.faint)/700):1;c.globalAlpha=fade;
+  const src=(FX.flash>now&&Math.floor(now/70)%2===0)?S.sil:S.cv;c.drawImage(src,S.idx[fr]*CELL,0,CELL,CELL,x+FX.dx,y+FX.dy+(FX.faint?Math.min(8,(now-FX.faint)/60):0),CELL,CELL);c.globalAlpha=1};
+ one(B.foe,B.fx.foe,70,18,'foe');one(B.me,B.fx.me,10,56,'me');
+ const dt=.045;for(let i=bparts.length-1;i>=0;i--){const p=bparts[i];p.t+=dt;if(p.t<0)continue;if(p.t>p.life){bparts.splice(i,1);continue}p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
+  const ic=ICV[p.ic];c.globalAlpha=p.t>p.life-.3?Math.max(0,(p.life-p.t)/.3):1;c.drawImage(ic,Math.round(p.x-ic.width/2),Math.round(p.y-ic.height/2));c.globalAlpha=1}}
+document.querySelectorAll('[data-mv]').forEach(b=>b.addEventListener('click',()=>onMove(b.dataset.mv)));
+$('bDone').onclick=closeBattle;
 
 /* =========================================================
    iPhone 相關：主畫面提示、持久化儲存、生命週期
@@ -712,7 +951,8 @@ cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect(),x=(e.clientX-
  if(x>=PET_X-2&&x<=PET_X+CELL+2&&y>=PET_Y-6&&y<=PET_Y+CELL+2)tapPet();else{unlockAudio();spawn('spark',1,{x,y,vy:-6,jx:0,jy:0,life:.5,spread:0})}});
 cv.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tapPet()}});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
-document.querySelectorAll('.act').forEach(b=>b.addEventListener('click',()=>act(b.dataset.act)));
+document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>act(b.dataset.act)));
+$('bAdv').onclick=advDialog;$('bSteps').onclick=stepsDialog;$('bMate').onclick=mateDialog;
 $('bRename').onclick=()=>renameDialog(false);$('bCodex').onclick=codexDialog;$('bSave').onclick=saveDialog;$('bMenu').onclick=menuDialog;
 $('homeTipX').onclick=()=>{$('homeTip').classList.add('hidden');store.set(TIP_KEY,'1')};
 
@@ -722,9 +962,11 @@ function init(){
  buildIcons();cloudCv=gridCanvas(CLOUD);
  buildStats();document.querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));
  const L=load();s=L.s;
- tick();
+ tick();dailyFree();
+ let urlMsg='';try{const q=new URLSearchParams(location.search);if(q.has('steps')){urlMsg=stepResultMsg(creditSteps(q.get('steps'),q.get('d')));history.replaceState(null,'',location.pathname+location.hash)}}catch(e){}
  if(s.hatched&&!s.route&&s.level>=5)setTimeout(checkEvolve,1500);
  save();renderUI();startLoop();
+ if(urlMsg)setTimeout(()=>{toast(urlMsg,5000);spawn('shoe',3,{y:70,life:1.2,stagger:.2})},300);
  if(L.src==='legacy')toast('✅ 已自動搬移 V1.x 舊存檔');
  else if(L.src==='backup-corrupt')toast('⚠️ 主存檔損壞，已從備份還原');
  if(!store.ok)$('saveWarn').classList.remove('hidden');
@@ -736,7 +978,7 @@ function init(){
  if(!inFrame&&'serviceWorker'in navigator&&(location.protocol==='https:'||location.hostname==='localhost')&&!/claude|anthropic/.test(location.hostname))
   navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{});
 }
-window.PF={get state(){return s},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
+window.PF={get state(){return s},creditSteps,mateCode,decodeMate,breedGenome,encodeGenome,decodeGenome,startBattle,onMove,get B(){return B},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
  debug:{skip(min){s.lastTick-=min*60000;tick();renderUI();save()},xp(n){gainXP(n);renderUI();save()},set(o){Object.assign(s,o);renderUI();save()}}};
 try{init()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<div style="padding:12px;background:#a8394c;color:#fff">啟動錯誤：${esc(e.message)}</div>`);throw e}
 </script>
