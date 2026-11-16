@@ -97,15 +97,18 @@ function makeGenome(seed) {
   const G = { seed, rarity, hue, sat: 45 + Math.floor(r() * 30), acc: (hue + 140 + Math.floor(r() * 80)) % 360, bh: (hue + Math.floor(r() * 60) - 30 + 360) % 360,
     rx: 10 + Math.floor(r() * 3), ry: 9 + Math.floor(r() * 3), side: pick(G_SIDE), top: pick(G_TOP), tail: pick(G_TAIL), pattern: pick(G_PAT), eyes: pick(G_EYE), wings: r() < .15 };
   if (rarity >= 2 && G.pattern === 'none') G.pattern = ['spots', 'stripes', 'belly'][Math.floor(r() * 3)];
+  G.el = EL_LIST[Math.floor(rng((seed ^ 0x5bd1e995) >>> 0)() * EL_LIST.length)];   // V1.12：蛋的屬性（另一組亂數，不影響外觀）
   return G;
 }
-const CLASSIC_G = { rarity: 1, hue: 168, sat: 45, acc: 42, bh: 130, rx: 11, ry: 10, side: 'nubs', top: 'none', tail: 'small', pattern: 'none', eyes: 'open', wings: false };
-function encodeGenome(G) { return [G.rarity, G.hue, G.sat, G.acc, G.bh, G.rx, G.ry, G_SIDE.indexOf(G.side), G_TOP.indexOf(G.top), G_TAIL.indexOf(G.tail), G_PAT.indexOf(G.pattern), G_EYE.indexOf(G.eyes), G.wings ? 1 : 0].join('.'); }
-const G_LIM = [[1, 3], [0, 359], [30, 90], [0, 359], [0, 359], [9, 13], [8, 12], [0, 5], [0, 5], [0, 5], [0, 4], [0, 1], [0, 1]];
+const EL_LIST = ['flame', 'tide', 'forest', 'earth', 'bird', 'elec', 'metal'];
+const CLASSIC_G = { rarity: 1, hue: 168, sat: 45, acc: 42, bh: 130, rx: 11, ry: 10, side: 'nubs', top: 'none', tail: 'small', pattern: 'none', eyes: 'open', wings: false, el: 'tide' };
+function encodeGenome(G) { return [G.rarity, G.hue, G.sat, G.acc, G.bh, G.rx, G.ry, G_SIDE.indexOf(G.side), G_TOP.indexOf(G.top), G_TAIL.indexOf(G.tail), G_PAT.indexOf(G.pattern), G_EYE.indexOf(G.eyes), G.wings ? 1 : 0, Math.max(0, EL_LIST.indexOf(G.el))].join('.'); }
+const G_LIM = [[1, 3], [0, 359], [30, 90], [0, 359], [0, 359], [9, 13], [8, 12], [0, 5], [0, 5], [0, 5], [0, 4], [0, 1], [0, 1], [0, 6]];
 function decodeGenome(c) {
   const a = String(c).split('.').map(Number);
-  if (a.length !== 13 || a.some((v, i) => !Number.isInteger(v) || v < G_LIM[i][0] || v > G_LIM[i][1])) return null;
-  return { rarity: a[0], hue: a[1], sat: a[2], acc: a[3], bh: a[4], rx: a[5], ry: a[6], side: G_SIDE[a[7]], top: G_TOP[a[8]], tail: G_TAIL[a[9]], pattern: G_PAT[a[10]], eyes: G_EYE[a[11]], wings: !!a[12] };
+  if ((a.length !== 13 && a.length !== 14) || a.some((v, i) => !Number.isInteger(v) || v < G_LIM[i][0] || v > G_LIM[i][1])) return null;
+  let el = EL_LIST[a[13]]; if (a.length === 13) { let h = 0; for (const ch of String(c)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; el = EL_LIST[h % EL_LIST.length]; }   // V1.11 以前的 13 碼基因：用雜湊決定屬性
+  return { rarity: a[0], hue: a[1], sat: a[2], acc: a[3], bh: a[4], rx: a[5], ry: a[6], side: G_SIDE[a[7]], top: G_TOP[a[8]], tail: G_TAIL[a[9]], pattern: G_PAT[a[10]], eyes: G_EYE[a[11]], wings: !!a[12], el };
 }
 function breedGenome(A, B, r = Math.random) {
   const pick = (a, b) => r() < .5 ? a : b, mut = .08, any = arr => arr[Math.floor(r() * arr.length)];
@@ -114,6 +117,7 @@ function breedGenome(A, B, r = Math.random) {
     sat: Math.round(clamp(pick(A.sat, B.sat) + (r() - .5) * 10, 40, 80)), acc: pick(A.acc, B.acc), bh: pick(A.bh, B.bh), rx: pick(A.rx, B.rx), ry: pick(A.ry, B.ry),
     side: r() < mut ? any(G_SIDE) : pick(A.side, B.side), top: r() < mut ? any(G_TOP) : pick(A.top, B.top), tail: r() < mut ? any(G_TAIL) : pick(A.tail, B.tail),
     pattern: r() < mut ? any(G_PAT) : pick(A.pattern, B.pattern), eyes: pick(A.eyes, B.eyes), wings: r() < mut ? r() < .5 : pick(A.wings, B.wings) };
+  G.el = r() < .05 ? any(EL_LIST) : pick(A.el || 'tide', B.el || 'tide');   // 繼承爸爸或媽媽的屬性，5% 突變
   const best = Math.max(A.rarity, B.rarity), q = r();
   G.rarity = q < (best === 3 ? .15 : best === 2 ? .08 : .05) ? 3 : q < (best >= 2 ? .45 : .25) ? 2 : 1;
   if (G.rarity >= 2 && G.pattern === 'none') G.pattern = any(['spots', 'stripes', 'belly']);
@@ -131,7 +135,8 @@ function genomeFromId(id) {
 function okId(id) { return typeof id === 'string' && (id === 'classic' || /^g:\d+$/.test(id) || (/^x:[\d.]+$/.test(id) && !!decodeGenome(id.slice(2)))); }
 /* 角色外觀代碼：juv / teen / flame|tide|forest / asc-<路線> */
 function formCode(stage, route) {
-  if (stage === 'adolescent') return 'teen';
+  if (stage === 'adolescent') return route ? 'teen-' + route : 'teen';
+  if (stage === 'juvenile' && route) return 'juv-' + route;
   if (stage === 'adult' && route) return route;
   if (stage === 'ascended' && route) return 'asc-' + route;
   return 'juv';
@@ -182,7 +187,7 @@ function sanitize(o, now = Date.now()) {
   if (!r.hatched) { r.stage = 'egg'; r.route = null; r.xp = 0; }
   else if (!legacy && STAGES.includes(o.stage) && o.stage !== 'egg') r.stage = o.stage;
   else r.stage = route ? 'adult' : 'juvenile';                 // 舊版已進化的視為成年
-  if ((r.stage === 'adult' || r.stage === 'ascended') && !r.route) r.stage = 'adolescent';
+  // 已孵化但還沒有屬性的舊存檔：等路線點數讀完後再決定（見下方）
   const pa = o.path && typeof o.path === 'object' ? o.path : null;
   if (pa) for (const k of ROUTES) r.path[k] = int(pa[k], 0, 0, 1e7);
   else if (legacy && o.care && typeof o.care === 'object') {   // 舊版照顧次數 → 路線點數（近似）
@@ -218,6 +223,7 @@ function sanitize(o, now = Date.now()) {
   if (st.days && typeof st.days === 'object') for (const k in st.days) if (/^\d{4}-\d\d-\d\d$/.test(k)) r.steps.days[k] = int(st.days[k], 0, 0, 200000);
   if (legacy && !pa) r.path.earth = Math.floor(r.steps.total / CONFIG.steps.forestEvery);
   const av = o.adv && typeof o.adv === 'object' ? o.adv : {};
+  if (r.hatched && !r.route) r.route = ROUTES.some(k => r.path[k] > 0) ? pickRoute(r) : (genomeFromId(gidOf(r)).el || 'tide');
   r.adv = { stage: int(av.stage, 1, 1, 999), wins: int(av.wins, 0, 0, 1e7), losses: int(av.losses, 0, 0, 1e7) };
   r.dex = Array.isArray(o.dex) ? o.dex.filter(e => e && typeof e === 'object').slice(-200).map(e => ({
     id: okId(e.id) ? e.id : (Number.isInteger(e.seed) ? 'g:' + e.seed : 'classic'),
@@ -387,7 +393,7 @@ function checkStages(st, now = Date.now()) {
     const q = stageReq(st, now);
     if (!q || !q.ageOk || !q.xpOk || !q.eventOk) break;
     const from = st.stage;
-    if (q.next === 'adult') st.route = pickRoute(st);
+    if (q.next === 'adult' && !st.route) st.route = pickRoute(st);
     st.stage = q.next;
     out.push({ from, to: st.stage, route: st.route });
     journal(st, now, { adolescent: '長成少年期了！', adult: `進化成成年期（${ROUTE_CH[st.route]}系）！`, ascended: '達到高階型態！' }[st.stage]);
@@ -396,15 +402,15 @@ function checkStages(st, now = Date.now()) {
   return out;
 }
 function tendencyHint(st) {
-  if (st.stage === 'adult' || st.stage === 'ascended') return null;
-  const p = st.path; if (ROUTES.every(k => !p[k])) return '還看不出牠會往哪個方向長大';
-  return { flame: '尾巴尖好像暖暖的…', tide: '眼睛像水面一樣閃閃發亮…', forest: '身上有淡淡的青草香…', earth: '腳步越來越穩，身上沾著泥土味…', bird: '常常抬頭看天空，好像想飛…', elec: '摸牠的時候會劈啪一下…', metal: '身體摸起來越來越硬，亮晶晶的…' }[pickRoute(st)];
+  if (!st.hatched || !st.route) return null;
+  return { flame: '尾巴尖好像暖暖的…', tide: '眼睛像水面一樣閃閃發亮…', forest: '身上有淡淡的青草香…', earth: '腳步越來越穩，身上沾著泥土味…', bird: '常常抬頭看天空，好像想飛…', elec: '摸牠的時候會劈啪一下…', metal: '身體摸起來越來越硬，亮晶晶的…' }[st.route];
 }
 
 /* ---------------- 孵化 ---------------- */
 function hatch(st, now = Date.now()) {
   st.hatched = true; st.eggTaps = 0; st.hatchedAt = now; st.lastTick = now; st.stage = 'juvenile';
-  const id = gidOf(st); if (!st.dex.find(x => x.id === id)) st.dex.push({ id, route: null, stage: 'juvenile', petName: st.name, at: now });
+  st.route = genomeFromId(gidOf(st)).el || 'tide';   // V1.12：屬性在蛋裡就決定，一路長到高階
+  const id = gidOf(st); if (!st.dex.find(x => x.id === id)) st.dex.push({ id, route: st.route, stage: 'juvenile', petName: st.name, at: now });
   journal(st, now, '孵化了！');
 }
 
@@ -456,7 +462,7 @@ const AREA_ROUTE = [null, 'tide', 'flame', 'forest', 'earth', 'bird', 'elec', 'm
 function foeFor(n) {
   const seed = (Math.imul(n, 2654435761) ^ 0x9e3779b9) >>> 0, G = makeGenome(seed), boss = n % 5 === 0;
   if (boss) G.rarity = 3;
-  const area = AREA_ROUTE[Math.min(AREA_ROUTE.length - 1, Math.floor((n - 1) / 5))], route = n < 4 ? null : (area && (seed >>> 8) % 10 < 7 ? area : ROUTES[seed % ROUTES.length]), stage = route ? 'adult' : (n >= 2 ? 'adolescent' : 'juvenile');
+  const area = AREA_ROUTE[Math.min(AREA_ROUTE.length - 1, Math.floor((n - 1) / 5))], route = area && (seed >>> 8) % 10 < 7 ? area : ROUTES[seed % ROUTES.length], stage = n >= 4 ? 'adult' : (n >= 2 ? 'adolescent' : 'juvenile');
   const lvl = Math.max(1, Math.round(n * .9) + (boss ? 2 : 0));
   return { id: 'x:' + encodeGenome(G), route, stage, level: lvl, boss };
 }
@@ -664,7 +670,7 @@ function breed(st, friend, now = Date.now(), r = Math.random) {
 }
 
 const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars, dayKey, hourIn, level, rng, makeGenome, CLASSIC_G, encodeGenome, decodeGenome, breedGenome,
-  G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
+  G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
   canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,

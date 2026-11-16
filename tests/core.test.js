@@ -58,7 +58,7 @@ t('少年期：12h 與 100 XP 都要達到', () => {
 });
 t('成年期：48h 與 350 XP 邊界', () => { const s = hatched(); s.xp = 349; assert.equal(C.checkStages(s, T0 + 48 * H).map(x => x.to).join(), 'adolescent'); s.xp = 350; assert.equal(C.checkStages(s, T0 + 48 * H)[0].to, 'adult'); });
 t('高階：168h、1000 XP 且完成特殊事件', () => {
-  const s = hatched(); s.xp = 1000; s.path.flame = 10; const tr = C.checkStages(s, T0 + 168 * H);
+  const s = hatched(); s.xp = 1000; s.route = 'flame'; const tr = C.checkStages(s, T0 + 168 * H);
   assert.deepEqual(tr.map(x => x.to), ['adolescent', 'adult']); assert.equal(s.route, 'flame');
   s.events.volcano = true; assert.equal(C.checkStages(s, T0 + 168 * H - 1).length, 0); assert.equal(C.checkStages(s, T0 + 168 * H)[0].to, 'ascended');
 });
@@ -71,8 +71,8 @@ t('路線平手：先比特殊事件，再依 tide > forest > flame', () => {
   s.events.volcano = true; assert.equal(C.pickRoute(s), 'flame'); s.events.volcano = false; s.path.tide = 4; assert.equal(C.pickRoute(s), 'forest');
 });
 t('缺少特殊事件不能高階進化（三條路線）', () => {
-  for (const rt of ['flame', 'tide', 'forest']) { const s = hatched(); s.xp = 2000; s.path[rt] = 99; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); assert.equal(s.route, rt); }
-  const s = hatched(); s.xp = 2000; s.path.tide = 99; s.events.moonspring = true; s.bond = 59; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); s.bond = 60; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
+  for (const rt of ['flame', 'tide', 'forest']) { const s = hatched(); s.xp = 2000; s.route = rt; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); assert.equal(s.route, rt); }
+  const s = hatched(); s.xp = 2000; s.route = 'tide'; s.events.moonspring = true; s.bond = 59; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); s.bond = 60; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
 });
 
 // 7. 零金幣、零食物不會卡死
@@ -127,7 +127,7 @@ t('V1.5 舊存檔遷移：等級轉總 XP、路線改名、成年期', () => {
 t('V1.2 舊存檔遷移', () => { const r = C.sanitize({ hatched: true, name: '舊', level: 3, xp: 40, coins: 77, hunger: 60, updated: T0 - H }, T0); assert.equal(r.xp, 190); assert.equal(r.stage, 'juvenile'); assert.equal(r.lastTick, T0 - H); });
 t('損毀資料安全恢復：亂碼數值被修正', () => {
   const r = C.sanitize({ v: 6, hatched: true, hunger: 'abc', mood: -50, clean: 999, coins: -3, xp: NaN, stage: 'hacker', route: 'lava', inv: { food: -1 }, path: { flame: 'x' }, genes: '1.2.3', dex: 'no', eggs: [{ id: 'evil' }] }, T0);
-  assert.ok(nonNeg(r)); assert.equal(r.hunger, 80); assert.equal(r.mood, 0); assert.equal(r.clean, 100); assert.equal(r.stage, 'juvenile'); assert.equal(r.route, null); assert.equal(r.genes, null); assert.equal(r.eggs.length, 0);
+  assert.ok(nonNeg(r)); assert.equal(r.hunger, 80); assert.equal(r.mood, 0); assert.equal(r.clean, 100); assert.equal(r.stage, 'juvenile'); assert.ok(C.EL_LIST.includes(r.route)); assert.equal(r.genes, null); assert.equal(r.eggs.length, 0);
 });
 t('null / 非物件 → 全新存檔', () => { assert.equal(C.sanitize(null, T0).stage, 'egg'); assert.equal(C.sanitize('x', T0).stage, 'egg'); });
 t('基因碼編碼／解碼可逆，非法碼被拒絕', () => { const G = C.makeGenome(42); const D = C.decodeGenome(C.encodeGenome(G)); delete G.seed; assert.deepEqual(D, G); assert.equal(C.decodeGenome('9.9.9'), null); });
@@ -143,7 +143,7 @@ t('種植：沒種子不能種；每格只能一株；金幣買種子', () => { 
 t('種植：時間倒退不會變成負進度', () => { const s = hatched(); C.plant(s, 0, T0); const q = C.plotState(s, 0, T0 - H); assert.equal(q.progress, 0); assert.ok(!q.ripe); });
 t('種植：存檔往返保留田地', () => { const s = hatched(); C.plant(s, 2, T0); const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(r.plots[2].at, T0); assert.equal(r.plots.length, 3); });
 t('森系高階：收成 10 次＋古樹事件', () => {
-  const s = hatched(); s.xp = 2000; s.path.forest = 99; s.events.oldtree = true; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult');
+  const s = hatched(); s.xp = 2000; s.route = 'forest'; s.events.oldtree = true; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult');
   s.inv.seeds = 20; let now = T0; for (let i = 0; i < 10; i++) { C.plant(s, 0, now); now += 2 * H; C.harvest(s, 0, now); }
   assert.equal(s.harvests, 10); C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
 });
@@ -240,9 +240,17 @@ t('新路線點數來源：步數→土、進球→鳥、蓄力與羈絆→電�
   C.battleCharge(s); C.battleBond(s, T0); assert.equal(s.path.elec, 4); assert.equal(s.bondUses, 1);
   s.clean = 10; C.act(s, 'wash', T0); C.addCore(s, 50, T0); C.clearCore(s, 0, T0); assert.equal(s.path.metal, 2); assert.equal(s.cleanups, 1);
 });
-t('七條路線都能在成年時被選到', () => { for (const r of ['flame', 'tide', 'forest', 'earth', 'bird', 'elec', 'metal']) { const s = hatched(); s.xp = 400; s.path[r] = 50; C.checkStages(s, T0 + 50 * H); assert.equal(s.route, r); } });
+t('屬性在蛋裡就決定：孵化就有屬性，長到成年、高階都不會變', () => {
+  for (let i = 0; i < 30; i++) { const s = C.fresh(T0); const el = C.genomeFromId(C.gidOf(s)).el; assert.ok(C.EL_LIST.includes(el)); C.hatch(s, T0); assert.equal(s.route, el);
+    s.xp = 400; s.path.flame = 999; C.checkStages(s, T0 + 50 * H); assert.equal(s.stage, 'adult'); assert.equal(s.route, el); }
+});
+t('7 種屬性的蛋都會出現（分布大致平均）', () => { const c = {}; for (let i = 0; i < 7000; i++) { const el = C.makeGenome(i * 2654435761 >>> 0).el; c[el] = (c[el] || 0) + 1; } for (const el of C.EL_LIST) assert.ok(c[el] > 800 && c[el] < 1200, el + ':' + c[el]); });
+t('加上屬性不會改變舊蛋的外觀', () => { const G = C.makeGenome(12345); assert.equal(G.hue, C.makeGenome(12345).hue); const { el, ...rest } = G; assert.ok(el); assert.ok(!('el' in rest)); });
+t('配對：寶寶繼承爸媽其中一方的屬性（偶爾突變）', () => { const A = Object.assign(C.makeGenome(1), { el: 'elec' }), B = Object.assign(C.makeGenome(2), { el: 'metal' }); let same = 0; for (let i = 0; i < 400; i++) { const g = C.breedGenome(A, B); if (g.el === 'elec' || g.el === 'metal') same++; } assert.ok(same > 370); });
+t('基因碼帶屬性；舊的 13 碼基因也能讀', () => { const G = Object.assign(C.makeGenome(9), { el: 'bird' }); assert.equal(C.decodeGenome(C.encodeGenome(G)).el, 'bird'); const old = C.encodeGenome(G).split('.').slice(0, 13).join('.'); assert.ok(C.EL_LIST.includes(C.decodeGenome(old).el)); });
+t('舊存檔：已孵化沒屬性 → 有照顧點數用點數、沒有就用基因', () => { const a = C.sanitize({ v: 7, hatched: true, seed: 5, path: { metal: 9 } }, T0); assert.equal(a.route, 'metal'); const b = C.sanitize({ v: 7, hatched: true, seed: 5 }, T0); assert.equal(b.route, C.makeGenome(5).el); });
 t('新路線高階條件：Boss 事件＋累積條件', () => {
-  const mk = r => { const s = hatched(); s.xp = 2000; s.path[r] = 99; C.checkStages(s, T0 + 200 * H); return s; };
+  const mk = r => { const s = hatched(); s.xp = 2000; s.route = r; C.checkStages(s, T0 + 200 * H); return s; };
   let s = mk('earth'); s.events.canyon = true; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); s.steps.total = 100000; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
   s = mk('bird'); s.events.skypeak = true; s.ball.goals = 29; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); s.ball.goals = 30; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
   s = mk('elec'); s.events.thunder = true; s.bondUses = 5; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
