@@ -119,11 +119,11 @@ async def main():
         await p.click('#bMenu'); await p.click('#mJournal'); await p.wait_for_timeout(300); txt = await p.inner_text('#sheet')
         ok('日記自動記錄孵化與進化', '孵化' in txt and '少年期' in txt and '成年期' in txt); await p.screenshot(path=f'{OUT}/08_journal.png'); await closeall(p)
         # ---------- 7. 零資源不卡死 ----------
-        await p.evaluate("PF.debug.set({coins:0,inv:{food:0,seeds:0,candy:0},hunger:20,sleeping:false})"); await p.wait_for_timeout(1200)
+        await p.evaluate("PF.debug.set({coins:0,inv:{food:0,seeds:0,candy:0,potion:1},hunger:20,sleeping:false})"); await p.wait_for_timeout(1200)
         await p.click('[data-act=feed]'); await p.wait_for_selector('#mbtns .pri', timeout=3000); await p.click('#mbtns .pri'); await p.wait_for_timeout(300)
         ok('零金幣零食物 → 採集得到食物', (await st(p))['inv']['food'] == 1)
         # ---------- 家園種植 ----------
-        await p.evaluate("PF.debug.set({inv:{food:1,seeds:2,candy:0}})")
+        await p.evaluate("PF.debug.set({inv:{food:1,seeds:2,candy:0,potion:1}})")
         await p.click('#bFarm'); await p.wait_for_timeout(300); await p.click('[data-pa="0"]'); await p.wait_for_timeout(300)
         s = await st(p); ok('種下種子', s['inv']['seeds'] == 1 and s['plots'][0]['at'] > 0)
         ok('成長中不能收成', await p.is_disabled('[data-pa="0"]')); await p.screenshot(path=f'{OUT}/09a_farm.png'); await closeall(p)
@@ -145,7 +145,7 @@ async def main():
         await p.click('#bShop'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/09e_shop.png')
         for it in ['paper_mint', 'wall_clock', 'lamp_moon', 'plant_flower', 'bed_cloud', 'rug_star', 'toy_block']:
             await p.click(f'[data-dz="{it}"]'); await p.wait_for_timeout(150)
-        s = await st(p); ok('買 7 件家具、扣錢、自動擺上', len(s['decor']['owned']) == 8 and s['coins'] == 400 - 30 - 45 - 50 - 35 - 80 - 60 - 25 and s['decor']['placed']['bed'] == 'bed_cloud', s['coins'])
+        s = await st(p); ok('買 7 件家具、扣錢、自動擺上', len(s['decor']['owned']) == 9 and s['coins'] == 400 - 30 - 45 - 50 - 35 - 80 - 60 - 25 and s['decor']['placed']['bed'] == 'bed_cloud', s['coins'])
         await p.click('[data-dz="toy_block"]'); await p.wait_for_timeout(150); ok('收起家具', 'toy' not in (await st(p))['decor']['placed'])
         await p.click('[data-dz="toy_block"]'); await p.wait_for_timeout(150)
         await p.click('[data-tab="items"]'); await p.wait_for_timeout(150); await p.click('[data-bi="candy"]'); await p.wait_for_timeout(150)
@@ -154,6 +154,24 @@ async def main():
         ok('買完家具後切到室內', s['view'] == 'room'); await p.screenshot(path=f'{OUT}/09f_room.png')
         await p.click('#viewBtn'); await p.wait_for_timeout(400); ok('切換回戶外', (await st(p))['view'] == 'yard')
         await tap(p, 20, 56); await p.wait_for_timeout(400); await p.click('#dIn'); await p.wait_for_timeout(400); ok('點小窩 →「進入小窩」', (await st(p))['view'] == 'room')
+        # ---------- 大便、馬桶、回窩睡覺 ----------
+        await p.evaluate("PF.debug.set({view:'yard',sleeping:false})"); await p.wait_for_timeout(300)
+        await p.evaluate("(()=>{PF.state.digest=[Date.now()-1000];PF.debug.set({})})()"); await p.wait_for_timeout(1500)
+        s = await st(p); poo = [c for c in s['cores'] if c['k'] == 'poop']; ok('吃完一段時間後大便', len(poo) == 1, s['cores'])
+        await p.screenshot(path=f'{OUT}/09g_poop.png')
+        await p.mouse.click(*await scene_xy(p, poo[0]['x'], 98)); await p.wait_for_timeout(300); ok('點大便清掉', not [c for c in (await st(p))['cores'] if c['k'] == 'poop'])
+        await p.evaluate("PF.debug.set({coins:300})"); await p.click('#bShop'); await p.wait_for_timeout(300); await p.click('[data-dz="toilet_pot"]'); await p.wait_for_timeout(200); await closeall(p)
+        await p.evaluate("(()=>{PF.state.digest=[Date.now()-1000];PF.debug.set({})})()"); await p.wait_for_timeout(1500); s = await st(p)
+        ok('有寵物馬桶：自己上廁所、地上沒有大便', s['toiletUses'] == 1 and not [c for c in s['cores'] if c['k'] == 'poop'])
+        await p.evaluate("PF.debug.set({view:'yard',energy:40})"); await p.click('#viewBtn'); await p.wait_for_timeout(200); await p.click('#viewBtn'); await p.wait_for_timeout(200)
+        await p.evaluate("PF.debug.set({view:'yard'})"); await p.wait_for_timeout(300); await p.click('[data-act=sleep]')
+        for _ in range(40):
+            if await p.evaluate("PF.state.sleeping"): break
+            await p.wait_for_timeout(150)
+        s = await st(p); ok('在外面按睡覺 → 自動回小窩、走到小圓床睡', s['sleeping'] and s['view'] == 'room' and await p.evaluate("PF.petX") <= 2, (s['sleeping'], s['view']))
+        await p.locator('#scene').screenshot(path=f'{OUT}/09h_sleep_bed.png')
+        await p.click('#viewBtn'); await p.wait_for_timeout(200); ok('睡覺時不能出門', (await st(p))['view'] == 'room')
+        await p.wait_for_timeout(700); await p.click('[data-act=sleep]'); await p.wait_for_timeout(1000); ok('叫醒', not (await st(p))['sleeping'])
         # ---------- 冒險 ----------
         await p.evaluate("PF.debug.set({energy:100,mood:90,hunger:90,coins:100})")
         await p.click('#bAdv'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/09_adv.png')
@@ -167,7 +185,36 @@ async def main():
                 if not await p.evaluate("PF.B&&PF.B.busy"): break
                 await p.wait_for_timeout(200)
         await p.screenshot(path=f'{OUT}/11_battle_end.png'); s = await st(p)
+        ok('打完後藥水只會被用掉或撿到，不會變負數', s['inv']['potion'] >= 0)
         ok('戰鬥結算並記錄', s['adv']['wins'] + s['adv']['losses'] == 1 and s['daily']['adv'] == 1, await p.inner_text('#blog'))
+        await p.click('#bDone')
+        # 戰鬥擴充：場地、蓄力、藥水、羈絆之力
+        await p.evaluate("PF.debug.set({energy:100,inv:{food:3,seeds:2,candy:0,potion:2}})"); await p.evaluate("(()=>{PF.state.adv.stage=Math.max(PF.state.adv.stage,15)})()")
+        await p.evaluate("PF.startBattle(13)"); await p.wait_for_timeout(500)
+        bl = await p.inner_text('#blog'); ok('岩石／水邊等場地依怪獸屬性', any(k in bl for k in ['岩石地', '水邊', '森林', '草原']), bl)
+        await p.click('#mvCh'); await p.wait_for_timeout(200); ok('蓄力', await p.evaluate("PF.B.me.charged") or '蓄力' in await p.inner_text('#blog'))
+        for _ in range(40):
+            if not await p.evaluate("PF.B.busy"): break
+            await p.wait_for_timeout(150)
+        if not await p.evaluate("PF.B.over"):
+            await p.evaluate("(()=>{PF.B.me.hp=Math.max(1,Math.floor(PF.B.me.max/3));PF.bUI()})()"); hp0 = await p.evaluate("PF.B.me.hp")
+            await p.click('#mvPo'); await p.wait_for_timeout(300); ok('喝藥水回血、藥水 −1', (await st(p))['inv']['potion'] == 1)
+            for _ in range(40):
+                if not await p.evaluate("PF.B.busy"): break
+                await p.wait_for_timeout(150)
+        if not await p.evaluate("PF.B.over"):
+            await p.evaluate("(()=>{PF.B.me.hp=1;PF.B.foe.hp=PF.B.foe.max;PF.bUI()})()"); await p.wait_for_timeout(200)
+            ok('危險時出現羈絆之力按鈕', await p.is_visible('#mvBond')); await p.screenshot(path=f'{OUT}/11b_danger.png')
+            f0 = await p.evaluate("PF.B.foe.hp"); await p.click('#mvBond'); await p.wait_for_timeout(2300)
+            for i in range(8): await p.mouse.click(200, 400); await p.wait_for_timeout(60)
+            for _ in range(60):
+                if await p.evaluate("!PF.B.busy||PF.B.over"): break
+                await p.wait_for_timeout(150)
+            ok('羈絆之力：連打造成大傷害、每場只能一次', await p.evaluate("PF.B.bondUsed") and f0 - await p.evaluate("PF.B.foe.hp") > 30)
+        for _ in range(60):
+            if await p.is_visible('#bDone'): break
+            if not await p.evaluate("PF.B.busy"): await p.click('[data-mv=tackle]')
+            await p.wait_for_timeout(200)
         await p.click('#bDone')
         # ---------- 步數 ----------
         await p.goto(URL + '?steps=12345'); await p.wait_for_timeout(900); s = await st(p)
@@ -214,7 +261,7 @@ async def main():
         # ---------- 版本升級與損毀資料 ----------
         legacy = {"v": 5, "hatched": True, "name": "舊小露", "level": 4, "xp": 10, "coins": 77, "route": None, "seed": 9, "hunger": 60, "updated": int(time.time() * 1000) - 60000}
         ctx3, q = await newpage(br, I13, "if(!sessionStorage.t){sessionStorage.t=1;localStorage.setItem('pixel-familiar-save',JSON.stringify(%s))}" % json.dumps(legacy))
-        s = await st(q); ok('V1.5 存檔升級：等級轉累積 XP', s['name'] == '舊小露' and s['xp'] == 50 + 100 + 150 + 10 and s['v'] == 6, (s['xp'], s['v']))
+        s = await st(q); ok('V1.5 存檔升級：等級轉累積 XP', s['name'] == '舊小露' and s['xp'] == 50 + 100 + 150 + 10 and s['v'] == 7, (s['xp'], s['v']))
         ok('升級提示', True); await ctx3.close()
         ctx4, q = await newpage(br, I13, "if(!sessionStorage.t){sessionStorage.t=1;localStorage.setItem('pixel-familiar-v1',JSON.stringify({hatched:true,name:'V12',level:2,xp:5,coins:9}))}")
         s = await st(q); ok('V1.2 舊存檔搬移', s['name'] == 'V12' and s['xp'] == 55); await ctx4.close()

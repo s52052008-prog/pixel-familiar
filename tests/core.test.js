@@ -21,7 +21,7 @@ t('餵食：已滿不消耗也不給 XP', () => { const s = hatched(); s.hunger 
 t('玩耍：體力 < 10 不能玩', () => { const s = hatched(); s.energy = 9; assert.ok(!C.act(s, 'play', T0).ok); });
 t('玩耍：心情 +20、體力 -10、XP +10', () => { const s = hatched(); s.mood = 50; s.energy = 50; C.act(s, 'play', T0); assert.equal(s.mood, 70); assert.equal(s.energy, 40); assert.equal(s.xp, 10); });
 t('玩耍：每 30 分鐘最多 3 次給 XP', () => { const s = hatched(); s.energy = 100; for (let i = 0; i < 5; i++) { s.energy = 100; C.act(s, 'play', T0 + i * 1000); } assert.equal(s.xp, 30); s.energy = 100; C.act(s, 'play', T0 + 31 * MIN); assert.equal(s.xp, 40); });
-t('睡覺時不能玩耍或冒險；叫醒無成本', () => { const s = hatched(); C.act(s, 'sleep', T0); assert.ok(s.sleeping); assert.ok(!C.act(s, 'play', T0).ok); assert.ok(C.canAdventure(s, 1)); C.act(s, 'sleep', T0); assert.ok(!s.sleeping); });
+t('睡覺時不能玩耍或冒險；叫醒無成本', () => { const s = hatched(); s.view = 'room'; C.act(s, 'sleep', T0); assert.ok(s.sleeping); assert.ok(!C.act(s, 'play', T0).ok); assert.ok(C.canAdventure(s, 1)); C.act(s, 'sleep', T0); assert.ok(!s.sleeping); });
 t('隨機操作 2000 次後所有數值都不為負', () => {
   const s = hatched(); let now = T0; const acts = ['feed', 'play', 'wash', 'sleep'];
   for (let i = 0; i < 2000; i++) { now += Math.floor(Math.random() * 20 * MIN); const a = acts[i % 4]; if (i % 7 === 0) C.pet(s, now); else C.act(s, a, now); if (i % 11 === 0) C.gather(s, now); }
@@ -47,7 +47,7 @@ for (const [label, hrs] of [['2 小時', 2], ['24 小時', 24], ['7 天', 168]])
     assert.equal(C.ageHours(s, now), hrs);
   });
 }
-t('睡眠時體力每小時 +12', () => { const s = hatched(); s.energy = 10; C.act(s, 'sleep', T0); C.applyTime(s, T0 + 5 * H); assert.equal(s.energy, 70); });
+t('睡眠時體力每小時 +12', () => { const s = hatched(); s.view = 'room'; s.energy = 10; C.act(s, 'sleep', T0); C.applyTime(s, T0 + 5 * H); assert.equal(s.energy, 70); });
 t('時間倒退：不回溯、記錄警告', () => { const s = hatched(); s.hunger = 50; const r = C.applyTime(s, T0 - H); assert.equal(r.warn, 'back'); assert.equal(s.hunger, 50); assert.ok(s.clockWarn); assert.equal(s.lastTick, T0); });
 t('大幅快轉：照上限處理並提示', () => { const s = hatched(); const r = C.applyTime(s, T0 + 40 * 24 * H); assert.equal(r.warn, 'jump'); assert.equal(r.eff, 12); });
 
@@ -176,7 +176,7 @@ t('家具：擺放／收起、沒有的不能擺、壁紙不能拿掉', () => {
 });
 t('家具：存檔亂碼被過濾（沒買的、放錯格的、不存在的）', () => {
   const r = C.sanitize({ v: 6, decor: { owned: ['rug_red', 'hack'], placed: { rug: 'rug_red', bed: 'bed_cloud', toy: 'rug_red', paper: 'xx' } } }, T0);
-  assert.deepEqual(r.decor.owned, ['paper_cream', 'rug_red']); assert.deepEqual(r.decor.placed, { paper: 'paper_cream', rug: 'rug_red' });
+  assert.deepEqual(r.decor.owned, ['paper_cream', 'bed_round', 'rug_red']); assert.deepEqual(r.decor.placed, { paper: 'paper_cream', rug: 'rug_red', bed: 'bed_round' });
 });
 t('道具：買食物／種子／星星糖、吃星星糖', () => {
   const s = hatched(); C.buyItem(s, 'candy'); assert.equal(s.coins, 38); assert.equal(s.inv.candy, 1); s.mood = 50; s.hunger = 50;
@@ -190,7 +190,7 @@ t('果核：10 分鐘內清掉沒事；發臭後每小時心情 −4（每顆）
   const m = s.mood; C.applyTime(s, T0 + 10 * MIN + H); assert.equal(Math.round((m - s.mood) * 100) / 100, 5);   // 自然 −1 + 果核 −4
   assert.ok(C.isRotten(s.cores[0], T0 + 11 * MIN)); assert.ok(C.clearCore(s, 0, T0 + 2 * H).rotten); assert.equal(s.cores.length, 0);
 });
-t('果核：最多 6 顆、存檔往返保留', () => { const s = hatched(); for (let i = 0; i < 9; i++) C.addCore(s, i * 10, T0); assert.equal(s.cores.length, 6); const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(r.cores.length, 6); });
+t('果核：最多 8 顆、存檔往返保留', () => { const s = hatched(); for (let i = 0; i < 11; i++) C.addCore(s, i * 10, T0); assert.equal(s.cores.length, 8); const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(r.cores.length, 8); });
 t('canAct 只檢查不改變狀態', () => { const s = hatched(); s.hunger = 50; const before = JSON.stringify(s); assert.equal(C.canAct(s, 'feed', T0), null); assert.equal(JSON.stringify(s), before); s.hunger = 99; assert.ok(C.canAct(s, 'feed', T0)); });
 // 頂球
 t('頂球：結算套用玩耍規則、記錄最佳分數', () => { const s = hatched(); s.energy = 50; s.mood = 40; const r = C.finishBallGame(s, 2, T0); assert.ok(r.ok); assert.equal(s.mood, 60); assert.equal(s.ball.best, 2); assert.equal(s.ball.goals, 2); C.finishBallGame(s, 1, T0); assert.equal(s.ball.best, 2); s.energy = 5; assert.ok(!C.finishBallGame(s, 3, T0).ok); assert.equal(s.ball.best, 2); });
@@ -206,6 +206,26 @@ t('小窩：交換夥伴，休息期間數值不變，存檔往返保留', () =>
   const back = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 24 * H); assert.equal(back.roster.length, 1); assert.equal(back.roster[0].name, 'B'); assert.ok(nonNeg(back));
 });
 t('小窩：亂碼住客被過濾', () => { const r = C.sanitize({ v: 6, den: { level: 99 }, roster: [{ hatched: true, name: 'X', hunger: 'bad' }, { hatched: false }, 'junk'] }, T0); assert.equal(r.den.level, 4); assert.equal(r.roster.length, 1); assert.equal(r.roster[0].hunger, 80); });
+
+// 大便與馬桶
+t('大便：吃完 40 分鐘後大便、3 分鐘沒清就發臭扣心情', () => {
+  const s = hatched(); s.hunger = 50; C.act(s, 'feed', T0); assert.equal(s.digest.length, 1);
+  C.applyTime(s, T0 + 39 * MIN); assert.equal(s.cores.length, 0); const r = C.applyTime(s, T0 + 40 * MIN); assert.deepEqual(r.events, ['poop']);
+  assert.equal(s.cores[0].k, 'poop'); assert.ok(!C.isRotten(s.cores[0], T0 + 42 * MIN)); assert.ok(C.isRotten(s.cores[0], T0 + 43 * MIN));
+  const m = s.mood; C.applyTime(s, T0 + 43 * MIN + H); assert.equal(Math.round((m - s.mood) * 100) / 100, 5.05);   // 自然 −1.05（1.05 小時）＋大便 −4（發臭 1 小時）
+  assert.equal(C.clearCore(s, 0, T0 + 2 * H).kind, 'poop');
+});
+t('寵物馬桶：有馬桶就自己上廁所，不會留下大便', () => { const s = hatched(); s.coins = 999; assert.ok(C.buyDecor(s, 'toilet_pot').ok); s.hunger = 50; C.act(s, 'feed', T0); const r = C.applyTime(s, T0 + H); assert.deepEqual(r.events, ['toilet']); assert.equal(s.cores.length, 0); assert.equal(s.toiletUses, 1); });
+t('離線時大便：一回來就算發臭的時間（最多 12 小時）', () => { const s = hatched(); s.hunger = 50; s.mood = 80; C.act(s, 'feed', T0); C.applyTime(s, T0 + 5 * H); assert.equal(s.cores.length, 1); assert.ok(s.mood < 80 - 5); });
+// 回窩睡覺
+t('外面不能睡覺，小窩裡可以', () => { const s = hatched(); assert.equal(C.act(s, 'sleep', T0).code, 'outside'); assert.ok(C.canAct(s, 'sleep', T0)); s.view = 'room'; assert.ok(C.act(s, 'sleep', T0).ok); assert.equal(C.canAct(s, 'sleep', T0), null); });
+t('新存檔與舊存檔都有小圓床', () => { assert.equal(C.fresh(T0).decor.placed.bed, 'bed_round'); assert.equal(C.sanitize({ v: 6, decor: { owned: ['paper_cream'], placed: { paper: 'paper_cream' } } }, T0).decor.placed.bed, 'bed_round');
+  const s = hatched(); C.placeDecor(s, 'bed_round'); assert.equal(C.sanitize(JSON.parse(JSON.stringify(s)), T0).decor.placed.bed, undefined); });
+// 戰鬥擴充
+t('藥水：開局 1 瓶、商店 20 金幣', () => { const s = hatched(); assert.equal(s.inv.potion, 1); C.buyItem(s, 'potion'); assert.equal(s.inv.potion, 2); assert.equal(s.coins, 30); });
+t('蓄力：下一擊 2 倍，用完就消失', () => { const a = C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0), d = C.mkFighter('b', 'k', 5, 'flame', 0, 80, 0); const n = C.expectDamage(a, d, false); a.charged = true; assert.ok(Math.abs(C.expectDamage(a, d, false) - n * 2) <= 1); C.damage(a, d, false, () => .5); assert.ok(!a.charged); });
+t('羈絆之力：點越多下越強，最多 5 倍', () => { assert.equal(C.bondBoost(0, 0), 1); assert.ok(C.bondBoost(6, 0) > C.bondBoost(3, 0)); assert.equal(C.bondBoost(50, 100), 5); const a = C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0), d = C.mkFighter('b', 'k', 30, 'tide', 0, 80, 0); const r = C.damage(a, d, false, () => .5, 3); assert.ok(r.dmg >= C.expectDamage(a, d, false) * 2.5); });
+t('預估傷害與實際平均一致（隨機 0.5、無會心）', () => { const a = C.mkFighter('a', 'k', 8, 'tide', 0, 80, 0), d = C.mkFighter('b', 'k', 8, 'flame', 0, 80, 0); const e = C.expectDamage(a, d, true); const r = C.damage(a, d, true, () => .5); assert.equal(r.dmg, e); });
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

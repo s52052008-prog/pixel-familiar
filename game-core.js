@@ -38,10 +38,13 @@ const CONFIG = {
   farm: { plots: 3, growHours: 2, food: 2, xp: 5, forest: 3, seedPrice: 3 },     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
   goals: { perDay: 3, reward: { coins: 8 } },
   candy: { price: 12, mood: 20, hunger: 10, xp: 3 },
-  core: { rotMin: 10, moodPerHour: 4, max: 6 },          // 果核：10 分鐘沒清會發臭長果蠅，每顆每小時心情 −4
+  core: { rotMin: 10, moodPerHour: 4, max: 8 },          // 果核：10 分鐘沒清會發臭長果蠅，每顆每小時心情 −4
+  poop: { delayMin: 40, rotMin: 3 },                      // 每吃一次，40 分鐘後大便；大便 3 分鐘沒清就發臭
+  potion: { price: 20, heal: .5, drop: .15 },             // 回復藥水：回復 50% 最大 HP
+  bond: { tapBoost: .35, maxBoost: 5 },                   // 羈絆之力：每點一下 +35% 威力，最多 5 倍
   ballGame: { balls: 3 },                                 // 頂球：一回合 3 顆球
   den: [ { name: '草叢小窩', cap: 1, cost: 0 }, { name: '稻草窩', cap: 2, cost: 120 }, { name: '樹根洞窟', cap: 3, cost: 300 }, { name: '大樹屋', cap: 4, cost: 600 } ],                            // 商店零食「星星糖」
-  decorSlots: ['paper', 'wall', 'lamp', 'plant', 'bed', 'rug', 'toy'],
+  decorSlots: ['paper', 'wall', 'lamp', 'plant', 'bed', 'rug', 'toy', 'toilet'],
   decor: {                                                                      // 房間家具：純裝飾，不影響數值
     paper_cream: { slot: 'paper', name: '奶油色壁紙', price: 0 },
     paper_mint:  { slot: 'paper', name: '薄荷色壁紙', price: 30 },
@@ -52,12 +55,14 @@ const CONFIG = {
     lamp_moon:   { slot: 'lamp', name: '月亮燈', price: 50 },
     plant_pot:   { slot: 'plant', name: '小盆栽', price: 20 },
     plant_flower:{ slot: 'plant', name: '向日葵花盆', price: 35 },
+    bed_round:   { slot: 'bed', name: '小圓床', price: 0 },
     bed_straw:   { slot: 'bed', name: '稻草窩', price: 25 },
     bed_cloud:   { slot: 'bed', name: '雲朵床', price: 80 },
     rug_red:     { slot: 'rug', name: '紅色地毯', price: 30 },
     rug_star:    { slot: 'rug', name: '星星地毯', price: 60 },
     toy_ball:    { slot: 'toy', name: '彈力球', price: 15 },
-    toy_block:   { slot: 'toy', name: '積木', price: 25 }
+    toy_block:   { slot: 'toy', name: '積木', price: 25 },
+    toilet_pot:  { slot: 'toilet', name: '寵物馬桶', price: 150 }
   },
   start: { coins: 50, food: 3, seeds: 2, stat: 80 }
 };
@@ -135,14 +140,14 @@ function formCode(stage, route) {
 function newSeed() { try { return (globalThis.crypto || require('crypto').webcrypto).getRandomValues(new Uint32Array(1))[0]; } catch (e) { return Math.floor(Math.random() * 4294967295); } }
 function fresh(now = Date.now()) {
   const S = CONFIG.start;
-  return { v: 6, rev: 0, seed: newSeed(), genes: null, name: '小露', hatched: false, eggTaps: 0, stage: 'egg', route: null,
+  return { v: 7, rev: 0, seed: newSeed(), genes: null, name: '小露', hatched: false, eggTaps: 0, stage: 'egg', route: null,
     xp: 0, coins: S.coins, hunger: S.stat, mood: S.stat, clean: S.stat, energy: S.stat, bond: 0, sleeping: false,
     path: { flame: 0, tide: 0, forest: 0 },
     care: { petLastRewardAt: 0, bathLastAt: 0, playXpAt: [], gatherAt: 0 },
-    inv: { food: S.food, seeds: S.seeds, candy: 0 }, harvests: 0,
+    inv: { food: S.food, seeds: S.seeds, candy: 0, potion: 1 }, harvests: 0,
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] },
-    decor: { owned: ['paper_cream'], placed: { paper: 'paper_cream' } }, view: 'yard',
+    decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0,
     cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [],
     events: { volcano: false, moonspring: false, oldtree: false },
     daily: { date: '', adv: 0, gift: false },
@@ -187,12 +192,15 @@ function sanitize(o, now = Date.now()) {
   r.care.petLastRewardAt = num(c.petLastRewardAt, 0, 0, now); r.care.bathLastAt = num(c.bathLastAt, 0, 0, now); r.care.gatherAt = num(c.gatherAt, 0, 0, now);
   r.care.playXpAt = Array.isArray(c.playXpAt) ? c.playXpAt.map(Number).filter(t => Number.isFinite(t) && t <= now && now - t < CONFIG.play.xpWindowMin * MIN).slice(-10) : [];
   const iv = o.inv && typeof o.inv === 'object' ? o.inv : {};
-  r.inv.food = int(iv.food, CONFIG.start.food, 0, 9999); r.inv.seeds = int(iv.seeds, CONFIG.start.seeds, 0, 9999); r.inv.candy = int(iv.candy, 0, 0, 9999);
+  r.inv.food = int(iv.food, CONFIG.start.food, 0, 9999); r.inv.seeds = int(iv.seeds, CONFIG.start.seeds, 0, 9999); r.inv.candy = int(iv.candy, 0, 0, 9999); r.inv.potion = int(iv.potion, 1, 0, 9999);
   const dc = o.decor && typeof o.decor === 'object' ? o.decor : {};
-  if (Array.isArray(dc.owned)) r.decor.owned = [...new Set(['paper_cream', ...dc.owned.filter(id => CONFIG.decor[id])])];
+  if (Array.isArray(dc.owned)) r.decor.owned = [...new Set(['paper_cream', 'bed_round', ...dc.owned.filter(id => CONFIG.decor[id])])];
   if (dc.placed && typeof dc.placed === 'object') { r.decor.placed = { paper: 'paper_cream' }; for (const sl of CONFIG.decorSlots) { const id = dc.placed[sl]; if (id && CONFIG.decor[id] && CONFIG.decor[id].slot === sl && r.decor.owned.includes(id)) r.decor.placed[sl] = id; } }
+  if (!(Number(o.v) >= 7) && !r.decor.placed.bed) r.decor.placed.bed = 'bed_round';   // 舊存檔：送一張小圓床
   r.view = o.view === 'room' ? 'room' : 'yard';
-  r.cores = Array.isArray(o.cores) ? o.cores.filter(c => c && typeof c === 'object').slice(-CONFIG.core.max).map(c => ({ x: num(c.x, 64, 4, 124), at: num(c.at, now, 0, 9e15), v: c.v === 'room' ? 'room' : 'yard' })) : [];
+  r.digest = Array.isArray(o.digest) ? o.digest.map(Number).filter(Number.isFinite).slice(0, 10) : [];
+  r.toiletUses = int(o.toiletUses, 0, 0, 1e7);
+  r.cores = Array.isArray(o.cores) ? o.cores.filter(c => c && typeof c === 'object').slice(-CONFIG.core.max).map(c => ({ x: num(c.x, 64, 4, 124), at: num(c.at, now, 0, 9e15), v: c.v === 'room' ? 'room' : 'yard', k: c.k === 'poop' ? 'poop' : 'core' })) : [];
   const bl = o.ball && typeof o.ball === 'object' ? o.ball : {}; r.ball = { best: int(bl.best, 0, 0, 99), goals: int(bl.goals, 0, 0, 1e7) };
   r.den = { level: int(o.den && o.den.level, 1, 1, CONFIG.den.length) };
   r.roster = Array.isArray(o.roster) ? o.roster.filter(p => p && typeof p === 'object' && p.hatched).slice(0, CONFIG.den.length - 1).map(p => sanitizePet(p, now)) : [];
@@ -231,17 +239,28 @@ function sanitize(o, now = Date.now()) {
 
 /* ---------------- 時間：離線模擬（GDD 第 2 節） ---------------- */
 function applyTime(st, now = Date.now()) {
-  if (now < st.lastTick) { st.clockWarn = now; return { warn: 'back', hours: 0 }; }   // 時間倒退：不回溯，記錄警告
+  if (now < st.lastTick) { st.clockWarn = now; return { warn: 'back', hours: 0, events: [] }; }   // 時間倒退：不回溯，記錄警告
   const hours = (now - st.lastTick) / H, eff = Math.min(hours, CONFIG.offlineCapHours);
   const last = st.lastTick; st.lastTick = now;
+  const events = digest(st, now);
   if (st.hatched && eff > 0) {
     const R = CONFIG.rates[st.sleeping ? 'sleep' : 'awake'];
     for (const k in R) st[k] = clamp(st[k] + R[k] * eff);
     // 發臭的果核：只算「已經發臭」的那段時間，同樣最多 12 小時
-    let rotH = 0; for (const c of st.cores) { const from = Math.max(last, c.at + CONFIG.core.rotMin * MIN); if (now > from) rotH += Math.min((now - from) / H, CONFIG.offlineCapHours); }
+    let rotH = 0; for (const c of st.cores) { const from = Math.max(last, c.at + rotMin(c) * MIN); if (now > from) rotH += Math.min((now - from) / H, CONFIG.offlineCapHours); }
     if (rotH > 0) st.mood = clamp(st.mood - rotH * CONFIG.core.moodPerHour);
   }
-  return { hours, eff, warn: hours > CONFIG.jumpWarnDays * 24 ? 'jump' : null };
+  return { hours, eff, warn: hours > CONFIG.jumpWarnDays * 24 ? 'jump' : null, events };
+}
+/* 消化：時間到了就大便；有寵物馬桶就自己去上廁所 */
+function digest(st, now) {
+  const out = []; if (!st.hatched) { st.digest = []; return out; }
+  const due = st.digest.filter(t => t <= now).sort((a, b) => a - b); st.digest = st.digest.filter(t => t > now);
+  for (const t of due) {
+    if (st.decor.placed.toilet) { st.toiletUses++; out.push('toilet'); if (st.toiletUses === 1) journal(st, t, '第一次自己去上廁所了！'); }
+    else { const r = rng(Math.floor(t))(); addCore(st, 56 + r * 56, t, st.view, 'poop'); out.push('poop'); }
+  }
+  return out;
 }
 const ageHours = (st, now) => st.hatched ? Math.max(0, now - st.hatchedAt) / H : 0;
 
@@ -275,6 +294,7 @@ function act(st, a, now = Date.now()) {
   const F = CONFIG.full;
   if (a === 'sleep') {
     if (st.sleeping) { st.sleeping = false; return { ok: true, anim: 'happy', sfx: 'wake', msg: '醒來了～', tm }; }
+    if (st.view !== 'room') return { ok: false, code: 'outside', msg: '外面不能睡覺，要回小窩裡睡喔', tm };
     st.sleeping = true; return { ok: true, anim: 'sleep', sfx: 'sleep', msg: '晚安～💤（睡覺時體力每小時 +12，再按一次可叫醒）', tm };
   }
   if (st.sleeping) return { ok: false, msg: '噓…牠在睡覺，先叫醒牠吧', tm };
@@ -286,7 +306,7 @@ function act(st, a, now = Date.now()) {
     else if (st.coins >= C.price) { st.coins -= C.price; paid = `花 ${C.price} 金幣買食物`; }
     else return { ok: false, code: 'nofood', msg: '沒有食物也沒有金幣了…可以去「採集」', tm };
     st.hunger = clamp(st.hunger + C.hunger); st.path.tide += C.tide;
-    track(st, 'feed', now);
+    track(st, 'feed', now); st.digest.push(now + CONFIG.poop.delayMin * MIN);
     return { ok: true, anim: 'eat', sfx: 'eat', xp: addXP(st, C.xp), msg: `好吃！（${paid}）`, tm };
   }
   if (a === 'play') {
@@ -429,8 +449,16 @@ function foeFor(n) {
   const lvl = Math.max(1, Math.round(n * .9) + (boss ? 2 : 0));
   return { id: 'x:' + encodeGenome(G), route, stage, level: lvl, boss };
 }
-function damage(a, d, special, r = Math.random) {
-  const pow = special ? (a.el === 'none' ? 1.15 : 1.3) : 1;
+function elemMult(a, d, special) { if (!special || a.el === 'none' || d.el === 'none') return 1; return BEATS[a.el] === d.el ? 1.5 : BEATS[d.el] === a.el ? .67 : 1; }
+/* 預估傷害（不含隨機與會心一擊）：用來顯示「這一擊強不強」、判斷是不是快撐不住了 */
+function expectDamage(a, d, special, boost = 1) {
+  const pow = special ? (a.el === 'none' ? 1.15 : 1.3) : 1, ch = a.charged ? 2 : 1;
+  let dmg = Math.max(1, Math.round(a.atk * pow * (a.atk / (a.atk + d.def)) * 1.6 * elemMult(a, d, special) * ch * boost));
+  if (d.guard) dmg = Math.max(1, Math.round(dmg * .5)); return dmg;
+}
+const bondBoost = (taps, bond = 0) => clamp(1 + taps * CONFIG.bond.tapBoost + bond / 100, 1, CONFIG.bond.maxBoost);
+function damage(a, d, special, r = Math.random, boost = 1) {
+  const pow = (special ? (a.el === 'none' ? 1.15 : 1.3) : 1) * (a.charged ? 2 : 1) * boost; a.charged = false;
   let mult = 1; if (special && a.el !== 'none' && d.el !== 'none') { if (BEATS[a.el] === d.el) mult = 1.5; else if (BEATS[d.el] === a.el) mult = .67; }
   let dmg = Math.max(1, Math.round(a.atk * pow * (a.atk / (a.atk + d.def)) * 1.6 * mult * (.85 + r() * .3)));
   if (d.guard) { dmg = Math.max(1, Math.round(dmg * .5)); d.guard = false; }
@@ -449,6 +477,7 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
     else out.xp = addXP(st, Math.round(xp * A.overCapXpRate));
     if (r() < A.dropFood) { st.inv.food++; out.food = 1; }
     if (r() < A.dropSeed) { st.inv.seeds++; out.seeds = 1; }
+    if (r() < CONFIG.potion.drop) { st.inv.potion++; out.potion = 1; }
     if (n === st.adv.stage) {                                   // 第一次打通：新地點 = 探索發現
       st.adv.stage++; out.unlocked = st.adv.stage; discover(st, now, null); out.events.push('place');
       for (const ev in CONFIG.bossStages) if (CONFIG.bossStages[ev] === n) { const e = discover(st, now, ev); if (e) out.events.push(e); }
@@ -499,10 +528,10 @@ function placeDecor(st, id) {
   st.decor.placed[it.slot] = id; return { ok: true, msg: `擺上「${it.name}」` };
 }
 function buyItem(st, kind) {
-  const price = kind === 'food' ? CONFIG.feed.price : kind === 'seeds' ? CONFIG.farm.seedPrice : kind === 'candy' ? CONFIG.candy.price : 0;
+  const price = kind === 'food' ? CONFIG.feed.price : kind === 'seeds' ? CONFIG.farm.seedPrice : kind === 'candy' ? CONFIG.candy.price : kind === 'potion' ? CONFIG.potion.price : 0;
   if (!price) return { ok: false, msg: '沒有這個商品' };
   if (st.coins < price) return { ok: false, msg: `金幣不足（需要 ${price}）` };
-  st.coins -= price; st.inv[kind] = (st.inv[kind] || 0) + 1; return { ok: true, msg: `買了 1 個${{ food: '食物', seeds: '種子', candy: '星星糖' }[kind]}（−${price} 金幣）` };
+  st.coins -= price; st.inv[kind] = (st.inv[kind] || 0) + 1; return { ok: true, msg: `買了 1 個${{ food: '食物', seeds: '種子', candy: '星星糖', potion: '回復藥水' }[kind]}（−${price} 金幣）` };
 }
 function useCandy(st, now = Date.now()) {
   const tm = applyTime(st, now);
@@ -516,15 +545,17 @@ function useCandy(st, now = Date.now()) {
 /* ---------------- 果核（餵食後留下，要點一下清掉） ---------------- */
 function canAct(st, a, now = Date.now()) {
   if (!st.hatched) return '先把蛋孵出來吧！';
-  if (st.sleeping) return '噓…牠在睡覺，先叫醒牠吧';
+  if (st.sleeping) return a === 'sleep' ? null : '噓…牠在睡覺，先叫醒牠吧';
   if (a === 'feed') { if (st.hunger >= CONFIG.full) return '飽飽的，吃不下了～'; if (st.inv.food < 1 && st.coins < CONFIG.feed.price) return '沒有食物也沒有金幣了…可以去「採集」'; }
   if (a === 'play' && st.energy < CONFIG.play.minEnergy) return '太累了…先讓牠休息或睡一下';
+  if (a === 'sleep' && st.view !== 'room') return '外面不能睡覺，要回小窩裡睡喔';
   if (a === 'wash') { if (st.clean >= CONFIG.full) return '已經很乾淨了！'; const w = st.care.bathLastAt + CONFIG.wash.cooldownMin * MIN - now; if (w > 0) return `剛洗過澡，${Math.ceil(w / MIN)} 分鐘後再洗吧`; }
   return null;
 }
-function addCore(st, x, now = Date.now(), v = 'yard') { st.cores.push({ x: clamp(x, 4, 124), at: now, v: v === 'room' ? 'room' : 'yard' }); while (st.cores.length > CONFIG.core.max) st.cores.shift(); }
-const isRotten = (c, now = Date.now()) => now - c.at >= CONFIG.core.rotMin * MIN;
-function clearCore(st, i, now = Date.now()) { const c = st.cores[i]; if (!c) return null; applyTime(st, now); st.cores.splice(i, 1); return { rotten: isRotten(c, now) }; }
+const rotMin = c => c.k === 'poop' ? CONFIG.poop.rotMin : CONFIG.core.rotMin;
+function addCore(st, x, now = Date.now(), v = 'yard', k = 'core') { st.cores.push({ x: clamp(x, 4, 124), at: now, v: v === 'room' ? 'room' : 'yard', k: k === 'poop' ? 'poop' : 'core' }); while (st.cores.length > CONFIG.core.max) st.cores.shift(); }
+const isRotten = (c, now = Date.now()) => now - c.at >= rotMin(c) * MIN;
+function clearCore(st, i, now = Date.now()) { const c = st.cores[i]; if (!c) return null; applyTime(st, now); const k = st.cores.indexOf(c); if (k >= 0) st.cores.splice(k, 1); return { rotten: isRotten(c, now), kind: c.k }; }
 
 /* ---------------- 頂球小遊戲 ---------------- */
 function finishBallGame(st, score, now = Date.now()) {
@@ -622,6 +653,6 @@ const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
   canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
-  ELEM, BEATS, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
+  ELEM, BEATS, elemMult, expectDamage, bondBoost, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
