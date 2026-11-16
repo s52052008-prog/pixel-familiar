@@ -184,5 +184,28 @@ t('道具：買食物／種子／星星糖、吃星星糖', () => {
   s.coins = 2; assert.ok(!C.buyItem(s, 'food').ok); assert.ok(nonNeg(s));
 });
 
+// 果核
+t('果核：10 分鐘內清掉沒事；發臭後每小時心情 −4（每顆），最多算 12 小時', () => {
+  const s = hatched(); s.mood = 80; C.addCore(s, 60, T0); C.applyTime(s, T0 + 10 * MIN); assert.equal(Math.round(s.mood * 100) / 100, Math.round((80 - 10 / 60) * 100) / 100);
+  const m = s.mood; C.applyTime(s, T0 + 10 * MIN + H); assert.equal(Math.round((m - s.mood) * 100) / 100, 5);   // 自然 −1 + 果核 −4
+  assert.ok(C.isRotten(s.cores[0], T0 + 11 * MIN)); assert.ok(C.clearCore(s, 0, T0 + 2 * H).rotten); assert.equal(s.cores.length, 0);
+});
+t('果核：最多 6 顆、存檔往返保留', () => { const s = hatched(); for (let i = 0; i < 9; i++) C.addCore(s, i * 10, T0); assert.equal(s.cores.length, 6); const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(r.cores.length, 6); });
+t('canAct 只檢查不改變狀態', () => { const s = hatched(); s.hunger = 50; const before = JSON.stringify(s); assert.equal(C.canAct(s, 'feed', T0), null); assert.equal(JSON.stringify(s), before); s.hunger = 99; assert.ok(C.canAct(s, 'feed', T0)); });
+// 頂球
+t('頂球：結算套用玩耍規則、記錄最佳分數', () => { const s = hatched(); s.energy = 50; s.mood = 40; const r = C.finishBallGame(s, 2, T0); assert.ok(r.ok); assert.equal(s.mood, 60); assert.equal(s.ball.best, 2); assert.equal(s.ball.goals, 2); C.finishBallGame(s, 1, T0); assert.equal(s.ball.best, 2); s.energy = 5; assert.ok(!C.finishBallGame(s, 3, T0).ok); assert.equal(s.ball.best, 2); });
+// 小窩
+t('小窩：升級扣錢、容量變大、最高 4 級', () => { const s = hatched(); s.coins = 2000; assert.equal(C.denCap(s), 1); assert.ok(C.upgradeDen(s).ok); assert.equal(C.denCap(s), 2); assert.equal(s.coins, 1880); C.upgradeDen(s); C.upgradeDen(s); assert.equal(C.denCap(s), 4); assert.ok(!C.upgradeDen(s).ok); });
+t('小窩：沒空位不能搬進去；有空位時搬進去並保留數值', () => {
+  const s = hatched(); assert.ok(!C.moveToDen(s)); s.coins = 999; C.upgradeDen(s); s.name = 'A'; s.xp = 123; s.bond = 40; assert.ok(C.moveToDen(s)); assert.equal(s.roster.length, 1); assert.equal(s.roster[0].name, 'A'); assert.equal(s.roster[0].xp, 123);
+});
+t('小窩：交換夥伴，休息期間數值不變，存檔往返保留', () => {
+  const s = hatched(); s.coins = 999; C.upgradeDen(s); s.name = 'A'; s.hunger = 30; C.moveToDen(s);
+  const fresh = C.fresh(T0); Object.assign(s, { seed: fresh.seed, name: 'B', hatched: true, stage: 'juvenile', hatchedAt: T0, hunger: 90, xp: 0, bond: 0 });
+  const r = C.swapPet(s, 0, T0 + 24 * H); assert.ok(r.ok); assert.equal(s.name, 'A'); assert.equal(s.hunger, 30); assert.equal(s.roster[0].name, 'B');
+  const back = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 24 * H); assert.equal(back.roster.length, 1); assert.equal(back.roster[0].name, 'B'); assert.ok(nonNeg(back));
+});
+t('小窩：亂碼住客被過濾', () => { const r = C.sanitize({ v: 6, den: { level: 99 }, roster: [{ hatched: true, name: 'X', hunger: 'bad' }, { hatched: false }, 'junk'] }, T0); assert.equal(r.den.level, 4); assert.equal(r.roster.length, 1); assert.equal(r.roster[0].hunger, 80); });
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

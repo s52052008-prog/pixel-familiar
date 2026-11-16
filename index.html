@@ -127,7 +127,7 @@ body.rm *{transition:none!important;animation:none!important}
  <div class="actions">
   <button class="act" data-act="feed"><canvas class="picon" data-icon="apple"></canvas>餵食</button>
   <button class="act" data-act="play"><canvas class="picon" data-icon="ball"></canvas>玩耍</button>
-  <button class="act" data-act="wash"><canvas class="picon" data-icon="bubble"></canvas>洗澡</button>
+  <button class="act" data-act="wash"><canvas class="picon" data-icon="sponge"></canvas>洗澡</button>
   <button class="act" data-act="sleep" id="sleepBtn"><canvas class="picon" data-icon="moon" id="sleepIcon"></canvas><span id="sleepLabel">睡覺</span></button>
  </div>
  <section class="panel">
@@ -173,7 +173,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.8.0';
+const VERSION='1.9.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -289,7 +289,8 @@ const ANIMS={
  wash:{f:['wash0','wash1','wash0','wash1','wash0','wash1','wash0','wash1','happy0','happy1'],fps:8},
  happy:{f:['happy0','happy1','happy0','happy1','happy0'],fps:6},
  shy:{f:['shy0','happy1','shy0','happy1'],fps:4},
- no:{f:['sad0','idle0','sad0','idle0'],fps:5}
+ no:{f:['sad0','idle0','sad0','idle0'],fps:5},
+ header:{f:['jump0','jump1','jump2','jump1','jump0'],fps:12}
 };
 
 /* ---------------- 程式化像素角色繪製 ---------------- */
@@ -415,6 +416,12 @@ const ICONS={
  leaf:{o:'#1a3a1a',p:{g:'#7ccc5a',d:'#3a8a3a'},m:['....gg','..gggd','.ggggd','gggdd.','gdd...','d.....']},
  fire:{o:'#5a1a10',p:{y:'#ffe066',o:'#ff8a2a'},m:['...o...','..oo...','..ooo.o','.ooyoo.','.oyyyoo','oyyyyyo','.oyyyo.','..ooo..']},
  shoe:{o:'#2a1a10',p:{w:'#ffffff',r:'#e8433f',g:'#c8c8d0'},m:['..rrr....','..rwr....','..rrrr...','.rrrrrrr.','rrrrrrrrr','ggggggggg']},
+ sponge:{o:'#5a3a10',p:{y:'#ffd34a',h:'#c89020',d:'#e0a020'},m:['.yyyyyyyy.','yyhyyyyhyy','yyyyyhyyyy','yhyyyyyyhy','yyyyhyyyyy','dddddddddd','.dddddddd.']},
+ tub:{o:'#2a3a5a',p:{w:'#ffffff',g:'#c8d0e0',b:'#5fb4f0',f:'#a8703e'},m:['.........gg.','.........g..','wwwwwwwwwwww','wbbbbbbbbbbw','wbbbbbbbbbbw','wwwwwwwwwwww','.gwwwwwwwwg.','..gggggggg..','..f......f..']},
+ bite:{o:'#3a1a1a',p:{r:'#e8433f',R:'#ff9a8a',d:'#a8282e',G:'#5fbf4a',s:'#7a4a2a',w:'#fff3d0'},m:['....s....','....sGG..','.rrrsw...','rRRrrw...','rRrrrrw..','rrrrrrrrd','rrrrrrrrd','.rrrrrrd.','..rrdrd..']},
+ core:{o:'#3a1a1a',p:{s:'#7a4a2a',r:'#e8433f',w:'#fff3d0',b:'#3a2a1a'},m:['...s...','...s...','..rrr..','...w...','..wbw..','...w...','..rrr..']},
+ coreRot:{o:'#2a1a10',p:{s:'#4a3a20',r:'#7a5a2a',w:'#a88a5a',b:'#2a1a0a'},m:['...s...','...s...','..rrr..','...w...','..wbw..','...w...','..rrr..']},
+ fly:{o:null,p:{w:'#d8f0ff',k:'#1a1a1a'},m:['w.w','.k.']},
  note:{o:'#2a1a3a',p:{n:'#ffffff'},m:['..nnn','..n.n','..n.n','nnn..','nnn..']}
 };
 const ICV={};
@@ -428,38 +435,66 @@ function paintIcon(cv,name){const src=ICV[name];if(!src)return;const sc=+(cv.dat
    ========================================================= */
 function phase(){const h=new Date().getHours();return h>=6&&h<17?'day':(h>=17&&h<19)||(h>=5&&h<6)?'dusk':'night'}
 let bgCache=null,bgKey='';
-function makeBg(ph){
- const cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+function makeBg(ph,lvl=1){
+ const cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d'),night=ph==='night',dusk=ph==='dusk';
  const sky={day:['#5aa6e0','#76bdea','#94d0f0','#b8e4f4'],dusk:['#3b3f7a','#7a4f8f','#d9767a','#f4b07a'],night:['#0c1430','#132042','#1a2b55','#233a68']}[ph];
  const band=16;for(let y=0;y<66;y++){const i=Math.min(3,Math.floor(y/band)),j=Math.min(3,i+1),r=y%band;
   for(let x=0;x<W;x++){const useNext=r>=band-3&&((x+y)%2===0)&&(r>=band-1||(r===band-2&&x%2===0)||(r===band-3&&x%4===0));c.fillStyle=useNext?sky[j]:sky[i];c.fillRect(x,y,1,1)}}
- if(ph==='night'){let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;c.fillStyle='#ffffff';for(let i=0;i<34;i++){c.globalAlpha=.5+rnd()*.5;c.fillRect(Math.floor(rnd()*W),Math.floor(rnd()*48),1,1)}c.globalAlpha=1}
- // 太陽／月亮
- const orb=grid(17,17),oc=ph==='night'?'#f3f0d0':ph==='dusk'?'#ffb35a':'#fff3a6';
- ellipse(orb,8.5,8.5,7,7,(x,y,nx,ny)=>ph==='night'&&((x===6&&y===6)||(x===10&&y===9)||(x===7&&y===11))?'#d8d2a8':(nx*.5+ny*.6>.55?(ph==='night'?'#ddd7b0':'#ffd36a'):oc));
- outline(orb,ph==='night'?'#b8b490':'#f2a84a');c.drawImage(gridCanvas(orb),ph==='dusk'?94:100,ph==='dusk'?34:8);
- // 遠山、近丘
- const far=ph==='night'?'#24405a':ph==='dusk'?'#5a4a7a':'#6aa898',near=ph==='night'?'#1f4a3a':ph==='dusk'?'#4f6a5a':'#4f9a62';
- for(let x=0;x<W;x++){const y1=Math.round(50+4*Math.sin(x/9)+2*Math.sin(x/4.3));c.fillStyle=far;c.fillRect(x,y1,1,66-y1)}
+ if(night){let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;c.fillStyle='#ffffff';for(let i=0;i<40;i++){c.globalAlpha=.5+rnd()*.5;c.fillRect(Math.floor(rnd()*W),Math.floor(rnd()*48),1,1)}c.globalAlpha=1}
+ const orb=grid(17,17),oc=night?'#f3f0d0':dusk?'#ffb35a':'#fff3a6';
+ ellipse(orb,8.5,8.5,7,7,(x,y,nx,ny)=>night&&((x===6&&y===6)||(x===10&&y===9)||(x===7&&y===11))?'#d8d2a8':(nx*.5+ny*.6>.55?(night?'#ddd7b0':'#ffd36a'):oc));
+ outline(orb,night?'#b8b490':'#f2a84a');c.drawImage(gridCanvas(orb),dusk?78:80,dusk?32:6);
+ // 遠山＋松樹剪影
+ const far=night?'#24405a':dusk?'#5a4a7a':'#6aa898',farD=night?'#1c3448':dusk?'#4a3e66':'#5a9888',near=night?'#1f4a3a':dusk?'#4f6a5a':'#4f9a62';
+ const fy=x=>Math.round(50+4*Math.sin(x/9)+2*Math.sin(x/4.3));
+ for(let x=0;x<W;x++){c.fillStyle=far;c.fillRect(x,fy(x),1,66-fy(x))}
+ for(const px0 of[48,56,63,71,86]){const by=fy(px0);c.fillStyle=farD;for(let k=0;k<9;k++){const w=Math.floor(k/2);c.fillRect(px0-w,by-9+k,w*2+1,1)}}
  for(let x=0;x<W;x++){const y2=Math.round(58+3*Math.sin(x/13+1));c.fillStyle=near;c.fillRect(x,y2,1,66-y2)}
- // 小屋
- const night=ph==='night';
- c.fillStyle='#2a1e1e';c.fillRect(9,46,26,19);c.fillStyle=night?'#9a8a78':'#ecd6aa';c.fillRect(10,47,24,17);c.fillStyle=night?'#7a6a5a':'#d0b07e';c.fillRect(10,60,24,4);
- for(let i=0;i<9;i++){c.fillStyle='#2a1e1e';c.fillRect(7+i,46-i,30-2*i,1);c.fillStyle=night?'#7a3a3a':'#c0584a';c.fillRect(8+i,46-i,28-2*i,1)}
- c.fillStyle=night?'#5a2a2a':'#9a3a34';c.fillRect(8,45,28,1);
- c.fillStyle='#2a1e1e';c.fillRect(14,52,7,12);c.fillStyle='#8a5a3a';c.fillRect(15,53,5,11);c.fillStyle='#ffd34a';c.fillRect(18,58,1,1);
- c.fillStyle='#2a1e1e';c.fillRect(24,51,8,7);c.fillStyle=night||ph==='dusk'?'#ffe07a':'#a8dcf0';c.fillRect(25,52,6,5);c.fillStyle='#2a1e1e';c.fillRect(27,52,1,5);c.fillRect(25,54,6,1);
- // 樹
- c.fillStyle='#3a2416';c.fillRect(108,44,6,22);c.fillStyle='#6a4428';c.fillRect(109,44,4,22);
- const tree=grid(30,26);ellipse(tree,15,13,14,12,(x,y,nx,ny)=>nx*.5+ny*.7>.45?(night?'#1e5a3a':'#2f8a4a'):((x*7+y*3)%11===0?(night?'#3a7a4a':'#7ccc5a'):(night?'#2a6a42':'#45a85a')));outline(tree,'#163a24');c.drawImage(gridCanvas(tree),96,22);
+ // 後方小樹與灌木
+ const leafA=night?'#2a6a42':'#45a85a',leafB=night?'#1e5a3a':'#2f8a4a',leafC=night?'#3a7a4a':'#7ccc5a';
+ const blob=(cx,cy,rx,ry)=>{const g=grid(rx*2+4,ry*2+4);ellipse(g,rx+2,ry+2,rx,ry,(x,y,nx,ny)=>nx*.5+ny*.7>.45?leafB:((x*7+y*3)%11===0?leafC:leafA));outline(g,'#163a24');c.drawImage(gridCanvas(g),cx-rx-2,cy-ry-2)};
+ c.fillStyle='#5a3a20';c.fillRect(57,48,3,18);blob(58,44,8,7);
+ // 右邊大樹
+ c.fillStyle='#3a2416';c.fillRect(108,44,6,22);c.fillStyle='#6a4428';c.fillRect(109,44,4,22);c.fillStyle='#3a2416';c.fillRect(105,64,12,2);
+ blob(111,35,14,12);
+ if(!night){c.fillStyle='#e8433f';for(const[x,y]of[[104,32],[116,38],[110,28],[119,31]])c.fillRect(x,y,2,2)}
+ for(const[x,r]of[[48,5],[74,6],[90,5]])blob(x,64,r,3);
  // 草地
- const g1=night?'#2f6a3a':ph==='dusk'?'#5a8a4a':'#6fbf5a',g2=night?'#285a32':ph==='dusk'?'#4a7a42':'#5fae4f',g3=night?'#3a7a46':ph==='dusk'?'#6a9a5a':'#86d06a';
+ const g1=night?'#2f6a3a':dusk?'#5a8a4a':'#6fbf5a',g2=night?'#285a32':dusk?'#4a7a42':'#5fae4f',g3=night?'#3a7a46':dusk?'#6a9a5a':'#86d06a';
  c.fillStyle=g1;c.fillRect(0,66,W,H-66);c.fillStyle=g2;for(let y=84;y<H;y++)for(let x=(y%2);x<W;x+=2)if(y>90||((x+y)%4===0))c.fillRect(x,y,1,1);
  c.fillStyle=g3;for(let x=0;x<W;x++)if(x%3!==1)c.fillRect(x,66,1,1);
+ // 石板小徑（從小窩門口延伸出來）
+ for(const[x,y]of[[24,70],[30,75],[37,80],[45,85],[54,89]]){const g=grid(9,5);ellipse(g,4.5,2.5,3.5,1.6,(xx,yy,nx,ny)=>ny>.2?(night?'#7a7a6a':'#a89a7a'):(night?'#9a9a88':'#d8ccaa'));outline(g,night?'#3a3a2a':'#6a5a3a');c.drawImage(gridCanvas(g),x-4,y-2)}
+ // 小池塘
+ {const g=grid(34,14);ellipse(g,17,7,15,5.5,(x,y,nx,ny)=>nx*nx+ny*ny>.72?(night?'#5a6a6a':'#9aa0a0'):(ny<-.2?(night?'#3a5a8a':'#8fd0f0'):(night?'#2a4a7a':'#5fb4f0')));outline(g,'#4a5050');
+  const pc=gridCanvas(g),pcx=pc.getContext('2d');pcx.fillStyle=night?'#6a8ab0':'#d8f4ff';pcx.fillRect(9,6,4,1);pcx.fillRect(17,8,5,1);
+  pcx.fillStyle='#3a8a3a';pcx.fillRect(22,5,4,2);pcx.fillStyle='#ff9ac0';pcx.fillRect(23,4,2,1);c.drawImage(pc,90,78)}
+ // 小草、花、蘑菇
  let sd=3;const r2=()=>(sd=(sd*48271)%2147483647)/2147483647;
- for(let i=0;i<40;i++){const x=Math.floor(r2()*W),y=68+Math.floor(r2()*42);c.fillStyle=g3;c.fillRect(x,y,1,2);c.fillRect(x+1,y-1,1,2);c.fillStyle=g2;c.fillRect(x-1,y+1,1,1)}
- const fl=night?['#c8c8e8','#d8a8c8','#e8e0a0']:['#ffffff','#ff9ac0','#ffe066'];for(let i=0;i<14;i++){const x=Math.floor(r2()*W),y=70+Math.floor(r2()*38);if(x>34&&x<94&&y>90)continue;c.fillStyle=fl[i%3];c.fillRect(x,y,1,1);c.fillRect(x-1,y+1,1,1);c.fillRect(x+1,y+1,1,1);c.fillRect(x,y+2,1,1);c.fillStyle='#e8b830';c.fillRect(x,y+1,1,1)}
+ for(let i=0;i<46;i++){const x=Math.floor(r2()*W),y=68+Math.floor(r2()*42);c.fillStyle=g3;c.fillRect(x,y,1,2);c.fillRect(x+1,y-1,1,2);c.fillStyle=g2;c.fillRect(x-1,y+1,1,1)}
+ const fl=night?['#c8c8e8','#d8a8c8','#e8e0a0','#a8c8e8']:['#ffffff','#ff9ac0','#ffe066','#b8a0ff'];
+ for(let i=0;i<22;i++){const x=Math.floor(r2()*W),y=70+Math.floor(r2()*38);if(x>34&&x<94&&y>88)continue;if(x>88&&y>76&&y<93)continue;c.fillStyle=fl[i%4];c.fillRect(x,y,1,1);c.fillRect(x-1,y+1,1,1);c.fillRect(x+1,y+1,1,1);c.fillRect(x,y+2,1,1);c.fillStyle='#e8b830';c.fillRect(x,y+1,1,1)}
+ for(const[x,y]of[[82,72],[124,96],[46,70]]){c.fillStyle='#e8e0d0';c.fillRect(x,y+2,2,2);c.fillStyle='#d8403a';c.fillRect(x-1,y,4,2);c.fillStyle='#fff';c.fillRect(x,y,1,1)}
+ drawDen(c,lvl,night||dusk);
  return cv}
+/* ---------------- 小窩（4 個等級） ---------------- */
+const DEN_BOX=[[2,42,44,68],[2,36,44,68],[2,30,44,70],[0,2,46,70]];   // x1,y1,x2,y2：點這裡打開小窩
+function drawDen(c,lvl,dark){const g=grid(W,H),R=(x,y,w,h,col)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)px(g,x+i,y+j,col)};
+ const hole='#1a140e',lit=dark?'#ffe07a':'#a8dcf0';
+ if(lvl===1){ellipse(g,22,61,18,9,(x,y,nx,ny)=>nx*.5+ny*.7>.45?'#2f8a4a':((x*5+y*3)%7===0?'#7ccc5a':'#45a85a'));ellipse(g,22,64,6,5,()=>hole);
+  for(const x of[8,14,30,36])R(x,51,1,3,'#7ccc5a');R(15,58,2,2,'#ffe066');R(30,57,2,2,'#ff9ac0')}
+ else if(lvl===2){ellipse(g,22,56,18,13,(x,y,nx,ny)=>(y%3===0)?'#b08030':(nx*.5+ny*.6>.45?'#c09040':'#d8a850'));R(20,42,4,3,'#d8a850');R(21,40,2,2,'#c09040');
+  ellipse(g,22,62,6,6.5,()=>hole);R(14,66,16,2,'#8a6a30');for(const x of[6,38])R(x,60,1,6,'#e8c070')}
+ else if(lvl===3){for(let y=36;y<=66;y++)for(let x=6;x<=38;x++)px(g,x,y,(x%5===0)?'#5a3a20':(x>30?'#6a4428':'#7a4e2e'));
+  ellipse(g,22,36,16.5,4,(x,y,nx,ny)=>((nx*nx+ny*ny)*10|0)%2?'#c49a6a':'#e0b880');
+  for(const[x,w]of[[2,6],[36,7]])R(x,64,w,3,'#5a3a20');ellipse(g,22,58,6.5,7,(x,y,nx,ny)=>nx*nx+ny*ny>.62?'#a8703e':hole);
+  ellipse(g,32,46,2.6,2.6,(x,y,nx,ny)=>nx*nx+ny*ny>.5?'#a8703e':lit);R(9,58,4,2,'#d8403a');R(10,60,2,3,'#e8e0d0');px(g,10,58,'#fff')}
+ else{R(17,28,12,40,'#6a4428');for(let y=28;y<68;y+=3)R(18,y,1,2,'#4a2e18');for(const[x,w]of[[10,7],[29,8]])R(x,65,w,3,'#5a3a20');
+  ellipse(g,23,14,22,13,(x,y,nx,ny)=>nx*.5+ny*.7>.45?'#2f8a4a':((x*7+y*3)%11===0?'#7ccc5a':'#45a85a'));
+  R(4,40,38,3,'#8a5a34');R(6,30,34,10,'#ecd6aa');for(let i=0;i<7;i++)R(4+i,30-i,38-2*i,1,'#c0584a');
+  R(10,32,6,8,'#7a4a2a');ellipse(g,31,35,3,3,(x,y,nx,ny)=>nx*nx+ny*ny>.5?'#7a4a2a':lit);
+  for(let y=43;y<66;y+=3)R(12,y,5,1,'#c49a6a');R(12,43,1,23,'#a8703e');R(16,43,1,23,'#a8703e');ellipse(g,24,62,5,5.5,()=>hole)}
+ outline(g,'#1a1208');c.drawImage(gridCanvas(g),0,0)}
 const CLOUD=(()=>{const g=grid(26,12);ellipse(g,8,7,6,4,()=> '#ffffff');ellipse(g,15,5,7,5,()=> '#ffffff');ellipse(g,20,8,5,3.5,()=> '#ffffff');
  for(let i=0;i<g.a.length;i++)if(g.a[i]&&Math.floor(i/g.w)>=8)g.a[i]='#dfeef8';outline(g,'#a8c8e0');return g})();
 let cloudCv=null;
@@ -527,39 +562,57 @@ function currentFrame(now){
  if(!s.hatched){const lvl=Math.min(3,Math.max(0,s.eggTaps-1));
   const seq=['L','0','R','0'];let l='0';if(now<wobbleUntil)l=seq[Math.floor(now/70)%4];else if(now%3200<360)l=seq[Math.floor(now/90)%4];return'egg'+lvl+l}
  if(anim.once){const A=ANIMS[anim.once],i=Math.floor((now-anim.t0)/1000*A.fps);if(i<A.f.length)return A.f[i];anim.once=null}
+ if(mode==='wash'&&WASH.rub)return['wash0','wash1'][Math.floor(now/120)%2];
+ if(petTarget!==null)return['idle1','jump0'][Math.floor(now/130)%2];
+ if(FEED.apple&&FEED.apple.st!=='eat')return'eat0';
  const b=baseAnim(),A=ANIMS[b];
  if(b==='idle'){if(!nextBlink)nextBlink=now+2500;if(now>nextBlink){if(now<nextBlink+150)return'blink';nextBlink=now+1800+Math.random()*3800}}
  return A.f[Math.floor(now/1000*A.fps)%A.f.length]}
-function spawn(icon,n,o={},arr=parts){if(rm())n=Math.min(n,1);for(let i=0;i<n;i++)arr.push({ic:icon,x:(o.x??64)+(Math.random()-.5)*(o.spread??26),y:(o.y??74)+(Math.random()-.5)*(o.sy??10),
+function spawn(icon,n,o={},arr=parts){if(rm())n=Math.min(n,1);for(let i=0;i<n;i++)arr.push({ic:icon,x:(o.x??petX+24)+(Math.random()-.5)*(o.spread??26),y:(o.y??74)+(Math.random()-.5)*(o.sy??10),
  vx:(o.vx??0)+(Math.random()-.5)*(o.jx??14),vy:(o.vy??-22)-Math.random()*(o.jy??10),g:o.g??0,life:o.life??1.2,t:-(i*(o.stagger??.06)),bounce:o.bounce})}
 
 /* ---------------- 畫面繪製 ---------------- */
 const cv=$('scene'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
 let lastFrameT=0;
 function draw(now){
- const ph=phase();if(ph!==bgKey){bgKey=ph;bgCache=makeBg(ph)}
- const inRoom=s.view==='room'&&s.hatched;let rph=null;
- if(inRoom)rph=drawRoom(now);else{
- ctx.drawImage(bgCache,0,0);
- const ca=ph==='night'?.35:ph==='dusk'?.75:1;ctx.globalAlpha=ca;const t=now/1000;
- ctx.drawImage(cloudCv,Math.round(((t*2)%(W+60))-30),10);ctx.drawImage(cloudCv,Math.round(((t*1.3+80)%(W+60))-30),26);ctx.globalAlpha=1;
- const nowMs=Date.now();for(let i=0;i<s.plots.length;i++){const st=plotStage(PC.plotState(s,i,nowMs));ctx.drawImage(PLOT_SPR[st],1+i*13,91+(i%2)*6);if(st===4&&Math.floor(now/400)%3===0){ctx.fillStyle='#ffffff';ctx.fillRect(6+i*13,89+(i%2)*6,1,1)}}}
+ const ph=phase(),bk=ph+'|'+s.den.level;if(bk!==bgKey){bgKey=bk;bgCache=makeBg(ph,s.den.level)}
+ const dt=Math.min(.1,(now-lastFrameT)/1000||0);lastFrameT=now;
+ updateWorld(now,dt);
+ const inRoom=curView()==='room';let rph=null;const t=now/1000;
+ if(inRoom){rph=drawRoom(now);drawResidents(now)}else{
+  ctx.drawImage(bgCache,0,0);
+  const ca=ph==='night'?.35:ph==='dusk'?.75:1;ctx.globalAlpha=ca;
+  ctx.drawImage(cloudCv,Math.round(((t*2)%(W+60))-30),10);ctx.drawImage(cloudCv,Math.round(((t*1.3+80)%(W+60))-30),26);ctx.globalAlpha=1;
+  drawAmbient(now,ph);
+  const nowMs=Date.now();for(let i=0;i<s.plots.length;i++){const st=plotStage(PC.plotState(s,i,nowMs));ctx.drawImage(PLOT_SPR[st],1+i*13,91+(i%2)*6);if(st===4&&Math.floor(now/400)%3===0){ctx.fillStyle='#ffffff';ctx.fillRect(6+i*13,89+(i%2)*6,1,1)}}}
+ if(mode==='play')drawRing();
  const key=formKey(),S=sheet(key);let fname=currentFrame(now),fi=S.idx[fname]??0;
- const fr=FRAMES[fname]||{};const lift=-(fr.dy||0);
- ctx.fillStyle='rgba(20,60,30,.28)';const sw=Math.max(10,(key.startsWith('egg')?22:26)-lift);ctx.fillRect(PET_X+24-sw/2,PET_Y+44,sw,2);ctx.fillRect(PET_X+24-sw/2+2,PET_Y+43,sw-4,1);
+ const fr=FRAMES[fname]||{};const lift=-(fr.dy||0),PX=Math.round(petX);
+ ctx.fillStyle='rgba(20,60,30,.28)';const sw=Math.max(10,(key.startsWith('egg')?22:26)-lift);ctx.fillRect(PX+24-sw/2,PET_Y+44,sw,2);ctx.fillRect(PX+24-sw/2+2,PET_Y+43,sw-4,1);
  if(evo){const e=(now-evo.t0)/1000;
   if(e<2.6){const per=Math.max(.06,.32-e*.11);const useNew=Math.floor(e/per)%2===1;const SS=sheet(useNew?evo.to:evo.from);
-   ctx.fillStyle='rgba(10,14,40,.55)';ctx.fillRect(0,0,W,H);ctx.drawImage(SS.sil,SS.idx.idle0*CELL,0,CELL,CELL,PET_X,PET_Y,CELL,CELL)}
-  else if(e<3.1){ctx.fillStyle='#ffffff';ctx.globalAlpha=1-(e-2.6)/.5;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;ctx.drawImage(sheet(evo.to).cv,0,0,CELL,CELL,PET_X,PET_Y,CELL,CELL)}
+   ctx.fillStyle='rgba(10,14,40,.55)';ctx.fillRect(0,0,W,H);ctx.drawImage(SS.sil,SS.idx.idle0*CELL,0,CELL,CELL,PX,PET_Y,CELL,CELL)}
+  else if(e<3.1){ctx.fillStyle='#ffffff';ctx.globalAlpha=1-(e-2.6)/.5;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;ctx.drawImage(sheet(evo.to).cv,0,0,CELL,CELL,PX,PET_Y,CELL,CELL)}
   else{const done=evo.done;evo=null;done&&done()}}
- else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,PET_X,PET_Y,CELL,CELL);
+ else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,PX,PET_Y,CELL,CELL);
+ drawCores(now);drawApple();drawBall();
  if(inRoom&&!evo)drawRoomFront(now,rph);
- if(s.sleeping&&!evo){ctx.fillStyle='rgba(8,12,40,.42)';ctx.fillRect(0,0,W,H);if(Math.random()<.02)spawn('z',1,{x:76,y:62,vx:6,vy:-8,jx:2,jy:2,life:2.2,spread:4})}
- const dt=Math.min(.1,(now-lastFrameT)/1000||0);lastFrameT=now;
+ if(s.sleeping&&!evo){ctx.fillStyle='rgba(8,12,40,.42)';ctx.fillRect(0,0,W,H);if(Math.random()<.02)spawn('z',1,{x:PX+36,y:62,vx:6,vy:-8,jx:2,jy:2,life:2.2,spread:4})}
  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=dt;if(p.t<0)continue;if(p.t>p.life){parts.splice(i,1);continue}
   p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;if(p.bounce&&p.y>96){p.y=96;p.vy*=-.55}
   const ic=ICV[p.ic];ctx.globalAlpha=p.t>p.life-.3?Math.max(0,(p.life-p.t)/.3):1;ctx.drawImage(ic,Math.round(p.x-ic.width/2),Math.round(p.y-ic.height/2));ctx.globalAlpha=1}
+ drawWashUI(now);drawBallHUD();
  if(now<flashUntil&&!rm()){ctx.fillStyle='#ffffff';ctx.globalAlpha=Math.min(1,(flashUntil-now)/400);ctx.fillRect(0,0,W,H);ctx.globalAlpha=1}}
+/* ---------------- 環境小動畫：蝴蝶、小鳥、螢火蟲 ---------------- */
+function drawAmbient(now,ph){if(rm())return;const t=now/1000;
+ if(ph==='night'){for(let i=0;i<7;i++){const a=Math.sin(t*1.7+i*2.3);if(a<.2)continue;ctx.globalAlpha=a;ctx.fillStyle='#fff3a0';ctx.fillRect(Math.round(10+((i*37+t*3)%108)),Math.round(70+12*Math.sin(t*.6+i)+i*3),1,1)}ctx.globalAlpha=1;return}
+ const cols=[['#ffd34a','#ff9a3a'],['#b8a0ff','#ffffff']];
+ for(let i=0;i<2;i++){const x=Math.round(60+40*Math.sin(t*.25+i*3)),y=Math.round(76+7*Math.sin(t*1.1+i*2)),f=Math.floor(t*8+i)%2;ctx.fillStyle=cols[i][0];
+  if(f){ctx.fillRect(x-2,y,2,2);ctx.fillRect(x+1,y,2,2)}else{ctx.fillRect(x-1,y,1,2);ctx.fillRect(x+1,y,1,2)}ctx.fillStyle='#2a1a10';ctx.fillRect(x,y,1,2)}
+ if(ph==='day'){const bx=((t*9)%(W+80))-40;ctx.fillStyle='#2a3a5a';for(const[ox,oy]of[[0,0],[9,4]]){const x=Math.round(bx+ox),y=Math.round(18+oy+Math.sin(t*2+ox)),w=Math.floor(t*4+ox)%2;ctx.fillRect(x-2,y-w,2,1);ctx.fillRect(x,y,1,1);ctx.fillRect(x+1,y-w,2,1)}}}
+/* ---------------- 小窩裡的其他寵物（縮小、睡覺） ---------------- */
+function drawResidents(now){s.roster.forEach((p,i)=>{const id=gidOf(p),S=sheet(petKey(id,formCode(p.stage,p.route))),[x,y]=[[2,76],[18,76],[100,56]][i]||[2,76];
+ ctx.drawImage(S.cv,S.idx[Math.floor(now/900+i)%2?'sleep0':'sleep1']*CELL,0,CELL,CELL,x,y,24,24);if(!rm()&&Math.random()<.004)spawn('z',1,{x:x+18,y:y+4,vx:4,vy:-6,jx:1,jy:1,life:1.6,spread:2})})}
 let rafOn=false,lastDraw=0;
 function loop(now){if(document.hidden){rafOn=false;return}if(now-lastDraw>=45){lastDraw=now;if(B)drawBattle(now);else draw(now)}requestAnimationFrame(loop)}
 function startLoop(){if(!rafOn){rafOn=true;requestAnimationFrame(loop)}}
@@ -570,7 +623,7 @@ function startLoop(){if(!rafOn){rafOn=true;requestAnimationFrame(loop)}}
 const msgQ=[];let msgTimer=0,nextChat=Date.now()+9000;
 function say(t,{log=true,q=false}={}){if(log)$('log').textContent=t;if(!q)msgQ.length=0;msgQ.push(t);if(msgQ.length>3)msgQ.shift();if(!q||!msgTimer){clearTimeout(msgTimer);nextMsg()}nextChat=Date.now()+12000}
 function nextMsg(){const t=msgQ.shift();if(t===undefined){msgTimer=0;$('bubble').classList.add('off');return}const b=$('bubble');b.textContent=t;b.classList.remove('off');msgTimer=setTimeout(nextMsg,Math.max(1700,t.length*120))}
-function chatter(){if(!s.hatched){return['裡面好像有東西在動…','輕輕點蛋看看？'][Math.floor(Math.random()*2)]}
+function chatter(){if(s.hatched&&s.cores.some(c=>PC.isRotten(c))&&Math.random()<.6)return'好臭喔…有果蠅🪰 幫我清掉果核嘛';if(!s.hatched){return['裡面好像有東西在動…','輕輕點蛋看看？'][Math.floor(Math.random()*2)]}
  if(s.sleeping)return'Zzz…';if(s.hunger<25)return'肚子咕嚕咕嚕…';if(s.clean<25)return'身上黏黏的…';if(s.energy<20)return'好睏喔…';if(s.mood<30)return'陪我玩嘛…';
  const ph=phase();return ph==='night'?['星星好漂亮✨','晚上好安靜～','月亮出來了'][Math.floor(Math.random()*3)]:['今天天氣真好！','嗯哼～♪','摸摸我嘛！','我會長得很大喔！',`${s.name}在這裡！`][Math.floor(Math.random()*5)]}
 let toastT=0;function toast(t,ms=2600){const el=$('toast');el.textContent=t;el.classList.remove('off');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.add('off'),ms)}
@@ -604,16 +657,16 @@ function nextEvo(){
   const msg=`${s.name} 長成${STAGE_NAME[t.to]}「${TF.name}」了！`;say(msg);toast(`🎉 ${STAGE_NAME[t.to]}：${TF.name}（${TF.en}）`,3500);setTimeout(nextEvo,1500)}}}
 function gatherOffer(){confirmBox('🌿 去採集？','沒有食物、金幣也不夠時，可以免費採集果子（每 2 分鐘一次），不會卡關。','採集',()=>{const g=PC.gather(s,Date.now());toast(g.msg);save();renderUI()})}
 function act(a){
- if(!s.hatched||evo||Date.now()<busyUntil)return;unlockAudio();
- const x0=s.xp,r=PC.act(s,a,Date.now());handleTime(r.tm);
- if(!r.ok){say(r.msg);playAnim('no');sfx('no');renderUI();save();if(r.code==='nofood')setTimeout(gatherOffer,500);return}
- if(a==='sleep'){if(s.sleeping){busyUntil=Date.now()+500;spawn('z',2,{x:76,y:62,vx:6,vy:-8,jx:2,jy:2,life:2,spread:4})}else playAnim('happy')}
- else playAnim(r.anim);
- sfx(r.sfx);
- if(a==='feed'){spawn('apple',1,{x:64,y:66,vy:-4,jx:0,jy:0,life:.6,spread:0});spawn('heart',3,{y:70,life:1.1,stagger:.25})}
- if(a==='play'){spawn('ball',1,{x:30,y:70,vx:40,vy:-50,g:110,jx:0,jy:0,life:1.4,spread:0,bounce:1});spawn('star',3,{y:66,life:1,stagger:.3})}
- if(a==='wash')spawn('bubble',9,{y:80,vy:-18,jx:10,spread:40,sy:20,life:1.4,stagger:.08});
- say(r.msg+(r.xp?`　經驗 +${r.xp}`:''));buzz(15);save();renderUI();afterChange(x0)}
+ if(!s.hatched||evo)return;unlockAudio();
+ if(a==='sleep'){if(Date.now()<busyUntil||modeBusy())return;cancelMode();const x0=s.xp,r=PC.act(s,'sleep',Date.now());handleTime(r.tm);
+  if(s.sleeping){busyUntil=Date.now()+500;spawn('z',2,{x:petX+36,y:62,vx:6,vy:-8,jx:2,jy:2,life:2,spread:4})}else playAnim('happy');
+  sfx(r.sfx);say(r.msg);save();renderUI();afterChange(x0);return}
+ if(mode===a){if(modeBusy())return;setMode(null);say('先不要了～',{log:false});renderUI();return}
+ if(mode&&modeBusy())return;
+ const why=PC.canAct(s,a,Date.now());
+ if(why){say(why);playAnim('no');sfx('no');if(a==='feed'&&PC.canGather(s,Date.now()))setTimeout(gatherOffer,500);return}
+ setMode(a);say(MODE_TIP[a]);sfx('tap');renderUI();
+ const r=cv.getBoundingClientRect();if(r.top<0||r.bottom>innerHeight)cv.scrollIntoView({block:'start',behavior:rm()?'auto':'smooth'})}
 function tapPet(){
  unlockAudio();requestPersist();if(evo||Date.now()<busyUntil)return;
  if(!s.hatched){tick();s.eggTaps++;wobbleUntil=performance.now()+450;sfx(s.eggTaps>=2?'crack':'tap');buzz(10);
@@ -639,7 +692,7 @@ function dailyCheck(){const r=PC.claimDaily(s,Date.now());if(!r)return;save();re
 /* =========================================================
    介面更新
    ========================================================= */
-const STATS=[['hunger','飽食','apple','#f19a6a'],['mood','心情','heart','#f18fae'],['clean','清潔','drop','#73c9e6'],['energy','體力','bolt','#f2cc6e']];
+const STATS=[['hunger','飽食','apple','#f19a6a'],['mood','心情','heart','#f18fae'],['clean','清潔','tub','#73c9e6'],['energy','體力','bolt','#f2cc6e']];
 function buildStats(){$('stats').innerHTML=STATS.map(([k,l,ic,c])=>`<div class="stat" id="st-${k}"><div class="sh"><canvas class="picon" data-icon="${ic}" data-s="2"></canvas>${l}<span class="v" id="sv-${k}"></span></div><div class="bar"><i id="sb-${k}" style="background:${c}"></i></div></div>`).join('')}
 function dayCount(){return Math.floor((Date.now()-s.hatchedAt)/86400000)+1}
 function growLine(){
@@ -661,7 +714,7 @@ function renderUI(){
  const q=s.hatched&&PC.stageReq(s,Date.now()),goal=q?q.xp:0;
  $('xptext').textContent=!s.hatched?'—':q?(s.xp>=goal?`${s.xp} XP（${STAGE_NAME[q.next]} XP 已達標 ✓）`:`${s.xp} / ${goal} XP（${STAGE_NAME[q.next]}）`):`${s.xp} XP`;$('xpbar').style.width=(!s.hatched?0:q?Math.min(100,s.xp/goal*100):100)+'%';
  document.body.classList.toggle('rm',rm());
- $('viewBtn').classList.toggle('hidden',!s.hatched);$('viewBtn').textContent=s.view==='room'?'🌳 出門':'🏠 進屋';
+ $('viewBtn').classList.toggle('hidden',!s.hatched);$('viewBtn').textContent=s.view==='room'?'🌳 出門':'🪺 進窩';
  $('goalDot').classList.toggle('hidden',!(s.goals.list||[]).some(g=>!g.claimed&&g.n>=PC.GOALS[g.id].need))}
 
 /* =========================================================
@@ -686,9 +739,9 @@ function renameDialog(first){
 function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',`
 <p><b>目標：</b>照顧幻獸，陪牠慢慢長大。沒有死亡、離線不扣親密度、不需要每天簽到。</p>
 <ul>
-<li>🍎 <b>餵食</b>：用 1 個食物（沒有就花 ${C.feed.price} 金幣買），飽食 +${C.feed.hunger}、經驗 +${C.feed.xp}。吃飽時不能餵。</li>
-<li>🎾 <b>玩耍</b>：體力 ${C.play.minEnergy} 以上，心情 +${C.play.mood}、體力 −10、經驗 +${C.play.xp}（每 30 分鐘最多 3 次有經驗）。</li>
-<li>🫧 <b>洗澡</b>：清潔 +${C.wash.clean}、經驗 +${C.wash.xp}，每 30 分鐘一次。</li>
+<li>🍎 <b>餵食</b>：按「餵食」後點畫面放蘋果，牠會走過去吃掉。吃完會留下果核，<b>要點一下清掉</b>，放超過 10 分鐘會發臭長果蠅，讓心情一直變差。用 1 個食物（沒有就花 ${C.feed.price} 金幣買），飽食 +${C.feed.hunger}、經驗 +${C.feed.xp}。吃飽時不能餵。</li>
+<li>🎾 <b>玩耍（頂球）</b>：按「玩耍」後點畫面丟球，球快掉到牠頭上時再點一下，牠會把球頂向右邊的圈圈，一回合 3 顆球。體力 ${C.play.minEnergy} 以上，心情 +${C.play.mood}、體力 −10、經驗 +${C.play.xp}（每 30 分鐘最多 3 次有經驗）。</li>
+<li>🫧 <b>洗澡</b>：按「洗澡」後用手指拿海綿 🧽 在牠身上來回刷 3 秒。清潔 +${C.wash.clean}、經驗 +${C.wash.xp}，每 30 分鐘一次。</li>
 <li>👆 <b>摸摸</b>：隨時都能摸；每 30 分鐘第一次：親密度 +2、心情 +3。</li>
 <li>🌙 <b>睡覺</b>：體力每小時 +12（醒著每小時 +3）。睡覺時不能玩耍、冒險；叫醒不用代價。</li>
 </ul>
@@ -696,7 +749,8 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',`
 <p><b>成長：</b>幼年期 → 少年期（孵化 12 小時＋100 XP）→ 成年期（48 小時＋350 XP）→ 高階（7 天＋1000 XP＋特殊事件）。</p>
 <p><b>成年分支：</b>🔥 焰系：冒險、戰鬥；💧 潮系：餵食、摸摸；🌿 森系：種植收成、走路、發現新地點。成年前會看到模糊的提示。</p>
 <p><b>🌱 家園：</b>種子種下 ${CONFIG.farm.growHours} 小時後收成，食物 +${CONFIG.farm.food}、經驗 +${CONFIG.farm.xp}、🌿 森 +${CONFIG.farm.forest}。</p>
-<p><b>🛒 商店與小屋：</b>用金幣買家具，擺進小屋（畫面左下「🏠 進屋」或點小屋）。家具是裝飾，晚上有燈的房間會比較亮。商店也賣食物、種子和星星糖。</p>
+<p><b>🪺 小窩：</b>點院子裡的小窩可以升級（4 級，最多住 4 隻）。迎接新蛋時，小窩有空位的話，現在的夥伴會搬進去休息，不用告別。</p>
+<p><b>🛒 商店：</b>用金幣買家具，擺進小窩裡（畫面左上「🪺 進窩」）。家具是裝飾，晚上有燈的房間會比較亮。商店也賣食物、種子和星星糖。</p>
 <p><b>🎯 小目標：</b>每天 3 個，任選完成就能領獎勵，沒做完也沒關係。</p>
 <p><b>特殊事件：</b>🔥 打通第 ${C.bossStages.volcano} 關「火山遺跡」；💧 親密度 60 以上、晚上摸摸觸發「月泉」；🌿 打通第 ${C.bossStages.oldtree} 關「古樹」並收成 10 次。</p>
 <p><b>親密度：</b>20 解鎖撒嬌與早安問候、50 每天收到小禮物、80 戰鬥時撐住一次。</p>
@@ -765,11 +819,24 @@ function menuDialog(){
  $('mSound').onclick=()=>{s.settings.sound=!s.settings.sound;save();unlockAudio();sfx('tap');$('mSound').textContent=snd()};
  $('mMotion').onclick=()=>{s.settings.reducedMotion=!s.settings.reducedMotion;save();renderUI();$('mMotion').textContent=mo()};
  $('mUpdate').onclick=async()=>{try{const r=await navigator.serviceWorker?.getRegistration();if(r){await r.update()}}catch(e){}toast('正在重新載入最新版本…');setTimeout(()=>location.reload(),600)};
- $('mReset').onclick=()=>confirmBox('🥚 迎接新的蛋？',`目前的${s.hatched?'夥伴「'+esc(s.name)+'」會告別（成長與數值重新開始），但牠會永遠留在「📖 圖鑑」裡':'蛋會被換掉'}。金幣、食物、步數、冒險進度、日記都會保留。<br><br>建議先到「存檔」匯出存檔碼備份。`,'迎接新蛋',()=>newPet(null))}
+ $('mReset').onclick=()=>confirmBox('🥚 迎接新的蛋？',`${!s.hatched?'目前的蛋會被換掉':PC.petCount(s)<PC.denCap(s)?'小窩還有空位：「'+esc(s.name)+'」會搬進小窩休息，隨時可以換回來':'小窩已經滿了：「'+esc(s.name)+'」會告別（永遠留在「📖 圖鑑」裡）。升級小窩就能讓更多夥伴住下來'}。金幣、食物、步數、冒險進度、日記都會保留。<br><br>建議先到「存檔」匯出存檔碼備份。`,'迎接新蛋',()=>newPet(null))}
+function denDialog(){const D=CONFIG.den,L=s.den.level,cur=D[L-1],next=D[L],cap=PC.denCap(s);
+ const rows=s.roster.map((p,i)=>`<div class="eggrow"><canvas data-r="${i}" width="48" height="48"></canvas><div style="flex:1"><b>${esc(p.name)}</b><div class="small">${STAGE_NAME[p.stage]}・XP ${p.xp}・在小窩休息中</div></div><button class="btn pri" data-sw="${i}" style="min-width:72px;flex:0 0 auto">換牠出來</button></div>`).join('');
+ openModal(`🪺 ${cur.name}`,`<p>小窩等級 <b>${L}</b> / ${D.length}　可以住 <b>${cap}</b> 隻（現在 ${PC.petCount(s)} 隻）</p>
+<p class="small">「迎接新的蛋」時，如果小窩還有空位，現在的夥伴會搬進小窩休息，不用告別。休息中的夥伴數值不會下降，隨時可以換出來陪你。</p>
+${rows||'<p class="small">小窩裡還沒有其他夥伴。</p>'}
+<div class="row"><button class="btn pri" id="dIn">🏠 進入小窩</button>${next?`<button class="btn" id="dUp">⬆️ 升級成「${next.name}」（${next.cost} 金幣）</button>`:''}</div>
+<div class="err" id="dErr"></div>`);
+ document.querySelectorAll('[data-r]').forEach(c=>{const p=s.roster[+c.dataset.r];thumb(c,petKey(gidOf(p),formCode(p.stage,p.route)),'sleep0')});
+ $('dIn').onclick=()=>{closeModal();if(s.view!=='room')toggleView()};
+ if($('dUp'))$('dUp').onclick=()=>{const r=PC.upgradeDen(s);if(!r.ok){$('dErr').textContent='❌ '+r.msg;return}PC.journal(s,Date.now(),r.msg);save();bgKey='';renderUI();sfx('level');toast('🎉 '+r.msg,3500);denDialog()};
+ document.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{if(modeBusy())return;cancelMode();const r=PC.swapPet(s,+b.dataset.sw,Date.now());toast(r.msg);if(r.ok){petX=PET_X;save();renderUI();closeModal();playAnim('happy');say(`${s.name}：我來了！`)}})}
 /* 換新的蛋：保留玩家層級的資料（金幣、物品、圖鑑、蛋籃、步數、冒險、每日紀錄、日記、設定） */
 function newPet(genes,from){store.set(BACKUP_KEY,JSON.stringify(s));
- const keep={rev:s.rev,settings:s.settings,coins:s.coins,inv:s.inv,decor:s.decor,view:s.view,harvests:s.harvests,dex:s.dex,eggs:s.eggs,steps:s.steps,adv:s.adv,daily:s.daily,breedAt:s.breedAt,journal:s.journal,lastExport:s.lastExport};
- s=fresh();Object.assign(s,keep);if(genes){s.genes=genes;s.seed=null}lastBackup=Date.now();evo=null;evoQueue.length=0;save();renderUI();
+ const moved=PC.moveToDen(s),oldName=s.name;
+ const keep={rev:s.rev,settings:s.settings,coins:s.coins,inv:s.inv,decor:s.decor,view:s.view,cores:s.cores,ball:s.ball,den:s.den,roster:s.roster,harvests:s.harvests,dex:s.dex,eggs:s.eggs,steps:s.steps,adv:s.adv,daily:s.daily,breedAt:s.breedAt,journal:s.journal,lastExport:s.lastExport};
+ s=fresh();Object.assign(s,keep);if(genes){s.genes=genes;s.seed=null}lastBackup=Date.now();evo=null;evoQueue.length=0;cancelMode();petX=PET_X;save();renderUI();
+ if(moved)setTimeout(()=>toast(`🪺 ${oldName} 搬進小窩休息了`,3500),400);
  say(from?'配對寶寶的蛋來了！':'一顆新的蛋來了！');setTimeout(()=>say('會孵出什麼呢？輕點看看！',{q:true}),100)}
 function spriteDialog(){
  openModal('🎞️ Sprite Sheet（實際遊戲用）',`<p class="small">以下是遊戲執行時由程式產生的逐格像素圖（每格 48×48 px，放大 2 倍顯示）。角色動畫就是逐格切換這些畫格。</p><div class="sprites" id="spr"></div>`);
@@ -859,7 +926,7 @@ function basketDialog(){
   :'<p>蛋籃是空的。到「💞 配對」跟朋友的幻獸配對，就會得到蛋。</p>');
  document.querySelectorAll('.eggrow canvas[data-i]').forEach(c=>thumb(c,eggKey(s.eggs[+c.dataset.i].id),'egg00'));
  document.querySelectorAll('[data-hatch]').forEach(b=>b.onclick=()=>{const i=+b.dataset.hatch,e=s.eggs[i];
-  confirmBox('🥚 孵這顆蛋？',`目前的${s.hatched?'夥伴「'+esc(s.name)+'」會告別（永遠留在圖鑑）':'蛋會被換掉'}，改由這顆蛋開始。`,'孵這顆',()=>{s.eggs.splice(i,1);newPet(e.id.slice(2),e.from)})})}
+  confirmBox('🥚 孵這顆蛋？',`${!s.hatched?'目前的蛋會被換掉':PC.petCount(s)<PC.denCap(s)?'「'+esc(s.name)+'」會搬進小窩休息':'小窩滿了，「'+esc(s.name)+'」會告別（留在圖鑑）'}，改由這顆蛋開始。`,'孵這顆',()=>{s.eggs.splice(i,1);newPet(e.id.slice(2),e.from)})})}
 
 /* =========================================================
    🌱 家園種植
@@ -898,7 +965,7 @@ function goalsDialog(){PC.claimDaily(s,Date.now());PC.ensureGoals(s,Date.now());
 /* =========================================================
    🛒 商店與房間裝飾
    ========================================================= */
-function toggleView(){if(!s.hatched)return;s.view=s.view==='room'?'yard':'room';save();renderUI();sfx('tap');say(s.view==='room'?'回到小屋了～':'出門走走！',{log:false})}
+function toggleView(){if(!s.hatched||modeBusy())return;cancelMode();petX=PET_X;petTarget=null;s.view=s.view==='room'?'yard':'room';save();renderUI();sfx('tap');say(s.view==='room'?'回到小窩了～':'出門走走！',{log:false})}
 const SLOT_NAME={paper:'壁紙',wall:'牆上',lamp:'燈',plant:'植物',bed:'床',rug:'地毯',toy:'玩具'};
 function decorPreview(id){if(id.startsWith('paper_')){const c=document.createElement('canvas');c.width=24;c.height=16;const x=c.getContext('2d'),[a,b]=PAPER[id];x.fillStyle=a;x.fillRect(0,0,24,16);x.fillStyle=b;
   if(id==='paper_night'){x.fillStyle='#fff3a6';for(let i=0;i<8;i++)x.fillRect((i*7)%24,(i*5)%16,1,1)}else for(let i=0;i<24;i+=6)x.fillRect(i,0,2,16);return c}return makeDecor(id)}
@@ -940,7 +1007,7 @@ function advDialog(){PC.claimDaily(s,Date.now());tick();
 <p class="small">今天還有 <b>${left}</b> 次全額獎勵（每天前 ${A.dailyFull} 次；之後只給 20% 經驗和材料）。<br>完成：經驗 +${A.xp}、金幣 +${A.coins}、🔥 焰系 +${A.flame}；勝利再加經驗 +10、金幣 +4、🔥 +2。失敗不扣東西，經驗 +3。<br>第一次打通新關卡＝發現新地點（🌿 森系 +2）。✨ 標記的 Boss 關有特殊事件。<br>屬性相剋：🔥 剋 🌿、🌿 剋 💧、💧 剋 🔥（屬性技 1.5 倍）。</p>
 ${why&&why!=='這一關還沒解鎖'?'<p class="err">'+why+'</p>':''}${list}`);
  document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{const n=+b.dataset.st,w=PC.canAdventure(s,n);if(w){toast(w);return}closeModal();startBattle(n)})}
-function startBattle(n){const r=PC.startAdventure(s,n,Date.now());if(!r.ok){toast(r.msg);return}save();renderUI();
+function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();petX=PET_X;const r=PC.startAdventure(s,n,Date.now());if(!r.ok){toast(r.msg);return}save();renderUI();
  const me=PC.mkFighter(s.name,formKey(),lvl(),s.route,tier(),s.mood,s.bond),foe=foeFighter(n);
  B={n,full:r.full,me,foe,busy:false,over:false,fx:{me:{dx:0,dy:0,flash:0,faint:0,anim:null,t0:0},foe:{dx:0,dy:0,flash:0,faint:0,anim:null,t0:0}}};bparts.length=0;
  $('battle').classList.remove('hidden');$('bDone').classList.add('hidden');$('moves').classList.remove('hidden');
@@ -1002,9 +1069,94 @@ window.addEventListener('pagehide',()=>{tick();save()});
 window.addEventListener('storage',e=>{if(e.key===SAVE_KEY&&e.newValue){const o=parse(e.newValue);if(o&&Number(o.rev)>s.rev){s=sanitize(o);renderUI()}}});
 
 /* ---------------- 輸入 ---------------- */
-cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
- if(x>=PET_X-2&&x<=PET_X+CELL+2&&y>=PET_Y-6&&y<=PET_Y+CELL+2)tapPet();
- else if(s.hatched&&s.view!=='room'&&x>=6&&x<=38&&y>=36&&y<=66)toggleView();else{unlockAudio();spawn('spark',1,{x,y,vy:-6,jx:0,jy:0,life:.5,spread:0})}});
+/* =========================================================
+   觸控互動：放蘋果餵食、海綿刷洗、頂球小遊戲、清果核
+   ========================================================= */
+let mode=null,petX=PET_X,petTarget=null,walkCb=null,homeAt=0;
+const curView=()=>s.hatched&&s.view==='room'?'room':'yard';
+function walkTo(x,cb){petTarget=clamp(Math.round(x),0,W-CELL);walkCb=cb||null}
+const overPet=(x,y)=>x>=petX+6&&x<=petX+42&&y>=PET_Y+8&&y<=PET_Y+46;
+const FEED={apple:null},WASH={t:0,down:false,px:0,py:0,lastMove:0,sfxAt:0},BALL={left:0,score:0,b:null,tapAt:0},RING={x:112,y:40,r:7};
+const MODE_TIP={feed:'點畫面任何地方，把蘋果放下去 🍎',wash:'拿海綿 🧽 在牠身上來回刷 3 秒',play:'點畫面丟球 🏀 球快掉到頭上時再點一下，幫牠頂進右邊的圈圈！'};
+function setMode(m){mode=m;document.querySelectorAll('[data-act]').forEach(b=>{if(b.dataset.act!=='sleep')b.classList.toggle('on',b.dataset.act===m)});
+ cv.style.touchAction=m==='wash'?'none':'';WASH.t=0;WASH.down=false;FEED.apple=null;if(m==='play'){BALL.left=CONFIG.ballGame.balls;BALL.score=0;BALL.b=null}else{BALL.b=null}
+ if(!m)homeAt=performance.now()+4000}
+function modeBusy(){return(mode==='feed'&&FEED.apple)||(mode==='play'&&(BALL.b||BALL.left<CONFIG.ballGame.balls))||(mode==='wash'&&WASH.t>.3)}
+function cancelMode(){if(!mode)return;setMode(null)}
+/* ---- 世界更新（每一格畫面） ---- */
+function updateWorld(now,dt){
+ if(petTarget!==null){const d=petTarget-petX,step=(mode==='play'?75:55)*dt;if(Math.abs(d)<=step){petX=petTarget;petTarget=null;const cb=walkCb;walkCb=null;cb&&cb()}else petX+=Math.sign(d)*step}
+ else if(!mode&&s.hatched&&Math.abs(petX-PET_X)>1&&now>homeAt&&!anim.once)walkTo(PET_X);
+ // 蘋果
+ const A=FEED.apple;
+ if(A){if(A.st==='fall'){A.vy+=220*dt;A.y+=A.vy*dt;if(A.y>=100){A.y=100;A.st='wait';sfx('tap');walkTo(A.x-24,()=>{A.st='eat';A.t0=now;playAnim('eat',1400);sfx('eat')})}}
+  else if(A.st==='eat'&&now-A.t0>1350)finishFeed()}
+ // 海綿
+ if(mode==='wash'){const rubbing=WASH.down&&overPet(WASH.px,WASH.py)&&now-WASH.lastMove<180;WASH.rub=rubbing;
+  if(rubbing){WASH.t+=dt;if(Math.random()<.3)spawn('bubble',1,{x:WASH.px,y:WASH.py,vy:-14,jx:10,jy:4,life:.9,spread:6});if(now-WASH.sfxAt>420){WASH.sfxAt=now;sfx('tap')}}
+  if(WASH.t>=CONFIG.wash.rubSeconds)finishWash()}
+ // 球
+ const b=BALL.b;
+ if(b){b.vy+=95*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;
+  if(!b.hit)petTarget=clamp(Math.round(b.x-24),0,W-CELL);
+  const headX=petX+24,lift=anim.once==='header'?7:0,headY=PET_Y+16-lift;
+  if(!b.hit&&b.vy>0&&Math.abs(b.x-headX)<13&&b.y>=headY-4&&b.y<=headY+8){b.hit=true;const dtap=now-BALL.tapAt,good=dtap<300,perfect=dtap<160;
+   const e=perfect?4:good?11:34,T=.9,tx=RING.x+(Math.random()-.5)*e,ty=RING.y+(Math.random()-.5)*e*.6;
+   b.vx=(tx-b.x)/T;b.vy=(ty-b.y-.5*95*T*T)/T;if(!anim.once)playAnim('header',450);sfx('play');spawn('spark',2,{x:b.x,y:b.y,vy:-10,life:.5,spread:4});b.good=good;if(perfect)say('完美時機！',{log:false})}
+  if(b.hit&&!b.scored&&b.vy>0&&Math.hypot(b.x-RING.x,b.y-RING.y)<RING.r-1){b.scored=true;BALL.score++;sfx('level');spawn('star',6,{x:RING.x,y:RING.y,vy:-20,jx:30,life:1,spread:6});say('進球了！🎉',{log:false})}
+  if(b.y>=100&&b.vy>0){b.y=100;b.vy*=-.45;b.vx*=.6;b.bounces=(b.bounces||0)+1;if(b.bounces>=2)endBall()}
+  if(b.x>W+6||b.x<-6)endBall()}}
+/* ---- 餵食 ---- */
+function placeApple(x,y){if(FEED.apple)return;const why=PC.canAct(s,'feed',Date.now());if(why){say(why);setMode(null);return}
+ FEED.apple={x:clamp(x,8,120),y:Math.min(y,100),vy:0,st:'fall'};sfx('tap');say('牠看到蘋果了！',{log:false})}
+function finishFeed(){const A=FEED.apple,x0=s.xp,r=PC.act(s,'feed',Date.now());handleTime(r.tm);
+ if(r.ok){PC.addCore(s,A.x,Date.now(),curView());spawn('heart',3,{x:petX+24,y:70,life:1.1,stagger:.25});say(r.msg+(r.xp?`　經驗 +${r.xp}`:''));$('log').textContent=r.msg+'　記得把果核清掉，不然會發臭喔！'}
+ else say(r.msg);
+ FEED.apple=null;setMode(null);save();renderUI();afterChange(x0)}
+function drawApple(){const A=FEED.apple;if(!A)return;
+ if(A.st==='eat'){const e=(performance.now()-A.t0)/1000,ic=ICV[e<.45?'apple':e<.9?'bite':'core'];ctx.drawImage(ic,Math.round(petX+24-ic.width/2),PET_Y+30)}
+ else{const ic=ICV.apple;ctx.drawImage(ic,Math.round(A.x-ic.width/2),Math.round(A.y-ic.height+2))}}
+/* ---- 果核 ---- */
+function drawCores(now){const v=curView(),ms=Date.now();s.cores.forEach((c,i)=>{if((c.v||'yard')!==v)return;const rot=PC.isRotten(c,ms),ic=ICV[rot?'coreRot':'core'];
+ ctx.drawImage(ic,Math.round(c.x-ic.width/2),100-ic.height+2);
+ if(rot){if(!rm()){for(let k=0;k<2;k++){const a=now/300+k*3+i;ctx.drawImage(ICV.fly,Math.round(c.x+6*Math.cos(a)-2),Math.round(92+3*Math.sin(a*1.7)))}}
+  ctx.fillStyle='#8ab84a';const w=Math.floor(now/250)%2;ctx.fillRect(c.x-3+w,88,1,2);ctx.fillRect(c.x+2-w,86,1,2)}})}
+function tryClearCore(x,y){const v=curView(),i=s.cores.findIndex(c=>(c.v||'yard')===v&&Math.abs(c.x-x)<=8&&y>=88&&y<=108);if(i<0)return false;
+ const r=PC.clearCore(s,i,Date.now());sfx('tap');spawn('spark',3,{x,y:96,vy:-12,life:.6,spread:6});say(r.rotten?'終於清乾淨了…好臭好臭！':'果核清掉了 ✨',{log:false});save();renderUI();return true}
+/* ---- 洗澡 ---- */
+function finishWash(){const x0=s.xp,r=PC.act(s,'wash',Date.now());handleTime(r.tm);setMode(null);
+ if(r.ok){playAnim('wash');sfx('wash');spawn('bubble',10,{x:petX+24,y:80,vy:-18,jx:10,spread:40,sy:20,life:1.4,stagger:.06});say(r.msg+(r.xp?`　經驗 +${r.xp}`:''))}else say(r.msg);
+ save();renderUI();afterChange(x0)}
+function drawWashUI(now){if(mode!=='wash')return;const PX=Math.round(petX),p=Math.min(1,WASH.t/CONFIG.wash.rubSeconds);
+ ctx.fillStyle='#0a1020';ctx.fillRect(PX+8,PET_Y+2,32,4);ctx.fillStyle='#73c9e6';ctx.fillRect(PX+9,PET_Y+3,Math.round(30*p),2);
+ const ic=ICV.sponge;if(WASH.down)ctx.drawImage(ic,Math.round(WASH.px-ic.width/2),Math.round(WASH.py-ic.height/2));
+ else ctx.drawImage(ic,PX+46,Math.round(PET_Y+18+2*Math.sin(now/200)))}
+/* ---- 頂球 ---- */
+function playTap(){if(BALL.b){BALL.tapAt=performance.now();if(!anim.once)playAnim('header',450);return}
+ if(BALL.left<=0)return;BALL.left--;BALL.b={x:clamp(petX+24+(Math.random()-.5)*60,16,100),y:-8,vx:(Math.random()-.5)*8,vy:0,hit:false,scored:false};sfx('tap')}
+function endBall(){const b=BALL.b;BALL.b=null;if(!b.scored)say(b.hit?(b.good?'差一點點！':'頂到了，可是偏掉了…'):'沒頂到…',{log:false});
+ if(BALL.left<=0)setTimeout(finishPlay,700)}
+function finishPlay(){if(mode!=='play')return;const x0=s.xp,sc=BALL.score,r=PC.finishBallGame(s,sc,Date.now());handleTime(r.tm);setMode(null);
+ if(r.ok){playAnim(sc?'happy':'play');sfx(sc?'level':'play');say(`頂球結束：${sc} / ${CONFIG.ballGame.balls} 分${r.best?'　🏆 新紀錄！':''}`);$('log').textContent=`頂球 ${sc} 分（最佳 ${s.ball.best} 分）　${r.msg}${r.xp?'　經驗 +'+r.xp:''}`}
+ else say(r.msg);save();renderUI();afterChange(x0)}
+function drawRing(){const{x,y,r}=RING;ctx.fillStyle='#6a4428';ctx.fillRect(x+r,y-2,2,104-y+2);
+ ctx.strokeStyle='#ff8a2a';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(x,y,r,r,0,0,Math.PI*2);ctx.stroke();ctx.strokeStyle='#ffffffaa';ctx.lineWidth=1;for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(x+k*4,y+r-2);ctx.lineTo(x+k*2,y+r+5);ctx.stroke()}}
+function drawBall(){const b=BALL.b;if(!b)return;const ic=ICV.ball;ctx.drawImage(ic,Math.round(b.x-ic.width/2),Math.round(b.y-ic.height/2))}
+function drawBallHUD(){if(mode!=='play')return;for(let i=0;i<BALL.left;i++)ctx.drawImage(ICV.ball,W-12-i*11,3);for(let i=0;i<BALL.score;i++)ctx.drawImage(ICV.star,3+i*11,3)}
+/* ---- 畫面點擊 ---- */
+function toLogical(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}}
+cv.addEventListener('pointerdown',e=>{const p=toLogical(e);unlockAudio();requestPersist();
+ if(mode==='wash'){WASH.down=true;WASH.px=p.x;WASH.py=p.y;WASH.lastMove=performance.now();try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
+ pointerTap(p.x,p.y)});
+cv.addEventListener('pointermove',e=>{if(mode!=='wash'||!WASH.down)return;const p=toLogical(e);if(Math.hypot(p.x-WASH.px,p.y-WASH.py)>.6)WASH.lastMove=performance.now();WASH.px=p.x;WASH.py=p.y});
+for(const ev of['pointerup','pointercancel','pointerleave'])cv.addEventListener(ev,()=>{WASH.down=false});
+function pointerTap(x,y){if(evo)return;
+ if(mode==='feed'){placeApple(x,y);return}
+ if(mode==='play'){playTap();return}
+ if(s.hatched&&tryClearCore(x,y))return;
+ if(overPet(x,y)||(!s.hatched&&x>=PET_X&&x<=PET_X+CELL&&y>=PET_Y&&y<=PET_Y+CELL)){tapPet();return}
+ if(s.hatched&&curView()==='yard'){const d=DEN_BOX[s.den.level-1];if(x>=d[0]&&x<=d[2]&&y>=d[1]&&y<=d[3]){denDialog();return}}
+ spawn('spark',1,{x,y,vy:-6,jx:0,jy:0,life:.5,spread:0})}
 cv.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tapPet()}});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>act(b.dataset.act)));
@@ -1037,7 +1189,7 @@ function init(){
  if(!inFrame&&'serviceWorker'in navigator&&(location.protocol==='https:'||location.hostname==='localhost')&&!/claude|anthropic/.test(location.hostname))
   navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{});
 }
-window.PF={get state(){return s},PC,creditSteps,mateCode,decodeMate,encodeGenome,decodeGenome,startBattle,onMove,get B(){return B},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
+window.PF={get state(){return s},get mode(){return mode},get ball(){return BALL},get apple(){return FEED.apple},get petX(){return petX},PC,creditSteps,mateCode,decodeMate,encodeGenome,decodeGenome,startBattle,onMove,get B(){return B},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
  debug:{info(){return{busy:busyUntil-Date.now(),evo:!!evo,modal:!$('modal').classList.contains('hidden'),taps:s.eggTaps,h:s.hatched,battle:!!B}},skip(min){s.lastTick-=min*60000;tick();renderUI();save()},age(h){s.hatchedAt-=h*3600000;save();runStages();renderUI()},xp(n){const x0=s.xp;PC.addXP(s,n);save();renderUI();afterChange(x0)},set(o){Object.assign(s,o);renderUI();save()}}};
 try{init()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<div style="padding:12px;background:#a8394c;color:#fff">啟動錯誤：${esc(e.message)}</div>`);throw e}
 </script>

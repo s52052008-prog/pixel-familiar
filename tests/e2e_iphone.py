@@ -21,6 +21,37 @@ async def newpage(br, dev, init=None):
 async def hatch(p, name='小露'):
     for i in range(5): await tap(p); await p.wait_for_timeout(450)
     await p.wait_for_selector('#nameIn', timeout=5000); await p.fill('#nameIn', name); await p.click('#mbtns .pri'); await p.wait_for_timeout(1200)
+async def scene_xy(p, x, y):
+    await p.wait_for_timeout(400); await p.locator('#scene').scroll_into_view_if_needed(); b = await p.locator('#scene').bounding_box(); return b['x'] + x / 128 * b['width'], b['y'] + y / 112 * b['height']
+async def do_feed(p, x=96, y=70):
+    await p.click('[data-act=feed]'); await p.mouse.click(*await scene_xy(p, x, y))
+    for _ in range(80):
+        if await p.evaluate("!PF.mode"): break
+        await p.wait_for_timeout(100)
+async def do_wash(p):
+    await p.click('[data-act=wash]'); await p.wait_for_timeout(400); b = await p.locator('#scene').bounding_box(); cx = await p.evaluate('PF.petX') + 24
+    X = lambda v: b['x'] + v / 128 * b['width']; Y = lambda v: b['y'] + v / 112 * b['height']
+    await p.mouse.move(X(cx), Y(82)); await p.mouse.down()
+    for i in range(60):
+        if await p.evaluate("!PF.mode"): break
+        await p.mouse.move(X(cx - 12 + (i % 2) * 24), Y(80 + (i % 3) * 3), steps=3); await p.wait_for_timeout(60)
+    await p.mouse.up(); await p.wait_for_timeout(300)
+async def do_play(p, timed=True):
+    await p.click('[data-act=play]'); await p.wait_for_timeout(400); b = await p.locator('#scene').bounding_box()
+    tapxy = (b['x'] + 64 / 128 * b['width'], b['y'] + 40 / 112 * b['height'])
+    for k in range(3):
+        await p.mouse.click(*tapxy)
+        for _ in range(80):
+            bb = await p.evaluate("PF.ball.b&&{y:PF.ball.b.y,hit:PF.ball.b.hit}")
+            if not bb or bb['hit']: break
+            if timed and bb['y'] > 60: await p.mouse.click(*tapxy); break
+            await p.wait_for_timeout(25)
+        for _ in range(100):
+            if not await p.evaluate("!!PF.ball.b"): break
+            await p.wait_for_timeout(50)
+    for _ in range(40):
+        if await p.evaluate("!PF.mode"): break
+        await p.wait_for_timeout(100)
 async def closeall(p):
     if await p.is_visible('#modal'): await p.click('#mbtns .btn >> nth=0')
 async def main():
@@ -37,12 +68,21 @@ async def main():
         ok('每日禮物刷新後不重複', s['coins'] == 60, s['coins'])
         # ---------- 2. 照顧行為 ----------
         await p.evaluate("PF.debug.set({hunger:50,mood:50,clean:40,energy:60})")
-        await p.click('[data-act=feed]'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/02_eat.png'); await p.wait_for_timeout(1200)
-        s = await st(p); ok('餵食用掉食物、飽食 +25、XP +5', s['inv']['food'] == 3 and round(s['hunger']) == 75 and s['xp'] == 5, (s['inv'], round(s['hunger']), s['xp']))
-        await p.click('[data-act=play]'); await p.wait_for_timeout(1600); s = await st(p)
-        ok('玩耍：心情 +20、體力 -10', round(s['mood']) == 70 and round(s['energy']) == 50)
-        await p.click('[data-act=wash]'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/03_wash.png'); await p.wait_for_timeout(1300)
-        s = await st(p); ok('洗澡：清潔 +35', round(s['clean']) == 75)
+        await p.click('[data-act=feed]'); await p.wait_for_timeout(200); ok('按餵食進入放蘋果模式', await p.evaluate("PF.mode") == 'feed')
+        await p.mouse.click(*await scene_xy(p, 96, 60)); await p.wait_for_timeout(300); ok('點畫面放下蘋果', await p.evaluate("!!PF.apple"))
+        await p.screenshot(path=f'{OUT}/02_apple.png')
+        for _ in range(80):
+            if await p.evaluate("!PF.mode"): break
+            await p.wait_for_timeout(100)
+        s = await st(p); ok('走過去吃完：用掉食物、飽食 +25、XP +5、留下果核', s['inv']['food'] == 3 and round(s['hunger']) == 75 and s['xp'] == 5 and len(s['cores']) == 1, (s['inv'], round(s['hunger']), s['xp'], s['cores']))
+        await p.wait_for_timeout(5000); await p.screenshot(path=f'{OUT}/02b_core.png')
+        await p.mouse.click(*await scene_xy(p, s['cores'][0]['x'], 98)); await p.wait_for_timeout(300)
+        ok('點果核清掉', len((await st(p))['cores']) == 0)
+        await do_play(p); s = await st(p)
+        ok('頂球一回合：心情 +20、體力 -10、記錄分數', round(s['mood']) == 70 and round(s['energy']) == 50 and s['ball']['goals'] >= 0, (round(s['mood']), round(s['energy']), s['ball']))
+        await p.click('[data-act=wash]'); await p.wait_for_timeout(300); await p.click('[data-act=wash]'); await p.wait_for_timeout(300)
+        ok('再按一次可以取消', await p.evaluate("PF.mode") is None)
+        await do_wash(p); s = await st(p); ok('海綿刷 3 秒：清潔 +35', round(s['clean']) == 75, round(s['clean']))
         # ---------- 3. 冷卻不能用重新整理繞過 ----------
         await p.evaluate("PF.debug.set({clean:30})"); await p.reload(); await p.wait_for_timeout(700)
         await p.click('[data-act=wash]'); await p.wait_for_timeout(300)
@@ -52,6 +92,11 @@ async def main():
         await p.reload(); await p.wait_for_timeout(700); await tap(p); await p.wait_for_timeout(1200); b2 = (await st(p))['bond']
         ok('撫摸 30 分鐘一次收益：重新整理後不能再拿', b1 == b0 + 2 and b2 == b1, (b0, b1, b2))
         await p.screenshot(path=f'{OUT}/04_pet.png')
+        # 果核發臭
+        await p.evaluate("(()=>{PF.PC.addCore(PF.state,30,Date.now()-120*60000,'yard');PF.debug.set({mood:80})})()"); await p.wait_for_timeout(600)
+        await p.screenshot(path=f'{OUT}/03b_rotten.png')
+        await p.evaluate("PF.debug.skip(60)"); s = await st(p); ok('發臭果核：每小時心情多掉 4', abs(s['mood'] - 75) < .2, round(s['mood'], 1))
+        await p.mouse.click(*await scene_xy(p, 30, 98)); await p.wait_for_timeout(300); ok('清掉臭果核', len((await st(p))['cores']) == 0)
         # ---------- 4. 離線上限 12 小時 ----------
         for hrs in (2, 24, 168):
             await p.evaluate("PF.debug.set({hunger:80,mood:80,clean:80,energy:20})"); await p.evaluate(f"PF.debug.skip({hrs*60})")
@@ -108,7 +153,7 @@ async def main():
         s = await st(p); ok('吃星星糖：心情 +20', s['inv']['candy'] == 0 and round(s['mood']) >= 69, round(s['mood']))
         ok('買完家具後切到室內', s['view'] == 'room'); await p.screenshot(path=f'{OUT}/09f_room.png')
         await p.click('#viewBtn'); await p.wait_for_timeout(400); ok('切換回戶外', (await st(p))['view'] == 'yard')
-        await tap(p, 20, 50); await p.wait_for_timeout(400); ok('點小屋進屋', (await st(p))['view'] == 'room')
+        await tap(p, 20, 56); await p.wait_for_timeout(400); await p.click('#dIn'); await p.wait_for_timeout(400); ok('點小窩 →「進入小窩」', (await st(p))['view'] == 'room')
         # ---------- 冒險 ----------
         await p.evaluate("PF.debug.set({energy:100,mood:90,hunger:90,coins:100})")
         await p.click('#bAdv'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/09_adv.png')
@@ -136,12 +181,22 @@ async def main():
         ok('配對得到蛋、扣 20 金幣', len(s['eggs']) == 1 and s['coins'] == 80)
         await p.click('#bMate'); await p.fill('#mIn', fcode); await p.click('#mGo'); await p.wait_for_timeout(200)
         ok('配對冷卻 6 小時', '⏳' in await p.inner_text('#mErr')); await closeall(p)
+        # ---------- 小窩 ----------
+        await p.evaluate("PF.debug.set({view:'yard',coins:500})"); await p.wait_for_timeout(500)
+        await p.mouse.click(*await scene_xy(p, 22, 56)); await p.wait_for_timeout(300); ok('點小窩打開小窩畫面', '小窩' in await p.inner_text('#sheet'))
+        await p.screenshot(path=f'{OUT}/12b_den.png'); await p.click('#dUp'); await p.wait_for_timeout(300); s = await st(p)
+        ok('升級小窩：扣 120 金幣、可住 2 隻', s['den']['level'] == 2 and s['coins'] == 380); await closeall(p)
+        await p.wait_for_timeout(400); await p.screenshot(path=f'{OUT}/12c_den2.png')
         # ---------- 9. 匯出、迎接新蛋、匯入 ----------
         code = await p.evaluate("PF.exportCode()"); before = await st(p)
         await p.click('#bMenu'); await p.click('#mReset'); await p.click('#mbtns .pri'); await p.wait_for_timeout(400); s = await st(p)
         ok('迎接新蛋：保留金幣、圖鑑、日記、每日紀錄', s['stage'] == 'egg' and s['coins'] == before['coins'] and len(s['dex']) == 1 and len(s['journal']) >= 3 and s['daily']['date'] == before['daily']['date'])
+        ok('小窩有空位：舊夥伴搬進小窩', len(s['roster']) == 1 and s['roster'][0]['name'] == '露米')
+        await hatch(p, '小二'); await p.click('#viewBtn'); await p.wait_for_timeout(500); await p.screenshot(path=f'{OUT}/12d_room_residents.png'); await p.click('#viewBtn')
+        await p.mouse.click(*await scene_xy(p, 22, 56)); await p.wait_for_timeout(300); await p.click('[data-sw="0"]'); await p.wait_for_timeout(300); s = await st(p)
+        ok('從小窩換夥伴出來', s['name'] == '露米' and s['roster'][0]['name'] == '小二')
         await p.click('#bSave'); await p.fill('#impText', code); await p.click('#bImp'); await p.wait_for_timeout(200); await p.click('#mbtns .pri'); await p.wait_for_timeout(400)
-        s = await st(p); ok('匯入還原', s['name'] == '露米' and s['stage'] == 'adult')
+        s = await st(p); ok('匯入還原', s['name'] == '露米' and s['stage'] == 'adult' and s['den']['level'] == 2)
         # 減少動畫、音效
         await p.click('#bMenu'); await p.click('#mMotion'); await p.click('#mSound'); s = await st(p); await closeall(p)
         ok('減少動畫與音效開關會存檔', s['settings']['reducedMotion'] and not s['settings']['sound'])

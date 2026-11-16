@@ -19,7 +19,7 @@ const CONFIG = {
   full: 95,                          // 視為「已滿」的門檻
   feed: { hunger: 25, xp: 5, tide: 1, price: 5 },
   play: { minEnergy: 10, mood: 20, energy: -10, xp: 10, xpWindowMin: 30, xpPerWindow: 3 },
-  wash: { cooldownMin: 30, clean: 35, xp: 5 },
+  wash: { cooldownMin: 30, clean: 35, xp: 5, rubSeconds: 3 },
   pet:  { cooldownMin: 30, bond: 2, mood: 3, tide: 2 },
   adventure: { minEnergy: 20, energy: -20, xp: 15, coins: 8, flame: 3, dailyFull: 5, overCapXpRate: 0.2, dropFood: 0.3, dropSeed: 0.4 },
   battleWin: { xp: 10, coins: 4, flame: 2 },
@@ -37,7 +37,10 @@ const CONFIG = {
   breed: { cost: 20, cooldownH: 6, minMood: 50, basket: 6 },
   farm: { plots: 3, growHours: 2, food: 2, xp: 5, forest: 3, seedPrice: 3 },     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
   goals: { perDay: 3, reward: { coins: 8 } },
-  candy: { price: 12, mood: 20, hunger: 10, xp: 3 },                            // 商店零食「星星糖」
+  candy: { price: 12, mood: 20, hunger: 10, xp: 3 },
+  core: { rotMin: 10, moodPerHour: 4, max: 6 },          // 果核：10 分鐘沒清會發臭長果蠅，每顆每小時心情 −4
+  ballGame: { balls: 3 },                                 // 頂球：一回合 3 顆球
+  den: [ { name: '草叢小窩', cap: 1, cost: 0 }, { name: '稻草窩', cap: 2, cost: 120 }, { name: '樹根洞窟', cap: 3, cost: 300 }, { name: '大樹屋', cap: 4, cost: 600 } ],                            // 商店零食「星星糖」
   decorSlots: ['paper', 'wall', 'lamp', 'plant', 'bed', 'rug', 'toy'],
   decor: {                                                                      // 房間家具：純裝飾，不影響數值
     paper_cream: { slot: 'paper', name: '奶油色壁紙', price: 0 },
@@ -140,6 +143,7 @@ function fresh(now = Date.now()) {
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] },
     decor: { owned: ['paper_cream'], placed: { paper: 'paper_cream' } }, view: 'yard',
+    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [],
     events: { volcano: false, moonspring: false, oldtree: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
@@ -188,6 +192,10 @@ function sanitize(o, now = Date.now()) {
   if (Array.isArray(dc.owned)) r.decor.owned = [...new Set(['paper_cream', ...dc.owned.filter(id => CONFIG.decor[id])])];
   if (dc.placed && typeof dc.placed === 'object') { r.decor.placed = { paper: 'paper_cream' }; for (const sl of CONFIG.decorSlots) { const id = dc.placed[sl]; if (id && CONFIG.decor[id] && CONFIG.decor[id].slot === sl && r.decor.owned.includes(id)) r.decor.placed[sl] = id; } }
   r.view = o.view === 'room' ? 'room' : 'yard';
+  r.cores = Array.isArray(o.cores) ? o.cores.filter(c => c && typeof c === 'object').slice(-CONFIG.core.max).map(c => ({ x: num(c.x, 64, 4, 124), at: num(c.at, now, 0, 9e15), v: c.v === 'room' ? 'room' : 'yard' })) : [];
+  const bl = o.ball && typeof o.ball === 'object' ? o.ball : {}; r.ball = { best: int(bl.best, 0, 0, 99), goals: int(bl.goals, 0, 0, 1e7) };
+  r.den = { level: int(o.den && o.den.level, 1, 1, CONFIG.den.length) };
+  r.roster = Array.isArray(o.roster) ? o.roster.filter(p => p && typeof p === 'object' && p.hatched).slice(0, CONFIG.den.length - 1).map(p => sanitizePet(p, now)) : [];
   r.harvests = int(o.harvests, 0, 0, 1e7);
   if (Array.isArray(o.plots)) r.plots = r.plots.map((p, i) => ({ at: num(o.plots[i] && o.plots[i].at, 0, 0, 9e15) }));
   const gl = o.goals && typeof o.goals === 'object' ? o.goals : {};
@@ -225,10 +233,13 @@ function sanitize(o, now = Date.now()) {
 function applyTime(st, now = Date.now()) {
   if (now < st.lastTick) { st.clockWarn = now; return { warn: 'back', hours: 0 }; }   // 時間倒退：不回溯，記錄警告
   const hours = (now - st.lastTick) / H, eff = Math.min(hours, CONFIG.offlineCapHours);
-  st.lastTick = now;
+  const last = st.lastTick; st.lastTick = now;
   if (st.hatched && eff > 0) {
     const R = CONFIG.rates[st.sleeping ? 'sleep' : 'awake'];
     for (const k in R) st[k] = clamp(st[k] + R[k] * eff);
+    // 發臭的果核：只算「已經發臭」的那段時間，同樣最多 12 小時
+    let rotH = 0; for (const c of st.cores) { const from = Math.max(last, c.at + CONFIG.core.rotMin * MIN); if (now > from) rotH += Math.min((now - from) / H, CONFIG.offlineCapHours); }
+    if (rotH > 0) st.mood = clamp(st.mood - rotH * CONFIG.core.moodPerHour);
   }
   return { hours, eff, warn: hours > CONFIG.jumpWarnDays * 24 ? 'jump' : null };
 }
@@ -502,6 +513,49 @@ function useCandy(st, now = Date.now()) {
   return { ok: true, xp: addXP(st, C.xp), msg: '甜甜的星星糖！心情大好 ✨', tm };
 }
 
+/* ---------------- 果核（餵食後留下，要點一下清掉） ---------------- */
+function canAct(st, a, now = Date.now()) {
+  if (!st.hatched) return '先把蛋孵出來吧！';
+  if (st.sleeping) return '噓…牠在睡覺，先叫醒牠吧';
+  if (a === 'feed') { if (st.hunger >= CONFIG.full) return '飽飽的，吃不下了～'; if (st.inv.food < 1 && st.coins < CONFIG.feed.price) return '沒有食物也沒有金幣了…可以去「採集」'; }
+  if (a === 'play' && st.energy < CONFIG.play.minEnergy) return '太累了…先讓牠休息或睡一下';
+  if (a === 'wash') { if (st.clean >= CONFIG.full) return '已經很乾淨了！'; const w = st.care.bathLastAt + CONFIG.wash.cooldownMin * MIN - now; if (w > 0) return `剛洗過澡，${Math.ceil(w / MIN)} 分鐘後再洗吧`; }
+  return null;
+}
+function addCore(st, x, now = Date.now(), v = 'yard') { st.cores.push({ x: clamp(x, 4, 124), at: now, v: v === 'room' ? 'room' : 'yard' }); while (st.cores.length > CONFIG.core.max) st.cores.shift(); }
+const isRotten = (c, now = Date.now()) => now - c.at >= CONFIG.core.rotMin * MIN;
+function clearCore(st, i, now = Date.now()) { const c = st.cores[i]; if (!c) return null; applyTime(st, now); st.cores.splice(i, 1); return { rotten: isRotten(c, now) }; }
+
+/* ---------------- 頂球小遊戲 ---------------- */
+function finishBallGame(st, score, now = Date.now()) {
+  score = int(score, 0, 0, CONFIG.ballGame.balls);
+  const r = act(st, 'play', now); if (!r.ok) return r;
+  st.ball.goals += score; const best = score > st.ball.best; if (best) { st.ball.best = score; if (score > 0) journal(st, now, `頂球創新紀錄：${score} 分！`); }
+  return Object.assign(r, { score, best });
+}
+
+/* ---------------- 小窩：升級、讓多隻寵物住進來 ---------------- */
+const PET_FIELDS = ['seed', 'genes', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
+function snapshotPet(st) { const p = {}; for (const k of PET_FIELDS) p[k] = JSON.parse(JSON.stringify(st[k])); p.sleeping = false; return p; }
+function sanitizePet(p, now = Date.now()) { const r = sanitize(Object.assign({ v: 6 }, p, { roster: [], dex: [] }), now); return snapshotPet(r); }
+const denCap = st => CONFIG.den[st.den.level - 1].cap;
+const petCount = st => (st.hatched ? 1 : 0) + st.roster.length;
+function upgradeDen(st) {
+  const next = CONFIG.den[st.den.level]; if (!next) return { ok: false, msg: '已經是最大的小窩了' };
+  if (st.coins < next.cost) return { ok: false, msg: `金幣不足（需要 ${next.cost}）` };
+  st.coins -= next.cost; st.den.level++; return { ok: true, msg: `小窩升級成「${next.name}」！可以住 ${next.cap} 隻` };
+}
+/* 迎接新蛋時：小窩還有空位 → 目前的夥伴搬進小窩休息；沒空位 → 告別（留在圖鑑） */
+function moveToDen(st) { if (!st.hatched || petCount(st) >= denCap(st)) return false; st.roster.push(snapshotPet(st)); return true; }
+function swapPet(st, i, now = Date.now()) {
+  const p = st.roster[i]; if (!p) return { ok: false, msg: '小窩裡沒有這隻' };
+  applyTime(st, now);
+  const out = st.hatched ? snapshotPet(st) : null;
+  Object.assign(st, JSON.parse(JSON.stringify(p))); st.sleeping = false; st.lastTick = now; st.eggTaps = 0;   // 在小窩休息時數值不變
+  st.roster.splice(i, 1); if (out) st.roster.push(out);
+  return { ok: true, msg: `${st.name} 出來陪你了！` };
+}
+
 /* ---------------- 每日小目標（GDD 第 5 節：3 個任選，不強迫全清） ---------------- */
 const GOALS = {
   feed:    { t: '餵食 1 次', ev: 'feed', need: 1, item: 'food' },
@@ -566,7 +620,8 @@ function breed(st, friend, now = Date.now(), r = Math.random) {
 const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars, dayKey, hourIn, level, rng, makeGenome, CLASSIC_G, encodeGenome, decodeGenome, breedGenome,
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
-  plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
+  canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   ELEM, BEATS, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
