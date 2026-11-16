@@ -19,7 +19,7 @@ t('餵食：先用庫存食物', () => { const s = hatched(); s.hunger = 50; con
 t('餵食：沒食物就花 5 金幣', () => { const s = hatched(); s.hunger = 50; s.inv.food = 0; C.act(s, 'feed', T0); assert.equal(s.coins, 45); });
 t('餵食：已滿不消耗也不給 XP', () => { const s = hatched(); s.hunger = 96; const r = C.act(s, 'feed', T0); assert.ok(!r.ok); assert.equal(s.inv.food, 3); assert.equal(s.xp, 0); });
 t('玩耍：體力 < 10 不能玩', () => { const s = hatched(); s.energy = 9; assert.ok(!C.act(s, 'play', T0).ok); });
-t('玩耍：心情 +20、體力 -10、XP +10', () => { const s = hatched(); s.mood = 50; s.energy = 50; C.act(s, 'play', T0); assert.equal(s.mood, 70); assert.equal(s.energy, 40); assert.equal(s.xp, 10); });
+t('玩耍：心情 +15、體力 -10、會變餓變髒、XP +10', () => { const s = hatched(); s.mood = 50; s.energy = 50; s.hunger = 50; s.clean = 50; C.act(s, 'play', T0); assert.equal(s.mood, 65); assert.equal(s.hunger, 45); assert.equal(s.clean, 44); assert.equal(s.energy, 40); assert.equal(s.xp, 10); });
 t('玩耍：每 30 分鐘最多 3 次給 XP', () => { const s = hatched(); s.energy = 100; for (let i = 0; i < 5; i++) { s.energy = 100; C.act(s, 'play', T0 + i * 1000); } assert.equal(s.xp, 30); s.energy = 100; C.act(s, 'play', T0 + 31 * MIN); assert.equal(s.xp, 40); });
 t('睡覺時不能玩耍或冒險；叫醒無成本', () => { const s = hatched(); s.view = 'room'; C.act(s, 'sleep', T0); assert.ok(s.sleeping); assert.ok(!C.act(s, 'play', T0).ok); assert.ok(C.canAdventure(s, 1)); C.act(s, 'sleep', T0); assert.ok(!s.sleeping); });
 t('隨機操作 2000 次後所有數值都不為負', () => {
@@ -43,7 +43,7 @@ t('撫摸 30 分鐘內只有第一次有收益（重新載入也一樣）', () =
 for (const [label, hrs] of [['2 小時', 2], ['24 小時', 24], ['7 天', 168]]) {
   t(`離線 ${label}：狀態最多變化 12 小時，年齡 ${hrs} 小時`, () => {
     const s = hatched(); s.hunger = 80; s.mood = 80; s.energy = 20; const now = T0 + hrs * H; C.applyTime(s, now);
-    const eff = Math.min(hrs, 12); assert.equal(Math.round(s.hunger * 100) / 100, 80 - 2 * eff); assert.equal(s.mood, 80 - eff); assert.equal(s.energy, Math.min(100, 20 + 8 * eff));
+    const eff = Math.min(hrs, 12); assert.equal(Math.round(s.hunger * 100) / 100, 80 - 4 * eff); assert.equal(s.mood, 80 - 3 * eff); assert.equal(s.energy, Math.min(100, 20 + 8 * eff));
     assert.equal(C.ageHours(s, now), hrs);
   });
 }
@@ -127,7 +127,7 @@ t('V1.5 舊存檔遷移：等級轉總 XP、路線改名、成年期', () => {
 t('V1.2 舊存檔遷移', () => { const r = C.sanitize({ hatched: true, name: '舊', level: 3, xp: 40, coins: 77, hunger: 60, updated: T0 - H }, T0); assert.equal(r.xp, 190); assert.equal(r.stage, 'juvenile'); assert.equal(r.lastTick, T0 - H); });
 t('損毀資料安全恢復：亂碼數值被修正', () => {
   const r = C.sanitize({ v: 6, hatched: true, hunger: 'abc', mood: -50, clean: 999, coins: -3, xp: NaN, stage: 'hacker', route: 'lava', inv: { food: -1 }, path: { flame: 'x' }, genes: '1.2.3', dex: 'no', eggs: [{ id: 'evil' }] }, T0);
-  assert.ok(nonNeg(r)); assert.equal(r.hunger, 80); assert.equal(r.mood, 0); assert.equal(r.clean, 100); assert.equal(r.stage, 'juvenile'); assert.ok(C.EL_LIST.includes(r.route)); assert.equal(r.genes, null); assert.equal(r.eggs.length, 0);
+  assert.ok(nonNeg(r)); assert.equal(r.hunger, C.CONFIG.start.hunger); assert.equal(r.mood, 0); assert.equal(r.clean, 100); assert.equal(r.stage, 'juvenile'); assert.ok(C.EL_LIST.includes(r.route)); assert.equal(r.genes, null); assert.equal(r.eggs.length, 0);
 });
 t('null / 非物件 → 全新存檔', () => { assert.equal(C.sanitize(null, T0).stage, 'egg'); assert.equal(C.sanitize('x', T0).stage, 'egg'); });
 t('基因碼編碼／解碼可逆，非法碼被拒絕', () => { const G = C.makeGenome(42); const D = C.decodeGenome(C.encodeGenome(G)); delete G.seed; assert.deepEqual(D, G); assert.equal(C.decodeGenome('9.9.9'), null); });
@@ -137,7 +137,7 @@ t('日期以台北時區計算', () => { assert.equal(C.dayKey(Date.parse('2026-
 t('種植：用掉種子，2 小時前不能收成，2 小時整可以', () => {
   const s = hatched(); assert.ok(C.plant(s, 0, T0).ok); assert.equal(s.inv.seeds, 1); assert.ok(!C.plant(s, 0, T0).ok);
   assert.ok(!C.harvest(s, 0, T0 + 2 * H - 1).ok); const r = C.harvest(s, 0, T0 + 2 * H); assert.ok(r.ok);
-  assert.equal(s.inv.food, 5); assert.equal(s.xp, 5); assert.equal(s.path.forest, 3); assert.equal(s.harvests, 1); assert.ok(C.plotState(s, 0, T0).empty);
+  assert.equal(s.inv.food, 4); assert.equal(s.inv.berry, 2); assert.equal(s.xp, 5); assert.equal(s.path.forest, 3); assert.equal(s.harvests, 1); assert.ok(C.plotState(s, 0, T0).empty);
 });
 t('種植：沒種子不能種；每格只能一株；金幣買種子', () => { const s = hatched(); s.inv.seeds = 0; assert.equal(C.plant(s, 1, T0).code, 'noseed'); assert.ok(C.buySeed(s).ok); assert.equal(s.coins, 47); assert.ok(C.plant(s, 1, T0).ok); assert.ok(!C.plant(s, 9, T0).ok); });
 t('種植：時間倒退不會變成負進度', () => { const s = hatched(); C.plant(s, 0, T0); const q = C.plotState(s, 0, T0 - H); assert.equal(q.progress, 0); assert.ok(!q.ripe); });
@@ -186,14 +186,20 @@ t('道具：買食物／種子／星星糖、吃星星糖', () => {
 
 // 果核
 t('果核：10 分鐘內清掉沒事；發臭後每小時心情 −4（每顆），最多算 12 小時', () => {
-  const s = hatched(); s.mood = 80; C.addCore(s, 60, T0); C.applyTime(s, T0 + 10 * MIN); assert.equal(Math.round(s.mood * 100) / 100, Math.round((80 - 10 / 60) * 100) / 100);
-  const m = s.mood; C.applyTime(s, T0 + 10 * MIN + H); assert.equal(Math.round((m - s.mood) * 100) / 100, 5);   // 自然 −1 + 果核 −4
+  const s = hatched(); s.mood = 80; C.addCore(s, 60, T0); C.applyTime(s, T0 + 10 * MIN); assert.equal(Math.round(s.mood * 100) / 100, Math.round((80 - 3 * 10 / 60) * 100) / 100);
+  const m = s.mood; C.applyTime(s, T0 + 10 * MIN + H); assert.equal(Math.round((m - s.mood) * 100) / 100, 7);   // 自然 −3 + 果核 −4
   assert.ok(C.isRotten(s.cores[0], T0 + 11 * MIN)); assert.ok(C.clearCore(s, 0, T0 + 2 * H).rotten); assert.equal(s.cores.length, 0);
 });
 t('果核：最多 8 顆、存檔往返保留', () => { const s = hatched(); for (let i = 0; i < 11; i++) C.addCore(s, i * 10, T0); assert.equal(s.cores.length, 8); const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(r.cores.length, 8); });
 t('canAct 只檢查不改變狀態', () => { const s = hatched(); s.hunger = 50; const before = JSON.stringify(s); assert.equal(C.canAct(s, 'feed', T0), null); assert.equal(JSON.stringify(s), before); s.hunger = 99; assert.ok(C.canAct(s, 'feed', T0)); });
+// V1.19：難度與食物
+t('多種食物：魚是潮系最愛（心情 +10、經驗 +3），吃完留下魚骨', () => { const s = hatched(); s.route = 'tide'; s.hunger = 30; s.mood = 50; s.inv.fish = 1; const r = C.act(s, 'feed', T0, 'fish'); assert.ok(r.ok && r.fav); assert.equal(r.left, 'bone'); assert.equal(s.inv.fish, 0); assert.equal(s.hunger, 65); assert.equal(s.mood, 64); assert.equal(s.xp, 9); });
+t('食物沒有就用金幣買；商店可以買各種食物', () => { const s = hatched(); s.coins = 20; s.hunger = 10; s.inv.meat = 0; assert.ok(C.act(s, 'feed', T0, 'meat').ok); assert.equal(s.coins, 8); assert.ok(C.buyItem(s, 'berry').ok); assert.equal(s.inv.berry, 1); });
+t('冒險會變餓變髒；輸了心情下降', () => { const s = hatched(); s.energy = 100; s.hunger = 80; s.clean = 80; s.mood = 60; C.startAdventure(s, 1, T0); assert.equal(s.hunger, 65); assert.equal(s.clean, 60); C.finishAdventure(s, 1, 'loss', true, T0); assert.equal(s.mood, 48); });
+t('沒照顧好親密度會掉；心情低時摸摸不加親密度', () => { const s = hatched(); s.bond = 30; s.hunger = 10; C.applyTime(s, T0 + 2 * H); assert.ok(s.bond < 30); s.hunger = 90; s.clean = 90; s.mood = 30; C.applyTime(s, T0 + 3 * H); const b = s.bond; C.pet(s, T0 + 3 * H); assert.equal(s.bond, b); });
+t('野生怪會跟著玩家等級變強', () => { assert.equal(C.foeFor(1, 20).level, 18); assert.equal(C.foeFor(1, 1).level, 1); assert.equal(C.foeFor(12, 20).level, 19); });
 // 頂球
-t('頂球：結算套用玩耍規則、記錄最佳分數', () => { const s = hatched(); s.energy = 50; s.mood = 40; const r = C.finishBallGame(s, 2, T0); assert.ok(r.ok); assert.equal(s.mood, 60); assert.equal(s.ball.best, 2); assert.equal(s.ball.goals, 2); C.finishBallGame(s, 1, T0); assert.equal(s.ball.best, 2); s.energy = 5; assert.ok(!C.finishBallGame(s, 3, T0).ok); assert.equal(s.ball.best, 2); });
+t('頂球：結算套用玩耍規則、記錄最佳分數', () => { const s = hatched(); s.energy = 50; s.mood = 40; const r = C.finishBallGame(s, 2, T0); assert.ok(r.ok); assert.equal(s.mood, 55); assert.equal(s.ball.best, 2); assert.equal(s.ball.goals, 2); C.finishBallGame(s, 1, T0); assert.equal(s.ball.best, 2); s.energy = 5; assert.ok(!C.finishBallGame(s, 3, T0).ok); assert.equal(s.ball.best, 2); });
 // 小窩
 t('小窩：升級扣錢、容量變大、最高 4 級', () => { const s = hatched(); s.coins = 2000; assert.equal(C.denCap(s), 1); assert.ok(C.upgradeDen(s).ok); assert.equal(C.denCap(s), 2); assert.equal(s.coins, 1880); C.upgradeDen(s); C.upgradeDen(s); assert.equal(C.denCap(s), 4); assert.ok(!C.upgradeDen(s).ok); });
 t('小窩：沒空位不能搬進去；有空位時搬進去並保留數值', () => {
@@ -205,14 +211,14 @@ t('小窩：交換夥伴，休息期間數值不變，存檔往返保留', () =>
   const r = C.swapPet(s, 0, T0 + 24 * H); assert.ok(r.ok); assert.equal(s.name, 'A'); assert.equal(s.hunger, 30); assert.equal(s.roster[0].name, 'B');
   const back = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 24 * H); assert.equal(back.roster.length, 1); assert.equal(back.roster[0].name, 'B'); assert.ok(nonNeg(back));
 });
-t('小窩：亂碼住客被過濾', () => { const r = C.sanitize({ v: 6, den: { level: 99 }, roster: [{ hatched: true, name: 'X', hunger: 'bad' }, { hatched: false }, 'junk'] }, T0); assert.equal(r.den.level, 4); assert.equal(r.roster.length, 1); assert.equal(r.roster[0].hunger, 80); });
+t('小窩：亂碼住客被過濾', () => { const r = C.sanitize({ v: 6, den: { level: 99 }, roster: [{ hatched: true, name: 'X', hunger: 'bad' }, { hatched: false }, 'junk'] }, T0); assert.equal(r.den.level, 4); assert.equal(r.roster.length, 1); assert.equal(r.roster[0].hunger, C.CONFIG.start.hunger); });
 
 // 大便與馬桶
 t('大便：吃完 40 分鐘後大便、3 分鐘沒清就發臭扣心情', () => {
   const s = hatched(); s.hunger = 50; C.act(s, 'feed', T0); assert.equal(s.digest.length, 1);
   C.applyTime(s, T0 + 39 * MIN); assert.equal(s.cores.length, 0); const r = C.applyTime(s, T0 + 40 * MIN); assert.deepEqual(r.events, ['poop']);
   assert.equal(s.cores[0].k, 'poop'); assert.ok(!C.isRotten(s.cores[0], T0 + 42 * MIN)); assert.ok(C.isRotten(s.cores[0], T0 + 43 * MIN));
-  const m = s.mood; C.applyTime(s, T0 + 43 * MIN + H); assert.equal(Math.round((m - s.mood) * 100) / 100, 5.05);   // 自然 −1.05（1.05 小時）＋大便 −4（發臭 1 小時）
+  const m = s.mood; C.applyTime(s, T0 + 43 * MIN + H); assert.equal(Math.round((m - s.mood) * 100) / 100, 7.15);   // 自然 −3.15（1.05 小時）＋大便 −4（發臭 1 小時）
   assert.equal(C.clearCore(s, 0, T0 + 2 * H).kind, 'poop');
 });
 t('寵物馬桶：有馬桶就自己上廁所，不會留下大便', () => { const s = hatched(); s.coins = 999; assert.ok(C.buyDecor(s, 'toilet_pot').ok); s.hunger = 50; C.act(s, 'feed', T0); const r = C.applyTime(s, T0 + H); assert.deepEqual(r.events, ['toilet']); assert.equal(s.cores.length, 0); assert.equal(s.toiletUses, 1); });

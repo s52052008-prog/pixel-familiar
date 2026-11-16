@@ -81,10 +81,10 @@ async def main():
         await p.mouse.click(*await scene_xy(p, s['cores'][0]['x'], 98)); await p.wait_for_timeout(300)
         ok('點果核清掉', len((await st(p))['cores']) == 0)
         await do_play(p); s = await st(p)
-        ok('頂球一回合：心情 +20、體力 -10、記錄分數', round(s['mood']) == 70 and round(s['energy']) == 50 and s['ball']['goals'] >= 0, (round(s['mood']), round(s['energy']), s['ball']))
+        ok('頂球一回合：心情 +15、體力 -10、記錄分數', round(s['mood']) == 65 and round(s['energy']) == 50 and s['ball']['goals'] >= 0, (round(s['mood']), round(s['energy']), s['ball']))
         await p.click('[data-act=wash]'); await p.wait_for_timeout(300); await p.click('[data-act=wash]'); await p.wait_for_timeout(300)
         ok('再按一次可以取消', await p.evaluate("PF.mode") is None)
-        await do_wash(p); s = await st(p); ok('海綿刷 3 秒：清潔 +35', round(s['clean']) == 75, round(s['clean']))
+        c0 = (await st(p))['clean']; await do_wash(p); s = await st(p); ok('海綿刷 3 秒：清潔 +35', round(s['clean'] - c0) == 35, (c0, round(s['clean'])))
         # ---------- 3. 冷卻不能用重新整理繞過 ----------
         await p.evaluate("PF.debug.set({clean:30})"); await p.reload(); await p.wait_for_timeout(700)
         await p.click('[data-act=wash]'); await p.wait_for_timeout(300)
@@ -97,13 +97,13 @@ async def main():
         # 果核發臭
         await p.evaluate("(()=>{PF.PC.addCore(PF.state,30,Date.now()-120*60000,'yard');PF.debug.set({mood:80})})()"); await p.wait_for_timeout(600)
         await p.screenshot(path=f'{OUT}/03b_rotten.png')
-        await p.evaluate("PF.debug.skip(60)"); s = await st(p); ok('發臭果核：每小時心情多掉 4', abs(s['mood'] - 75) < .2, round(s['mood'], 1))
+        await p.evaluate("PF.debug.skip(60)"); s = await st(p); ok('發臭果核：每小時心情多掉 4', abs(s['mood'] - 73) < .2, round(s['mood'], 1))
         await p.mouse.click(*await scene_xy(p, 30, 98)); await p.wait_for_timeout(300); ok('清掉臭果核', len((await st(p))['cores']) == 0)
         # ---------- 4. 離線上限 12 小時 ----------
         for hrs in (2, 24, 168):
             await p.evaluate("PF.debug.set({hunger:80,mood:80,clean:80,energy:20})"); await p.evaluate(f"PF.debug.skip({hrs*60})")
             s = await st(p); eff = min(hrs, 12)
-            ok(f'離線 {hrs} 小時 → 只計算 {eff} 小時', abs(s['hunger'] - (80 - 2 * eff)) < .2 and abs(s['energy'] - min(100, 20 + 8 * eff)) < .2, (round(s['hunger'], 1), round(s['energy'], 1)))
+            ok(f'離線 {hrs} 小時 → 只計算 {eff} 小時', abs(s['hunger'] - (80 - 4 * eff)) < .2 and abs(s['energy'] - min(100, 20 + 8 * eff)) < .2, (round(s['hunger'], 1), round(s['energy'], 1)))
         # ---------- 5. 成長門檻（用 debug 把孵化時間往前移） ----------
         await p.evaluate("PF.debug.set({xp:99})"); await p.evaluate("PF.debug.age(12)"); await p.wait_for_timeout(400)
         ok('12h 但 99 XP：還是幼年期', (await st(p))['stage'] == 'juvenile')
@@ -132,7 +132,7 @@ async def main():
         await p.evaluate("(()=>{const s=PF.state;s.plots[0].at=Date.now()-2*3600000-1000;PF.debug.set({})})()"); await p.wait_for_timeout(600)
         await p.screenshot(path=f'{OUT}/09b_ripe_in_scene.png')
         x0 = (await st(p))['xp']; await p.click('#bFarm'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/09c_farm_ripe.png'); await p.click('[data-pa="0"]'); await p.wait_for_timeout(300)
-        s = await st(p); ok('2 小時後收成：食物 +2、XP +5、收成次數 1', s['inv']['food'] == 3 and s['xp'] == x0 + 5 and s['harvests'] == 1, (s['inv'], s['xp'] - x0)); await closeall(p)
+        s = await st(p); ok('2 小時後收成：蘋果 +1、莓果 +2、XP +5、收成次數 1', s['inv']['food'] == 2 and s['inv']['berry'] == 2 and s['xp'] == x0 + 5 and s['harvests'] == 1, (s['inv'], s['xp'] - x0)); await closeall(p)
         # ---------- 每日小目標 ----------
         await p.click('#bGoals'); await p.wait_for_timeout(300); s = await st(p)
         ok('每日 3 個小目標', len(s['goals']['list']) == 3)
@@ -194,7 +194,7 @@ async def main():
         await p.evaluate("PF.debug.set({energy:100,inv:{food:3,seeds:2,candy:0,potion:2}})"); await p.evaluate("(()=>{PF.state.adv.stage=Math.max(PF.state.adv.stage,15)})()")
         await p.evaluate("PF.startBattle(13)"); await p.wait_for_timeout(500)
         bl = await p.inner_text('#blog'); ok('岩石／水邊等場地依怪獸屬性', any(k in bl for k in ['岩地', '水邊', '森林', '草原', '峽谷', '天空', '雷雲', '礦坑']), bl)
-        await p.click('#mvCh'); await p.wait_for_timeout(200); ok('蓄力', await p.evaluate("PF.B.me.charged") or '蓄力' in await p.inner_text('#blog'))
+        await p.click('#mvCh'); await p.wait_for_timeout(2500); ok('蓄力', await p.evaluate("PF.B.me.charged") or '蓄力' in await p.inner_text('#blog'))
         for _ in range(40):
             if not await p.evaluate("PF.B.busy"): break
             await p.wait_for_timeout(150)

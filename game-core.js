@@ -13,15 +13,16 @@ const CONFIG = {
   offlineCapHours: 12,               // 離線狀態變化最多補算 12 小時
   jumpWarnDays: 30,                  // 一次跳過超過 30 天 → 提示時間異常
   rates: {                           // 每小時變化
-    awake: { hunger: -2, mood: -1, clean: -1, energy: 8 },   // 醒著也會慢慢恢復：約 1 小時可以再玩 1 次
-    sleep: { hunger: -2, mood: -1, clean: -1, energy: 25 }   // 睡 4 小時左右就充飽
+    awake: { hunger: -4, mood: -3, clean: -2, energy: 8 },  // V1.19：變餓、變無聊、變髒都比較快   // 醒著也會慢慢恢復：約 1 小時可以再玩 1 次
+    sleep: { hunger: -2, mood: 0, clean: -1, energy: 25 }   // 睡 4 小時左右就充飽
   },
   full: 95,                          // 視為「已滿」的門檻
   feed: { hunger: 25, xp: 5, tide: 1, price: 5 },
-  play: { minEnergy: 10, mood: 20, energy: -10, xp: 10, xpWindowMin: 30, xpPerWindow: 3 },
+  play: { minEnergy: 10, mood: 15, energy: -10, hunger: -5, clean: -6, xp: 10, xpWindowMin: 30, xpPerWindow: 3 },
   wash: { cooldownMin: 30, clean: 35, xp: 5, rubSeconds: 3 },
-  pet:  { cooldownMin: 30, bond: 2, mood: 3, tide: 2 },
-  adventure: { minEnergy: 20, energy: -20, xp: 15, coins: 8, flame: 3, dailyFull: 5, overCapXpRate: 0.2, dropFood: 0.3, dropSeed: 0.4 },
+  pet:  { cooldownMin: 30, bond: 2, mood: 3, tide: 2, minMood: 40 },   // 心情 40 以下摸摸不會加親密度
+  neglect: { below: 25, bondPerHour: 1 },                 // 飽食／心情／清潔任一低於 25：親密度每小時 −1
+  adventure: { minEnergy: 20, energy: -20, hunger: -15, clean: -20, winMood: 8, lossMood: -12, xp: 15, coins: 8, flame: 3, dailyFull: 5, overCapXpRate: 0.2, dropFood: 0.3, dropSeed: 0.4 },
   battleWin: { xp: 10, coins: 4, flame: 2 },
   battleLoss: { xp: 3 },
   discovery: { xp: 10, forest: 2 },
@@ -36,7 +37,7 @@ const CONFIG = {
   bossStages: { volcano: 15, oldtree: 20, canyon: 25, skypeak: 30, thunder: 35, mine: 40 },
   newRoutes: { stepsForEarth: 100000, goalsForBird: 30, bondForElec: 5, cleanForMetal: 50, earthEvery: 2000 },
   breed: { cost: 20, cooldownH: 6, minMood: 50, basket: 6 },
-  farm: { plots: 3, growHours: 2, food: 2, xp: 5, forest: 3, seedPrice: 3 },     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
+  farm: { plots: 3, growHours: 2, food: 1, berry: 2, xp: 5, forest: 3, seedPrice: 3 },     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
   goals: { perDay: 3, reward: { coins: 8 } },
   candy: { price: 12, mood: 20, hunger: 10, xp: 3 },
   core: { rotMin: 10, moodPerHour: 4, max: 8 },          // 果核：10 分鐘沒清會發臭長果蠅，每顆每小時心情 −4
@@ -65,7 +66,15 @@ const CONFIG = {
     toy_block:   { slot: 'toy', name: '積木', price: 25 },
     toilet_pot:  { slot: 'toilet', name: '寵物馬桶', price: 150 }
   },
-  start: { coins: 50, food: 3, seeds: 2, stat: 80 }
+  start: { coins: 50, food: 3, seeds: 2, stat: 80, hunger: 60, mood: 55, clean: 70, energy: 80 },
+  foods: {   // 食物：key＝背包欄位；left＝吃剩的東西（會發臭）；fav＝最愛的屬性（心情 +10、經驗 +3）
+    food:  { name: '蘋果', icon: 'apple', hunger: 25, mood: 0,  xp: 5, price: 5,  left: 'core', fav: ['earth'] },
+    berry: { name: '莓果', icon: 'berry', hunger: 15, mood: 8,  xp: 4, price: 4,  left: null,   fav: ['forest', 'bird'] },
+    fish:  { name: '烤魚', icon: 'fish',  hunger: 35, mood: 4,  xp: 6, price: 8,  left: 'bone', fav: ['tide', 'metal'] },
+    meat:  { name: '肉排', icon: 'meat',  hunger: 45, mood: 5,  xp: 7, price: 12, left: 'bone', fav: ['flame'] },
+    cake:  { name: '蛋糕', icon: 'cake',  hunger: 20, mood: 20, xp: 5, price: 15, left: null,   fav: ['elec'], clean: -8 }
+  },
+  favBonus: { mood: 10, xp: 3 }
 };
 const ROUTES = ['flame', 'tide', 'forest', 'earth', 'bird', 'elec', 'metal'];
 const ROUTE_EVENT = { flame: 'volcano', tide: 'moonspring', forest: 'oldtree', earth: 'canyon', bird: 'skypeak', elec: 'thunder', metal: 'mine' };
@@ -147,7 +156,7 @@ function newSeed() { try { return (globalThis.crypto || require('crypto').webcry
 function fresh(now = Date.now()) {
   const S = CONFIG.start;
   return { v: 7, rev: 0, seed: newSeed(), genes: null, name: '小露', hatched: false, eggTaps: 0, stage: 'egg', route: null,
-    xp: 0, coins: S.coins, hunger: S.stat, mood: S.stat, clean: S.stat, energy: S.stat, bond: 0, sleeping: false,
+    xp: 0, coins: S.coins, hunger: S.hunger, mood: S.mood, clean: S.clean, energy: S.energy, bond: 0, sleeping: false,
     path: { flame: 0, tide: 0, forest: 0, earth: 0, bird: 0, elec: 0, metal: 0 }, bondUses: 0, cleanups: 0,
     care: { petLastRewardAt: 0, bathLastAt: 0, playXpAt: [], gatherAt: 0 },
     inv: { food: S.food, seeds: S.seeds, candy: 0, potion: 1 }, harvests: 0,
@@ -199,6 +208,7 @@ function sanitize(o, now = Date.now()) {
   r.care.playXpAt = Array.isArray(c.playXpAt) ? c.playXpAt.map(Number).filter(t => Number.isFinite(t) && t <= now && now - t < CONFIG.play.xpWindowMin * MIN).slice(-10) : [];
   const iv = o.inv && typeof o.inv === 'object' ? o.inv : {};
   r.inv.food = int(iv.food, CONFIG.start.food, 0, 9999); r.inv.seeds = int(iv.seeds, CONFIG.start.seeds, 0, 9999); r.inv.candy = int(iv.candy, 0, 0, 9999); r.inv.potion = int(iv.potion, 1, 0, 9999);
+  for (const k of ['berry', 'fish', 'meat', 'cake']) r.inv[k] = int(iv[k], 0, 0, 9999);
   const dc = o.decor && typeof o.decor === 'object' ? o.decor : {};
   if (Array.isArray(dc.owned)) r.decor.owned = [...new Set(['paper_cream', 'bed_round', ...dc.owned.filter(id => CONFIG.decor[id])])];
   if (dc.placed && typeof dc.placed === 'object') { r.decor.placed = { paper: 'paper_cream' }; for (const sl of CONFIG.decorSlots) { const id = dc.placed[sl]; if (id && CONFIG.decor[id] && CONFIG.decor[id].slot === sl && r.decor.owned.includes(id)) r.decor.placed[sl] = id; } }
@@ -256,6 +266,7 @@ function applyTime(st, now = Date.now()) {
     // 發臭的果核：只算「已經發臭」的那段時間，同樣最多 12 小時
     let rotH = 0; for (const c of st.cores) { const from = Math.max(last, c.at + rotMin(c) * MIN); if (now > from) rotH += Math.min((now - from) / H, CONFIG.offlineCapHours); }
     if (rotH > 0) st.mood = clamp(st.mood - rotH * CONFIG.core.moodPerHour);
+    const N = CONFIG.neglect; if (Math.min(st.hunger, st.mood, st.clean) < N.below) st.bond = clamp(st.bond - N.bondPerHour * eff);   // 沒照顧好，親密度會掉
   }
   return { hours, eff, warn: hours > CONFIG.jumpWarnDays * 24 ? 'jump' : null, events };
 }
@@ -295,7 +306,7 @@ function gather(st, now = Date.now()) {
 
 /* ---------------- 照顧行為（GDD 第 3 節表格） ---------------- */
 function addXP(st, n) { n = Math.max(0, Math.round(n)); st.xp += n; return n; }
-function act(st, a, now = Date.now()) {
+function act(st, a, now = Date.now(), opt) {
   const tm = applyTime(st, now);
   if (!st.hatched) return { ok: false, msg: '先把蛋孵出來吧！', tm };
   const F = CONFIG.full;
@@ -306,15 +317,16 @@ function act(st, a, now = Date.now()) {
   }
   if (st.sleeping) return { ok: false, msg: '噓…牠在睡覺，先叫醒牠吧', tm };
   if (a === 'feed') {
-    const C = CONFIG.feed;
+    const kind = CONFIG.foods[opt] ? opt : 'food', FD = CONFIG.foods[kind];
     if (st.hunger >= F) return { ok: false, msg: '飽飽的，吃不下了～', tm };
     let paid = '';
-    if (st.inv.food > 0) { st.inv.food--; paid = '用掉 1 個食物'; }
-    else if (st.coins >= C.price) { st.coins -= C.price; paid = `花 ${C.price} 金幣買食物`; }
-    else return { ok: false, code: 'nofood', msg: '沒有食物也沒有金幣了…可以去「採集」', tm };
-    st.hunger = clamp(st.hunger + C.hunger); st.path.tide += C.tide;
-    track(st, 'feed', now); st.digest.push(now + CONFIG.poop.delayMin * MIN);
-    return { ok: true, anim: 'eat', sfx: 'eat', xp: addXP(st, C.xp), msg: `好吃！（${paid}）`, tm };
+    if ((st.inv[kind] || 0) > 0) { st.inv[kind]--; paid = `用掉 1 個${FD.name}`; }
+    else if (st.coins >= FD.price) { st.coins -= FD.price; paid = `花 ${FD.price} 金幣買${FD.name}`; }
+    else return { ok: false, code: 'nofood', msg: `沒有${FD.name}也沒有金幣了…可以去「採集」或種田`, tm };
+    const fav = !!(st.route && FD.fav.includes(st.route)), B = CONFIG.favBonus;
+    st.hunger = clamp(st.hunger + FD.hunger); st.mood = clamp(st.mood + FD.mood + (fav ? B.mood : 0)); if (FD.clean) st.clean = clamp(st.clean + FD.clean);
+    st.path.tide += CONFIG.feed.tide; track(st, 'feed', now); st.digest.push(now + CONFIG.poop.delayMin * MIN);
+    return { ok: true, anim: 'eat', sfx: 'eat', kind, left: FD.left, fav, xp: addXP(st, FD.xp + (fav ? B.xp : 0)), msg: (fav ? `最愛的${FD.name}！超好吃！` : `好吃！`) + `（${paid}）`, tm };
   }
   if (a === 'play') {
     const C = CONFIG.play;
@@ -322,7 +334,7 @@ function act(st, a, now = Date.now()) {
     st.care.playXpAt = st.care.playXpAt.filter(t => now - t < C.xpWindowMin * MIN && t <= now);
     let xp = 0;
     if (st.care.playXpAt.length < C.xpPerWindow) { st.care.playXpAt.push(now); xp = addXP(st, C.xp); }
-    st.mood = clamp(st.mood + C.mood); st.energy = clamp(st.energy + C.energy); track(st, 'play', now);
+    st.mood = clamp(st.mood + C.mood); st.energy = clamp(st.energy + C.energy); st.hunger = clamp(st.hunger + C.hunger); st.clean = clamp(st.clean + C.clean); track(st, 'play', now);
     return { ok: true, anim: 'play', sfx: 'play', xp, msg: xp ? '玩得好開心！' : '玩得好開心！（玩太多次了，暫時沒有經驗）', tm };
   }
   if (a === 'wash') {
@@ -342,7 +354,7 @@ function pet(st, now = Date.now()) {
   const C = CONFIG.pet, out = { ok: true, reward: false, tm, events: [] };
   if (now - st.care.petLastRewardAt >= C.cooldownMin * MIN) {
     const t0 = bondTier(st.bond);
-    st.care.petLastRewardAt = now; st.bond = clamp(st.bond + C.bond); st.mood = clamp(st.mood + C.mood); st.path.tide += C.tide;
+    st.care.petLastRewardAt = now; if (st.mood >= C.minMood) st.bond = clamp(st.bond + C.bond); else out.lowMood = true; st.mood = clamp(st.mood + C.mood); st.path.tide += C.tide;
     out.reward = true; track(st, 'pet', now); const t1 = bondTier(st.bond);
     if (t1 > t0) { out.bondUp = CONFIG.bondTiers[t1 - 1]; journal(st, now, `親密度達到 ${out.bondUp}！`); }
     // 親密度 50：每天一次，牠會撿東西送你
@@ -449,7 +461,7 @@ function canAdventure(st, n) {
 function startAdventure(st, n, now = Date.now()) {
   applyTime(st, now); claimDaily(st, now);
   const why = canAdventure(st, n); if (why) return { ok: false, msg: why };
-  st.energy = clamp(st.energy + CONFIG.adventure.energy); st.daily.adv++; track(st, 'adv', now);
+  const A = CONFIG.adventure; st.energy = clamp(st.energy + A.energy); st.hunger = clamp(st.hunger + A.hunger); st.clean = clamp(st.clean + A.clean); st.daily.adv++; track(st, 'adv', now);
   return { ok: true, full: st.daily.adv <= CONFIG.adventure.dailyFull };
 }
 function mkFighter(name, key, lvl, route, tierN, mood, bond) {
@@ -459,11 +471,11 @@ function mkFighter(name, key, lvl, route, tierN, mood, bond) {
 }
 /* 冒險區域（每 5 關一區）主要出現的屬性 */
 const AREA_ROUTE = [null, 'tide', 'flame', 'forest', 'earth', 'bird', 'elec', 'metal', null];
-function foeFor(n) {
+function foeFor(n, myLvl = 1) {
   const seed = (Math.imul(n, 2654435761) ^ 0x9e3779b9) >>> 0, G = makeGenome(seed), boss = n % 5 === 0;
   if (boss) G.rarity = 3;
   const area = AREA_ROUTE[Math.min(AREA_ROUTE.length - 1, Math.floor((n - 1) / 5))], route = area && (seed >>> 8) % 10 < 7 ? area : ROUTES[seed % ROUTES.length], stage = n >= 4 ? 'adult' : (n >= 2 ? 'adolescent' : 'juvenile');
-  const lvl = Math.max(1, Math.round(n * .9) + (boss ? 2 : 0));
+  const lvl = n <= 5 ? Math.max(n + (boss ? 1 : 0), Math.round(myLvl) - (boss ? 1 : 2)) : Math.max(1, n + (boss ? 2 : 0), Math.round(myLvl) - (boss ? 0 : 1));   // 新手區（1–5 關）比你低 2 級；之後野生怪會跟著你的等級變強
   return { id: 'x:' + encodeGenome(G), route, stage, level: lvl, boss };
 }
 function elemMult(a, d, special) { if (!special || a.el === 'none' || d.el === 'none') return 1; return (BEATS[a.el] || []).includes(d.el) ? 1.5 : (BEATS[d.el] || []).includes(a.el) ? .67 : 1; }
@@ -487,6 +499,7 @@ function damage(a, d, special, r = Math.random, boost = 1) {
 }
 function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random) {
   const A = CONFIG.adventure, out = { xp: 0, coins: 0, food: 0, seeds: 0, unlocked: 0, events: [] };
+  if (result === 'win' || result === 'loss') st.mood = clamp(st.mood + (result === 'win' ? A.winMood : A.lossMood));
   if (result === 'win') {
     st.adv.wins++; track(st, 'win', now);
     const xp = A.xp + CONFIG.battleWin.xp;
@@ -520,11 +533,11 @@ function plant(st, i, now = Date.now()) {
 function harvest(st, i, now = Date.now()) {
   const q = plotState(st, i, now); if (!q || q.empty) return { ok: false, msg: '這塊田是空的' };
   if (!q.ripe) return { ok: false, msg: `還沒成熟，再等 ${Math.ceil(q.left / MIN)} 分鐘` };
-  const F = CONFIG.farm; st.plots[i].at = 0; st.inv.food += F.food; st.harvests++;
+  const F = CONFIG.farm; st.plots[i].at = 0; st.inv.food += F.food; st.inv.berry = (st.inv.berry || 0) + F.berry; st.harvests++;
   let xp = 0; if (st.hatched) { xp = addXP(st, F.xp); st.path.forest += F.forest; }
   track(st, 'harvest', now);
   if (st.harvests === CONFIG.harvestsForOldTree) journal(st, now, `收成第 ${st.harvests} 次了！`);
-  return { ok: true, food: F.food, xp, forest: st.hatched ? F.forest : 0, msg: `收成！食物 +${F.food}` + (xp ? `、經驗 +${xp}、🌿 森 +${F.forest}` : '') };
+  return { ok: true, food: F.food, xp, forest: st.hatched ? F.forest : 0, msg: `收成！蘋果 +${F.food}、莓果 +${F.berry}` + (xp ? `、經驗 +${xp}、🌿 森 +${F.forest}` : '') };
 }
 function buySeed(st) {
   const P = CONFIG.farm.seedPrice; if (st.coins < P) return { ok: false, msg: `金幣不足（種子 ${P} 金幣）` };
@@ -545,10 +558,10 @@ function placeDecor(st, id) {
   st.decor.placed[it.slot] = id; return { ok: true, msg: `擺上「${it.name}」` };
 }
 function buyItem(st, kind) {
-  const price = kind === 'food' ? CONFIG.feed.price : kind === 'seeds' ? CONFIG.farm.seedPrice : kind === 'candy' ? CONFIG.candy.price : kind === 'potion' ? CONFIG.potion.price : 0;
+  const price = CONFIG.foods[kind] ? CONFIG.foods[kind].price : kind === 'seeds' ? CONFIG.farm.seedPrice : kind === 'candy' ? CONFIG.candy.price : kind === 'potion' ? CONFIG.potion.price : 0;
   if (!price) return { ok: false, msg: '沒有這個商品' };
   if (st.coins < price) return { ok: false, msg: `金幣不足（需要 ${price}）` };
-  st.coins -= price; st.inv[kind] = (st.inv[kind] || 0) + 1; return { ok: true, msg: `買了 1 個${{ food: '食物', seeds: '種子', candy: '星星糖', potion: '回復藥水' }[kind]}（−${price} 金幣）` };
+  st.coins -= price; st.inv[kind] = (st.inv[kind] || 0) + 1; return { ok: true, msg: `買了 1 個${{ food: '食物', seeds: '種子', candy: '星星糖', potion: '回復藥水' }[kind] || CONFIG.foods[kind].name}（−${price} 金幣）` };
 }
 function useCandy(st, now = Date.now()) {
   const tm = applyTime(st, now);
@@ -563,14 +576,14 @@ function useCandy(st, now = Date.now()) {
 function canAct(st, a, now = Date.now()) {
   if (!st.hatched) return '先把蛋孵出來吧！';
   if (st.sleeping) return a === 'sleep' ? null : '噓…牠在睡覺，先叫醒牠吧';
-  if (a === 'feed') { if (st.hunger >= CONFIG.full) return '飽飽的，吃不下了～'; if (st.inv.food < 1 && st.coins < CONFIG.feed.price) return '沒有食物也沒有金幣了…可以去「採集」'; }
+  if (a === 'feed') { if (st.hunger >= CONFIG.full) return '飽飽的，吃不下了～'; if (!Object.keys(CONFIG.foods).some(k => (st.inv[k] || 0) > 0) && st.coins < CONFIG.feed.price) return '沒有食物也沒有金幣了…可以去「採集」'; }
   if (a === 'play' && st.energy < CONFIG.play.minEnergy) return '太累了…先讓牠休息或睡一下';
   if (a === 'sleep' && st.view !== 'room') return '外面不能睡覺，要回小窩裡睡喔';
   if (a === 'wash') { if (st.clean >= CONFIG.full) return '已經很乾淨了！'; const w = st.care.bathLastAt + CONFIG.wash.cooldownMin * MIN - now; if (w > 0) return `剛洗過澡，${Math.ceil(w / MIN)} 分鐘後再洗吧`; }
   return null;
 }
 const rotMin = c => c.k === 'poop' ? CONFIG.poop.rotMin : CONFIG.core.rotMin;
-function addCore(st, x, now = Date.now(), v = 'yard', k = 'core') { st.cores.push({ x: clamp(x, 4, 124), at: now, v: v === 'room' ? 'room' : 'yard', k: k === 'poop' ? 'poop' : 'core' }); while (st.cores.length > CONFIG.core.max) st.cores.shift(); }
+function addCore(st, x, now = Date.now(), v = 'yard', k = 'core') { st.cores.push({ x: clamp(x, 4, 124), at: now, v: v === 'room' ? 'room' : 'yard', k: ['poop', 'bone'].includes(k) ? k : 'core' }); while (st.cores.length > CONFIG.core.max) st.cores.shift(); }
 const isRotten = (c, now = Date.now()) => now - c.at >= rotMin(c) * MIN;
 function clearCore(st, i, now = Date.now()) { const c = st.cores[i]; if (!c) return null; applyTime(st, now); const k = st.cores.indexOf(c); if (k >= 0) st.cores.splice(k, 1); st.cleanups++; if (st.hatched) st.path.metal += 1; return { rotten: isRotten(c, now), kind: c.k }; }
 
