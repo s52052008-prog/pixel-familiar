@@ -156,6 +156,35 @@ def process(el):
     pv.save(os.path.join(ROOT, 'art', f'preview-{el}.png'))
 
 
+EGG_FIT = (36, 38)
+
+
+def process_eggs():
+    """蛋：art/src/eggs/egg_<屬性>.png → sprites/egg_<屬性>.png（腳底對齊 y=46）"""
+    src = os.path.join(ROOT, 'art', 'src', 'eggs')
+    outdir = os.path.join(ROOT, 'sprites')
+    previews = []
+    for f in sorted(os.listdir(src)):
+        if not f.endswith('.png'):
+            continue
+        a, m = load(os.path.join(src, f))
+        box = bbox(m)
+        bw, bh = box[2] - box[0], box[3] - box[1]
+        k = min(EGG_FIT[0] / bw, EGG_FIT[1] / bh)
+        tw, th = max(1, round(bw * k)), max(1, round(bh * k))
+        im = downsample(a, m, box, tw, th, (CELL - tw) // 2, GROUND - th)
+        (im,), pal = quantize([im], 20)
+        im = add_outline(im, min(pal.tolist(), key=lambda c: lum(c)))
+        Image.fromarray(im, 'RGBA').save(os.path.join(outdir, f), optimize=True)
+        previews.append(im)
+        print(f, f'{tw}x{th}')
+    sc = 6
+    pv = Image.new('RGBA', (CELL * sc * len(previews), CELL * sc), (40, 52, 70, 255))
+    for i, im in enumerate(previews):
+        pv.alpha_composite(Image.fromarray(im, 'RGBA').resize((CELL * sc, CELL * sc), Image.NEAREST), (i * CELL * sc, 0))
+    pv.save(os.path.join(ROOT, 'art', 'preview-eggs.png'))
+
+
 if __name__ == '__main__':
     for el in sys.argv[1:] or ['flame']:
-        process(el)
+        process_eggs() if el == 'eggs' else process(el)
