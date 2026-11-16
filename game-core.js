@@ -29,11 +29,12 @@ const CONFIG = {
   daily: { coins: 10, food: 1 },
   gather: { cooldownMin: 2, food: 1 },
   stages: { adolescent: { hours: 12, xp: 100 }, adult: { hours: 48, xp: 350 }, ascended: { hours: 168, xp: 1000 } },
-  routeTie: ['tide', 'forest', 'flame'],       // 平手時的固定順序
+  routeTie: ['tide', 'forest', 'flame', 'earth', 'bird', 'elec', 'metal'],   // 平手時的固定順序（GDD 前三個 + V1.11 新增四個）
   bondTiers: [20, 50, 80],
   moonspringBond: 60,
   harvestsForOldTree: 10,
-  bossStages: { volcano: 15, oldtree: 20 },
+  bossStages: { volcano: 15, oldtree: 20, canyon: 25, skypeak: 30, thunder: 35, mine: 40 },
+  newRoutes: { stepsForEarth: 100000, goalsForBird: 30, bondForElec: 5, cleanForMetal: 50, earthEvery: 2000 },
   breed: { cost: 20, cooldownH: 6, minMood: 50, basket: 6 },
   farm: { plots: 3, growHours: 2, food: 2, xp: 5, forest: 3, seedPrice: 3 },     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
   goals: { perDay: 3, reward: { coins: 8 } },
@@ -66,8 +67,8 @@ const CONFIG = {
   },
   start: { coins: 50, food: 3, seeds: 2, stat: 80 }
 };
-const ROUTES = ['flame', 'tide', 'forest'];
-const ROUTE_EVENT = { flame: 'volcano', tide: 'moonspring', forest: 'oldtree' };
+const ROUTES = ['flame', 'tide', 'forest', 'earth', 'bird', 'elec', 'metal'];
+const ROUTE_EVENT = { flame: 'volcano', tide: 'moonspring', forest: 'oldtree', earth: 'canyon', bird: 'skypeak', elec: 'thunder', metal: 'mine' };
 const STAGES = ['egg', 'juvenile', 'adolescent', 'adult', 'ascended'];
 
 /* ---------------- 小工具 ---------------- */
@@ -142,14 +143,14 @@ function fresh(now = Date.now()) {
   const S = CONFIG.start;
   return { v: 7, rev: 0, seed: newSeed(), genes: null, name: '小露', hatched: false, eggTaps: 0, stage: 'egg', route: null,
     xp: 0, coins: S.coins, hunger: S.stat, mood: S.stat, clean: S.stat, energy: S.stat, bond: 0, sleeping: false,
-    path: { flame: 0, tide: 0, forest: 0 },
+    path: { flame: 0, tide: 0, forest: 0, earth: 0, bird: 0, elec: 0, metal: 0 }, bondUses: 0, cleanups: 0,
     care: { petLastRewardAt: 0, bathLastAt: 0, playXpAt: [], gatherAt: 0 },
     inv: { food: S.food, seeds: S.seeds, candy: 0, potion: 1 }, harvests: 0,
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] },
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0,
     cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [],
-    events: { volcano: false, moonspring: false, oldtree: false },
+    events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
     adv: { stage: 1, wins: 0, losses: 0 },
@@ -204,7 +205,7 @@ function sanitize(o, now = Date.now()) {
   const bl = o.ball && typeof o.ball === 'object' ? o.ball : {}; r.ball = { best: int(bl.best, 0, 0, 99), goals: int(bl.goals, 0, 0, 1e7) };
   r.den = { level: int(o.den && o.den.level, 1, 1, CONFIG.den.length) };
   r.roster = Array.isArray(o.roster) ? o.roster.filter(p => p && typeof p === 'object' && p.hatched).slice(0, CONFIG.den.length - 1).map(p => sanitizePet(p, now)) : [];
-  r.harvests = int(o.harvests, 0, 0, 1e7);
+  r.harvests = int(o.harvests, 0, 0, 1e7); r.bondUses = int(o.bondUses, 0, 0, 1e7); r.cleanups = int(o.cleanups, 0, 0, 1e7);
   if (Array.isArray(o.plots)) r.plots = r.plots.map((p, i) => ({ at: num(o.plots[i] && o.plots[i].at, 0, 0, 9e15) }));
   const gl = o.goals && typeof o.goals === 'object' ? o.goals : {};
   if (/^\d{4}-\d\d-\d\d$/.test(gl.date) && Array.isArray(gl.list)) r.goals = { date: gl.date, list: gl.list.filter(g => g && GOALS[g.id]).slice(0, 5).map(g => ({ id: g.id, n: int(g.n, 0, 0, 1e6), claimed: g.claimed === true })) };
@@ -215,7 +216,7 @@ function sanitize(o, now = Date.now()) {
   const st = o.steps && typeof o.steps === 'object' ? o.steps : {};
   r.steps.total = int(st.total, 0, 0, 1e10); r.steps.rem = num(st.rem, 0, 0, 999); r.steps.forestRem = num(st.forestRem, 0, 0, 1999);
   if (st.days && typeof st.days === 'object') for (const k in st.days) if (/^\d{4}-\d\d-\d\d$/.test(k)) r.steps.days[k] = int(st.days[k], 0, 0, 200000);
-  if (legacy && !pa) r.path.forest = Math.floor(r.steps.total / CONFIG.steps.forestEvery);
+  if (legacy && !pa) r.path.earth = Math.floor(r.steps.total / CONFIG.steps.forestEvery);
   const av = o.adv && typeof o.adv === 'object' ? o.adv : {};
   r.adv = { stage: int(av.stage, 1, 1, 999), wins: int(av.wins, 0, 0, 1e7), losses: int(av.losses, 0, 0, 1e7) };
   r.dex = Array.isArray(o.dex) ? o.dex.filter(e => e && typeof e === 'object').slice(-200).map(e => ({
@@ -322,7 +323,7 @@ function act(st, a, now = Date.now()) {
     const C = CONFIG.wash, wait = st.care.bathLastAt + C.cooldownMin * MIN - now;
     if (st.clean >= F) return { ok: false, msg: '已經很乾淨了！', tm };
     if (wait > 0) return { ok: false, msg: `剛洗過澡，${Math.ceil(wait / MIN)} 分鐘後再洗吧`, tm };
-    st.care.bathLastAt = now; st.clean = clamp(st.clean + C.clean); track(st, 'wash', now);
+    st.care.bathLastAt = now; st.clean = clamp(st.clean + C.clean); st.path.metal += 1; track(st, 'wash', now);
     return { ok: true, anim: 'wash', sfx: 'wash', xp: addXP(st, C.xp), msg: '洗得香噴噴～', tm };
   }
   return { ok: false, msg: '未知動作', tm };
@@ -348,7 +349,7 @@ function pet(st, now = Date.now()) {
 }
 
 /* ---------------- 特殊事件／探索發現 ---------------- */
-const EVENT_TEXT = { volcano: '火山遺跡', moonspring: '月泉', oldtree: '古樹' };
+const EVENT_TEXT = { volcano: '火山遺跡', moonspring: '月泉', oldtree: '古樹', canyon: '大地裂谷', skypeak: '天空之巔', thunder: '雷雲祭壇', mine: '鋼鐵礦坑' };
 function discover(st, now, ev) {
   if (ev && st.events[ev]) return null;
   if (ev) st.events[ev] = true;
@@ -366,6 +367,11 @@ function specialDone(st, route) {
   if (route === 'flame') return st.events.volcano;
   if (route === 'tide') return st.events.moonspring && st.bond >= CONFIG.moonspringBond;
   if (route === 'forest') return st.events.oldtree && st.harvests >= CONFIG.harvestsForOldTree;
+  const N = CONFIG.newRoutes;
+  if (route === 'earth') return st.events.canyon && st.steps.total >= N.stepsForEarth;
+  if (route === 'bird') return st.events.skypeak && st.ball.goals >= N.goalsForBird;
+  if (route === 'elec') return st.events.thunder && st.bondUses >= N.bondForElec;
+  if (route === 'metal') return st.events.mine && st.cleanups >= N.cleanForMetal;
   return false;
 }
 function stageReq(st, now) {
@@ -374,6 +380,7 @@ function stageReq(st, now) {
   if (!nxt) return null;
   return { next: nxt, hours: S[nxt].hours, xp: S[nxt].xp, ageOk: age >= S[nxt].hours, xpOk: st.xp >= S[nxt].xp, eventOk: nxt !== 'ascended' || specialDone(st, st.route), age };
 }
+const ROUTE_CH = { flame: '焰', tide: '潮', forest: '森', earth: '土', bird: '鳥', elec: '電', metal: '金' };
 function checkStages(st, now = Date.now()) {
   const out = [];
   for (let guard = 0; guard < 4 && st.hatched; guard++) {
@@ -383,15 +390,15 @@ function checkStages(st, now = Date.now()) {
     if (q.next === 'adult') st.route = pickRoute(st);
     st.stage = q.next;
     out.push({ from, to: st.stage, route: st.route });
-    journal(st, now, { adolescent: '長成少年期了！', adult: `進化成成年期（${{ flame: '焰', tide: '潮', forest: '森' }[st.route]}系）！`, ascended: '達到高階型態！' }[st.stage]);
+    journal(st, now, { adolescent: '長成少年期了！', adult: `進化成成年期（${ROUTE_CH[st.route]}系）！`, ascended: '達到高階型態！' }[st.stage]);
     const e = st.dex.find(x => x.id === gidOf(st)); if (e) { e.stage = st.stage; e.route = st.route; }
   }
   return out;
 }
 function tendencyHint(st) {
   if (st.stage === 'adult' || st.stage === 'ascended') return null;
-  const p = st.path; if (p.flame + p.tide + p.forest === 0) return '還看不出牠會往哪個方向長大';
-  return { flame: '尾巴尖好像暖暖的…', tide: '眼睛像水面一樣閃閃發亮…', forest: '身上有淡淡的青草香…' }[pickRoute(st)];
+  const p = st.path; if (ROUTES.every(k => !p[k])) return '還看不出牠會往哪個方向長大';
+  return { flame: '尾巴尖好像暖暖的…', tide: '眼睛像水面一樣閃閃發亮…', forest: '身上有淡淡的青草香…', earth: '腳步越來越穩，身上沾著泥土味…', bird: '常常抬頭看天空，好像想飛…', elec: '摸牠的時候會劈啪一下…', metal: '身體摸起來越來越硬，亮晶晶的…' }[pickRoute(st)];
 }
 
 /* ---------------- 孵化 ---------------- */
@@ -414,16 +421,18 @@ function creditSteps(st, raw, date, now = Date.now()) {
   st.steps.days[date] = v; st.steps.total += delta; st.steps.rem += delta; st.steps.forestRem += delta;
   const k = Math.floor(st.steps.rem / C.per); st.steps.rem -= k * C.per;
   const f = Math.floor(st.steps.forestRem / C.forestEvery); st.steps.forestRem -= f * C.forestEvery;
-  let xp = 0; if (st.hatched) { xp = addXP(st, k * C.xpPer); st.path.forest += f; }
+  let xp = 0; if (st.hatched) { xp = addXP(st, k * C.xpPer); st.path.earth += f; }
   if (date === td) track(st, 'steps', now, delta);
   const up = Math.floor(st.steps.total / C.tier) - tier0; if (up > 0) { st.coins += up * C.tierCoins; journal(st, now, `累積 ${Math.floor(st.steps.total / C.tier) * C.tier} 步，突破！`); }
   const keys = Object.keys(st.steps.days).sort(); while (keys.length > 30) delete st.steps.days[keys.shift()];
-  return { delta, v, xp, forest: st.hatched ? f : 0, up };
+  return { delta, v, xp, earth: st.hatched ? f : 0, up };
 }
 const stepTier = st => Math.floor(st.steps.total / CONFIG.steps.tier);
 
 /* ---------------- 冒險與戰鬥 ---------------- */
-const ELEM = { flame: 'fire', tide: 'water', forest: 'leaf' }, BEATS = { fire: 'leaf', leaf: 'water', water: 'fire' };
+const ELEM = { flame: 'fire', tide: 'water', forest: 'leaf', earth: 'earth', bird: 'bird', elec: 'elec', metal: 'metal' };
+/* 屬性相剋：key 剋 陣列裡的屬性（傷害 ×1.5；反過來 ×0.67） */
+const BEATS = { fire: ['leaf', 'metal'], water: ['fire', 'earth'], leaf: ['water', 'earth'], earth: ['fire', 'elec', 'metal'], bird: ['leaf', 'earth'], elec: ['water', 'bird'], metal: ['bird', 'leaf'] };
 function canAdventure(st, n) {
   if (!st.hatched) return '先孵化幻獸才能冒險';
   if (st.sleeping) return '牠在睡覺，先叫醒牠吧';
@@ -442,14 +451,16 @@ function mkFighter(name, key, lvl, route, tierN, mood, bond) {
   return { name, key, level: lvl, el: ELEM[route] || 'none', max: Math.round((30 + lvl * 6) * k), hp: Math.round((30 + lvl * 6) * k),
     atk: (8 + lvl * 2) * k * cond, def: (6 + lvl * 1.5) * k, spd: 5 + lvl + tierN, cd: 0, guard: false, endure: bond >= 80 };
 }
+/* 冒險區域（每 5 關一區）主要出現的屬性 */
+const AREA_ROUTE = [null, 'tide', 'flame', 'forest', 'earth', 'bird', 'elec', 'metal', null];
 function foeFor(n) {
   const seed = (Math.imul(n, 2654435761) ^ 0x9e3779b9) >>> 0, G = makeGenome(seed), boss = n % 5 === 0;
   if (boss) G.rarity = 3;
-  const route = n >= 4 ? ROUTES[seed % 3] : null, stage = route ? 'adult' : (n >= 2 ? 'adolescent' : 'juvenile');
+  const area = AREA_ROUTE[Math.min(AREA_ROUTE.length - 1, Math.floor((n - 1) / 5))], route = n < 4 ? null : (area && (seed >>> 8) % 10 < 7 ? area : ROUTES[seed % ROUTES.length]), stage = route ? 'adult' : (n >= 2 ? 'adolescent' : 'juvenile');
   const lvl = Math.max(1, Math.round(n * .9) + (boss ? 2 : 0));
   return { id: 'x:' + encodeGenome(G), route, stage, level: lvl, boss };
 }
-function elemMult(a, d, special) { if (!special || a.el === 'none' || d.el === 'none') return 1; return BEATS[a.el] === d.el ? 1.5 : BEATS[d.el] === a.el ? .67 : 1; }
+function elemMult(a, d, special) { if (!special || a.el === 'none' || d.el === 'none') return 1; return (BEATS[a.el] || []).includes(d.el) ? 1.5 : (BEATS[d.el] || []).includes(a.el) ? .67 : 1; }
 /* 預估傷害（不含隨機與會心一擊）：用來顯示「這一擊強不強」、判斷是不是快撐不住了 */
 function expectDamage(a, d, special, boost = 1) {
   const pow = special ? (a.el === 'none' ? 1.15 : 1.3) : 1, ch = a.charged ? 2 : 1;
@@ -459,7 +470,7 @@ function expectDamage(a, d, special, boost = 1) {
 const bondBoost = (taps, bond = 0) => clamp(1 + taps * CONFIG.bond.tapBoost + bond / 100, 1, CONFIG.bond.maxBoost);
 function damage(a, d, special, r = Math.random, boost = 1) {
   const pow = (special ? (a.el === 'none' ? 1.15 : 1.3) : 1) * (a.charged ? 2 : 1) * boost; a.charged = false;
-  let mult = 1; if (special && a.el !== 'none' && d.el !== 'none') { if (BEATS[a.el] === d.el) mult = 1.5; else if (BEATS[d.el] === a.el) mult = .67; }
+  const mult = elemMult(a, d, special);
   let dmg = Math.max(1, Math.round(a.atk * pow * (a.atk / (a.atk + d.def)) * 1.6 * mult * (.85 + r() * .3)));
   if (d.guard) { dmg = Math.max(1, Math.round(dmg * .5)); d.guard = false; }
   const crit = r() < .08; if (crit) dmg = Math.round(dmg * 1.5);
@@ -555,13 +566,13 @@ function canAct(st, a, now = Date.now()) {
 const rotMin = c => c.k === 'poop' ? CONFIG.poop.rotMin : CONFIG.core.rotMin;
 function addCore(st, x, now = Date.now(), v = 'yard', k = 'core') { st.cores.push({ x: clamp(x, 4, 124), at: now, v: v === 'room' ? 'room' : 'yard', k: k === 'poop' ? 'poop' : 'core' }); while (st.cores.length > CONFIG.core.max) st.cores.shift(); }
 const isRotten = (c, now = Date.now()) => now - c.at >= rotMin(c) * MIN;
-function clearCore(st, i, now = Date.now()) { const c = st.cores[i]; if (!c) return null; applyTime(st, now); const k = st.cores.indexOf(c); if (k >= 0) st.cores.splice(k, 1); return { rotten: isRotten(c, now), kind: c.k }; }
+function clearCore(st, i, now = Date.now()) { const c = st.cores[i]; if (!c) return null; applyTime(st, now); const k = st.cores.indexOf(c); if (k >= 0) st.cores.splice(k, 1); st.cleanups++; if (st.hatched) st.path.metal += 1; return { rotten: isRotten(c, now), kind: c.k }; }
 
 /* ---------------- 頂球小遊戲 ---------------- */
 function finishBallGame(st, score, now = Date.now()) {
   score = int(score, 0, 0, CONFIG.ballGame.balls);
   const r = act(st, 'play', now); if (!r.ok) return r;
-  st.ball.goals += score; const best = score > st.ball.best; if (best) { st.ball.best = score; if (score > 0) journal(st, now, `頂球創新紀錄：${score} 分！`); }
+  st.ball.goals += score; st.path.bird += 2 * score; const best = score > st.ball.best; if (best) { st.ball.best = score; if (score > 0) journal(st, now, `頂球創新紀錄：${score} 分！`); }
   return Object.assign(r, { score, best });
 }
 
@@ -628,6 +639,10 @@ function claimGoal(st, idx, now = Date.now()) {
   st.inv.seeds++; return { ok: true, msg: '種子 +1' };
 }
 
+/* ---------------- 電系：戰鬥中蓄力、羈絆之力 ---------------- */
+function battleCharge(st) { if (st.hatched) st.path.elec += 1; }
+function battleBond(st, now = Date.now()) { st.bondUses++; if (st.hatched) st.path.elec += 3; if (st.bondUses === 1) journal(st, now, '第一次發動羈絆之力！'); }
+
 /* ---------------- 配對 ---------------- */
 function canBreed(st, friend, now = Date.now()) {
   const B = CONFIG.breed;
@@ -653,6 +668,6 @@ const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
   canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
-  ELEM, BEATS, elemMult, expectDamage, bondBoost, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
+  ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, expectDamage, bondBoost, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -191,7 +191,7 @@ async def main():
         # 戰鬥擴充：場地、蓄力、藥水、羈絆之力
         await p.evaluate("PF.debug.set({energy:100,inv:{food:3,seeds:2,candy:0,potion:2}})"); await p.evaluate("(()=>{PF.state.adv.stage=Math.max(PF.state.adv.stage,15)})()")
         await p.evaluate("PF.startBattle(13)"); await p.wait_for_timeout(500)
-        bl = await p.inner_text('#blog'); ok('岩石／水邊等場地依怪獸屬性', any(k in bl for k in ['岩石地', '水邊', '森林', '草原']), bl)
+        bl = await p.inner_text('#blog'); ok('岩石／水邊等場地依怪獸屬性', any(k in bl for k in ['岩地', '水邊', '森林', '草原', '峽谷', '天空', '雷雲', '礦坑']), bl)
         await p.click('#mvCh'); await p.wait_for_timeout(200); ok('蓄力', await p.evaluate("PF.B.me.charged") or '蓄力' in await p.inner_text('#blog'))
         for _ in range(40):
             if not await p.evaluate("PF.B.busy"): break

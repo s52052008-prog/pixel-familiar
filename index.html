@@ -179,7 +179,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.10.0';
+const VERSION='1.11.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -199,7 +199,7 @@ const PC=window.PFCore;
 const {CONFIG,ROUTES,makeGenome,CLASSIC_G,encodeGenome,decodeGenome,G_SIDE,gidOf,genomeFromId,formCode,fresh,sanitize}=PC;
 const FORMS={egg:{name:'神秘的蛋',stage:0}};
 const STAGE_NAME={egg:'蛋',juvenile:'幼年期',adolescent:'少年期',adult:'成年期',ascended:'高階'};
-const ROUTE_ICON={flame:'🔥',tide:'💧',forest:'🌿'},ROUTE_LABEL={flame:'焰系',tide:'潮系',forest:'森系'};
+const ROUTE_ICON={flame:'🔥',tide:'💧',forest:'🌿',earth:'🪨',bird:'🐦',elec:'⚡',metal:'⚙️'},ROUTE_LABEL={flame:'焰系',tide:'潮系',forest:'森系',earth:'土系',bird:'鳥系',elec:'電系',metal:'金系'};
 const BOND_UNLOCK={20:'解鎖：撒嬌表情與早安問候',50:'解鎖：每天的小禮物',80:'解鎖：心之羈絆（戰鬥中撐住一次）'};
 
 /* ---------------- 物種外觀（由基因產生） ---------------- */
@@ -207,8 +207,8 @@ function hsl(h,s,l){h=((h%360)+360)%360;s=clamp(s)/100;l=clamp(l)/100;const k=n=
  return'#'+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('')}
 const HUE_NAMES=[[15,'緋','Scarlet'],[40,'焰','Blaze'],[65,'琥','Amber'],[95,'苔','Moss'],[150,'翠','Jade'],[185,'湖','Lagoon'],[215,'霜','Frost'],[250,'夜','Night'],[285,'紫','Violet'],[320,'霞','Dusk'],[345,'桃','Peach'],[361,'緋','Scarlet']];
 const SIDE_NAMES={nubs:['角','Nub'],horns:['角','Horn'],leaves:['葉','Leaf'],ears:['耳','Ear'],bunny:['兔','Bun'],none:['絨','Fluff']};
-const ROUTE_NAMES={flame:['焰','Flame'],tide:['潮','Tide'],forest:['森','Forest']};
-const CLASSIC_NAMES={juv:['露露獸','Lulu'],flame:['焰尾獸','Flametail'],tide:['潮靈獸','Tidewisp'],forest:['森語獸','Forestsong']};
+const ROUTE_NAMES={flame:['焰','Flame'],tide:['潮','Tide'],forest:['森','Forest'],earth:['岩','Terra'],bird:['翼','Sky'],elec:['雷','Volt'],metal:['鋼','Steel']};
+const CLASSIC_NAMES={juv:['露露獸','Lulu'],flame:['焰尾獸','Flametail'],tide:['潮靈獸','Tidewisp'],forest:['森語獸','Forestsong'],earth:['岩甲獸','Rockshell'],bird:['風翼獸','Windwing'],elec:['雷光獸','Sparkling'],metal:['鋼鎧獸','Steelguard']};
 const RARITY=['','普通','稀有','傳說'],STARS=['','★','★★','★★★'];
 function codeRoute(code){return code.startsWith('asc-')?code.slice(4):(ROUTES.includes(code)?code:null)}
 function speciesName(G,code,classic){const route=codeRoute(code),asc=code.startsWith('asc-');
@@ -218,16 +218,22 @@ function speciesName(G,code,classic){const route=codeRoute(code),asc=code.starts
 /* code：juv 幼年／teen 少年／flame|tide|forest 成年／asc-路線 高階 */
 function genomeForm(G,code='juv',classic=false){
  const asc=code.startsWith('asc-'),route=codeRoute(code),grow=code==='juv'?0:code==='teen'?1:asc?3:2;
- const ah=route==='flame'?40:route==='tide'?195:route==='forest'?95:G.acc,gold=G.rarity===3||asc,h=G.hue,s=G.sat;
+ const ah=route==='flame'?40:route==='tide'?195:route==='forest'?95:route==='earth'?30:route==='bird'?205:route==='elec'?52:route==='metal'?210:G.acc,gold=G.rarity===3||asc,h=G.hue,s=G.sat;
+ const RA={earth:['#b8946a','#7a5a3a','#c8b8a0','#8a7a68'],bird:['#f4faff','#9ac4e8','#ffffff','#b0c8e0'],elec:['#ffe040','#e09a00','#fff3a0','#d8a020'],metal:['#d8e0e8','#8a98a8','#eef2f6','#a0aab8']}[route];
  const pal={o:hsl(h,35,13),b:hsl(h,s,56),d:hsl(h,s,38),l:hsl(h,s-5,75),feet:hsl(h,s-5,75),pat:hsl(h,s+10,42),
   belly:G.pattern==='belly'?hsl(G.acc,60,86):hsl(G.bh,45,91),bellyD:G.pattern==='belly'?hsl(G.acc,50,74):hsl(G.bh,35,79),
   horn:gold?'#ffe680':hsl(ah,70,76),hornD:gold?'#d9a441':hsl(ah,60,52),acc:gold&&!route?'#ffd34a':hsl(ah,80,68),accD:gold&&!route?'#e0902a':hsl(ah,70,48)};
+ if(RA){pal.acc=RA[0];pal.accD=RA[1];if(!gold){pal.horn=RA[2];pal.hornD=RA[3]}}
  const feat=[],add=f=>{if(f&&f!=='none'&&!feat.includes(f))feat.push(f)};
  let side=G.side,top=G.top,tail=G.tail;
  if(code==='teen'&&top==='none')top='tuft';
  if(route==='flame'){if(side==='nubs'||side==='none')side='horns';if(top==='none'||top==='tuft')top='crest';tail='flame'}
  if(route==='tide'){add('fins');if(top==='none'||top==='tuft')top='antenna';tail='fin'}
  if(route==='forest'){add('wings');if(top==='none'||top==='tuft')top='flower';tail='leaf'}
+ if(route==='earth'){if(side==='nubs'||side==='none'||side==='leaves')side='horns';top='rockcrest';tail='club'}
+ if(route==='bird'){add('wings');top='plume';tail='feather';if(side==='horns'||side==='nubs')side='none'}
+ if(route==='elec'){top='zap';tail='bolt';add('sparkcheek')}
+ if(route==='metal'){add('helm');if(side==='nubs'||side==='none'||side==='leaves')side='horns';tail='blade'}
  add(side);add(top);if(G.wings||asc)add('wings');
  if(G.pattern==='spots'||G.pattern==='stripes')add('pat-'+G.pattern);if(gold)add('sparkle');if(G.eyes==='big')add('bigeyes');
  const nm=speciesName(G,code,classic);
@@ -321,6 +327,10 @@ function drawCreature(F,fr){
  if(F.tail==='fluffy')ellipse(g,tx+3,ty,4.2,4,(x,y,nx,ny)=>nx*.5+ny*.7>.5?P.d:((nx+.4)**2+(ny+.4)**2<.12?'#ffffff':P.l));
  if(F.tail==='flame'){rect(tx+1,ty-4,1,P.acc);rect(tx,ty-3,3,P.acc);rect(tx-1,ty-2,4,P.accD);rect(tx-1,ty-1,5,P.accD);px(g,tx+1,ty-2,'#fff6c8');px(g,tx+1,ty-1,P.acc);px(g,tx+2,ty-1,P.acc)}
  if(F.tail==='fin'){for(let r=0;r<5;r++)for(let x=0;x<=r+1;x++)px(g,tx+2+x,ty-3+r,x%2?P.accD:P.acc)}
+ if(F.tail==='club'){ellipse(g,tx+4,ty-2,3.6,3.4,(x,y,nx,ny)=>nx*.5+ny*.6>.3?P.accD:P.acc);px(g,tx+3,ty-3,'#e8d8c0')}
+ if(F.tail==='feather'){for(let k=0;k<3;k++){const ox=tx+2+k*2,oy=ty-4+k;for(let j=0;j<4;j++){px(g,ox+j,oy-j+k,j===0?P.accD:P.acc)}}px(g,tx+2,ty-1,P.accD)}
+ if(F.tail==='bolt'){[[0,0],[1,-1],[2,-2],[1,-3],[2,-3],[3,-4],[4,-5],[3,-6],[4,-6],[5,-7]].forEach(([a,b],i)=>{px(g,tx+2+a,ty-1+b,i%3===0?P.accD:P.acc);px(g,tx+3+a,ty-1+b,P.acc)})}
+ if(F.tail==='blade'){for(let k=0;k<6;k++)for(let j=0;j<=Math.floor(k/2);j++)px(g,tx+2+k,ty-2-j,j===0?P.accD:(k%2?P.acc:'#ffffff'))}
  if(F.tail==='leaf'){rect(tx+2,ty-4,2,P.acc);rect(tx+1,ty-3,4,P.acc);rect(tx+1,ty-2,4,P.acc);rect(tx+2,ty-1,2,P.acc);px(g,tx+3,ty-3,P.accD);px(g,tx+2,ty-2,P.accD)}
  // --- 腳 ---
  const fy=fr.feet==='tuck'?ground-3:ground-1,fxo=Math.round(rx*.5);
@@ -344,6 +354,10 @@ function drawCreature(F,fr){
  if(has('ears')){const bx=cxi-10;[[0,0,5],[0,-1,4],[1,-2,3],[1,-3,2],[2,-4,1]].forEach(([ox,oy,w],i)=>{for(let k=0;k<w;k++)pm(bx+ox+k,top+2+oy,k>0&&k<w-1&&i<3?P.acc:(k===0?P.d:P.b))})}
  if(has('bunny')){for(let k=0;k<9;k++){const x=cxi-8-Math.floor(k/4);for(let w=0;w<3;w++)pm(x+w,top+1-k,w===1&&k>0&&k<8?P.acc:(w===0?P.d:P.b))}}
  if(has('tuft')){rect(cxi-1,top,2,P.l);rect(cxi-1,top-1,2,P.l);px(g,cxi-2,top-2,P.l);px(g,cxi+1,top-2,P.l);px(g,cxi,top-3,P.l);px(g,cxi-1,top-1,P.b)}
+ if(has('rockcrest')){for(const[ox,w,hh]of[[-4,3,2],[1,4,3]]){for(let j=0;j<hh;j++)rect(cxi+ox-1,top-j,w,j===0?P.accD:P.acc)}px(g,cxi,top-2,'#e8d8c0')}
+ if(has('plume')){[[0,0],[0,-1],[1,-2],[1,-3],[2,-4],[3,-5],[4,-5],[5,-4]].forEach(([a,b],i)=>{px(g,cxi-1+a,top+b,i>3?P.accD:P.acc);px(g,cxi+a,top+b,P.acc)})}
+ if(has('zap')){[[0,0],[0,-1],[1,-2],[1,-3],[0,-3],[-1,-4],[0,-5],[1,-6]].forEach(([a,b],i)=>{px(g,cxi-1+a,top+b,i%2?P.accD:P.acc);px(g,cxi+a,top+b,P.acc)})}
+ if(has('helm')){for(let x=Math.round(cx-rx);x<=Math.round(cx+rx);x++)for(let y=top+1;y<=top+3;y++){const c0=get(g,x,y);if(c0===P.b||c0===P.d||c0===P.l)px(g,x,y,y===top+1?'#ffffff':(y===top+3?P.accD:P.acc))}rect(cxi-1,top+2,2,'#e8433f')}
  if(has('flower')){rect(cxi-2,top,4,P.horn);rect(cxi-1,top-1,2,P.horn);rect(cxi-1,top+1,2,P.horn);px(g,cxi-1,top,'#ffe066');px(g,cxi,top,'#ffe066')}
  // --- 臉 ---
  const ex=Math.round(rx*.4),ey=Math.round(cy-ry*.12),L=cxi-ex-3,E=P.o,Wt='#ffffff';
@@ -359,6 +373,7 @@ function drawCreature(F,fr){
   else if(eye==='tired'){rect(x,ey-1,3,P.d);rect(x,ey,3,E);rect(x,ey+1,3,E);px(g,x,ey,Wt)}};
  eyeAt(L,-1);eyeAt(2*cxi-1-L-2,1);
  if(fr.blush||eye==='open'||eye==='happy'){const ch=fr.blush===2?'#ff6a8a':'#f59ab0';rect(L-1,ey+2,2,ch,1);if(fr.blush)rect(L-1,ey+3,2,ch,1)}
+ if(has('sparkcheek')){rect(L-1,ey+2,2,'#ffe040',1);px(g,L-2,ey+1,'#fff3a0');px(g,2*cxi-1-(L-2),ey+1,'#fff3a0')}
  const my=ey+3,M='#6a2433';
  if(mouth==='smile'){px(g,cxi-3,my,M);px(g,cxi-2,my+1,M);px(g,cxi-1,my,M);px(g,cxi,my,M);px(g,cxi+1,my+1,M);px(g,cxi+2,my,M)}
  else if(mouth==='open'){rect(cxi-2,my,4,M);rect(cxi-2,my+1,4,M);rect(cxi-1,my+2,2,'#f07a8a')}
@@ -432,6 +447,9 @@ const ICONS={
  poop:{o:'#2a1408',p:{b:'#8a5a2a',d:'#5a3a18',l:'#b07a40',w:'#ffffff'},m:['...l....','..bbb...','..bbbl..','.bwbwbb.','.bbbbbb.','bbbbbbbd','dddddddd']},
  poopRot:{o:'#1a1008',p:{b:'#6a4a1a',d:'#3a2a10',l:'#8a6a2a',w:'#c8c8a0'},m:['...l....','..bbb...','..bbbl..','.bwbwbb.','.bbbbbb.','bbbbbbbd','dddddddd']},
  potion:{o:'#2a1a3a',p:{g:'#c8d0e0',r:'#ff6a8a',R:'#ffb0c0',c:'#a8703e'},m:['..cc..','..gg..','.grrg.','grRrrg','grrrrg','.gggg.']},
+ rock:{o:'#2a2018',p:{g:'#a89a8a',d:'#6a5a4a',l:'#d8ccc0'},m:['.ggg..','glggg.','gggggd','ggggdd','.dddd.']},
+ feather:{o:'#3a4a6a',p:{w:'#ffffff',b:'#b0d0f0'},m:['....ww','...wwb','..wwb.','.wwb..','wb....']},
+ shard:{o:'#3a4050',p:{s:'#d8e0e8',w:'#ffffff',d:'#8a98a8'},m:['..w..','.sws.','sssss','.dsd.','..d..']},
  fly:{o:null,p:{w:'#d8f0ff',k:'#1a1a1a'},m:['w.w','.k.']},
  note:{o:'#2a1a3a',p:{n:'#ffffff'},m:['..nnn','..n.n','..n.n','nnn..','nnn..']}
 };
@@ -764,11 +782,13 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',`
 </ul>
 <p><b>時間：</b>每小時飽食 −2、心情 −1、清潔 −1。離線最多計算 12 小時。數值為 0 只會讓牠難過，不會死掉。</p>
 <p><b>成長：</b>幼年期 → 少年期（孵化 12 小時＋100 XP）→ 成年期（48 小時＋350 XP）→ 高階（7 天＋1000 XP＋特殊事件）。</p>
-<p><b>成年分支：</b>🔥 焰系：冒險、戰鬥；💧 潮系：餵食、摸摸；🌿 森系：種植收成、走路、發現新地點。成年前會看到模糊的提示。</p>
+<p><b>成年分支（7 系）：</b>🔥 焰：冒險、戰鬥勝利；💧 潮：餵食、摸摸；🌿 森：種植收成、發現新地點；🪨 土：走路步數；🐦 鳥：頂球進球；⚡ 電：戰鬥中蓄力、羈絆之力；⚙️ 金：洗澡、清大便和果核。點數最高的就是牠的路線，成年前會看到模糊的提示。</p>
+<p><b>屬性相剋（屬性技 ×1.5）：</b>🔥剋🌿⚙️、💧剋🔥🪨、🌿剋💧🪨、🪨剋🔥⚡⚙️、🐦剋🌿🪨、⚡剋💧🐦、⚙️剋🐦🌿。</p>
 <p><b>🌱 家園：</b>種子種下 ${CONFIG.farm.growHours} 小時後收成，食物 +${CONFIG.farm.food}、經驗 +${CONFIG.farm.xp}、🌿 森 +${CONFIG.farm.forest}。</p>
 <p><b>🪺 小窩：</b>點院子裡的小窩可以升級（4 級，最多住 4 隻）。迎接新蛋時，小窩有空位的話，現在的夥伴會搬進去休息，不用告別。</p>
 <p><b>🛒 商店：</b>用金幣買家具，擺進小窩裡（畫面左上「🪺 進窩」）。家具是裝飾，晚上有燈的房間會比較亮。商店也賣食物、種子和星星糖。</p>
 <p><b>🎯 小目標：</b>每天 3 個，任選完成就能領獎勵，沒做完也沒關係。</p>
+<p><b>新屬性的高階條件：</b>🪨 打通第 25 關「大地裂谷」＋累積 10 萬步；🐦 第 30 關「天空之巔」＋頂球進球 30 顆；⚡ 第 35 關「雷雲祭壇」＋發動羈絆之力 5 次；⚙️ 第 40 關「鋼鐵礦坑」＋清理 50 次。</p>
 <p><b>特殊事件：</b>🔥 打通第 ${C.bossStages.volcano} 關「火山遺跡」；💧 親密度 60 以上、晚上摸摸觸發「月泉」；🌿 打通第 ${C.bossStages.oldtree} 關「古樹」並收成 10 次。</p>
 <p><b>親密度：</b>20 解鎖撒嬌與早安問候、50 每天收到小禮物、80 戰鬥時撐住一次。</p>
 <p><b>⚔️ 戰鬥技巧：</b>戰鬥地點依怪獸屬性變成草原、岩石地、水邊、森林或星之塔。招式有撞擊、屬性技、蓄力（下一擊 ×2）、防禦、回復藥水和逃跑，按鈕上會顯示預估傷害（▲效果好、▼效果差）。快被打倒時會出現「💗 羈絆之力」：倒數後 1 秒內連打螢幕，點越多下攻擊越強（每場一次）。</p>
@@ -785,7 +805,7 @@ function codexDialog(){
   :'<p class="small">還沒有任何物種。孵化第一顆蛋吧！</p>';
  const hint=s.hatched?PC.tendencyHint(s):null;
  const lean=hint?`<p style="margin-top:12px"><b>成長的預感</b>（成年期時決定路線，外觀特色會保留）</p><p>「${esc(hint)}」</p>
-  <p class="small">🔥 焰系：冒險與戰鬥　💧 潮系：餵食與摸摸　🌿 森系：種植收成、走路與發現新地點</p>`:'';
+  <p class="small">🔥 焰：冒險戰鬥　💧 潮：餵食摸摸　🌿 森：種植、發現新地點　🪨 土：走路　🐦 鳥：頂球進球　⚡ 電：蓄力、羈絆之力　⚙️ 金：洗澡、清理</p>`:'';
  const n=s.dex.length,rare=s.dex.filter(e=>e.id!=='classic'&&genomeFromId(e.id).rarity>1).length;
  openModal('📖 物種圖鑑',`<p class="small">每顆蛋都會隨機孵出獨一無二的新物種（約 75% 普通、20% 稀有、5% 傳說）。已發現 <b>${n}</b> 種，其中稀有以上 <b>${rare}</b> 種。</p><div class="codex">${cards}</div>${lean}
  <p class="small" style="margin-top:10px">想收集更多？選單 →「🥚 迎接新的蛋」，或到「💞 配對」。</p>`);
@@ -870,14 +890,14 @@ const fmtN=n=>Math.round(n).toLocaleString('en-US');
 const tier=()=>PC.stepTier(s),todayKey=()=>PC.dayKey(Date.now());
 function creditSteps(raw,date){const x0=s.xp,r=PC.creditSteps(s,raw,date,Date.now());if(!r.err&&r.delta){save();renderUI();afterChange(x0)}return r}
 function stepResultMsg(r){if(r.err)return'❌ '+r.err;if(!r.delta)return`今天已登記 ${fmtN(r.v)} 步，沒有新增的步數`;
- return`👟 新增 ${fmtN(r.delta)} 步！`+(r.xp?`經驗 +${r.xp}`:'')+(r.forest?`、森系 +${r.forest}`:'')+(!r.xp&&!r.forest?'（累積到 1,000 步就有獎勵）':'')+(r.up?`\n🌟 累積 ${fmtN(tier()*STEP_TIER)} 步，突破成功！金幣 +${CONFIG.steps.tierCoins*r.up}`:'')}
+ return`👟 新增 ${fmtN(r.delta)} 步！`+(r.xp?`經驗 +${r.xp}`:'')+(r.earth?`、🪨 土系 +${r.earth}`:'')+(!r.xp&&!r.earth?'（累積到 1,000 步就有獎勵）':'')+(r.up?`\n🌟 累積 ${fmtN(tier()*STEP_TIER)} 步，突破成功！金幣 +${CONFIG.steps.tierCoins*r.up}`:'')}
 function stepsDialog(){
  const td=s.steps.days[todayKey()]||0,tot=s.steps.total,nx=(tier()+1)*STEP_TIER,url=(inFrame?HOME_URL:location.origin+location.pathname)+'?steps=';
  openModal('👟 步數冒險',`
 <p>今天：<b>${fmtN(td)}</b> 步　累積：<b>${fmtN(tot)}</b> 步</p>
 <p class="small">突破 ${'✦'.repeat(tier())||'0'}（每 10 萬步突破一次，戰鬥能力 +10%）距離下一次：${fmtN(nx-tot)} 步</p>
 <div class="prog"><i style="width:${(tot%STEP_TIER)/STEP_TIER*100}%"></i></div>
-<p class="small">每 1,000 步 → 經驗 +10；每 2,000 步 → 🌿 森系點數 +1。每天最多計算 5 萬步，可以補登最近 7 天。</p>
+<p class="small">每 1,000 步 → 經驗 +10；每 2,000 步 → 🪨 土系點數 +1。每天最多計算 5 萬步，可以補登最近 7 天。</p>
 <div class="row"><button class="btn pri" id="sPaste">📋 從剪貼簿貼上步數</button></div>
 <div class="row"><input type="text" id="sIn" inputmode="numeric" placeholder="或手動輸入今天的步數" style="flex:1 1 60%"><button class="btn" id="sOk" style="min-width:70px;flex:0 0 auto">登記</button></div>
 <div class="err" id="sErr"></div>
@@ -1010,10 +1030,10 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
 /* =========================================================
    ⚔️ 冒險：關卡制回合戰鬥
    ========================================================= */
-const EL_NAME={fire:'🔥火',water:'💧水',leaf:'🌿森',none:'⭐無'};
-const SP_NAME={fire:'火球術',water:'泡泡砲',leaf:'飛葉刃',none:'星星衝撞'},SP_ICON={fire:'fire',water:'bubble',leaf:'leaf',none:'star'};
-const AREAS=['青草原','迷霧湖','火山口','古森林','星之塔'];
-function areaName(n){return AREAS[Math.min(4,Math.floor((n-1)/5))]+' '+(n>20?n-20:((n-1)%5)+1)}
+const EL_NAME={fire:'🔥火',water:'💧水',leaf:'🌿森',earth:'🪨土',bird:'🐦鳥',elec:'⚡電',metal:'⚙️金',none:'⭐無'};
+const SP_NAME={fire:'火球術',water:'泡泡砲',leaf:'飛葉刃',earth:'碎岩擊',bird:'旋風羽',elec:'雷光閃',metal:'鋼刃斬',none:'星星衝撞'},SP_ICON={fire:'fire',water:'bubble',leaf:'leaf',earth:'rock',bird:'feather',elec:'bolt',metal:'shard',none:'star'};
+const AREAS=['青草原','迷霧湖','火山口','古森林','大地峽谷','天空之巔','雷雲山','鋼鐵礦坑','星之塔'];
+function areaName(n){return AREAS[Math.min(8,Math.floor((n-1)/5))]+' '+(n>40?n-40:((n-1)%5)+1)}
 function foeFighter(n){const f=PC.foeFor(n),key=petKey(f.id,formCode(f.stage,f.route)),F=formOf(key);
  const ft=PC.mkFighter((f.boss?'Boss ':'野生的 ')+F.name,key,f.level,f.route,0,80,0);if(f.boss)ft.max=ft.hp=Math.round(ft.max*1.4);return ft}
 let B=null;const bparts=[];const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1032,8 +1052,8 @@ function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');retu
  $('mvSp').textContent='✨ '+SP_NAME[me.el];blog(`📍 ${ARENA_NAME[arenaFor(n,foe)]}\n${foe.name} 出現了！（${EL_NAME[foe.el]} Lv.${foe.level}）${r.full?'':'　今天的全額次數用完了，獎勵會減少'}`);bUI();sfx('play')}
 function blog(t){$('blog').textContent=t}
 /* ---------------- 戰鬥場地：依怪獸屬性決定 ---------------- */
-const ARENA_NAME={meadow:'🌼 草原',rock:'🪨 岩石地',water:'🌊 水邊',forest:'🌲 森林深處',tower:'✨ 星之塔'};
-function arenaFor(n,foe){if(n>20)return'tower';return foe.el==='fire'?'rock':foe.el==='water'?'water':foe.el==='leaf'?'forest':(['meadow','water','rock','forest'][Math.min(3,Math.floor((n-1)/5))])}
+const ARENA_NAME={meadow:'🌼 草原',rock:'🌋 火山岩地',water:'🌊 水邊',forest:'🌲 森林深處',canyon:'🪨 大地峽谷',sky:'☁️ 天空之巔',storm:'⛈️ 雷雲山',mine:'⚙️ 鋼鐵礦坑',tower:'✨ 星之塔'};
+function arenaFor(n,foe){if(n>40)return'tower';const m={fire:'rock',water:'water',leaf:'forest',earth:'canyon',bird:'sky',elec:'storm',metal:'mine'};return m[foe.el]||(['meadow','water','rock','forest','canyon','sky','storm','mine'][Math.min(7,Math.floor((n-1)/5))])}
 const ARENA_CACHE={};
 function makeArena(k){if(ARENA_CACHE[k])return ARENA_CACHE[k];const cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
  const grad=(cols,y0,y1)=>{for(let y=y0;y<y1;y++){c.fillStyle=cols[Math.min(cols.length-1,Math.floor((y-y0)/(y1-y0)*cols.length))];c.fillRect(0,y,W,1)}};
@@ -1058,6 +1078,27 @@ function makeArena(k){if(ARENA_CACHE[k])return ARENA_CACHE[k];const cv=document.
   grad(['#3a6a3a','#2f5a32'],64,H);dots(['#4f8a45','#6fbf5a','#d8403a'],80,66,H,17);
   for(const[x,y]of[[12,84],[118,96],[70,72]]){c.fillStyle='#e8e0d0';c.fillRect(x,y+2,2,2);c.fillStyle='#d8403a';c.fillRect(x-1,y,4,2)}
   pad(94,62,22,'#4f8a45','#2f5a32');pad(34,100,24,'#4f8a45','#2f5a32')}
+ if(k==='canyon'){grad(['#e8b878','#f0c890','#f8dcb0'],0,40);
+  for(let x=0;x<W;x++){const y=Math.round(22+14*Math.abs(Math.sin(x/18))+4*Math.sin(x/6));c.fillStyle=x%9<4?'#b06a3a':'#9a5a30';c.fillRect(x,y,1,62-y);c.fillStyle='#c8804a';if(x%7===0)c.fillRect(x,y+6,1,20)}
+  grad(['#c8905a','#b07a48','#9a6a3a'],60,H);dots(['#8a5a30','#e0b080','#7a4a28'],110,62,H,25);
+  for(const[x,y]of[[18,76],[108,90],[60,104]]){c.fillStyle='#8a7060';c.fillRect(x,y,6,4);c.fillStyle='#a89080';c.fillRect(x+1,y,4,1)}
+  pad(94,62,22,'#d0a070','#9a6a3a');pad(34,100,24,'#d0a070','#9a6a3a')}
+ if(k==='sky'){grad(['#4a9ae0','#7ab8ec','#a8d4f4','#d0ecfa'],0,H);
+  for(const[x,y,r]of[[10,30,12],[40,50,16],[90,20,10],[110,70,18],[70,96,22],[0,90,16]]){const g=grid(r*2+4,r+4);ellipse(g,r+2,r/2+2,r,r/2,()=> '#ffffff');ellipse(g,r+2,r/2+3,r*.9,r/2.4,(xx,yy,nx,ny)=>ny>.2?'#e0eef8':0);c.drawImage(gridCanvas(g),x-r,y-r/2)}
+  pad(94,62,22,'#7ccc5a','#8a6a4a');pad(34,100,24,'#7ccc5a','#8a6a4a');c.fillStyle='#8a6a4a';c.fillRect(76,66,36,6);c.fillRect(14,104,40,6)}
+ if(k==='storm'){grad(['#2a2a3a','#3a3a52','#4a4a66'],0,62);
+  for(let i=0;i<7;i++){const g=grid(40,16);ellipse(g,20,8,19,7,(x,y,nx,ny)=>ny>.2?'#3a3a4a':'#5a5a70');c.drawImage(gridCanvas(g),i*20-14,-2+(i%2)*6)}
+  c.fillStyle='#ffe040';for(const[x0,y0]of[[30,12],[96,18]]){let x=x0;for(let y=y0;y<y0+30;y++){c.fillRect(x,y,1,1);if(y%4===0)x+=(y%8===0?2:-2)}}
+  for(let x=0;x<W;x++){const y=Math.round(50+5*Math.sin(x/11));c.fillStyle='#3a3a4a';c.fillRect(x,y,1,64-y)}
+  grad(['#5a5a6a','#4a4a5a'],62,H);dots(['#6a6a80','#3a3a4a','#ffe040'],70,64,H,29);
+  pad(94,62,22,'#7a7a90','#4a4a5a');pad(34,100,24,'#7a7a90','#4a4a5a')}
+ if(k==='mine'){grad(['#1a1612','#2a221a','#3a2e22'],0,H);
+  for(let i=0;i<40;i++){c.fillStyle=['#4a3a2a','#5a4a38','#3a2e22'][i%3];c.fillRect((i*37)%W,(i*23)%60,6+(i%4)*3,4+(i%3)*2)}
+  for(const[x,y]of[[20,20],[70,34],[110,14],[44,52]]){c.fillStyle='#c8d8e8';c.fillRect(x,y,3,2);c.fillStyle='#ffe066';c.fillRect(x+4,y+1,2,2)}
+  c.fillStyle='#7a5a3a';for(const x of[8,116]){c.fillRect(x,8,4,58)}c.fillRect(8,8,112,4);
+  c.fillStyle='#ffe07a';c.fillRect(62,13,4,4);c.globalAlpha=.12;c.beginPath();c.ellipse(64,22,14,9,0,0,Math.PI*2);c.fill();c.globalAlpha=1;
+  grad(['#4a3a2a','#3a2e22'],64,H);c.fillStyle='#6a6a70';for(let x=0;x<W;x+=6)c.fillRect(x,96,4,2);c.fillStyle='#9a9aa8';c.fillRect(0,94,W,1);c.fillRect(0,99,W,1);
+  pad(94,62,22,'#6a5a48','#3a2e22');pad(34,100,24,'#6a5a48','#3a2e22')}
  if(k==='tower'){grad(['#1a1040','#2a1a5a','#3a2a6a'],0,62);dots(['#ffffff','#fff3a6','#c8b8ff'],50,0,58,21);
   for(const x of[10,108]){c.fillStyle='#5a4a8a';c.fillRect(x,10,10,56);c.fillStyle='#7a6aaa';c.fillRect(x,10,2,56)}
   for(let y=62;y<H;y+=6)for(let x=((y/6)%2)*8;x<W;x+=16){c.fillStyle='#4a3a7a';c.fillRect(x,y,15,5);c.fillStyle='#5a4a8a';c.fillRect(x,y,15,1)}
@@ -1081,7 +1122,7 @@ function aiMove(f){if(f.hp<f.max*.3&&Math.random()<.35)return'guard';if(!f.charg
 async function doMove(a,d,mv,side,boost=1){
  const A=B.fx[side],D=B.fx[side==='me'?'foe':'me'];
  if(mv==='guard'){a.guard=true;const h=Math.round(a.max*.08);a.hp=Math.min(a.max,a.hp+h);blog(`${a.name} 擺出防禦姿勢！（回復 ${h}）`);A.anim='happy';A.t0=performance.now();sfx('pet');bUI();await sleep(900);return}
- if(mv==='charge'){a.charged=true;blog(`${a.name} 集中力量…下一擊威力 ×2！`);A.anim='happy';A.t0=performance.now();sfx('wake');spawn('bolt',3,{x:side==='me'?34:94,y:side==='me'?80:44,vy:-16,jx:20,life:.8,spread:12},bparts);bUI();await sleep(900);return}
+ if(mv==='charge'){if(side==='me')PC.battleCharge(s);a.charged=true;blog(`${a.name} 集中力量…下一擊威力 ×2！`);A.anim='happy';A.t0=performance.now();sfx('wake');spawn('bolt',3,{x:side==='me'?34:94,y:side==='me'?80:44,vy:-16,jx:20,life:.8,spread:12},bparts);bUI();await sleep(900);return}
  if(mv==='potion'){const h=Math.min(a.max-a.hp,Math.round(a.max*CONFIG.potion.heal));a.hp+=h;s.inv.potion--;save();blog(`${a.name} 喝下回復藥水！HP +${h}`);A.anim='happy';A.t0=performance.now();sfx('level');spawn('heart',4,{x:34,y:80,vy:-18,jx:20,life:1,spread:14},bparts);bUI();await sleep(1000);return}
  const sp=mv==='special'||mv==='bond';if(mv==='special')a.cd=3;
  blog(mv==='bond'?`💗 ${a.name} 的羈絆之力爆發！`:`${a.name} 使出${sp?'「'+SP_NAME[a.el]+'」':'撞擊'}！${a.charged?'（蓄力 ×2）':''}`);A.anim='jump';A.t0=performance.now();const dir=side==='me'?1:-1;A.dx=10*dir;A.dy=-6*dir;sfx(sp?'evolve':'tap');await sleep(220);A.dx=0;A.dy=0;
@@ -1099,7 +1140,7 @@ async function onMove(mv){if(!B||B.busy||B.over)return;unlockAudio();
  if(mv==='run'){B.busy=true;bUI();blog(`${B.me.name} 逃跑了…`);await sleep(800);endBattle(null);return}
  if(mv==='special'&&B.me.cd>0)return;if(mv==='potion'&&s.inv.potion<1)return;
  const{me,foe}=B;let boost=1;
- if(mv==='bond'){if(B.bondUsed||!dangerNow())return;B.bondUsed=true;B.busy=true;bUI();const taps=await tapRush();boost=PC.bondBoost(taps,s.bond);blog(`💗 連打 ${taps} 下，威力 ×${boost.toFixed(1)}！`);await sleep(900)}
+ if(mv==='bond'){if(B.bondUsed||!dangerNow())return;B.bondUsed=true;PC.battleBond(s,Date.now());B.busy=true;bUI();const taps=await tapRush();boost=PC.bondBoost(taps,s.bond);blog(`💗 連打 ${taps} 下，威力 ×${boost.toFixed(1)}！`);await sleep(900)}
  B.busy=true;bUI();
  const fm=aiMove(foe),first=mv==='bond'||mv==='guard'||mv==='potion'||me.spd>foe.spd||(me.spd===foe.spd&&Math.random()<.5);
  const order=fm==='guard'&&!['guard','bond'].includes(mv)?[['foe',fm],['me',mv]]:first?[['me',mv],['foe',fm]]:[['foe',fm],['me',mv]];

@@ -101,8 +101,8 @@ t('親密度 80：戰鬥中撐住一次', () => { const a = C.mkFighter('a', 'k'
 t('屬性相剋：火剋森 1.5 倍', () => { const a = C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0), d = C.mkFighter('b', 'k', 5, 'forest', 0, 80, 0); assert.equal(C.damage(a, d, true, () => .5).mult, 1.5); });
 
 // 步數
-t('步數：每 1000 步 XP +10、每 2000 步森林 +1，同日只算增加量', () => {
-  const s = hatched(); let r = C.creditSteps(s, '12,345', null, T0); assert.equal(r.delta, 12345); assert.equal(r.xp, 120); assert.equal(s.path.forest, 6);
+t('步數：每 1000 步 XP +10、每 2000 步土系 +1，同日只算增加量', () => {
+  const s = hatched(); let r = C.creditSteps(s, '12,345', null, T0); assert.equal(r.delta, 12345); assert.equal(r.xp, 120); assert.equal(s.path.earth, 6);
   r = C.creditSteps(s, 12000, null, T0); assert.equal(r.delta, 0); r = C.creditSteps(s, 15000, null, T0); assert.equal(r.delta, 2655);
 });
 t('步數：每天上限 5 萬、只能補登 7 天、10 萬步突破 +100 金幣', () => {
@@ -122,7 +122,7 @@ t('配對：需要成年期、冷卻 6 小時、花 20 金幣', () => {
 t('V1.5 舊存檔遷移：等級轉總 XP、路線改名、成年期', () => {
   const old = { v: 5, hatched: true, name: '老露', level: 5, xp: 20, coins: 77, route: 'mist', seed: 123, care: { feed: 3, pet: 2 }, steps: { total: 10000, days: {} }, adv: { stage: 3, wins: 2 }, dex: [{ id: 'g:123', route: 'mist', petName: '老露', at: T0 }], hatchedAt: T0 - 3 * 86400000, sound: false };
   const r = C.sanitize(old, T0); assert.equal(r.xp, 50 + 100 + 150 + 200 + 20); assert.equal(r.route, 'tide'); assert.equal(r.stage, 'adult'); assert.equal(r.coins, 77);
-  assert.equal(r.path.tide, 7); assert.equal(r.path.flame, 10); assert.equal(r.path.forest, 5); assert.equal(r.settings.sound, false); assert.equal(r.dex[0].route, 'tide'); assert.equal(r.inv.food, 3);
+  assert.equal(r.path.tide, 7); assert.equal(r.path.flame, 10); assert.equal(r.path.earth, 5); assert.equal(r.settings.sound, false); assert.equal(r.dex[0].route, 'tide'); assert.equal(r.inv.food, 3);
 });
 t('V1.2 舊存檔遷移', () => { const r = C.sanitize({ hatched: true, name: '舊', level: 3, xp: 40, coins: 77, hunger: 60, updated: T0 - H }, T0); assert.equal(r.xp, 190); assert.equal(r.stage, 'juvenile'); assert.equal(r.lastTick, T0 - H); });
 t('損毀資料安全恢復：亂碼數值被修正', () => {
@@ -226,6 +226,34 @@ t('藥水：開局 1 瓶、商店 20 金幣', () => { const s = hatched(); asser
 t('蓄力：下一擊 2 倍，用完就消失', () => { const a = C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0), d = C.mkFighter('b', 'k', 5, 'flame', 0, 80, 0); const n = C.expectDamage(a, d, false); a.charged = true; assert.ok(Math.abs(C.expectDamage(a, d, false) - n * 2) <= 1); C.damage(a, d, false, () => .5); assert.ok(!a.charged); });
 t('羈絆之力：點越多下越強，最多 5 倍', () => { assert.equal(C.bondBoost(0, 0), 1); assert.ok(C.bondBoost(6, 0) > C.bondBoost(3, 0)); assert.equal(C.bondBoost(50, 100), 5); const a = C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0), d = C.mkFighter('b', 'k', 30, 'tide', 0, 80, 0); const r = C.damage(a, d, false, () => .5, 3); assert.ok(r.dmg >= C.expectDamage(a, d, false) * 2.5); });
 t('預估傷害與實際平均一致（隨機 0.5、無會心）', () => { const a = C.mkFighter('a', 'k', 8, 'tide', 0, 80, 0), d = C.mkFighter('b', 'k', 8, 'flame', 0, 80, 0); const e = C.expectDamage(a, d, true); const r = C.damage(a, d, true, () => .5); assert.equal(r.dmg, e); });
+
+// 七種屬性
+t('相剋表：每個屬性都有剋與被剋，而且沒有互剋', () => {
+  const els = ['fire', 'water', 'leaf', 'earth', 'bird', 'elec', 'metal'];
+  for (const a of els) { assert.ok(C.BEATS[a].length >= 2); assert.ok(els.some(b => C.BEATS[b].includes(a)), a + ' 沒有被剋'); for (const b of C.BEATS[a]) assert.ok(!C.BEATS[b].includes(a), a + '/' + b + ' 互剋'); }
+  const f = (r) => C.mkFighter('x', 'k', 5, r, 0, 80, 0);
+  assert.equal(C.elemMult(f('elec'), f('tide'), true), 1.5); assert.equal(C.elemMult(f('elec'), f('earth'), true), .67); assert.equal(C.elemMult(f('bird'), f('forest'), true), 1.5); assert.equal(C.elemMult(f('metal'), f('bird'), true), 1.5); assert.equal(C.elemMult(f('flame'), f('metal'), true), 1.5);
+});
+t('新路線點數來源：步數→土、進球→鳥、蓄力與羈絆→電、洗澡與清理→金', () => {
+  const s = hatched(); C.creditSteps(s, 4000, null, T0); assert.equal(s.path.earth, 2);
+  s.energy = 50; C.finishBallGame(s, 2, T0); assert.equal(s.path.bird, 4);
+  C.battleCharge(s); C.battleBond(s, T0); assert.equal(s.path.elec, 4); assert.equal(s.bondUses, 1);
+  s.clean = 10; C.act(s, 'wash', T0); C.addCore(s, 50, T0); C.clearCore(s, 0, T0); assert.equal(s.path.metal, 2); assert.equal(s.cleanups, 1);
+});
+t('七條路線都能在成年時被選到', () => { for (const r of ['flame', 'tide', 'forest', 'earth', 'bird', 'elec', 'metal']) { const s = hatched(); s.xp = 400; s.path[r] = 50; C.checkStages(s, T0 + 50 * H); assert.equal(s.route, r); } });
+t('新路線高階條件：Boss 事件＋累積條件', () => {
+  const mk = r => { const s = hatched(); s.xp = 2000; s.path[r] = 99; C.checkStages(s, T0 + 200 * H); return s; };
+  let s = mk('earth'); s.events.canyon = true; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); s.steps.total = 100000; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
+  s = mk('bird'); s.events.skypeak = true; s.ball.goals = 29; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); s.ball.goals = 30; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
+  s = mk('elec'); s.events.thunder = true; s.bondUses = 5; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
+  s = mk('metal'); s.events.mine = true; s.cleanups = 49; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); s.cleanups = 50; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
+});
+t('冒險區域：21~40 關分別以土、鳥、電、金為主；Boss 關觸發對應事件', () => {
+  const count = (from, r) => { let c = 0; for (let n = from; n < from + 5; n++) if (C.foeFor(n).route === r) c++; return c; };
+  assert.ok(count(21, 'earth') >= 2); assert.ok(count(26, 'bird') >= 2); assert.ok(count(31, 'elec') >= 2); assert.ok(count(36, 'metal') >= 2);
+  const s = hatched(); s.adv.stage = 30; s.energy = 100; C.claimDaily(s, T0); const st = C.startAdventure(s, 30, T0); const r = C.finishAdventure(s, 30, 'win', st.full, T0, () => .99); assert.ok(r.events.includes('skypeak'));
+});
+t('舊存檔沒有新路線欄位也能正常讀取', () => { const r = C.sanitize({ v: 7, hatched: true, path: { flame: 3, tide: 2, forest: 1 } }, T0); assert.equal(r.path.earth, 0); assert.equal(r.path.metal, 0); assert.equal(r.events.mine, false); });
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);
