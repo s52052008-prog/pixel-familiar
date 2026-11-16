@@ -164,5 +164,25 @@ t('每日目標：完成才能領、只能領一次、時間倒退不重置', ()
 });
 t('每日目標：存檔亂碼目標被過濾', () => { const r = C.sanitize({ v: 6, goals: { date: '2026-11-16', list: [{ id: 'hack', n: 9 }, { id: 'feed', n: -3 }] } }, T0); assert.equal(r.goals.list.length, 1); assert.equal(r.goals.list[0].n, 0); });
 
+// 商店與裝飾
+t('家具：買了扣錢並自動擺上、不能重複買、錢不夠不能買', () => {
+  const s = hatched(); assert.ok(C.buyDecor(s, 'rug_red').ok); assert.equal(s.coins, 20); assert.equal(s.decor.placed.rug, 'rug_red');
+  assert.ok(!C.buyDecor(s, 'rug_red').ok); assert.ok(!C.buyDecor(s, 'bed_cloud').ok); assert.equal(s.coins, 20); assert.ok(!C.buyDecor(s, 'hack').ok);
+});
+t('家具：擺放／收起、沒有的不能擺、壁紙不能拿掉', () => {
+  const s = hatched(); s.coins = 999; C.buyDecor(s, 'toy_ball'); assert.ok(C.placeDecor(s, 'toy_ball').ok); assert.equal(s.decor.placed.toy, undefined);
+  assert.ok(C.placeDecor(s, 'toy_ball').ok); assert.equal(s.decor.placed.toy, 'toy_ball'); assert.ok(!C.placeDecor(s, 'lamp_moon').ok); assert.ok(!C.placeDecor(s, 'paper_cream').ok);
+  C.buyDecor(s, 'rug_star'); C.buyDecor(s, 'rug_red'); assert.equal(s.decor.placed.rug, 'rug_red'); C.placeDecor(s, 'rug_star'); assert.equal(s.decor.placed.rug, 'rug_star');
+});
+t('家具：存檔亂碼被過濾（沒買的、放錯格的、不存在的）', () => {
+  const r = C.sanitize({ v: 6, decor: { owned: ['rug_red', 'hack'], placed: { rug: 'rug_red', bed: 'bed_cloud', toy: 'rug_red', paper: 'xx' } } }, T0);
+  assert.deepEqual(r.decor.owned, ['paper_cream', 'rug_red']); assert.deepEqual(r.decor.placed, { paper: 'paper_cream', rug: 'rug_red' });
+});
+t('道具：買食物／種子／星星糖、吃星星糖', () => {
+  const s = hatched(); C.buyItem(s, 'candy'); assert.equal(s.coins, 38); assert.equal(s.inv.candy, 1); s.mood = 50; s.hunger = 50;
+  const r = C.useCandy(s, T0); assert.ok(r.ok); assert.equal(s.mood, 70); assert.equal(s.hunger, 60); assert.equal(s.xp, 3); assert.ok(!C.useCandy(s, T0).ok);
+  s.coins = 2; assert.ok(!C.buyItem(s, 'food').ok); assert.ok(nonNeg(s));
+});
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

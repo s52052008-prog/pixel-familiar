@@ -74,11 +74,11 @@ async def main():
         await p.click('#bMenu'); await p.click('#mJournal'); await p.wait_for_timeout(300); txt = await p.inner_text('#sheet')
         ok('日記自動記錄孵化與進化', '孵化' in txt and '少年期' in txt and '成年期' in txt); await p.screenshot(path=f'{OUT}/08_journal.png'); await closeall(p)
         # ---------- 7. 零資源不卡死 ----------
-        await p.evaluate("PF.debug.set({coins:0,inv:{food:0,seeds:0},hunger:20,sleeping:false})"); await p.wait_for_timeout(1200)
+        await p.evaluate("PF.debug.set({coins:0,inv:{food:0,seeds:0,candy:0},hunger:20,sleeping:false})"); await p.wait_for_timeout(1200)
         await p.click('[data-act=feed]'); await p.wait_for_selector('#mbtns .pri', timeout=3000); await p.click('#mbtns .pri'); await p.wait_for_timeout(300)
         ok('零金幣零食物 → 採集得到食物', (await st(p))['inv']['food'] == 1)
         # ---------- 家園種植 ----------
-        await p.evaluate("PF.debug.set({inv:{food:1,seeds:2}})")
+        await p.evaluate("PF.debug.set({inv:{food:1,seeds:2,candy:0}})")
         await p.click('#bFarm'); await p.wait_for_timeout(300); await p.click('[data-pa="0"]'); await p.wait_for_timeout(300)
         s = await st(p); ok('種下種子', s['inv']['seeds'] == 1 and s['plots'][0]['at'] > 0)
         ok('成長中不能收成', await p.is_disabled('[data-pa="0"]')); await p.screenshot(path=f'{OUT}/09a_farm.png'); await closeall(p)
@@ -95,6 +95,20 @@ async def main():
         c0 = await st(p); await p.click('[data-g="0"]'); await p.wait_for_timeout(300); s = await st(p)
         ok('領取目標獎勵、只能領一次', s['goals']['list'][0]['claimed'] and (s['coins'] > c0['coins'] or s['inv']['food'] > c0['inv']['food'] or s['inv']['seeds'] > c0['inv']['seeds']) and await p.is_disabled('[data-g="0"]'))
         await closeall(p)
+        # ---------- 商店與小屋 ----------
+        await p.evaluate("PF.debug.set({coins:400,mood:50,hunger:50,sleeping:false})")
+        await p.click('#bShop'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/09e_shop.png')
+        for it in ['paper_mint', 'wall_clock', 'lamp_moon', 'plant_flower', 'bed_cloud', 'rug_star', 'toy_block']:
+            await p.click(f'[data-dz="{it}"]'); await p.wait_for_timeout(150)
+        s = await st(p); ok('買 7 件家具、扣錢、自動擺上', len(s['decor']['owned']) == 8 and s['coins'] == 400 - 30 - 45 - 50 - 35 - 80 - 60 - 25 and s['decor']['placed']['bed'] == 'bed_cloud', s['coins'])
+        await p.click('[data-dz="toy_block"]'); await p.wait_for_timeout(150); ok('收起家具', 'toy' not in (await st(p))['decor']['placed'])
+        await p.click('[data-dz="toy_block"]'); await p.wait_for_timeout(150)
+        await p.click('[data-tab="items"]'); await p.wait_for_timeout(150); await p.click('[data-bi="candy"]'); await p.wait_for_timeout(150)
+        ok('買星星糖', (await st(p))['inv']['candy'] == 1); await p.click('#eatCandy'); await p.wait_for_timeout(1500)
+        s = await st(p); ok('吃星星糖：心情 +20', s['inv']['candy'] == 0 and round(s['mood']) >= 69, round(s['mood']))
+        ok('買完家具後切到室內', s['view'] == 'room'); await p.screenshot(path=f'{OUT}/09f_room.png')
+        await p.click('#viewBtn'); await p.wait_for_timeout(400); ok('切換回戶外', (await st(p))['view'] == 'yard')
+        await tap(p, 20, 50); await p.wait_for_timeout(400); ok('點小屋進屋', (await st(p))['view'] == 'room')
         # ---------- 冒險 ----------
         await p.evaluate("PF.debug.set({energy:100,mood:90,hunger:90,coins:100})")
         await p.click('#bAdv'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/09_adv.png')

@@ -37,6 +37,25 @@ const CONFIG = {
   breed: { cost: 20, cooldownH: 6, minMood: 50, basket: 6 },
   farm: { plots: 3, growHours: 2, food: 2, xp: 5, forest: 3, seedPrice: 3 },     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
   goals: { perDay: 3, reward: { coins: 8 } },
+  candy: { price: 12, mood: 20, hunger: 10, xp: 3 },                            // 商店零食「星星糖」
+  decorSlots: ['paper', 'wall', 'lamp', 'plant', 'bed', 'rug', 'toy'],
+  decor: {                                                                      // 房間家具：純裝飾，不影響數值
+    paper_cream: { slot: 'paper', name: '奶油色壁紙', price: 0 },
+    paper_mint:  { slot: 'paper', name: '薄荷色壁紙', price: 30 },
+    paper_night: { slot: 'paper', name: '星空壁紙', price: 60 },
+    wall_frame:  { slot: 'wall', name: '風景畫', price: 40 },
+    wall_clock:  { slot: 'wall', name: '咕咕鐘', price: 45 },
+    lamp_candle: { slot: 'lamp', name: '蠟燭燈', price: 15 },
+    lamp_moon:   { slot: 'lamp', name: '月亮燈', price: 50 },
+    plant_pot:   { slot: 'plant', name: '小盆栽', price: 20 },
+    plant_flower:{ slot: 'plant', name: '向日葵花盆', price: 35 },
+    bed_straw:   { slot: 'bed', name: '稻草窩', price: 25 },
+    bed_cloud:   { slot: 'bed', name: '雲朵床', price: 80 },
+    rug_red:     { slot: 'rug', name: '紅色地毯', price: 30 },
+    rug_star:    { slot: 'rug', name: '星星地毯', price: 60 },
+    toy_ball:    { slot: 'toy', name: '彈力球', price: 15 },
+    toy_block:   { slot: 'toy', name: '積木', price: 25 }
+  },
   start: { coins: 50, food: 3, seeds: 2, stat: 80 }
 };
 const ROUTES = ['flame', 'tide', 'forest'];
@@ -117,9 +136,10 @@ function fresh(now = Date.now()) {
     xp: 0, coins: S.coins, hunger: S.stat, mood: S.stat, clean: S.stat, energy: S.stat, bond: 0, sleeping: false,
     path: { flame: 0, tide: 0, forest: 0 },
     care: { petLastRewardAt: 0, bathLastAt: 0, playXpAt: [], gatherAt: 0 },
-    inv: { food: S.food, seeds: S.seeds }, harvests: 0,
+    inv: { food: S.food, seeds: S.seeds, candy: 0 }, harvests: 0,
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] },
+    decor: { owned: ['paper_cream'], placed: { paper: 'paper_cream' } }, view: 'yard',
     events: { volcano: false, moonspring: false, oldtree: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
@@ -163,7 +183,11 @@ function sanitize(o, now = Date.now()) {
   r.care.petLastRewardAt = num(c.petLastRewardAt, 0, 0, now); r.care.bathLastAt = num(c.bathLastAt, 0, 0, now); r.care.gatherAt = num(c.gatherAt, 0, 0, now);
   r.care.playXpAt = Array.isArray(c.playXpAt) ? c.playXpAt.map(Number).filter(t => Number.isFinite(t) && t <= now && now - t < CONFIG.play.xpWindowMin * MIN).slice(-10) : [];
   const iv = o.inv && typeof o.inv === 'object' ? o.inv : {};
-  r.inv.food = int(iv.food, CONFIG.start.food, 0, 9999); r.inv.seeds = int(iv.seeds, CONFIG.start.seeds, 0, 9999);
+  r.inv.food = int(iv.food, CONFIG.start.food, 0, 9999); r.inv.seeds = int(iv.seeds, CONFIG.start.seeds, 0, 9999); r.inv.candy = int(iv.candy, 0, 0, 9999);
+  const dc = o.decor && typeof o.decor === 'object' ? o.decor : {};
+  if (Array.isArray(dc.owned)) r.decor.owned = [...new Set(['paper_cream', ...dc.owned.filter(id => CONFIG.decor[id])])];
+  if (dc.placed && typeof dc.placed === 'object') { r.decor.placed = { paper: 'paper_cream' }; for (const sl of CONFIG.decorSlots) { const id = dc.placed[sl]; if (id && CONFIG.decor[id] && CONFIG.decor[id].slot === sl && r.decor.owned.includes(id)) r.decor.placed[sl] = id; } }
+  r.view = o.view === 'room' ? 'room' : 'yard';
   r.harvests = int(o.harvests, 0, 0, 1e7);
   if (Array.isArray(o.plots)) r.plots = r.plots.map((p, i) => ({ at: num(o.plots[i] && o.plots[i].at, 0, 0, 9e15) }));
   const gl = o.goals && typeof o.goals === 'object' ? o.goals : {};
@@ -450,6 +474,34 @@ function buySeed(st) {
   st.coins -= P; st.inv.seeds++; return { ok: true, msg: `買了 1 顆種子（−${P} 金幣）` };
 }
 
+/* ---------------- 商店與房間裝飾 ---------------- */
+function buyDecor(st, id) {
+  const it = CONFIG.decor[id]; if (!it) return { ok: false, msg: '沒有這個商品' };
+  if (st.decor.owned.includes(id)) return { ok: false, msg: '已經擁有了' };
+  if (st.coins < it.price) return { ok: false, msg: `金幣不足（需要 ${it.price}）` };
+  st.coins -= it.price; st.decor.owned.push(id); st.decor.placed[it.slot] = id;
+  return { ok: true, msg: `買了「${it.name}」，已經擺進房間！` };
+}
+function placeDecor(st, id) {
+  const it = CONFIG.decor[id]; if (!it || !st.decor.owned.includes(id)) return { ok: false, msg: '還沒有這個家具' };
+  if (st.decor.placed[it.slot] === id) { if (it.slot === 'paper') return { ok: false, msg: '壁紙不能拿掉，可以換別的' }; delete st.decor.placed[it.slot]; return { ok: true, msg: `收起「${it.name}」` }; }
+  st.decor.placed[it.slot] = id; return { ok: true, msg: `擺上「${it.name}」` };
+}
+function buyItem(st, kind) {
+  const price = kind === 'food' ? CONFIG.feed.price : kind === 'seeds' ? CONFIG.farm.seedPrice : kind === 'candy' ? CONFIG.candy.price : 0;
+  if (!price) return { ok: false, msg: '沒有這個商品' };
+  if (st.coins < price) return { ok: false, msg: `金幣不足（需要 ${price}）` };
+  st.coins -= price; st.inv[kind] = (st.inv[kind] || 0) + 1; return { ok: true, msg: `買了 1 個${{ food: '食物', seeds: '種子', candy: '星星糖' }[kind]}（−${price} 金幣）` };
+}
+function useCandy(st, now = Date.now()) {
+  const tm = applyTime(st, now);
+  if (!st.hatched) return { ok: false, msg: '先把蛋孵出來吧！', tm };
+  if (st.sleeping) return { ok: false, msg: '牠在睡覺，醒來再吃吧', tm };
+  if (st.inv.candy < 1) return { ok: false, msg: '沒有星星糖了', tm };
+  const C = CONFIG.candy; st.inv.candy--; st.mood = clamp(st.mood + C.mood); st.hunger = clamp(st.hunger + C.hunger);
+  return { ok: true, xp: addXP(st, C.xp), msg: '甜甜的星星糖！心情大好 ✨', tm };
+}
+
 /* ---------------- 每日小目標（GDD 第 5 節：3 個任選，不強迫全清） ---------------- */
 const GOALS = {
   feed:    { t: '餵食 1 次', ev: 'feed', need: 1, item: 'food' },
@@ -514,7 +566,7 @@ function breed(st, friend, now = Date.now(), r = Math.random) {
 const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars, dayKey, hourIn, level, rng, makeGenome, CLASSIC_G, encodeGenome, decodeGenome, breedGenome,
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
-  plotState, plant, harvest, buySeed, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy, GOALS, goalsFor, ensureGoals, track, claimGoal,
   ELEM, BEATS, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
