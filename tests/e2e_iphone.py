@@ -14,6 +14,7 @@ async def tap(p, x=64, y=80):
     await p.mouse.click(b['x'] + x / 128 * b['width'], b['y'] + y / 112 * b['height'])
 async def newpage(br, dev, init=None):
     ctx = await br.new_context(**dev); p = await ctx.new_page()
+    await p.add_init_script('window.PF_NO_WANDER=1')   # 測試時關掉待命亂走，點擊位置才固定
     p.on('pageerror', lambda e: errors.append(str(e)))
     p.on('console', lambda m: errors.append(m.text) if m.type == 'error' and 'favicon' not in m.text else None)
     if init: await p.add_init_script(init)
@@ -102,7 +103,7 @@ async def main():
         for hrs in (2, 24, 168):
             await p.evaluate("PF.debug.set({hunger:80,mood:80,clean:80,energy:20})"); await p.evaluate(f"PF.debug.skip({hrs*60})")
             s = await st(p); eff = min(hrs, 12)
-            ok(f'離線 {hrs} 小時 → 只計算 {eff} 小時', abs(s['hunger'] - (80 - 2 * eff)) < .2 and abs(s['energy'] - (20 + 3 * eff)) < .2, (round(s['hunger'], 1), round(s['energy'], 1)))
+            ok(f'離線 {hrs} 小時 → 只計算 {eff} 小時', abs(s['hunger'] - (80 - 2 * eff)) < .2 and abs(s['energy'] - min(100, 20 + 8 * eff)) < .2, (round(s['hunger'], 1), round(s['energy'], 1)))
         # ---------- 5. 成長門檻（用 debug 把孵化時間往前移） ----------
         await p.evaluate("PF.debug.set({xp:99})"); await p.evaluate("PF.debug.age(12)"); await p.wait_for_timeout(400)
         ok('12h 但 99 XP：還是幼年期', (await st(p))['stage'] == 'juvenile')
@@ -268,6 +269,17 @@ async def main():
         s = await st(q); ok('V1.2 舊存檔搬移', s['name'] == 'V12' and s['xp'] == 55); await ctx4.close()
         ctx5, q = await newpage(br, I13, "if(!sessionStorage.t){sessionStorage.t=1;localStorage.setItem('pixel-familiar-save-backup',JSON.stringify({v:6,hatched:true,name:'備份君',stage:'juvenile'}));localStorage.setItem('pixel-familiar-save','{broken')}")
         s = await st(q); ok('損毀 JSON → 從備份還原', s['name'] == '備份君'); await ctx5.close()
+        # ---------- V1.17–1.18：待命走動、皮球、暖燈、野生怪獸外型 ----------
+        ctx7, q = await newpage(br, I13); await hatch(q, '走走')
+        await q.evaluate("window.PF_NO_WANDER=0"); xs = set()
+        for _ in range(20): xs.add(round(await q.evaluate('PF.petX'))); await q.wait_for_timeout(500)
+        ok('待命時會自己走來走去', len(xs) >= 3, sorted(xs)[:8])
+        await q.evaluate("window.PF_NO_WANDER=1"); await q.wait_for_timeout(300)
+        tx = await q.evaluate('PF.toy.x'); await tap(q, tx, 98); await q.wait_for_timeout(600)
+        ok('點皮球會滾', abs(await q.evaluate('PF.toy.x') - tx) > 5, (tx, await q.evaluate('PF.toy.x')))
+        ok('野生怪獸不用 7 系手繪造型', await q.evaluate("(()=>{const k=PF.petKey('g:5','flame')+'|wild';return PF.formOf(k).wild===true&&/怪$/.test(PF.formOf(k).name)})()"))
+        await q.evaluate("PF.state.settings.light=false"); s = await st(q); ok('開燈設定可存', s['settings']['light'] is False)
+        await ctx7.close()
         # ---------- 小螢幕 ----------
         ctx6, q = await newpage(br, pw.devices['iPhone SE']); await q.screenshot(path=f'{OUT}/14_iphoneSE.png', full_page=True)
         ok('iPhone SE 無橫向捲動', await q.evaluate("document.documentElement.scrollWidth<=innerWidth"))

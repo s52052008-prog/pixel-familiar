@@ -13,8 +13,8 @@ const CONFIG = {
   offlineCapHours: 12,               // 離線狀態變化最多補算 12 小時
   jumpWarnDays: 30,                  // 一次跳過超過 30 天 → 提示時間異常
   rates: {                           // 每小時變化
-    awake: { hunger: -2, mood: -1, clean: -1, energy: 3 },
-    sleep: { hunger: -2, mood: -1, clean: -1, energy: 12 }
+    awake: { hunger: -2, mood: -1, clean: -1, energy: 8 },   // 醒著也會慢慢恢復：約 1 小時可以再玩 1 次
+    sleep: { hunger: -2, mood: -1, clean: -1, energy: 25 }   // 睡 4 小時左右就充飽
   },
   full: 95,                          // 視為「已滿」的門檻
   feed: { hunger: 25, xp: 5, tide: 1, price: 5 },

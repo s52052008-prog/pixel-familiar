@@ -43,11 +43,11 @@ t('撫摸 30 分鐘內只有第一次有收益（重新載入也一樣）', () =
 for (const [label, hrs] of [['2 小時', 2], ['24 小時', 24], ['7 天', 168]]) {
   t(`離線 ${label}：狀態最多變化 12 小時，年齡 ${hrs} 小時`, () => {
     const s = hatched(); s.hunger = 80; s.mood = 80; s.energy = 20; const now = T0 + hrs * H; C.applyTime(s, now);
-    const eff = Math.min(hrs, 12); assert.equal(Math.round(s.hunger * 100) / 100, 80 - 2 * eff); assert.equal(s.mood, 80 - eff); assert.equal(s.energy, Math.min(100, 20 + 3 * eff));
+    const eff = Math.min(hrs, 12); assert.equal(Math.round(s.hunger * 100) / 100, 80 - 2 * eff); assert.equal(s.mood, 80 - eff); assert.equal(s.energy, Math.min(100, 20 + 8 * eff));
     assert.equal(C.ageHours(s, now), hrs);
   });
 }
-t('睡眠時體力每小時 +12', () => { const s = hatched(); s.view = 'room'; s.energy = 10; C.act(s, 'sleep', T0); C.applyTime(s, T0 + 5 * H); assert.equal(s.energy, 70); });
+t('睡眠時體力每小時 +25', () => { const s = hatched(); s.view = 'room'; s.energy = 10; C.act(s, 'sleep', T0); C.applyTime(s, T0 + 2 * H); assert.equal(s.energy, 60); });
 t('時間倒退：不回溯、記錄警告', () => { const s = hatched(); s.hunger = 50; const r = C.applyTime(s, T0 - H); assert.equal(r.warn, 'back'); assert.equal(s.hunger, 50); assert.ok(s.clockWarn); assert.equal(s.lastTick, T0); });
 t('大幅快轉：照上限處理並提示', () => { const s = hatched(); const r = C.applyTime(s, T0 + 40 * 24 * H); assert.equal(r.warn, 'jump'); assert.equal(r.eff, 12); });
 
