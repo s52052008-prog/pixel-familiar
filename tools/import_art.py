@@ -19,6 +19,7 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CELL = 48
 MODE = os.environ.get('MODE', 'center')
+OPEN = {'elec': 9}          # 各屬性去除細線的強度（像素）
 KEEP_FRAC = 0.04           # 比最大塊小很多的碎點（閃光、水花）不算進角色
 DARK = 0.42                # 區塊裡深色超過這個比例才畫成線條
 GROUND = 46               # 腳底所在的列
@@ -134,6 +135,13 @@ def process(el):
         imgs, sizes = [], []
         mw, mh = FIT[st]
         for a, m in pair.values():
+            if OPEN.get(el):                     # 細細的電光線條縮小後會變成黑色雜點：先把細線去掉
+                from scipy import ndimage
+                m = ndimage.binary_opening(m, iterations=OPEN[el])
+                lab, n = ndimage.label(m)
+                if n > 1:
+                    sz = ndimage.sum(m, lab, range(1, n + 1))
+                    m = np.isin(lab, [i + 1 for i, s in enumerate(sz) if s >= sz.max() * KEEP_FRAC])
             box = bbox(m)
             bw, bh = box[2] - box[0], box[3] - box[1]
             k = min(mw / bw, mh / bh)
