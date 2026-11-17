@@ -37,22 +37,18 @@ async def do_wash(p):
         if await p.evaluate("!PF.mode"): break
         await p.mouse.move(X(cx - 12 + (i % 2) * 24), Y(80 + (i % 3) * 3), steps=3); await p.wait_for_timeout(60)
     await p.mouse.up(); await p.wait_for_timeout(300)
-async def do_play(p, timed=True):
+async def do_play(p, timed=True, goals=2):
+    """頂球：點一下開始；每顆球只能按一次，球快到頭上時按。進 goals 球之後就不按，讓 3 條命用完結束"""
     await p.click('[data-act=play]'); await p.wait_for_timeout(400); b = await p.locator('#scene').bounding_box()
     tapxy = (b['x'] + 64 / 128 * b['width'], b['y'] + 40 / 112 * b['height'])
-    for k in range(3):
-        await p.mouse.click(*tapxy)
-        for _ in range(80):
-            bb = await p.evaluate("PF.ball.b&&{y:PF.ball.b.y,hit:PF.ball.b.hit}")
-            if not bb or bb['hit']: break
-            if timed and bb['y'] > 60: await p.mouse.click(*tapxy); break
-            await p.wait_for_timeout(25)
-        for _ in range(100):
-            if not await p.evaluate("!!PF.ball.b"): break
-            await p.wait_for_timeout(50)
-    for _ in range(40):
+    await p.mouse.click(*tapxy)
+    for _ in range(1500):
         if await p.evaluate("!PF.mode"): break
-        await p.wait_for_timeout(100)
+        info = await p.evaluate("(()=>{const b=PF.ball.b;return b&&{y:b.y,vy:b.vy,hit:b.hit,tapped:b.tapped,score:PF.ball.score,head:PF.PET_Y+16}})()")
+        if info and timed and not info['hit'] and not info['tapped'] and info['score'] < goals and info['vy'] > 0:
+            tt = (info['head'] - info['y']) / max(info['vy'], 1)
+            if tt < 0.13: await p.mouse.click(*tapxy)
+        await p.wait_for_timeout(12)
 async def closeall(p):
     if await p.is_visible('#modal'): await p.click('#mbtns .btn >> nth=0')
 async def main():

@@ -243,6 +243,7 @@ t('離開很久（超過 12 小時上限）也會真的餓到離家出走', () =
 t('餓到 0 之後餵食，飽食會正常回升，倒數取消', () => { const s = hatched(); s.hunger = 8; C.applyTime(s, T0 + 3 * H); assert.equal(s.hunger, 0); assert.ok(s.starveSince); s.inv.food = 3; C.act(s, 'feed', T0 + 3 * H); assert.equal(s.hunger, 10); C.applyTime(s, T0 + 3 * H + 60000); assert.ok(s.hunger > 9); assert.equal(s.starveSince, 0); });
 // 頂球
 t('頂球：結算套用玩耍規則、記錄最佳分數', () => { const s = hatched(); s.energy = 50; s.mood = 40; const r = C.finishBallGame(s, 2, T0); assert.ok(r.ok); assert.equal(s.mood, 55); assert.equal(s.ball.best, 2); assert.equal(s.ball.goals, 2); C.finishBallGame(s, 1, T0); assert.equal(s.ball.best, 2); s.energy = 5; assert.ok(!C.finishBallGame(s, 3, T0).ok); assert.equal(s.ball.best, 2); });
+t('頂球：連續模式，每 3 球 1 金幣、路線最多算 5 球', () => { const s = hatched(); s.energy = 80; const c0 = s.coins; const r = C.finishBallGame(s, 12, T0); assert.ok(r.ok); assert.equal(r.coins, 4); assert.equal(s.coins, c0 + 4); assert.equal(s.ball.best, 12); assert.equal(s.ball.goals, 5); assert.equal(s.path.bird, 10); });
 // 小窩
 t('小窩：升級扣錢、容量變大、最高 4 級', () => { const s = hatched(); s.coins = 2000; assert.equal(C.denCap(s), 1); assert.ok(C.upgradeDen(s).ok); assert.equal(C.denCap(s), 2); assert.equal(s.coins, 1880); C.upgradeDen(s); C.upgradeDen(s); assert.equal(C.denCap(s), 4); assert.ok(!C.upgradeDen(s).ok); });
 t('小窩：沒空位不能搬進去；有空位時搬進去並保留數值', () => {

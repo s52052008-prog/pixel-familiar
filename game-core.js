@@ -45,7 +45,7 @@ const CONFIG = {
   potion: { price: 20, heal: .5, drop: .15 },             // 回復藥水：回復 50% 最大 HP
   rps: { seconds: 2, win: 0, tie: .8, lose: 1.2 },          // 敵人出招前猜拳：贏＝躲開、平手 0.8 倍、輸或超時 1.2 倍
   bond: { seconds: 2, steps: [[0, 1], [20, 2.2], [22, 2.5], [25, 2.7], [28, 3]], cost: 10, restHours: 2 },   // 羈絆之力：2 秒內連打；20 下 2.2 倍、22 下 2.5、25 下 2.7、28 下以上 3 倍（中間按比例）。要花 10 金幣買加油棒，之後 2 小時要休息不能冒險
-  ballGame: { balls: 3 },                                 // 頂球：一回合 3 顆球
+  ballGame: { lives: 3, max: 99, goalCap: 5, coinEvery: 3, coinMax: 10 },   // 頂球：3 條命一直玩到漏接 3 次；每 3 球 1 金幣（最多 10）；冒險路線最多算 5 球
   den: [ { name: '草叢小窩', cap: 1, cost: 0 }, { name: '稻草窩', cap: 2, cost: 120 }, { name: '樹根洞窟', cap: 3, cost: 300 }, { name: '大樹屋', cap: 4, cost: 600 } ],                            // 商店零食「星星糖」
   decorSlots: ['paper', 'wall', 'lamp', 'plant', 'bed', 'rug', 'toy', 'toilet'],
   decor: {                                                                      // 房間家具：純裝飾，不影響數值
@@ -696,10 +696,12 @@ function clearCore(st, i, now = Date.now()) { const c = st.cores[i]; if (!c) ret
 
 /* ---------------- 頂球小遊戲 ---------------- */
 function finishBallGame(st, score, now = Date.now()) {
-  score = int(score, 0, 0, CONFIG.ballGame.balls);
+  const G = CONFIG.ballGame; score = int(score, 0, 0, G.max);
   const r = act(st, 'play', now); if (!r.ok) return r;
-  st.ball.goals += score; st.path.bird += 2 * score; const best = score > st.ball.best; if (best) { st.ball.best = score; if (score > 0) journal(st, now, `頂球創新紀錄：${score} 分！`); }
-  return Object.assign(r, { score, best });
+  const counted = Math.min(score, G.goalCap), coins = Math.min(G.coinMax, Math.floor(score / G.coinEvery));
+  st.ball.goals += counted; st.path.bird += 2 * counted; st.coins += coins;
+  const best = score > st.ball.best; if (best) { st.ball.best = score; if (score > 0) journal(st, now, `頂球創新紀錄：連續進 ${score} 球！`); }
+  return Object.assign(r, { score, best, coins });
 }
 
 /* ---------------- 小窩：升級、讓多隻寵物住進來 ---------------- */
