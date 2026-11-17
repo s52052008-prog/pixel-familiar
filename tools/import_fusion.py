@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """血繼幻獸圖（綠底，4 欄＝幼年／少年／成年／高階 × 2 排＝睜眼／閉眼）→ sprites/fusion/<名>_<1..4>_<open|closed>.png
 用法：python3 tools/import_fusion.py <名稱> [原圖路徑] [--base=主屬性] [--eyes=左眼x,右眼x,y] [--iris=#深色,#亮色]
+  --spark：有細電光的（電系組合）把混到綠底的藍綠色換回電光青
+  --eyesrc=X1,Y1,X2,Y2：原圖上左右眼中心（高階那欄），自動換算位置（比 --eyes 準）
   --mouth=x,y：補一個小小的 ω 嘴
   --clean=x0,y0,x1,y1：先把臉上這塊範圍的深色殘影清掉（避免看起來像多一隻眼睛）
   --eyesize=beast：四腳獸的高階用兇兇的獸眼；--eyesize=4：臉比較小時用 4×4 的眼睛；--keepclosed：閉眼保留原圖（原本就畫得好時）
@@ -82,7 +84,7 @@ def clean_face(a, box, keep):
     return a
 
 
-def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esize=5, keepclosed=False, clean=None, mouth=None):
+def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esize=5, keepclosed=False, clean=None, mouth=None, eyesrc=None, spark=False):
     path = path or os.path.join(ROOT, 'art', 'src', 'fusion', name + '.png')
     a = np.asarray(Image.open(path).convert('RGB')); m = mask_of(a)
     rows = runs(ndimage.binary_closing(m.sum(1) > 0, iterations=6), 40)[:2]
@@ -98,6 +100,15 @@ def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esi
         for mm in ms:
             b = bbox(mm); tw, th = min(CELL - 2, round((b[2] - b[0]) * k)), min(45, round((b[3] - b[1]) * k))
             ims.append(downsample(a, mm, b, tw, th, (CELL - tw) // 2, 46 - th))
+        if eyesrc and st == 4:   # 原圖上的眼睛中心 → 48 格座標（和縮圖同一個比例），眼睛就不會放歪
+            b = bbox(ms[0]); tw = min(CELL - 2, round((b[2] - b[0]) * k)); th = min(45, round((b[3] - b[1]) * k)); ox, oy = (CELL - tw) // 2, 46 - th
+            mp = lambda X, Y: ((X - b[0]) * tw / (b[2] - b[0]) + ox, (Y - b[1]) * th / (b[3] - b[1]) + oy)
+            (lx, ly), (rx, ry) = mp(*eyesrc[:2]), mp(*eyesrc[2:4]); s5 = 5 if esize in (5, 'beast') else 4
+            eyes = [round(lx - s5 / 2), round(rx - s5 / 2), round((ly + ry) / 2 - s5 / 2)]; print('眼睛換算成', eyes)
+        for im in (ims if spark else []):   # --spark：細細的電光（青色）縮小後會混到綠底，變成藍綠色：換回電光青；樹葉（綠、不帶藍）不受影響
+            r, g, bl = im[..., 0].astype(int), im[..., 1].astype(int), im[..., 2].astype(int)
+            teal = (im[..., 3] > 0) & (r < 120) & (g > r + 40) & (bl > r + 30) & (np.abs(g - bl) < 70)   # 混到綠底的電光：紅很少、綠藍差不多；水的藍（藍比綠高很多）不會被改
+            im[teal, 0] = np.clip(140 + (g[teal] - 120) // 2, 120, 220); im[teal, 1] = 235; im[teal, 2] = 255
         ims, pal = quantize(ims, 24); oc = min(pal.tolist(), key=lambda q: lum(q)); ims = [add_outline(i, oc) for i in ims]
         if eyes and st == 4:
             ir = [hexc(c) for c in iris]
@@ -122,4 +133,4 @@ if __name__ == '__main__':
     opt = lambda k: next((x[len(k) + 3:] for x in sys.argv[1:] if x.startswith('--' + k + '=')), None)
     args = [x for x in sys.argv[1:] if not x.startswith('--')]
     ey = opt('eyes'); ir = opt('iris')
-    main(args[0], args[1] if len(args) > 1 else None, opt('base'), [int(v) for v in ey.split(',')] if ey else None, ir.split(',') if ir else ('#2a3a8a', '#e8a030'), (opt('eyesize') if opt('eyesize') == 'beast' else int(opt('eyesize') or 5)), '--keepclosed' in sys.argv, [int(v) for v in opt('clean').split(',')] if opt('clean') else None, [int(v) for v in opt('mouth').split(',')] if opt('mouth') else None)
+    main(args[0], args[1] if len(args) > 1 else None, opt('base'), [int(v) for v in ey.split(',')] if ey else None, ir.split(',') if ir else ('#2a3a8a', '#e8a030'), (opt('eyesize') if opt('eyesize') == 'beast' else int(opt('eyesize') or 5)), '--keepclosed' in sys.argv, [int(v) for v in opt('clean').split(',')] if opt('clean') else None, [int(v) for v in opt('mouth').split(',')] if opt('mouth') else None, [int(v) for v in opt('eyesrc').split(',')] if opt('eyesrc') else None, '--spark' in sys.argv)
