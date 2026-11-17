@@ -115,7 +115,7 @@ async def main():
         await p.screenshot(path=f'{OUT}/07_adult.png', full_page=True)
         await p.evaluate("PF.debug.set({xp:1200})"); await p.evaluate("PF.debug.age(200)"); await p.wait_for_timeout(1500)
         ok('沒有特殊事件不能高階', (await st(p))['stage'] == 'adult')
-        evname = await p.evaluate("PF.PC.EVENT_TEXT[PF.PC.ROUTE_EVENT[PF.state.route]]"); ok('畫面顯示還缺該屬性的特殊事件', evname in await p.inner_text('#growText'), await p.inner_text('#growText'))
+        evname = await p.evaluate("PF.PC.ascendInfo(PF.state).task.text"); g = await p.inner_text('#growText'); ok('畫面顯示還缺試煉和該屬性的專屬任務', evname in g and '關以後的 Boss' in g, g)
         # 日記
         await p.click('#bMenu'); await p.click('#mJournal'); await p.wait_for_timeout(300); txt = await p.inner_text('#sheet')
         ok('日記自動記錄孵化與進化', '孵化' in txt and '少年期' in txt and '成年期' in txt); await p.screenshot(path=f'{OUT}/08_journal.png'); await closeall(p)

@@ -233,7 +233,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.35.0';
+const VERSION='1.36.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1165,7 +1165,7 @@ function buildStats(){$('stats').innerHTML=STATS.map(([k,l,ic,c])=>`<div class="
 function dayCount(){return Math.floor((Date.now()-s.hatchedAt)/86400000)+1}
 function growLine(){
  if(!s.hatched)return'';const now=Date.now(),q=PC.stageReq(s,now),hint=PC.tendencyHint(s);let g=`💗 親密度 ${Math.round(s.bond)}`;
- if(q){const left=[];if(!q.ageOk)left.push(`${Math.ceil(q.hours-q.age)} 小時`);if(!q.xpOk)left.push(`${q.xp-s.xp} XP`);if(!q.eventOk)left.push(`「${PC.EVENT_TEXT[PC.ROUTE_EVENT[s.route]]}」事件`);if(!q.matOk&&q.mat)left.push(`素材「${q.mat}」`);
+ if(q){const left=[];if(!q.ageOk)left.push(`${Math.ceil(q.hours-q.age)} 小時`);if(!q.xpOk)left.push(`${q.xp-s.xp} XP`);if(!q.eventOk){const A=PC.ascendInfo(s);if(!A.trial)left.push(`打贏第 ${CONFIG.ascend.trialStage} 關以後的 Boss`);if(A.task&&!A.task.done)left.push(`${A.task.text}（${A.task.need>1?fmtN(A.task.have)+' / '+fmtN(A.task.need):'未完成'}）`)}if(!q.matOk&&q.mat)left.push(`素材「${q.mat}」`);
   g+=left.length?` · 距離${STAGE_NAME[q.next]}：${left.join('、')}`:` · 即將長成${STAGE_NAME[q.next]}！`}
  return g+(hint?` · ${hint}`:'')}
 const sexMark=p=>p&&p.sex==='m'?' ♂':p&&p.sex==='f'?' ♀':'';
@@ -1284,8 +1284,8 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',`
 <p><b>🪺 小窩：</b>點院子裡的小窩可以升級（4 級，最多住 4 隻）。迎接新蛋時，小窩有空位的話，現在的夥伴會搬進去休息，不用告別。</p>
 <p><b>🛒 商店：</b>用金幣買家具，擺進小窩裡（在畫面上點兩下小窩就能進去，裡面右上角「🛠 小窩」可以升級、換夥伴）。家具是裝飾，晚上有燈的房間會比較亮。商店也賣食物、種子和星星糖。</p>
 <p><b>🎯 每日任務：</b>每天 3 個（★ 簡單、★★ 普通、★★★ 困難），越難獎勵越好；3 個都完成任務等級 +1，之後更難、獎勵更好。</p>
-<p><b>新屬性的高階條件：</b>🪨 打通第 25 關「大地裂谷」＋累積 10 萬步；🐦 第 30 關「天空之巔」＋頂球進球 30 顆；⚡ 第 35 關「雷雲祭壇」＋發動羈絆之力 5 次；⚙️ 第 40 關「鋼鐵礦坑」＋清理 50 次。</p>
-<p><b>特殊事件：</b>🔥 打通第 ${C.bossStages.volcano} 關「火山遺跡」；💧 親密度 60 以上、晚上摸摸觸發「月泉」；🌿 打通第 ${C.bossStages.oldtree} 關「古樹」並收成 10 次。</p>
+<p><b>高階條件（七個屬性都一樣）：</b>① 打贏第 ${C.ascend.trialStage} 關以後任一隻 Boss（通過試煉，第一次必掉自己屬性的素材）② 完成專屬任務 ③ 用掉 1 個該屬性素材。</p>
+<p><b>專屬任務：</b>${PC.ROUTES.map(r=>ROUTE_ICON[r]+' '+C.ascend.tasks[r][2]).join('；')}。</p>
 <p><b>親密度：</b>20 解鎖撒嬌與早安問候、50 每天收到小禮物、80 戰鬥時撐住一次。</p>
 <p><b>⚔️ 戰鬥技巧：</b>戰鬥地點依怪獸屬性變成草原、岩石地、水邊、森林或星之塔。招式有撞擊、屬性技、蓄力（下一擊 ×2）、防禦、回復藥水和逃跑，按鈕上會顯示預估傷害（▲效果好、▼效果差）。快被打倒時會出現「💗 羈絆之力」：花 10 金幣買加油棒，倒數後 2 秒內連打螢幕，20 下 2.2 倍、22 下 2.5 倍、25 下 2.7 倍、28 下以上 3 倍（每場一次）；發揮超常能力後要休息 2 小時才能再冒險。敵人出招前會猜拳：猜贏完全躲開，平手受 0.8 倍傷害，猜輸或沒選受 1.2 倍。</p>
 <p><b>每天：</b>第一次打開送金幣 +${C.daily.coins}、食物 +${C.daily.food}。沒食物又沒錢時可以免費「採集」。冒險不限次數，有體力就能出發。</p>
@@ -1746,7 +1746,7 @@ function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond
  if(r.potion)rows.push(['potion','回復藥水','+1','']);
  if(r.ember)rows.push(['ember','經驗火種','+1','Boss 寶物！']);
  if(r.mat)rows.push(['mat_'+r.mat,CONFIG.materials[r.mat],'+1','💎 高階進化素材！']);
- const notes=[];if(r.unlocked)notes.push(`🗺️ 發現新地點！解鎖第 ${r.unlocked} 關`);for(const e of r.events)if(e!=='place')notes.push(`✨ 發生了「${PC.EVENT_TEXT[e]}」事件！`);
+ const notes=[];if(r.trial)notes.push(`🏅 通過${ROUTE_LABEL[r.trial]}的高階試煉！`);if(r.unlocked)notes.push(`🗺️ 發現新地點！解鎖第 ${r.unlocked} 關`);for(const e of r.events)if(e!=='place')notes.push(`✨ 發生了「${PC.EVENT_TEXT[e]}」事件！`);
  if(win&&!B.full)notes.push('今天的冒險獎勵次數用完了，只拿到少量經驗');
  if(win){blog('🎉 勝利！');sfx('level');spawn('star',10,{x:40,y:70,vy:-30,jx:50,life:1.4},bparts)}
  else if(win===false){blog('輸了…沒關係，回家休息吧。');notes.push('下次可以先蓄力、帶藥水，或在危險時用羈絆之力！');sfx('no')}

@@ -61,10 +61,10 @@ t('少年期：12h 與 300 XP 都要達到', () => {
   s.xp = 299; assert.equal(C.checkStages(s, T0 + 12 * H).length, 0); s.xp = 300; assert.equal(C.checkStages(s, T0 + 12 * H)[0].to, 'adolescent');
 });
 t('成年期：48h 與 800 XP 邊界', () => { const s = hatched(); s.xp = 799; assert.equal(C.checkStages(s, T0 + 48 * H).map(x => x.to).join(), 'juvenile,adolescent'); s.xp = 800; assert.equal(C.checkStages(s, T0 + 48 * H)[0].to, 'adult'); });
-t('高階：168h、2000 XP 且完成特殊事件', () => {
+t('高階：168h、2000 XP 且完成試煉與任務', () => {
   const s = hatched(); s.xp = 2000; s.route = 'flame'; s.inv.mats.flame = 1; const tr = C.checkStages(s, T0 + 168 * H);
   assert.deepEqual(tr.map(x => x.to), ['juvenile', 'adolescent', 'adult']); assert.equal(s.route, 'flame');
-  s.events.volcano = true; assert.equal(C.checkStages(s, T0 + 168 * H - 1).length, 0); assert.equal(C.checkStages(s, T0 + 168 * H)[0].to, 'ascended');
+  s.trials.flame = true; s.adv.wins = 30; assert.equal(C.checkStages(s, T0 + 168 * H - 1).length, 0); assert.equal(C.checkStages(s, T0 + 168 * H)[0].to, 'ascended');
 });
 t('一次跨越多個門檻時依序記錄', () => { const s = hatched(); s.xp = 5000; const tr = C.checkStages(s, T0 + 500 * H); assert.deepEqual(tr.map(x => x.to), ['juvenile', 'adolescent', 'adult']); assert.ok(s.journal.length >= 3); });
 
@@ -74,9 +74,9 @@ t('路線平手：先比特殊事件，再依 tide > forest > flame', () => {
   const s = hatched(); s.path = { flame: 5, tide: 5, forest: 5 }; assert.equal(C.pickRoute(s), 'tide');
   s.events.volcano = true; assert.equal(C.pickRoute(s), 'flame'); s.events.volcano = false; s.path.tide = 4; assert.equal(C.pickRoute(s), 'forest');
 });
-t('缺少特殊事件不能高階進化（三條路線）', () => {
+t('缺少試煉或任務不能高階進化；水系要親密度 60＋晚上摸摸', () => {
   for (const rt of ['flame', 'tide', 'forest']) { const s = hatched(); s.xp = 2000; s.route = rt; s.inv.mats[rt] = 1; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); assert.equal(s.route, rt); }
-  const s = hatched(); s.xp = 2000; s.route = 'tide'; s.inv.mats.tide = 1; s.events.moonspring = true; s.bond = 59; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); s.bond = 60; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
+  const s = hatched(); s.xp = 2000; s.route = 'tide'; s.inv.mats.tide = 1; s.trials.tide = true; s.events.moonspring = true; s.bond = 59; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); s.bond = 60; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
 });
 
 // 7. 零金幣、零食物不會卡死
@@ -146,10 +146,10 @@ t('種植：用掉種子，2 小時前不能收成，2 小時整可以', () => {
 t('種植：沒種子不能種；每格只能一株；金幣買種子', () => { const s = hatched(); s.inv.seeds = 0; assert.equal(C.plant(s, 1, T0).code, 'noseed'); assert.ok(C.buySeed(s).ok); assert.equal(s.coins, 47); assert.ok(C.plant(s, 1, T0).ok); assert.ok(!C.plant(s, 9, T0).ok); });
 t('種植：時間倒退不會變成負進度', () => { const s = hatched(); C.plant(s, 0, T0); const q = C.plotState(s, 0, T0 - H); assert.equal(q.progress, 0); assert.ok(!q.ripe); });
 t('種植：存檔往返保留田地', () => { const s = hatched(); C.plant(s, 2, T0); const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(r.plots[2].at, T0); assert.equal(r.plots.length, 3); });
-t('森系高階：收成 10 次＋古樹事件', () => {
-  const s = hatched(); s.xp = 2000; s.route = 'forest'; s.inv.mats.forest = 1; s.events.oldtree = true; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult');
-  s.inv.seeds = 20; let now = T0; for (let i = 0; i < 10; i++) { C.plant(s, 0, now); now += 2 * H; C.harvest(s, 0, now); }
-  assert.equal(s.harvests, 10); C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
+t('森系高階：收成 15 次＋試煉', () => {
+  const s = hatched(); s.xp = 2000; s.route = 'forest'; s.inv.mats.forest = 1; s.trials.forest = true; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult');
+  s.inv.seeds = 20; let now = T0; for (let i = 0; i < 15; i++) { C.plant(s, 0, now); now += 2 * H; C.harvest(s, 0, now); }
+  assert.equal(s.harvests, 15); C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
 });
 // 每日小目標
 t('每日目標：每天 3 個、同一天固定、隔天換新', () => {
@@ -232,9 +232,11 @@ t('種植：紅色＝蘋果、紫色＝莓果；成熟 6 小時內是好品質�
   C.plant(s, 1, T0, () => 0); r = C.harvest(s, 1, T0 + 2 * H + 7 * H, () => 0); assert.ok(r.over); assert.equal(s.inv.food, 5); assert.equal(s.inv.fresh.food, 0);
   C.plant(s, 2, T0, () => 0); assert.ok(C.plotState(s, 2, T0 + 27 * H).rotten); r = C.harvest(s, 2, T0 + 27 * H); assert.ok(r.rotten); assert.equal(s.inv.food, 5); assert.ok(C.plotState(s, 2, T0 + 27 * H).empty); });
 t('能力水果：給對的屬性吃，體力 +10、經驗 +15 額外加成', () => { const s = hatched(); s.route = 'elec'; s.hunger = 10; s.energy = 20; s.coins = 99; const r = C.act(s, 'feed', T0, 'banana'); assert.ok(r.ok && r.fav && r.power); assert.equal(s.energy, 40); assert.equal(s.xp, 25); const w = hatched(); w.route = 'tide'; w.hunger = 10; w.coins = 99; assert.ok(!C.act(w, 'feed', T0, 'banana').power); });
-t('高階進化要有該屬性的素材，進化時用掉；Boss 第一次必掉素材', () => { const s = hatched(); s.xp = 2000; s.route = 'flame'; s.events.volcano = true; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); assert.equal(C.stageReq(s, T0 + 200 * H).mat, '火種源');
+t('高階進化要有該屬性的素材，進化時用掉；第 20 關以後 Boss：通過試煉、第一次必掉自己屬性的素材', () => { const s = hatched(); s.xp = 2000; s.route = 'flame'; s.trials.flame = true; s.adv.wins = 30; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); assert.equal(C.stageReq(s, T0 + 200 * H).mat, '火種源');
   s.inv.mats.flame = 1; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended'); assert.equal(s.inv.mats.flame, 0);
-  const b = hatched(); b.energy = 100; b.adv.stage = 15; const st = C.startAdventure(b, 15, T0); const o = C.finishAdventure(b, 15, 'win', st.full, T0, () => .99); assert.equal(o.mat, 'flame'); assert.equal(b.inv.mats.flame, 1); });
+  const b = hatched(); b.route = 'tide'; b.energy = 100; b.adv.stage = 15; let st = C.startAdventure(b, 15, T0); let o = C.finishAdventure(b, 15, 'win', st.full, T0, () => .99); assert.equal(o.mat, undefined);
+  b.adv.stage = 20; b.energy = 100; st = C.startAdventure(b, 20, T0); o = C.finishAdventure(b, 20, 'win', st.full, T0, () => .99); assert.equal(o.mat, 'tide'); assert.equal(o.trial, 'tide'); assert.equal(b.inv.mats.tide, 1); assert.ok(b.trials.tide);
+  b.energy = 100; st = C.startAdventure(b, 20, T0); o = C.finishAdventure(b, 20, 'win', st.full, T0, () => .99); assert.equal(o.mat, undefined); b.energy = 100; st = C.startAdventure(b, 20, T0); o = C.finishAdventure(b, 20, 'win', st.full, T0, () => .1); assert.equal(o.mat, 'tide'); });
 t('太久沒餵：餓到 0 再過 12 小時就離家出走；走 1 萬步找回來', () => { const s = hatched(); s.hunger = 40; C.applyTime(s, T0 + 9 * H); assert.equal(s.hunger, 4); assert.equal(s.runaway, null);
   C.applyTime(s, T0 + 10 * H + 11 * H); assert.equal(s.hunger, 0); assert.equal(s.runaway, null); const r = C.applyTime(s, T0 + 10 * H + 12 * H); assert.ok(s.runaway); assert.ok(r.events.includes('runaway'));
   assert.equal(C.act(s, 'feed', T0 + 23 * H).code, 'runaway'); assert.ok(C.canAdventure(s, 1, T0 + 23 * H)); s.bond = 50;
@@ -299,12 +301,11 @@ t('加上屬性不會改變舊蛋的外觀', () => { const G = C.makeGenome(1234
 t('配對：寶寶繼承爸媽其中一方的屬性（偶爾突變）', () => { const A = Object.assign(C.makeGenome(1), { el: 'elec' }), B = Object.assign(C.makeGenome(2), { el: 'metal' }); let same = 0; for (let i = 0; i < 400; i++) { const g = C.breedGenome(A, B); if (g.el === 'elec' || g.el === 'metal') same++; } assert.ok(same > 370); });
 t('基因碼帶屬性；舊的 13 碼基因也能讀', () => { const G = Object.assign(C.makeGenome(9), { el: 'bird' }); assert.equal(C.decodeGenome(C.encodeGenome(G)).el, 'bird'); const old = C.encodeGenome(G).split('.').slice(0, 13).join('.'); assert.ok(C.EL_LIST.includes(C.decodeGenome(old).el)); });
 t('舊存檔：已孵化沒屬性 → 有照顧點數用點數、沒有就用基因', () => { const a = C.sanitize({ v: 7, hatched: true, seed: 5, path: { metal: 9 } }, T0); assert.equal(a.route, 'metal'); const b = C.sanitize({ v: 7, hatched: true, seed: 5 }, T0); assert.equal(b.route, C.makeGenome(5).el); });
-t('新路線高階條件：Boss 事件＋累積條件', () => {
-  const mk = r => { const s = hatched(); s.xp = 2000; s.route = r; s.inv.mats[r] = 1; C.checkStages(s, T0 + 200 * H); return s; };
-  let s = mk('earth'); s.events.canyon = true; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); s.steps.total = 100000; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
-  s = mk('bird'); s.events.skypeak = true; s.ball.goals = 29; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); s.ball.goals = 30; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
-  s = mk('elec'); s.events.thunder = true; s.bondUses = 5; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
-  s = mk('metal'); s.events.mine = true; s.cleanups = 49; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); s.cleanups = 50; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended');
+t('高階條件（V1.36 平衡）：試煉＋專屬任務＋素材，七屬性都一樣', () => {
+  const need = { flame: s => { s.adv.wins = 30; }, tide: s => { s.events.moonspring = true; s.bond = 60; }, forest: s => { s.harvests = 15; }, earth: s => { s.steps.total = 60000; }, bird: s => { s.ball.goals = 30; }, elec: s => { s.bondUses = 5; }, metal: s => { s.cleanups = 40; } };
+  for (const r in need) { const s = hatched(); s.xp = 2000; s.route = r; s.inv.mats[r] = 1; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult', r);
+    need[r](s); C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult', r + ' 沒有試煉'); s.trials[r] = true; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended', r); }
+  const s = hatched(); s.route = 'metal'; s.cleanups = 39; assert.equal(C.ascendInfo(s).task.done, false); assert.equal(C.ascendInfo(s).task.need, 40);
 });
 t('冒險區域：21~40 關分別以土、鳥、電、金為主；Boss 關觸發對應事件', () => {
   const count = (from, r) => { let c = 0; for (let n = from; n < from + 5; n++) if (C.foeFor(n).route === r) c++; return c; };
@@ -314,6 +315,7 @@ t('冒險區域：21~40 關分別以土、鳥、電、金為主；Boss 關觸發
 t('兩隻一起：帶出來、換照顧、第二隻狀態減半、回小窩', () => { const s = hatched(); s.den.level = 2; s.roster.push(C.snapshotPet(Object.assign(hatched(), { name: '小火' }))); const r = C.bringOut(s, 0, T0); assert.ok(r.ok); assert.equal(s.pair.name, '小火'); assert.equal(s.roster.length, 0); assert.equal(C.petCount(s), 2);
   s.hunger = 80; s.pair.hunger = 80; s.lastTick = T0; C.applyTime(s, T0 + 4 * 3600e3); const dMain = 80 - s.hunger, dPair = 80 - s.pair.hunger; assert.ok(Math.abs(dPair - dMain / 2) < 0.6, dMain + ' ' + dPair);
   const nm = s.name; assert.ok(C.switchPair(s, T0 + 4 * 3600e3).ok); assert.equal(s.name, '小火'); assert.equal(s.pair.name, nm); assert.ok(C.sendIn(s, T0 + 4 * 3600e3).ok); assert.equal(s.pair, null); assert.equal(s.roster.length, 1); });
+t('舊存檔：以前打過的屬性事件（水系除外）算通過試煉', () => { const r = C.sanitize({ v: 7, hatched: true, events: { volcano: true, moonspring: true, mine: true } }, T0); assert.ok(r.trials.flame); assert.ok(r.trials.metal); assert.ok(!r.trials.tide); });
 t('存檔：pair、主人名字、性別、愛的小窩都會保留', () => { const s = hatched(); s.owner = '冠宏<b>'; s.pair = C.snapshotPet(Object.assign(hatched(), { name: '小火' })); s.loveNest = true; const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(r.owner, '冠宏b'); assert.equal(r.pair.name, '小火'); assert.ok(['m', 'f'].includes(r.sex)); assert.ok(['m', 'f'].includes(r.pair.sex)); assert.equal(r.loveNest, true); });
 t('愛的小窩：要買、要成年、要一公一母，生出一顆蛋', () => { const s = hatched(); s.stage = 'adult'; s.sex = 'm'; s.mood = 80; s.coins = 500; const p = C.snapshotPet(Object.assign(hatched(), { name: '小花', stage: 'adult', sex: 'f' })); s.pair = p;
   assert.match(C.canLove(s, 'pair', T0), /愛的小窩/); assert.ok(C.buyLoveNest(s).ok); assert.equal(s.coins, 200); s.pair.sex = 'm'; assert.match(C.canLove(s, 'pair', T0), /一公一母/); s.pair.sex = 'f';
