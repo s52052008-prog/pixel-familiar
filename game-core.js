@@ -37,6 +37,7 @@ const CONFIG = {
   bossStages: { volcano: 15, oldtree: 20, canyon: 25, skypeak: 30, thunder: 35, mine: 40 },
   newRoutes: { stepsForEarth: 100000, goalsForBird: 30, bondForElec: 5, cleanForMetal: 50, earthEvery: 2000 },
   breed: { cost: 20, cooldownH: 6, minMood: 50, basket: 6 },
+  piggy: { base: .5, per: .25, maxLv: 30, capHours: 12, minMood: 30, sleepRate: .5, pairShare: .5 },   // 存錢筒（被動收入）：每小時 0.5＋等級×0.25（最多算到 Lv.30），最多存 12 小時
   loveNest: { cost: 300, cooldownH: 12, mood: 10 },          // 愛的小窩：買一次，成年期以上的一公一母可以進去生蛋
   pair: { rate: .5, advMinEnergy: 20, foeHp: 1.5, xpShare: .6 },   // 第二隻一起出來：狀態變化速度減半；一起冒險時敵人血量 ×1.5、第二隻分到 6 成經驗
   farm: { plots: 3, maxPlots: 6, expand: [30, 60, 90], growHours: 2, fruitMin: 2, fruitMax: 3, freshHours: 6, rotHours: 24, xp: 5, forest: 3, seedPrice: 3 },   // 收成：蘋果、莓果各隨機 1～2 顆；田可以花錢擴建到 6 格     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
@@ -196,7 +197,7 @@ function fresh(now = Date.now()) {
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] }, goalLv: 0,
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
-    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0,
+    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0,
     events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
@@ -259,6 +260,7 @@ function sanitize(o, now = Date.now()) {
   r.pair = o.pair && typeof o.pair === 'object' && o.pair.hatched && r.hatched ? sanitizePet(o.pair, now) : null;
   if (r.pair && r.roster.length > CONFIG.den.length - 2) r.roster.length = CONFIG.den.length - 2;
   r.owner = typeof o.owner === 'string' ? o.owner.replace(/[<>&"]/g, '').trim().slice(0, 12) : '';
+  r.piggy = num(o.piggy, 0, 0, 1e5);
   r.loveNest = o.loveNest === true; r.loveAt = num(o.loveAt, 0, 0, 9e15);
   r.harvests = int(o.harvests, 0, 0, 1e7); r.bondUses = int(o.bondUses, 0, 0, 1e7); r.cleanups = int(o.cleanups, 0, 0, 1e7);
   if (Array.isArray(o.plots)) r.plots = Array.from({ length: Math.max(CONFIG.farm.plots, Math.min(CONFIG.farm.maxPlots, o.plots.length)) }, (_, i) => ({ at: num(o.plots[i] && o.plots[i].at, 0, 0, 9e15), k: o.plots[i] && o.plots[i].k === 'berry' ? 'berry' : 'food' }));
@@ -315,9 +317,15 @@ function applyTime(st, now = Date.now()) {
     if (st.starveSince && !st.runaway && now - st.starveSince >= CONFIG.runaway.starveHours * H) { st.runaway = { at: now, got: 0 }; st.sleeping = false; journal(st, now, '肚子太餓，離家出走了…'); events.push('runaway'); }
     const N = CONFIG.neglect; if (Math.min(st.hunger, st.mood, st.clean) < N.below) st.bond = clamp(st.bond - N.bondPerHour * eff);   // 沒照顧好，親密度會掉
     if (st.pair) decayPair(st, eff);
+    if (!st.runaway && st.mood >= CONFIG.piggy.minMood) st.piggy = Math.min(piggyCap(st), (st.piggy || 0) + piggyRate(st) * eff * (st.sleeping ? CONFIG.piggy.sleepRate : 1));
   }
   return { hours, eff, warn: hours > CONFIG.jumpWarnDays * 24 ? 'jump' : null, events };
 }
+/* 存錢筒：幻獸等級越高，每小時存越多；金系 ×1.5；一起出來的第二隻再加牠的一半 */
+function piggyRateOf(p) { const P = CONFIG.piggy, T = traitOf(p.route); return (P.base + P.per * Math.min(level(p.xp), P.maxLv)) * (T.coinX || 1); }
+function piggyRate(st) { if (!st.hatched) return 0; return piggyRateOf(st) + (st.pair ? piggyRateOf(st.pair) * CONFIG.piggy.pairShare : 0); }
+function piggyCap(st) { return Math.max(1, Math.round(piggyRate(st) * CONFIG.piggy.capHours)); }
+function collectPiggy(st, now = Date.now()) { applyTime(st, now); const n = Math.floor(st.piggy || 0); if (n < 1) return { ok: false, n: 0, msg: '存錢筒裡還沒有金幣' }; st.coins += n; st.piggy -= n; return { ok: true, n }; }
 /* 一起出來的第二隻：狀態變化速度只有一半（不會離家出走，餓到 0 只會心情、親密度往下掉） */
 function decayPair(st, eff) {
   const p = st.pair, R = CONFIG.rates[st.sleeping ? 'sleep' : 'awake'], T = traitOf(p.route), k = eff * CONFIG.pair.rate;
@@ -882,7 +890,7 @@ const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
-  canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  piggyRate, piggyCap, collectPiggy, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

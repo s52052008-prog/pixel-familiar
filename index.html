@@ -233,7 +233,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.31.1';
+const VERSION='1.32.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -889,7 +889,7 @@ function draw(now){
   ctx.drawImage(bgCache,0,0);
   const ca=ph==='night'?.35:ph==='dusk'?.75:1;ctx.globalAlpha=ca;
   ctx.drawImage(cloudCv,Math.round(((t*2)%(W+60))-30),10);ctx.drawImage(cloudCv,Math.round(((t*1.3+80)%(W+60))-30),26);ctx.globalAlpha=1;
-  drawAmbient(now,ph);
+  drawAmbient(now,ph);drawPig(now);
   const nowMs=Date.now();for(let i=0;i<s.plots.length;i++){const q=PC.plotState(s,i,nowMs),st=plotStage(q);ctx.drawImage(PLOT_SPR[st],1+i*13,91+(i%2)*6);if((st==='food'||st==='berry')&&Math.floor(now/400)%3===0){ctx.fillStyle='#ffffff';ctx.fillRect(6+i*13,89+(i%2)*6,1,1)}
    if(st==='rot'&&!rm()){const a=now/300+i;ctx.drawImage(ICV.fly,Math.round(11+i*13+5*Math.cos(a)),Math.round(93+(i%2)*6+3*Math.sin(a*1.7)))}}}
  if(mode==='play')drawRing();
@@ -959,6 +959,24 @@ function drawAmbient(now,ph){if(rm())return;const t=now/1000;
   if(f){ctx.fillRect(x-2,y,2,2);ctx.fillRect(x+1,y,2,2)}else{ctx.fillRect(x-1,y,1,2);ctx.fillRect(x+1,y,1,2)}ctx.fillStyle='#2a1a10';ctx.fillRect(x,y,1,2)}
  if(ph==='day'){const bx=((t*9)%(W+80))-40;ctx.fillStyle='#2a3a5a';for(const[ox,oy]of[[0,0],[9,4]]){const x=Math.round(bx+ox),y=Math.round(18+oy+Math.sin(t*2+ox)),w=Math.floor(t*4+ox)%2;ctx.fillRect(x-2,y-w,2,1);ctx.fillRect(x,y,1,1);ctx.fillRect(x+1,y-w,2,1)}}}
 /* ---------------- 小窩裡的其他寵物（縮小、睡覺） ---------------- */
+/* ---------------- 存錢筒（院子右下角的小豬）：點一下領金幣 ---------------- */
+const PIG={x:110,y:92,w:15,h:11};let pigCv=null;
+function makePig(){const g=grid(PIG.w+2,PIG.h+2),B='#ff9ab8',D='#e0708f',L='#ffd0de';
+ ellipse(g,8,7,6.5,4.5,(x,y,nx,ny)=>ny<-.35&&nx<.2?L:ny>.45?D:B);   // 身體
+ for(const[x,y]of[[4,11],[5,11],[10,11],[11,11]])px(g,x,y,D);   // 腳
+ px(g,5,2,D);px(g,6,2,D);px(g,6,3,B);   // 耳朵
+ for(let y=6;y<=8;y++){px(g,14,y,'#ff7aa0');px(g,15,y,'#ff7aa0')}px(g,15,6,'#c84a72');px(g,15,8,'#c84a72');   // 鼻子
+ px(g,12,5,'#3a2020');px(g,1,6,D);px(g,0,5,D);   // 眼睛、尾巴
+ for(let x=7;x<=10;x++)px(g,x,3,'#5a2a3a');   // 投幣孔
+ outline(g,'#5a2a3a');return gridCanvas(g)}
+function drawPig(now){if(!s.hatched||curView()!=='yard')return;if(!pigCv)pigCv=makePig();ctx.drawImage(pigCv,PIG.x-1,PIG.y-1);
+ const n=Math.floor(s.piggy||0),full=n>=PC.piggyCap(s);if(n<1)return;
+ const bob=rm()?0:Math.round(Math.sin(now/300)),ic=ICV.coin;const ns=String(n),cx=PIG.x+PIG.w-ic.width,nx=cx-ns.length*4-1;ctx.drawImage(ic,cx,PIG.y-ic.height-2+bob);pixNum(ns,nx,PIG.y-ic.height+1+bob,full?'#ffe066':'#ffffff');
+ if(full&&!rm()&&Math.floor(now/250)%2)spawn('spark',1,{x:PIG.x+8,y:PIG.y-8,vy:-8,life:.5,spread:10})}
+const overPig=(x,y)=>s.hatched&&curView()==='yard'&&x>=PIG.x-3&&x<=PIG.x+PIG.w+3&&y>=PIG.y-14&&y<=PIG.y+PIG.h+3;
+function tapPig(){const r=PC.collectPiggy(s,Date.now());if(!r.ok){say(`存錢筒還在存…（每小時約 ${PC.piggyRate(s).toFixed(1)} 枚）`,{log:false});sfx('tap');return}
+ sfx('level');buzz(15);spawn('coin',Math.min(8,2+Math.floor(r.n/5)),{x:PIG.x+8,y:PIG.y,vy:-26,jx:24,life:1,spread:8,stagger:.05});
+ say(`${s.name} 存了 ${r.n} 枚金幣給${ownerName()}！🐷`);save();renderUI()}
 /* ---------------- 第二隻一起出來：自己走來走去、跟主角玩、一起睡 ---------------- */
 const PAIR={x:84,target:null,face:-1,next:0,anim:null,t0:0,cb:null,playAt:0};
 function pairKey(){const p=s.pair;return petKey(gidOf(p),formCode(p.stage,p.route))}
@@ -1100,7 +1118,7 @@ function renderUI(){
  $('stageText').textContent=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome&&F.genome.el?' · 會孵出'+ROUTE_LABEL[F.genome.el]+'的新物種':''}`:`${s.route?ROUTE_ICON[s.route]+ROUTE_LABEL[s.route]+' · ':''}${STAGE_NAME[s.stage]} · ${F.name}${rar} · 第 ${dayCount()} 天`;
  $('growText').textContent=s.runaway?`😢 ${s.name}離家出走了！到「👟 步數」登記走路，找牠回來：${(s.runaway.got||0).toLocaleString()} / ${CONFIG.runaway.steps.toLocaleString()} 步`
   :s.starveSince?`⚠️ 餓壞了！再 ${Math.max(0,Math.ceil((s.starveSince+CONFIG.runaway.starveHours*3600000-Date.now())/3600000))} 小時不餵，牠就會離家出走！`:growLine();
- $('stepInfo').textContent=`🍎 食物 ${s.inv.food} · 🌱 種子 ${s.inv.seeds}${s.inv.candy?' · 🍬 '+s.inv.candy:''}${s.inv.potion?' · 🧪 '+s.inv.potion:''} · 👟 今日 ${fmtN(s.steps.days[PC.dayKey(Date.now())]||0)} 步 · ⚔️ 今日冒險 ${s.daily.adv}${s.eggs.length?' · 🧺 蛋 '+s.eggs.length:''}`;
+ $('stepInfo').textContent=`🍎 食物 ${s.inv.food} · 🌱 種子 ${s.inv.seeds}${s.inv.candy?' · 🍬 '+s.inv.candy:''}${s.inv.potion?' · 🧪 '+s.inv.potion:''} · 👟 今日 ${fmtN(s.steps.days[PC.dayKey(Date.now())]||0)} 步 · ⚔️ 今日冒險 ${s.daily.adv}${s.eggs.length?' · 🧺 蛋 '+s.eggs.length:''}${s.hatched?` · 🐷 存錢筒 ${Math.floor(s.piggy||0)}/${PC.piggyCap(s)}`:''}`;
  for(const[k]of STATS){const v=s.hatched?s[k]:0;$('sv-'+k).textContent=s.hatched?Math.round(v)+'%':'--';$('sb-'+k).style.width=v+'%';$('st-'+k).classList.toggle('low',s.hatched&&v<20)}
  document.querySelectorAll('[data-act]').forEach(b=>b.disabled=!s.hatched);
  $('sleepLabel').textContent=s.sleeping?'叫醒':'睡覺';$('sleepBtn').classList.toggle('on',s.sleeping);
@@ -1187,7 +1205,7 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',`
 <p><b>目標：</b>照顧幻獸，陪牠慢慢長大。沒有死亡、離線不扣親密度、不需要每天簽到。</p>
 <ul>
 <li>🍎 <b>餵食</b>：按「餵食」後點畫面放蘋果，牠會走過去吃掉。吃完會留下果核，<b>要點一下清掉</b>，放超過 10 分鐘會發臭長果蠅，讓心情一直變差。用 1 個食物（沒有就花 ${C.feed.price} 金幣買），飽食 +${C.feed.hunger}、經驗 +${C.feed.xp}。吃飽時不能餵。</li>
-<li>🎾 <b>玩耍（頂球）</b>：按「玩耍」後點畫面開始，球會一顆一顆掉下來。<b>每顆球只能按一次</b>，要在球快碰到頭的那一刻按，時機越準越會進；完美時機還會預判移動中的籃框。有 3 條命，漏接 3 次就結束，每連進 5 球補 1 條命。進越多球，籃框會開始上下、左右移動，球也掉得越快、越斜。每進 3 球得 1 金幣（最多 10）。體力 ${C.play.minEnergy} 以上，心情 +${C.play.mood}、體力 −10、經驗 +${C.play.xp}（每 30 分鐘最多 3 次有經驗）。</li>
+<li>🐷 <b>存錢筒</b>：院子右下角的小豬會幫你存錢，每小時 0.5＋等級×0.25 枚（最多算到 Lv.30；金系 ×1.5；第二隻一起出來再加牠的一半）。心情 30 以上才會存、睡覺時減半，最多存 12 小時，點小豬就能領。</li><li>🎾 <b>玩耍（頂球）</b>：按「玩耍」後點畫面開始，球會一顆一顆掉下來。<b>每顆球只能按一次</b>，要在球快碰到頭的那一刻按，時機越準越會進；完美時機還會預判移動中的籃框。有 3 條命，漏接 3 次就結束，每連進 5 球補 1 條命。進越多球，籃框會開始上下、左右移動，球也掉得越快、越斜。每進 3 球得 1 金幣（最多 10）。體力 ${C.play.minEnergy} 以上，心情 +${C.play.mood}、體力 −10、經驗 +${C.play.xp}（每 30 分鐘最多 3 次有經驗）。</li>
 <li>🫧 <b>洗澡</b>：按「洗澡」後用手指拿海綿 🧽 在牠身上來回刷 3 秒。清潔 +${C.wash.clean}、經驗 +${C.wash.xp}，每 30 分鐘一次。</li>
 <li>👆 <b>摸摸</b>：隨時都能摸；每 30 分鐘第一次：親密度 +2、心情 +3。</li>
 <li>💩 <b>大便</b>：每吃一次，大約 40 分鐘後會大便。要點一下清掉，超過 3 分鐘沒清會發臭，讓心情一直變差。商店買「寵物馬桶」後，牠會自己去上廁所。</li>
@@ -1924,6 +1942,7 @@ function pointerTap(x,y){if(evo)return;
  if(mode==='play'){playTap();return}
  if(s.hatched&&tryClearCore(x,y))return;
  if(s.runaway){say(`${s.name}不在家…走路去找牠吧（${(s.runaway.got||0).toLocaleString()} / ${CONFIG.runaway.steps.toLocaleString()} 步）`);return}
+ if(overPig(x,y)&&!overPet(x,y)){tapPig();return}
  if(s.hatched&&overPair(x,y)&&!overPet(x,y)){switchToPair();return}   // 點另一隻：換照顧牠
  if(overPet(x,y)||(!s.hatched&&x>=PET_X&&x<=PET_X+CELL&&y>=PET_Y&&y<=PET_Y+CELL)){tapPet();return}
  if(s.hatched&&curView()==='yard'){const d=DEN_BOX[s.den.level-1];if(x>=d[0]&&x<=d[2]&&y>=d[1]&&y<=d[3]){const nw=performance.now();   // 點兩下小窩：進去
