@@ -208,7 +208,7 @@ t('打贏 Boss 有機會得到經驗火種：心情 +10、體力 +20、經驗 +2
 t('食物沒有就用金幣買；商店可以買各種食物', () => { const s = hatched(); s.coins = 30; s.hunger = 10; s.inv.meat = 0; assert.ok(C.act(s, 'feed', T0, 'meat').ok); assert.equal(s.coins, 10); assert.ok(C.buyItem(s, 'berry').ok); assert.equal(s.inv.berry, 1); });
 t('冒險會變餓變髒；輸了心情下降', () => { const s = hatched(); s.energy = 100; s.hunger = 80; s.clean = 80; s.mood = 60; C.startAdventure(s, 1, T0); assert.equal(s.hunger, 65); assert.equal(s.clean, 60); C.finishAdventure(s, 1, 'loss', true, T0); assert.equal(s.mood, 48); });
 t('沒照顧好親密度會掉；心情低時摸摸不加親密度', () => { const s = hatched(); s.bond = 30; s.hunger = 10; C.applyTime(s, T0 + 2 * H); assert.ok(s.bond < 30); s.hunger = 90; s.clean = 90; s.mood = 30; C.applyTime(s, T0 + 3 * H); const b = s.bond; C.pet(s, T0 + 3 * H); assert.equal(s.bond, b); });
-t('野生怪會跟著玩家等級變強', () => { assert.equal(C.foeFor(1, 20).level, 18); assert.equal(C.foeFor(1, 1).level, 1); assert.equal(C.foeFor(12, 20).level, 19); });
+t('野生怪會跟著玩家等級變強', () => { assert.equal(C.foeFor(1, 20).level, 18); assert.equal(C.foeFor(1, 1).level, 1); assert.equal(C.foeFor(12, 20).level, 19); assert.equal(C.foeFor(21, 5).level, 17); assert.equal(C.foeFor(41, 5).level, 29); });
 t('猜拳：贏＝0 倍（躲開）、平手 0.8、輸 1.2、沒選算輸', () => { assert.deepEqual(C.rps('rock', 'scissors'), { result: 'win', mult: 0 }); assert.deepEqual(C.rps('paper', 'paper'), { result: 'tie', mult: .8 }); assert.deepEqual(C.rps('scissors', 'rock'), { result: 'lose', mult: 1.2 }); assert.equal(C.rps(null, 'rock').mult, 1.2); });
 // V1.22：屬性特性與弱點、水費、球會爆
 t('洗澡要付水費 3 金幣；土系 5 金幣而且洗不太乾淨', () => { const s = hatched(); s.clean = 40; s.coins = 10; C.act(s, 'wash', T0); assert.equal(s.coins, 7); assert.equal(s.clean, 75);

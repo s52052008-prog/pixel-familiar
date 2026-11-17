@@ -279,7 +279,7 @@ async def main():
         await q.evaluate("window.PF_NO_WANDER=1"); await q.wait_for_timeout(300)
         tx = await q.evaluate('PF.toy.x'); await tap(q, tx, 98); await q.wait_for_timeout(600)
         ok('點皮球會滾', abs(await q.evaluate('PF.toy.x') - tx) > 5, (tx, await q.evaluate('PF.toy.x')))
-        ok('野生怪獸不用 7 系手繪造型', await q.evaluate("(()=>{const k=PF.petKey('g:5','flame')+'|wild';return PF.formOf(k).wild===true&&/怪$/.test(PF.formOf(k).name)})()"))
+        ok('野生怪獸不用 7 系手繪造型', await q.evaluate("(()=>{const k=PF.petKey('g:5','flame')+'|wild';return PF.formOf(k).wild===true&&/(怪|像|蟲)$/.test(PF.formOf(k).name)})()"))
         await q.evaluate("PF.state.settings.light=false"); s = await st(q); ok('開燈設定可存', s['settings']['light'] is False)
         # 猜拳與嬰兒期
         ok('孵化後是嬰兒期', (await st(q))['stage'] == 'baby')

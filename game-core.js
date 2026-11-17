@@ -557,7 +557,7 @@ function foeFor(n, myLvl = 1) {
   const seed = (Math.imul(n, 2654435761) ^ 0x9e3779b9) >>> 0, G = makeGenome(seed), boss = n % 5 === 0;
   if (boss) G.rarity = 3;
   const area = AREA_ROUTE[Math.min(AREA_ROUTE.length - 1, Math.floor((n - 1) / 5))], route = area && (seed >>> 8) % 10 < 7 ? area : ROUTES[seed % ROUTES.length], stage = n >= 4 ? 'adult' : (n >= 2 ? 'adolescent' : 'juvenile');
-  const lvl = n <= 5 ? Math.max(n + (boss ? 1 : 0), Math.round(myLvl) - (boss ? 1 : 2)) : Math.max(1, n + (boss ? 2 : 0), Math.round(myLvl) - (boss ? 0 : 1));   // 新手區（1–5 關）比你低 2 級；之後野生怪會跟著你的等級變強
+  const lvl = n <= 5 ? Math.max(n + (boss ? 1 : 0), Math.round(myLvl) - (boss ? 1 : 2)) : Math.max(1, Math.round(4 + n * .6) + (boss ? 2 : 0), Math.round(myLvl) - (boss ? 0 : 1));   // 新手區（1–5 關）比你低 2 級；之後野生怪跟著你的等級，最低等級 ≈ 4＋關卡×0.6（V1.33 前是關卡數，後期太難）
   return { id: 'x:' + encodeGenome(G), route, stage, level: lvl, boss };
 }
 function elemMult(a, d, special) { if (!special || a.el === 'none' || d.el === 'none') return 1; return (BEATS[a.el] || []).includes(d.el) ? 1.5 : (BEATS[d.el] || []).includes(a.el) ? .67 : 1; }
