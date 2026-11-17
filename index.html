@@ -228,7 +228,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.28.0';
+const VERSION='1.28.1';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -334,6 +334,11 @@ function ellipse(g,cx,cy,rx,ry,fn){
   const nx=(x+.5-cx)/rx,ny=(y+.5-cy)/ry;if(nx*nx+ny*ny<=1){const c=fn(x,y,nx,ny);if(c)px(g,x,y,c)}}}
 function outline(g,col){const b=g.a.slice();for(let y=0;y<g.h;y++)for(let x=0;x<g.w;x++){if(b[y*g.w+x])continue;
  if((x>0&&b[y*g.w+x-1])||(x<g.w-1&&b[y*g.w+x+1])||(y>0&&b[(y-1)*g.w+x])||(y<g.h-1&&b[(y+1)*g.w+x]))g.a[y*g.w+x]=col}}
+// 場景用的外框：取旁邊那格的顏色再加深（不是黑線），背景物件看起來一致、柔和；幻獸和球維持黑框才會跳出來
+function outlineSelf(g,k=.55){const b=g.a.slice(),W=g.w,H=g.h;for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(b[y*W+x])continue;
+ const n=[x>0&&b[y*W+x-1],x<W-1&&b[y*W+x+1],y>0&&b[(y-1)*W+x],y<H-1&&b[(y+1)*W+x]].filter(Boolean);if(!n.length)continue;
+ let best=null,bl=1e9;for(const c of n){if(c[0]!=='#')continue;const[r,gg,bb]=rgb(c),l=r+gg+bb;if(l<bl){bl=l;best=[r,gg,bb]}}if(!best)continue;
+ g.a[y*W+x]='#'+best.map(v=>Math.round(v*k).toString(16).padStart(2,'0')).join('')}}
 const rgbCache={};
 function rgb(h){if(rgbCache[h])return rgbCache[h];const n=parseInt(h.slice(1),16);return rgbCache[h]=[n>>16&255,n>>8&255,n&255]}
 function blit(g,img,ox,oy=0){for(let y=0;y<g.h;y++)for(let x=0;x<g.w;x++){const c=g.a[y*g.w+x];if(!c)continue;
@@ -510,13 +515,30 @@ function artVariant(im,G,key){const ck=key+'|'+im.src;if(ART_VAR[ck])return ART_
  if(G&&G.rarity===3)for(const[sx,sy]of[[16,24],[31,22],[20,34],[29,36],[24,28]]){const i=(sy*CELL+sx)*4;if(a[i+3]&&a[i]+a[i+1]+a[i+2]>200){a[i]=a[i+1]=a[i+2]=255}}
  x.putImageData(d,0,0);return ART_VAR[ck]=c}
 const CLOSED_EYES=new Set(['blink','happy','sleep','squint','tired']);
+// 聰明縮放：壓扁／拉長時只刪掉或重複「和旁邊幾乎一樣」的行列，眼睛、嘴巴這種 1 格細線不會被吃掉變成點點
+const SQ_CACHE=new Map();
+function seamPick(cost,k){const c=cost.slice(),out=new Set();for(let n=0;n<k;n++){let b=-1;for(let i=0;i<c.length;i++)if(!out.has(i)&&(b<0||c[i]<c[b]))b=i;if(b<0)break;out.add(b);if(b>0)c[b-1]+=1e6;if(b<c.length-1)c[b+1]+=1e6}return out}
+function seamMap(cost,dst){const n=cost.length;if(dst===n)return[...Array(n).keys()];const m=[];
+ if(dst<n){const del=seamPick(cost,n-dst);for(let i=0;i<n;i++)if(!del.has(i))m.push(i)}else{const dup=seamPick(cost,Math.min(n,dst-n));for(let i=0;i<n;i++){m.push(i);if(dup.has(i))m.push(i)}while(m.length<dst)m.push(n-1)}
+ return m}
+function squashArt(im,bx,w,h){const ck=im,k=w+'x'+h;let byIm=SQ_CACHE.get(ck);if(!byIm){byIm={};SQ_CACHE.set(ck,byIm)}if(byIm[k])return byIm[k];
+ const sw=bx.right-bx.left,sh=46-bx.top,src=im.getContext?im:(()=>{const q=document.createElement('canvas');q.width=CELL;q.height=CELL;q.getContext('2d').drawImage(im,0,0);return q})();
+ const d=src.getContext('2d').getImageData(bx.left,bx.top,sw,sh).data,P=(x,y)=>(y*sw+x)*4,df=(i,j)=>Math.abs(d[i]-d[j])+Math.abs(d[i+1]-d[j+1])+Math.abs(d[i+2]-d[j+2])+Math.abs(d[i+3]-d[j+3])*2;
+ const rc=[],cc=[];
+ for(let y=0;y<sh;y++){let up=0,dn=0;for(let x=0;x<sw;x++){if(y>0)up+=df(P(x,y),P(x,y-1));if(y<sh-1)dn+=df(P(x,y),P(x,y+1))}rc.push(Math.min(y>0?up:1e9,y<sh-1?dn:1e9)+(y>=sh-2?5e5:0))}   // 腳底那兩行不要動
+ for(let x=0;x<sw;x++){let l=0,r=0;for(let y=0;y<sh;y++){if(x>0)l+=df(P(x,y),P(x-1,y));if(x<sw-1)r+=df(P(x,y),P(x+1,y))}cc.push(Math.min(x>0?l:1e9,x<sw-1?r:1e9))}
+ const rm=seamMap(rc,h),cm=seamMap(cc,w),c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d'),o=g.createImageData(w,h);
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){const s=P(cm[x],rm[y]),t=(y*w+x)*4;o.data[t]=d[s];o.data[t+1]=d[s+1];o.data[t+2]=d[s+2];o.data[t+3]=d[s+3]}
+ g.putImageData(o,0,0);return byIm[k]=c}
 function drawArtFrame(ctx,A,F,fr,ox,key){
  const im=artVariant(CLOSED_EYES.has(fr.eye)?A.closed:A.open,F.genome,key);
  const bx=artBox(im),aw=bx.right-bx.left,ah=46-bx.top;   // 壓扁／拉長時不要超出 48×48 格子（左右、上方）
  const sx=Math.min(fr.sx||1,Math.max(1,(CELL-2)/aw)),sy=Math.min(fr.sy||1,Math.max(1,46/ah)),w=Math.round(CELL*sx),h=Math.round(CELL*sy),dy=Math.round((fr.dy||0)*.8);
  const base=Math.round(46-46*sy),top=Math.floor(bx.top*sy),dyIn=Math.max(dy,-(base+top));   // 跳太高會超出格子：格子內只移到頂，剩下的高度畫的時候再往上移
  const ddx=aw*sx>CELL-4?0:(fr.dx||0),x=ox+Math.round(24-w/2)+ddx,y=base+dyIn;   // 很寬的造型就不左右晃，免得被切到   // 以腳底中央為錨點壓扁／拉長
- ctx.save();ctx.beginPath();ctx.rect(ox,0,CELL,CELL);ctx.clip();ctx.drawImage(im,x,y,w,h);
+ ctx.save();ctx.beginPath();ctx.rect(ox,0,CELL,CELL);ctx.clip();
+ const cw=Math.max(1,Math.round((bx.right-bx.left)*w/CELL)),chh=Math.max(1,Math.round((46-bx.top)*h/CELL)),sq=squashArt(im,bx,cw,chh);
+ ctx.drawImage(sq,x+Math.round(bx.left*w/CELL),y+Math.round(46*h/CELL)-chh);
  if(fr.eye==='sad'||fr.eye==='tired'){ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(40,60,120,.22)';ctx.fillRect(ox,0,CELL,CELL)}
  if(fr.blush===2){ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(255,90,140,.18)';ctx.fillRect(ox,0,CELL,CELL)}
  ctx.restore();return dy-dyIn}
@@ -632,7 +654,7 @@ function makeBg(ph,lvl=1){
  for(let x=0;x<W;x++){const y2=Math.round(58+3*Math.sin(x/13+1));c.fillStyle=near;c.fillRect(x,y2,1,66-y2)}
  // 後方小樹與灌木
  const leafA=night?'#2a6a42':'#45a85a',leafB=night?'#1e5a3a':'#2f8a4a',leafC=night?'#3a7a4a':'#7ccc5a';
- const blob=(cx,cy,rx,ry)=>{const g=grid(rx*2+4,ry*2+4);ellipse(g,rx+2,ry+2,rx,ry,(x,y,nx,ny)=>nx*.5+ny*.7>.45?leafB:((x*7+y*3)%11===0?leafC:leafA));outline(g,'#163a24');c.drawImage(gridCanvas(g),cx-rx-2,cy-ry-2)};
+ const blob=(cx,cy,rx,ry)=>{const g=grid(rx*2+4,ry*2+4);ellipse(g,rx+2,ry+2,rx,ry,(x,y,nx,ny)=>nx*.5+ny*.7>.45?leafB:((x*7+y*3)%11===0?leafC:leafA));outlineSelf(g);c.drawImage(gridCanvas(g),cx-rx-2,cy-ry-2)};
  // 樹：不規則的葉團疊出樹冠（上亮下暗＋零星亮點），樹幹有分枝與樹皮紋路
  const hsh=(x,y)=>((x*73856093)^(y*19349663))>>>0;
  const L=night?['#2a6a42','#1e5a3a','#163e2a','#3a7a4a','#4a8a5a']:dusk?['#4a8a52','#3a7a48','#2a5a38','#6a9a5a','#8ab86a']:['#4fb04a','#3a9040','#2a6e34','#8ad85a','#b8f07a'];
@@ -651,8 +673,8 @@ function makeBg(ph,lvl=1){
   const cl=[[tx,top+h*.28,w*.36,h*.24],...ends.map(([x,y],i)=>[x+(i===0?-2:2),y-h*.06,w*(.22+rr()*.08),h*(.16+rr()*.06)]),[tx+w*.08,top+h*.12,w*.22,h*.15],[tx-w*.12,top+h*.16,w*.2,h*.14]];
   for(const[x,y,rx,ry]of cl.sort((a,b)=>a[1]-b[1]))canopy(g,x,y,rx,ry);
   if(fruit&&!night)for(let i=0;i<6;i++){const[x,y,rx,ry]=cl[i%cl.length],a=rr()*6.28,x2=Math.round(x+Math.cos(a)*rx*.6),y2=Math.round(y+Math.sin(a)*ry*.6);px(g,x2,y2,'#e8433f');px(g,x2+1,y2,'#c83030');px(g,x2,y2-1,'#ff9a8a')}
-  outline(g,night?'#0e2418':'#163a24');c.drawImage(gridCanvas(g),ox-tx,oy-base-1)};
- const bush=(cx,cy,rx,ry)=>{const P=4,g=grid(rx*2+4+2*P,ry*2+4+P);canopy(g,P+rx+2-rx*.35,P+ry+3,rx*.6,ry*.8);canopy(g,P+rx+2+rx*.35,P+ry+3,rx*.6,ry*.8);canopy(g,P+rx+2,P+ry+2,rx*.7,ry);outline(g,'#163a24');c.drawImage(gridCanvas(g),cx-rx-2-P,cy-ry-2-P)};
+  outlineSelf(g);c.drawImage(gridCanvas(g),ox-tx,oy-base-1)};
+ const bush=(cx,cy,rx,ry)=>{const P=4,g=grid(rx*2+4+2*P,ry*2+4+P);canopy(g,P+rx+2-rx*.35,P+ry+3,rx*.6,ry*.8);canopy(g,P+rx+2+rx*.35,P+ry+3,rx*.6,ry*.8);canopy(g,P+rx+2,P+ry+2,rx*.7,ry);outlineSelf(g);c.drawImage(gridCanvas(g),cx-rx-2-P,cy-ry-2-P)};
  tree(58,66,.62,false,11);
  tree(104,67,.9,true,29);   // 不要超出畫面右邊
  for(const[x,r]of[[48,5],[74,6]])bush(x,64,r,3);
@@ -661,9 +683,9 @@ function makeBg(ph,lvl=1){
  c.fillStyle=g1;c.fillRect(0,66,W,H-66);c.fillStyle=g2;for(let y=84;y<H;y++)for(let x=(y%2);x<W;x+=2)if(y>90||((x+y)%4===0))c.fillRect(x,y,1,1);
  c.fillStyle=g3;for(let x=0;x<W;x++)if(x%3!==1)c.fillRect(x,66,1,1);
  // 石板小徑（從小窩門口延伸出來）
- for(const[x,y]of[[24,70],[30,75],[37,80],[45,85],[54,89]]){const g=grid(9,5);ellipse(g,4.5,2.5,3.5,1.6,(xx,yy,nx,ny)=>ny>.2?(night?'#7a7a6a':'#a89a7a'):(night?'#9a9a88':'#d8ccaa'));outline(g,night?'#3a3a2a':'#6a5a3a');c.drawImage(gridCanvas(g),x-4,y-2)}
+ for(const[x,y]of[[24,70],[30,75],[37,80],[45,85],[54,89]]){const g=grid(9,5);ellipse(g,4.5,2.5,3.5,1.6,(xx,yy,nx,ny)=>ny>.2?(night?'#7a7a6a':'#a89a7a'):(night?'#9a9a88':'#d8ccaa'));outlineSelf(g);c.drawImage(gridCanvas(g),x-4,y-2)}
  // 小池塘
- {const g=grid(34,14);ellipse(g,17,7,15,5.5,(x,y,nx,ny)=>nx*nx+ny*ny>.72?(night?'#5a6a6a':'#9aa0a0'):(ny<-.2?(night?'#3a5a8a':'#8fd0f0'):(night?'#2a4a7a':'#5fb4f0')));outline(g,'#4a5050');
+ {const g=grid(34,14);ellipse(g,17,7,15,5.5,(x,y,nx,ny)=>nx*nx+ny*ny>.72?(night?'#5a6a6a':'#9aa0a0'):(ny<-.2?(night?'#3a5a8a':'#8fd0f0'):(night?'#2a4a7a':'#5fb4f0')));outlineSelf(g);
   const pc=gridCanvas(g),pcx=pc.getContext('2d');pcx.fillStyle=night?'#6a8ab0':'#d8f4ff';pcx.fillRect(9,6,4,1);pcx.fillRect(17,8,5,1);
   pcx.fillStyle='#3a8a3a';pcx.fillRect(22,5,4,2);pcx.fillStyle='#ff9ac0';pcx.fillRect(23,4,2,1);c.drawImage(pc,0,0,34,14,POND.x-14,POND.y-5,28,10)}   // 往後放：小一點、靠近地平線
  // 小草、花、蘑菇
@@ -723,7 +745,7 @@ function drawDen(c,lvl,dark){const g=grid(W,H),R=(x,y,w,h,col)=>{for(let j=0;j<h
   R(25,32,9,6,'#5a3a20');R(26,33,7,4,lit);R(29,33,1,4,'#5a3a20');R(26,35,7,1,'#5a3a20');px(g,27,33,litHi);
   R(34,44,1,22,'#a8703e');R(38,44,1,22,'#a8703e');for(let y=46;y<66;y+=3)R(34,y,5,1,'#c49a6a');
   for(let y=56;y<=67;y++)for(let x=18;x<=26;x++){const dx=(x-22)/4.5,dy=(y-61)/5.5;if(y<61&&dx*dx+dy*dy>1)continue;px(g,x,y,(x===18||x===26||(y<61&&dx*dx+dy*dy>.7))?'#3a2414':'#120c08')}}
- outline(g,'#1a1208');c.drawImage(gridCanvas(g),0,0)}
+ outlineSelf(g);c.drawImage(gridCanvas(g),0,0)}
 const CLOUD=(()=>{const g=grid(26,12);ellipse(g,8,7,6,4,()=> '#ffffff');ellipse(g,15,5,7,5,()=> '#ffffff');ellipse(g,20,8,5,3.5,()=> '#ffffff');
  for(let i=0;i<g.a.length;i++)if(g.a[i]&&Math.floor(i/g.w)>=8)g.a[i]='#dfeef8';outline(g,'#a8c8e0');return g})();
 let cloudCv=null;
@@ -734,7 +756,7 @@ function buildPlots(){const soil=g=>ellipse(g,10,12.5,9,3.2,(x,y,nx,ny)=>ny>.2?'
  const stem=g=>{for(let y=7;y<=11;y++)px(g,10,y,'#3a8a3a');px(g,9,8,'#7ccc5a');px(g,8,8,'#7ccc5a');px(g,11,7,'#7ccc5a');px(g,12,7,'#7ccc5a')};
  const bushy=(g,big)=>ellipse(g,10,6.5,big?6:5,big?4.5:4,(x,y,nx,ny)=>nx*.5+ny*.6>.4?'#3a8a3a':'#5fbf4a');
  const fruitAt=[[7,5],[12,4],[10,7],[13,8]];
- const mk=(key,fn,ol)=>{const g=grid(20,16);fn(g);outline(g,ol||'#2a1a10');PLOT_SPR[key]=gridCanvas(g)};
+ const mk=(key,fn,ol)=>{const g=grid(20,16);fn(g);outlineSelf(g);PLOT_SPR[key]=gridCanvas(g)};
  // 空地＝一叢草（不是黑黑的泥土）
  mk('empty',g=>{for(const[x,h,c]of[[6,4,'#4f9a42'],[8,6,'#6fbf5a'],[10,7,'#86d06a'],[12,5,'#6fbf5a'],[14,4,'#4f9a42'],[9,3,'#3a8a3a'],[11,4,'#4f9a42']])for(let y=0;y<h;y++)px(g,x+((y>h-3)?(x<10?-1:x>10?1:0):0),14-y,c)},'#3f8a3a');   // 草叢用深綠描邊，不會黑黑的
  mk('seed',g=>{soil(g);px(g,8,11,'#3a2416');px(g,12,11,'#3a2416');px(g,10,10,'#7ccc5a')});
@@ -871,7 +893,8 @@ function petTopY(key,LIFT){const F=formOf(key),A=artFor(F);return PET_Y+LIFT+(A?
 function drawStatusFx(now,S,fi,PX,LIFT,key){const top=petTopY(key,LIFT),cx=PX+24,t=now/1000,still=rm();
  if(s.clean<30){   // 泥巴斑點：只畫在幻獸身上（source-atop）
   const x=FX_TMP.getContext('2d');x.clearRect(0,0,CELL,CELL);x.drawImage(S.cv,fi*CELL,0,CELL,CELL,0,0,CELL,CELL);x.globalCompositeOperation='source-atop';
-  const n=s.clean<15?9:5;for(let i=0;i<n;i++){const sx=10+((i*17+5)%28),sy=Math.max(top-PET_Y-LIFT+6,14)+((i*11+3)%24);x.fillStyle=i%3?'rgba(110,80,40,.75)':'rgba(80,60,30,.8)';x.fillRect(sx,sy,2+(i%2),2);x.fillRect(sx+1,sy+1,1,1)}
+  const n=s.clean<15?9:5,tr=top-PET_Y-LIFT,bh=Math.max(8,46-tr),y0=tr+Math.round(bh*.55),yr=Math.max(3,44-y0);   // 斑點只在身體下半部，不會蓋到眼睛、臉
+  for(let i=0;i<n;i++){const sx=10+((i*17+5)%28),sy=y0+((i*11+3)%yr);x.fillStyle=i%3?'rgba(110,80,40,.75)':'rgba(80,60,30,.8)';x.fillRect(sx,sy,2+(i%2),2);x.fillRect(sx+1,sy+1,1,1)}
   x.globalCompositeOperation='source-over';
   if(petFace===1){ctx.save();ctx.translate(PX+CELL,0);ctx.scale(-1,1);ctx.drawImage(FX_TMP,0,PET_Y+LIFT);ctx.restore()}else ctx.drawImage(FX_TMP,PX,PET_Y+LIFT);
   ctx.strokeStyle='rgba(150,170,60,.8)';ctx.lineWidth=1;for(let k=0;k<2;k++){const ox=cx+(k?14:-16),oy=top+14-((t*8+k*5)%10);ctx.beginPath();for(let j=0;j<6;j++){const yy=oy-j,xx=ox+(j%2?1:-1)*(still?0:1);j?ctx.lineTo(xx+.5,yy):ctx.moveTo(xx+.5,yy)}ctx.stroke()}
