@@ -88,6 +88,8 @@ def clean_face(a, box, keep):
 def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esize=5, keepclosed=False, clean=None, mouth=None, eyesrc=None, spark=False, sym=None):
     path = path or os.path.join(ROOT, 'art', 'src', 'fusion', name + '.png')
     a = np.asarray(Image.open(path).convert('RGB')); m = mask_of(a)
+    bgc = np.median(np.concatenate([a[:8].reshape(-1, 3), a[-8:].reshape(-1, 3)]), axis=0)   # 背景綠
+    m &= np.abs(a.astype(int) - bgc).sum(2) > 70   # 被圈起來的綠底（觸角的圈圈裡面）也要去掉；樹葉的黃綠色離背景綠夠遠，不會被去掉
     rows = runs(ndimage.binary_closing(m.sum(1) > 0, iterations=6), 40)[:2]
     cols = columns(m)
     out = os.path.join(ROOT, 'sprites', 'fusion'); os.makedirs(out, exist_ok=True); res = []
