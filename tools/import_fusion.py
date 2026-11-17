@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """血繼幻獸圖（綠底，4 欄＝幼年／少年／成年／高階 × 2 排＝睜眼／閉眼）→ sprites/fusion/<名>_<1..4>_<open|closed>.png
 用法：python3 tools/import_fusion.py <名稱> [原圖路徑] [--base=主屬性] [--eyes=左眼x,右眼x,y] [--iris=#深色,#亮色]
+  --eyesize=4：臉比較小時用 4×4 的眼睛；--keepclosed：閉眼保留原圖（原本就畫得好時）
   --eyes：高階縮圖後眼睛糊掉時，在這兩個位置重畫 5×5 的像素大眼（睜眼）和「︶」（閉眼）
 例：python3 tools/import_fusion.py blossom --base=flame --eyes=13,22,17 --iris=#8a3a10,#f0a030
 會另外輸出 art/preview-fusion-<名稱>.png（和主屬性同階段並排比較）
@@ -41,21 +42,25 @@ def columns(m, n=4):
 
 K, W = (26, 16, 32, 255), (255, 255, 255, 255)
 def hexc(h): h = h.lstrip('#'); return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4)) + (255,)
-def fix_eyes(im, xs, y, iris, closed):
-    a = im.copy(); from collections import Counter
-    face = [tuple(a[yy, xx]) for yy in range(y + 5, y + 9) for xx in range(min(xs), max(xs) + 5) if a[yy, xx, 3] and int(a[yy, xx, :3].sum()) > 480]
-    skin = Counter(face).most_common(1)[0][0] if face else (253, 235, 200, 255)
-    B, G = iris; tpl = ['.....', '.....', '.KKK.', 'K...K', '.....'] if closed else ['.KKK.', 'KWWBK', 'KWBBK', 'KBGGK', '.KKK.']
+def fix_eyes(im, xs, y, iris, closed, size=5):
+    """在 xs 兩個位置重畫眼睛。只把原本眼睛的深色殘影換成上下最近的毛色，不會蓋出一塊淺色方框"""
+    a = im.copy(); B, G = iris
+    if size == 4: tpl = ['....', '.KK.', 'K..K', '....'] if closed else ['.KK.', 'KWBK', 'KBGK', '.KK.']
+    else: tpl = ['.....', '.....', '.KKK.', 'K...K', '.....'] if closed else ['.KKK.', 'KWWBK', 'KWBBK', 'KBGGK', '.KKK.']
+    dark = lambda c: c[3] and (int(c[0]) + int(c[1]) + int(c[2]) < 260 or (c[0] > 150 and c[1] < 80 and c[2] < 80))
     for x0 in xs:
-        for j in range(5):
-            for i in range(5): a[y + j, x0 + i] = skin
+        for i in range(size):
+            x = x0 + i; col = [a[yy, x] for yy in list(range(y - 1, y - 4, -1)) + list(range(y + size, y + size + 3)) if 0 <= yy < a.shape[0] and a[yy, x, 3] and not dark(a[yy, x])]
+            fill = col[0] if col else (253, 235, 200, 255)
+            for j in range(size):
+                if dark(a[y + j, x]): a[y + j, x] = fill
         for j, row in enumerate(tpl):
             for i, ch in enumerate(row):
                 if ch != '.': a[y + j, x0 + i] = {'K': K, 'W': W, 'B': B, 'G': G}[ch]
     return a
 
 
-def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030')):
+def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esize=5, keepclosed=False):
     path = path or os.path.join(ROOT, 'art', 'src', 'fusion', name + '.png')
     a = np.asarray(Image.open(path).convert('RGB')); m = mask_of(a)
     rows = runs(ndimage.binary_closing(m.sum(1) > 0, iterations=6), 40)[:2]
@@ -72,7 +77,8 @@ def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030')):
             b = bbox(mm); tw, th = min(CELL - 2, round((b[2] - b[0]) * k)), min(45, round((b[3] - b[1]) * k))
             ims.append(downsample(a, mm, b, tw, th, (CELL - tw) // 2, 46 - th))
         ims, pal = quantize(ims, 24); oc = min(pal.tolist(), key=lambda q: lum(q)); ims = [add_outline(i, oc) for i in ims]
-        if eyes and st == 4: ims = [fix_eyes(ims[0], eyes[:2], eyes[2], [hexc(c) for c in iris], False), fix_eyes(ims[1], eyes[:2], eyes[2], [hexc(c) for c in iris], True)]
+        if eyes and st == 4:
+            ir = [hexc(c) for c in iris]; ims = [fix_eyes(ims[0], eyes[:2], eyes[2], ir, False, esize), ims[1] if keepclosed else fix_eyes(ims[1], eyes[:2], eyes[2], ir, True, esize)]
         for kind, im in zip(('open', 'closed'), ims): Image.fromarray(im, 'RGBA').save(os.path.join(out, f'{name}_{st}_{kind}.png'))
         res.append(ims)
     S = 4; pv = Image.new('RGBA', (4 * (CELL * S * 2 + 20), CELL * S * 2 + 30), (70, 110, 70, 255))
@@ -88,4 +94,4 @@ if __name__ == '__main__':
     opt = lambda k: next((x[len(k) + 3:] for x in sys.argv[1:] if x.startswith('--' + k + '=')), None)
     args = [x for x in sys.argv[1:] if not x.startswith('--')]
     ey = opt('eyes'); ir = opt('iris')
-    main(args[0], args[1] if len(args) > 1 else None, opt('base'), [int(v) for v in ey.split(',')] if ey else None, ir.split(',') if ir else ('#2a3a8a', '#e8a030'))
+    main(args[0], args[1] if len(args) > 1 else None, opt('base'), [int(v) for v in ey.split(',')] if ey else None, ir.split(',') if ir else ('#2a3a8a', '#e8a030'), int(opt('eyesize') or 5), '--keepclosed' in sys.argv)
