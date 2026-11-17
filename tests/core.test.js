@@ -319,6 +319,18 @@ t('5 關小王、10 關大王；第 10／20／30 關大王各掉一次自己屬�
   b.route = 'flame'; assert.equal(win(10).mat, 'flame');   // 換一隻別的屬性，可以再拿
   const r = C.sanitize(JSON.parse(JSON.stringify(b)), T0); assert.deepEqual(r.matGot.tide, [10, 20, 30]);
 });
+t('第 40 關大王：星辰之心＋碎片；碎片可以抵終極素材；星辰之心讓高階星耀覺醒', () => {
+  const b = hatched(); b.route = 'bird'; b.adv.stage = 41; const win = (n, rr = () => .99) => { b.energy = 100; const st = C.startAdventure(b, n, T0); return C.finishAdventure(b, n, 'win', st.full, T0, rr); };
+  const o = win(40); assert.equal(o.heart, 1); assert.equal(o.shard, 1); assert.equal(b.inv.hearts, 1); assert.equal(b.inv.shards, 1);
+  assert.equal(win(40).shard, undefined); assert.equal(win(40, () => .1).shard, 1); assert.equal(b.inv.shards, 2); assert.equal(b.inv.hearts, 1);
+  const s = hatched(); s.xp = 2000; s.route = 'bird'; C.checkStages(s, T0 + 200 * H); s.ball.goals += 30; s.inv.mats.bird = 2; s.inv.shards = 1; C.checkStages(s, T0 + 200 * H);
+  assert.equal(s.stage, 'ascended'); assert.equal(s.inv.mats.bird, 0); assert.equal(s.inv.shards, 0);
+  assert.match(C.canAwaken(s), /星辰之心/); s.inv.hearts = 1; const r0 = C.piggyRate(s); assert.ok(C.awaken(s, T0).ok); assert.ok(s.awake); assert.equal(s.inv.hearts, 0); assert.ok(Math.abs(C.piggyRate(s) - r0 * 1.5) < 1e-9);
+  assert.ok(C.sanitize(JSON.parse(JSON.stringify(s)), T0).awake);
+});
+t('新蛋不重複：優先給還沒玩過的屬性', () => { const s = hatched(); s.route = 'flame'; s.dex = [{ id: 'g:1', route: 'tide' }, { id: 'g:2', route: 'bird' }];
+  const u = C.unplayedRoutes(s); assert.ok(!u.includes('flame') && !u.includes('tide') && !u.includes('bird')); assert.equal(u.length, 4);
+  s.dex = C.EL_LIST.map((e, i) => ({ id: 'g:' + i, route: e })); assert.equal(C.unplayedRoutes(s).length, 7); assert.equal(C.genomeOfSeed(C.seedForEl('metal')).el, 'metal'); });
 t('舊存檔沒有新路線欄位也能正常讀取', () => { const r = C.sanitize({ v: 7, hatched: true, path: { flame: 3, tide: 2, forest: 1 } }, T0); assert.equal(r.path.earth, 0); assert.equal(r.path.metal, 0); assert.equal(r.events.mine, false); });
 
 console.log(`\n${pass}/${pass + fail} passed`);

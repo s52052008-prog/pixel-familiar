@@ -37,6 +37,7 @@ const CONFIG = {
   bossStages: { volcano: 15, oldtree: 20, canyon: 25, skypeak: 30, thunder: 35, mine: 40 },
   /* V1.37 高階條件（七屬性一樣）：① 終極素材 3 個（第 10、20、30 關大王各掉一次，依你這隻的屬性）② 專屬任務（長到成年期才出現、從那時開始算）
      tasks：[[計數器, 需要數量], …]，有兩組的是「二選一」 */
+  starHeart: { stage: 40, shardRepeat: .3, statX: 1.2, piggyX: 1.5 },   // 第 40 關大王：每個屬性第一次打贏得到星辰之心＋星辰碎片；之後再打贏 30% 掉碎片
   ascend: { mats: 3, bigBoss: [10, 20, 30], tasks: {
     flame: [['wins', 30]], tide: [['washes', 30]], forest: [['harvests', 30]], earth: [['steps', 60000], ['earthWins', 20]],
     bird: [['goals', 30]], elec: [['bondUses', 5]], metal: [['cleanups', 40]] } },
@@ -171,6 +172,10 @@ function breedGenome(A, B, r = Math.random) {
 }
 const GCACHE = {};
 function genomeOfSeed(seed) { return GCACHE[seed] || (GCACHE[seed] = makeGenome(seed)); }
+/* 玩過的屬性（圖鑑裡孵過的）：新蛋優先給還沒玩過的屬性，7 個都玩過才隨機 */
+function playedRoutes(st) { const s = new Set(); for (const d of st.dex || []) if (d.route) s.add(d.route); if (st.hatched && st.route) s.add(st.route); return [...s]; }
+function unplayedRoutes(st) { const p = playedRoutes(st); const u = EL_LIST.filter(e => !p.includes(e)); return u.length ? u : EL_LIST.slice(); }
+function seedForEl(el, r = Math.random) { for (let i = 0; i < 2000; i++) { const sd = Math.floor(r() * 4294967296) >>> 0; if (genomeOfSeed(sd).el === el) return sd; } return null; }
 function sexOfId(id) { let h = 2166136261; for (const c of String(id)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return h % 2 ? 'm' : 'f'; }
 function gidOf(st) { return st.genes ? 'x:' + st.genes : (st.seed === null || st.seed === undefined ? 'classic' : 'g:' + st.seed); }
 function genomeFromId(id) {
@@ -198,11 +203,11 @@ function fresh(now = Date.now()) {
     xp: 0, coins: S.coins, hunger: S.hunger, mood: S.mood, clean: S.clean, energy: S.energy, bond: 0, sleeping: false,
     path: { flame: 0, tide: 0, forest: 0, earth: 0, bird: 0, elec: 0, metal: 0 }, bondUses: 0, cleanups: 0,
     care: { petLastRewardAt: 0, bathLastAt: 0, playXpAt: [], gatherAt: 0 },
-    inv: Object.assign({ food: S.food, seeds: S.seeds, candy: 0, potion: 1, ember: 0, fresh: { food: 0, berry: 0 }, mats: {} }, ...Object.keys(CONFIG.foods).filter(k => k !== 'food').map(k => ({ [k]: 0 }))), harvests: 0,
+    inv: Object.assign({ food: S.food, seeds: S.seeds, candy: 0, potion: 1, ember: 0, shards: 0, hearts: 0, fresh: { food: 0, berry: 0 }, mats: {} }, ...Object.keys(CONFIG.foods).filter(k => k !== 'food').map(k => ({ [k]: 0 }))), harvests: 0,
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] }, goalLv: 0,
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
-    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null,
+    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
     events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
@@ -248,7 +253,7 @@ function sanitize(o, now = Date.now()) {
   r.care.playXpAt = Array.isArray(c.playXpAt) ? c.playXpAt.map(Number).filter(t => Number.isFinite(t) && t <= now && now - t < CONFIG.play.xpWindowMin * MIN).slice(-10) : [];
   const iv = o.inv && typeof o.inv === 'object' ? o.inv : {};
   r.inv.food = int(iv.food, CONFIG.start.food, 0, 9999); r.inv.seeds = int(iv.seeds, CONFIG.start.seeds, 0, 9999); r.inv.candy = int(iv.candy, 0, 0, 9999); r.inv.potion = int(iv.potion, 1, 0, 9999);
-  for (const k of [...Object.keys(CONFIG.foods).filter(k => k !== 'food'), 'ember']) r.inv[k] = int(iv[k], 0, 0, 9999);
+  for (const k of [...Object.keys(CONFIG.foods).filter(k => k !== 'food'), 'ember', 'shards', 'hearts']) r.inv[k] = int(iv[k], 0, 0, 9999);
   const mt = iv.mats && typeof iv.mats === 'object' ? iv.mats : {}; r.inv.mats = {}; for (const el of ROUTES) r.inv.mats[el] = int(mt[el], 0, 0, 99);
   const fr = iv.fresh && typeof iv.fresh === 'object' ? iv.fresh : {}; r.inv.fresh = { food: Math.min(int(fr.food, 0, 0, 9999), r.inv.food), berry: Math.min(int(fr.berry, 0, 0, 9999), r.inv.berry) };   // 自己種的、還沒賣的水果數
   const dc = o.decor && typeof o.decor === 'object' ? o.decor : {};
@@ -266,6 +271,7 @@ function sanitize(o, now = Date.now()) {
   if (r.pair && r.roster.length > CONFIG.den.length - 2) r.roster.length = CONFIG.den.length - 2;
   r.owner = typeof o.owner === 'string' ? o.owner.replace(/[<>&"]/g, '').trim().slice(0, 12) : '';
   r.piggy = num(o.piggy, 0, 0, 1e5);
+  r.awake = o.awake === true && r.stage === 'ascended';
   r.washes = int(o.washes, 0, 0, 1e7); r.earthWins = int(o.earthWins, 0, 0, 1e7);
   r.matGot = {}; if (o.matGot && typeof o.matGot === 'object') for (const k of ROUTES) if (Array.isArray(o.matGot[k])) r.matGot[k] = o.matGot[k].filter(n => [10, 20, 30, 40].includes(n)).slice(0, 4);
   r.ascBase = o.ascBase && typeof o.ascBase === 'object' ? Object.fromEntries(Object.keys(COUNTER_TEXT).map(k => [k, num(o.ascBase[k], 0, 0, 1e9)])) : null;
@@ -331,10 +337,13 @@ function applyTime(st, now = Date.now()) {
   return { hours, eff, warn: hours > CONFIG.jumpWarnDays * 24 ? 'jump' : null, events };
 }
 /* 存錢筒：幻獸等級越高，每小時存越多；金系 ×1.5；一起出來的第二隻再加牠的一半 */
-function piggyRateOf(p) { const P = CONFIG.piggy, T = traitOf(p.route); return (P.base + P.per * Math.min(level(p.xp), P.maxLv)) * (T.coinX || 1); }
+function piggyRateOf(p) { const P = CONFIG.piggy, T = traitOf(p.route); return (P.base + P.per * Math.min(level(p.xp), P.maxLv)) * (T.coinX || 1) * (p.awake ? CONFIG.starHeart.piggyX : 1); }
 function piggyRate(st) { if (!st.hatched) return 0; return piggyRateOf(st) + (st.pair ? piggyRateOf(st.pair) * CONFIG.piggy.pairShare : 0); }
 function piggyCap(st) { return Math.max(1, Math.round(piggyRate(st) * CONFIG.piggy.capHours)); }
 function collectPiggy(st, now = Date.now()) { applyTime(st, now); const n = Math.floor(st.piggy || 0); if (n < 1) return { ok: false, n: 0, msg: '存錢筒裡還沒有金幣' }; st.coins += n; st.piggy -= n; return { ok: true, n }; }
+/* 星辰之心：高階的幻獸使用 → 星耀覺醒（全能力 +20%、存錢筒 ×1.5、名字前加「星耀」） */
+function canAwaken(st) { if (!st.hatched || st.stage !== 'ascended') return '要先進化到高階'; if (st.awake) return '已經星耀覺醒了'; if ((st.inv.hearts || 0) < 1) return '沒有星辰之心（打倒第 40 關大王）'; return null; }
+function awaken(st, now = Date.now()) { const w = canAwaken(st); if (w) return { ok: false, msg: w }; st.inv.hearts--; st.awake = true; journal(st, now, '使用星辰之心，星耀覺醒了！'); return { ok: true, msg: `${st.name} 星耀覺醒了！✨` }; }
 /* 一起出來的第二隻：狀態變化速度只有一半（不會離家出走，餓到 0 只會心情、親密度往下掉） */
 function decayPair(st, eff) {
   const p = st.pair, R = CONFIG.rates[st.sleeping ? 'sleep' : 'awake'], T = traitOf(p.route), k = eff * CONFIG.pair.rate;
@@ -478,7 +487,7 @@ function stageReq(st, now) {
   const age = ageHours(st, now), S = CONFIG.stages;
   const nxt = st.stage === 'baby' ? 'juvenile' : st.stage === 'juvenile' ? 'adolescent' : st.stage === 'adolescent' ? 'adult' : st.stage === 'adult' ? 'ascended' : null;
   if (!nxt) return null;
-  return { next: nxt, hours: S[nxt].hours, xp: S[nxt].xp, ageOk: age >= S[nxt].hours, xpOk: st.xp >= S[nxt].xp, eventOk: nxt !== 'ascended' || specialDone(st, st.route), matOk: nxt !== 'ascended' || ((st.inv.mats || {})[st.route] || 0) >= CONFIG.ascend.mats, matHave: (st.inv.mats || {})[st.route] || 0, mat: nxt === 'ascended' ? CONFIG.materials[st.route] : null, age };
+  return { next: nxt, hours: S[nxt].hours, xp: S[nxt].xp, ageOk: age >= S[nxt].hours, xpOk: st.xp >= S[nxt].xp, eventOk: nxt !== 'ascended' || specialDone(st, st.route), matOk: nxt !== 'ascended' || ((st.inv.mats || {})[st.route] || 0) + (st.inv.shards || 0) >= CONFIG.ascend.mats, matHave: (st.inv.mats || {})[st.route] || 0, shards: st.inv.shards || 0, mat: nxt === 'ascended' ? CONFIG.materials[st.route] : null, age };
 }
 const ROUTE_CH = { flame: '焰', tide: '潮', forest: '森', earth: '土', bird: '鳥', elec: '電', metal: '金' };
 function checkStages(st, now = Date.now()) {
@@ -487,7 +496,7 @@ function checkStages(st, now = Date.now()) {
   for (let guard = 0; guard < 5 && st.hatched; guard++) {
     const q = stageReq(st, now);
     if (!q || !q.ageOk || !q.xpOk || !q.eventOk || !q.matOk) break;
-    if (q.next === 'ascended') st.inv.mats[st.route] -= CONFIG.ascend.mats;   // 進化用掉 3 個素材
+    if (q.next === 'ascended') { const use = Math.min(st.inv.mats[st.route] || 0, CONFIG.ascend.mats); st.inv.mats[st.route] -= use; st.inv.shards -= CONFIG.ascend.mats - use; }   // 進化用掉 3 個素材（不夠的用星辰碎片補）
     const from = st.stage;
     if (q.next === 'adult' && !st.route) st.route = pickRoute(st);
     st.stage = q.next;
@@ -619,6 +628,10 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
     if (CONFIG.ascend.bigBoss.includes(n) && st.route) {   // 第 10／20／30 關大王：這個屬性各掉一次終極素材
       const got = st.matGot[st.route] || (st.matGot[st.route] = []);
       if (!got.includes(n)) { got.push(n); st.inv.mats[st.route] = (st.inv.mats[st.route] || 0) + 1; out.mat = st.route; out.matN = st.inv.mats[st.route]; journal(st, now, `第 ${n} 關大王掉了「${CONFIG.materials[st.route]}」（${Math.min(st.inv.mats[st.route], CONFIG.ascend.mats)}/${CONFIG.ascend.mats}）`); } }
+    if (n === CONFIG.starHeart.stage && st.route) {   // 第 40 關大王：星辰之心＋星辰碎片
+      const got = st.matGot[st.route] || (st.matGot[st.route] = []);
+      if (!got.includes(n)) { got.push(n); st.inv.hearts++; st.inv.shards++; out.heart = 1; out.shard = 1; journal(st, now, '打倒最終大王！得到「星辰之心」和「星辰碎片」'); }
+      else if (r() < CONFIG.starHeart.shardRepeat) { st.inv.shards++; out.shard = 1; } }
     if (foeFor(n).route === 'earth') st.earthWins = (st.earthWins || 0) + 1;
     if (n === st.adv.stage) {                                   // 第一次打通：新地點 = 探索發現
       st.adv.stage++; out.unlocked = st.adv.stage; discover(st, now, null); out.events.push('place');
@@ -744,7 +757,7 @@ function finishBallGame(st, score, now = Date.now()) {
 }
 
 /* ---------------- 小窩：升級、讓多隻寵物住進來 ---------------- */
-const PET_FIELDS = ['seed', 'genes', 'sex', 'ascBase', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
+const PET_FIELDS = ['seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
 function snapshotPet(st) { const p = {}; for (const k of PET_FIELDS) p[k] = JSON.parse(JSON.stringify(st[k])); p.sleeping = false; return p; }
 function sanitizePet(p, now = Date.now()) { const r = sanitize(Object.assign({ v: 6 }, p, { roster: [], dex: [], pair: null }), now); return snapshotPet(r); }
 const denCap = st => CONFIG.den[st.den.level - 1].cap;
@@ -904,7 +917,7 @@ const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
-  piggyRate, piggyCap, collectPiggy, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  piggyRate, piggyCap, collectPiggy, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

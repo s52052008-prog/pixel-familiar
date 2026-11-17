@@ -233,7 +233,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.37.0';
+const VERSION='1.38.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -703,7 +703,7 @@ function loadItems(){let left=ITEM_NAMES.length;for(const n of ITEM_NAMES){const
  im.onerror=done;im.src=`sprites/items/${n}.png`}
  function done(){if(--left)return;document.querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));if(typeof renderFoodBar==='function')renderFoodBar()}}
 /* 新版介面圖示（sprites/ui，高解析度）：愛心、閃電、月亮、星星 */
-const UI_OVR={heart:'heart',bolt:'bolt',moon:'moon',star:'star'},UIIMG={};
+const UI_OVR={heart:'heart',bolt:'bolt',moon:'moon',star:'star',gem:'gem'},UIIMG={};
 for(const k in UI_OVR){const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);UIIMG[k]=c;document.querySelectorAll(`canvas.picon[data-icon="${k}"]`).forEach(c=>paintIcon(c,k))};im.src=`sprites/ui/${UI_OVR[k]}.png`}
 function paintIcon(cv,name){const src=UIIMG[name]||ICV[name];if(!src)return;const sc0=+(cv.dataset.s||3),sc=UIIMG[name]&&sc0>2?2:sc0;cv.width=src.width;cv.height=src.height;
  cv.style.width=src.width*sc+'px';cv.style.height=src.height*sc+'px';const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);c.drawImage(src,0,0)}
@@ -989,6 +989,7 @@ function draw(now){
 const FX_TMP=document.createElement('canvas');FX_TMP.width=CELL;FX_TMP.height=CELL;
 function petTopY(key,LIFT){const F=formOf(key),A=artFor(F);return PET_Y+LIFT+(A?artBox(A.open).top:10)}
 function drawStatusFx(now,S,fi,PX,LIFT,key){const top=petTopY(key,LIFT),cx=PX+24,t=now/1000,still=rm();
+ if(s.awake&&!still&&Math.random()<.08)spawn('spark',1,{x:cx+(Math.random()-.5)*34,y:top+6+Math.random()*30,vy:-8,jx:4,life:.8,spread:2});   // 星耀覺醒：身上一直有星光
  if(s.clean<30){   // 泥巴斑點：只畫在幻獸身上（source-atop）
   const x=FX_TMP.getContext('2d');x.clearRect(0,0,CELL,CELL);x.drawImage(S.cv,fi*CELL,0,CELL,CELL,0,0,CELL,CELL);x.globalCompositeOperation='source-atop';
   const n=s.clean<15?9:5,tr=top-PET_Y-LIFT,bh=Math.max(8,46-tr),y0=tr+Math.round(bh*.55),yr=Math.max(3,44-y0);   // 斑點只在身體下半部，不會蓋到眼睛、臉
@@ -1166,7 +1167,7 @@ function buildStats(){$('stats').innerHTML=STATS.map(([k,l,ic,c])=>`<div class="
 function dayCount(){return Math.floor((Date.now()-s.hatchedAt)/86400000)+1}
 function growLine(){
  if(!s.hatched)return'';const now=Date.now(),q=PC.stageReq(s,now),hint=PC.tendencyHint(s);let g=`💗 親密度 ${Math.round(s.bond)}`;
- if(q){const left=[];if(!q.ageOk)left.push(`${Math.ceil(q.hours-q.age)} 小時`);if(!q.xpOk)left.push(`${q.xp-s.xp} XP`);if(!q.eventOk){const A=PC.ascendInfo(s);if(A.task&&!A.task.done)left.push(`🔔 ${A.task.text}（${A.task.alts.map(a=>fmtN(a.have)+'/'+fmtN(a.need)).join('、')}）`)}if(!q.matOk&&q.mat)left.push(`素材「${q.mat}」${q.matHave}/${CONFIG.ascend.mats}（第 ${CONFIG.ascend.bigBoss.join('、')} 關大王）`);
+ if(q){const left=[];if(!q.ageOk)left.push(`${Math.ceil(q.hours-q.age)} 小時`);if(!q.xpOk)left.push(`${q.xp-s.xp} XP`);if(!q.eventOk){const A=PC.ascendInfo(s);if(A.task&&!A.task.done)left.push(`🔔 ${A.task.text}（${A.task.alts.map(a=>fmtN(a.have)+'/'+fmtN(a.need)).join('、')}）`)}if(!q.matOk&&q.mat)left.push(`素材「${q.mat}」${q.matHave}/${CONFIG.ascend.mats}${q.shards?`＋星辰碎片 ${q.shards}`:''}（第 ${CONFIG.ascend.bigBoss.join('、')} 關大王）`);
   g+=left.length?` · 距離${STAGE_NAME[q.next]}：${left.join('、')}`:` · 即將長成${STAGE_NAME[q.next]}！`}
  return g+(hint?` · ${hint}`:'')}
 const sexMark=p=>p&&p.sex==='m'?' ♂':p&&p.sex==='f'?' ♀':'';
@@ -1179,7 +1180,7 @@ function renderPairBar(){const el=$('pairBar'),p=s.pair;if(!p||!s.hatched){el.cl
 function renderUI(){
  $('coins').textContent=s.coins;renderPairBar();
  const F=formOf(formKey()),rar=F.genome&&F.genome.rarity>1&&!F.classic?` · ${STARS[F.genome.rarity]}${RARITY[F.genome.rarity]}`:'',tierN=PC.stepTier(s);
- $('petname').textContent=s.hatched?`${s.name}${sexMark(s)}　Lv.${lvl()}${tierN?' '+'✦'.repeat(Math.min(5,tierN)):''}`:F.name;
+ $('petname').textContent=s.hatched?`${s.awake?'🌟星耀 ':''}${s.name}${sexMark(s)}　Lv.${lvl()}${tierN?' '+'✦'.repeat(Math.min(5,tierN)):''}`:F.name;
  {const T=s.hatched&&PC.traitOf(s.route);$('traitText').textContent=T&&T.good?`✨ ${T.good}　⚠️ ${T.bad}`:''}
  $('stageText').textContent=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome&&F.genome.el?' · 會孵出'+ROUTE_LABEL[F.genome.el]+'的新物種':''}`:`${s.route?ROUTE_ICON[s.route]+ROUTE_LABEL[s.route]+' · ':''}${STAGE_NAME[s.stage]} · ${F.name}${rar} · 第 ${dayCount()} 天`;
  $('growText').textContent=s.runaway?`😢 ${s.name}離家出走了！到「👟 步數」登記走路，找牠回來：${(s.runaway.got||0).toLocaleString()} / ${CONFIG.runaway.steps.toLocaleString()} 步`
@@ -1232,10 +1233,10 @@ const PERSONA={flame:['🔥 熱血行動家','想到就做、勇往直前，你�
  earth:['🪨 踏實實踐家','一步一腳印、說到做到，是大家最可靠的後盾。大地幻獸和你一樣穩，每天多走一步就更強壯。'],
  metal:['⚙️ 智慧管家','你懂得規劃、珍惜資源、目標明確。鋼鐵幻獸和你一樣，亮晶晶的金幣最迷人了。'],
  elec:['⚡ 靈感發電機','你反應快、點子多，總是走在潮流前面。雷電幻獸和你一樣，充滿電就停不下來！']};
-function quizResult(ans){const cnt={},sc={};for(const[,ops]of QUIZ)for(const[,e]of ops)cnt[e]=(cnt[e]||0)+1;
+function quizResult(ans){const cnt={},sc={},U=PC.unplayedRoutes(s);for(const[,ops]of QUIZ)for(const[,e]of ops)cnt[e]=(cnt[e]||0)+1;
  ans.forEach((a,i)=>{const e=QUIZ[i][1][a][1];sc[e]=(sc[e]||0)+1});
- const rank=Object.keys(cnt).map(e=>[e,(sc[e]||0)/cnt[e]+Math.random()*1e-6]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
- const r=Math.random(),pick=r<.7?rank[0]:r<.9?rank[1]:rank[2+Math.floor(Math.random()*(rank.length-2))];return{top:rank[0],pick,rank}}
+ const all=Object.keys(cnt).map(e=>[e,(sc[e]||0)/cnt[e]+Math.random()*1e-6]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]),rank=all.filter(e=>U.includes(e));   // 玩過的屬性不會再抽到
+ const r=Math.random(),pick=rank.length<2?rank[0]:r<.7?rank[0]:r<.9||rank.length<3?rank[1]:rank[2+Math.floor(Math.random()*(rank.length-2))];return{top:all[0],pick,rank}}
 function seedFor(el){for(let i=0;i<500;i++){const sd=crypto.getRandomValues(new Uint32Array(1))[0];if(PC.genomeOfSeed(sd).el===el)return sd}return null}
 function quizIntro(first){if(s.hatched||s.eggTaps>0)return;
  openModal('🔮 性格小測驗',`<p>${esc(ownerName())}，回答 ${QUIZ.length} 個小問題，看看你是什麼性格、和哪一種幻獸最合拍！</p><p class="small">大約 2 分鐘。結果會決定你拿到哪一顆蛋（保留一點點隨機的驚喜）。</p>`,
@@ -1250,7 +1251,7 @@ function quizDone(ans){const R2=quizResult(ans),P=PERSONA[R2.top],sd=seedFor(R2.
  PC.journal(s,Date.now(),`性格測驗：${P[0].replace(/^\S+ /,'')}`);save();
  const surprise=R2.pick!==R2.top;
  openModal('🔮 你的性格分析',`<p style="font-size:20px;text-align:center;margin:4px 0"><b>${P[0]}</b></p><p>${P[1]}</p>
- ${surprise?`<p class="small">✨ 不過…命運給了你一點驚喜：這次來找你的是 <b>${ROUTE_ICON[R2.pick]} ${EGG_EL[R2.pick]}之蛋</b>！</p>`:''}
+ ${surprise?`<p class="small">✨ ${PC.playedRoutes(s).includes(R2.top)?`${EGG_EL[R2.top]}的幻獸你已經養過了，`:'不過…命運給了你一點驚喜：'}這次來找你的是 <b>${ROUTE_ICON[R2.pick]} ${EGG_EL[R2.pick]}之蛋</b>！</p>`:''}
  <div style="text-align:center;margin-top:10px"><canvas id="qEgg" width="48" height="48" style="width:120px;height:120px;image-rendering:pixelated"></canvas><div><b>${esc(formOf(formKey()).name)}</b></div></div>`,
   [{t:'收下這顆蛋！',cls:'pri',fn:()=>{say('輕點蛋看看？',{log:false});return true}}]);
  thumb($('qEgg'),formKey(),'egg00');sfx('level')}
@@ -1303,7 +1304,7 @@ function codexDialog(){
  const hint=s.hatched?PC.tendencyHint(s):null;
  const lean=hint?`<p style="margin-top:12px"><b>${ROUTE_ICON[s.route]} ${ROUTE_LABEL[s.route]}的成長</b>：「${esc(hint)}」</p><p class="small">屬性在蛋裡就決定，從幼年到高階都是同一系：幼年期有屬性配色和尾巴 → 少年期長出頭冠 → 成年期長出完整特徵 → 高階再加上翅膀和光芒。</p>`:'';
  const n=s.dex.length,rare=s.dex.filter(e=>e.id!=='classic'&&genomeFromId(e.id).rarity>1).length;
- openModal('📖 物種圖鑑',`<p class="small">每顆蛋都會隨機孵出獨一無二的新物種（約 75% 普通、20% 稀有、5% 傳說）。已發現 <b>${n}</b> 種，其中稀有以上 <b>${rare}</b> 種。</p><div class="codex">${cards}</div>${lean}
+ openModal('📖 物種圖鑑',`<p class="small">每顆蛋都會隨機孵出獨一無二的新物種（約 75% 普通、20% 稀有、5% 傳說）。已發現 <b>${n}</b> 種，其中稀有以上 <b>${rare}</b> 種。</p><p>🏅 已經養過的屬性 <b>${PC.playedRoutes(s).length}</b> / 7：${PC.ROUTES.map(r=>PC.playedRoutes(s).includes(r)?ROUTE_ICON[r]:'❔').join(' ')}　<span class="small">新的蛋會優先給還沒養過的屬性，7 個都養過最圓滿！</span></p><div class="codex">${cards}</div>${lean}
  <p class="small" style="margin-top:10px">想收集更多？選單 →「🥚 迎接新的蛋」，或到「💞 配對」。</p>`);
  document.querySelectorAll('.card canvas').forEach(c=>{const S=sheet(c.dataset.key),x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(S.cv,S.idx.happy1*CELL,0,CELL,CELL,0,0,48,48)})}
 function journalDialog(){const J=s.journal.slice().reverse();
@@ -1375,7 +1376,7 @@ ${prow}${rows||(s.pair?'':'<p class="small">小窩裡還沒有其他夥伴。</p
 function newPet(genes,from){store.set(BACKUP_KEY,JSON.stringify(s));
  const moved=PC.moveToDen(s),oldName=s.name;
  const keep={rev:s.rev,settings:s.settings,owner:s.owner,pair:s.pair,loveNest:s.loveNest,loveAt:s.loveAt,coins:s.coins,inv:s.inv,decor:s.decor,view:s.view,cores:s.cores,ball:s.ball,den:s.den,roster:s.roster,harvests:s.harvests,dex:s.dex,eggs:s.eggs,steps:s.steps,adv:s.adv,daily:s.daily,breedAt:s.breedAt,journal:s.journal,lastExport:s.lastExport};
- s=fresh();Object.assign(s,keep);if(genes){s.genes=genes;s.seed=null}lastBackup=Date.now();evo=null;evoQueue.length=0;cancelMode();petX=PET_X;save();renderUI();
+ s=fresh();Object.assign(s,keep);if(genes){s.genes=genes;s.seed=null}else{const U=PC.unplayedRoutes(s),sd=PC.seedForEl(U[Math.floor(Math.random()*U.length)]);if(sd!==null)s.seed=sd}   // 新蛋：優先給還沒玩過的屬性lastBackup=Date.now();evo=null;evoQueue.length=0;cancelMode();petX=PET_X;save();renderUI();
  if(moved)setTimeout(()=>toast(`🪺 ${oldName} 搬進小窩休息了`,3500),400);
  say(from?'配對寶寶的蛋來了！':'一顆新的蛋來了！');setTimeout(()=>say('會孵出什麼呢？輕點看看！',{q:true}),100)}
 function spriteDialog(){
@@ -1558,7 +1559,10 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
    if(s.inv.ember)tl.push({id:'ember',name:'經驗火種',sub:`×${s.inv.ember}`,icon:'ember',desc:`打贏 Boss 得到的寶物<br>心情 +${C.ember.mood}、體力 +${C.ember.energy}、經驗 +${C.ember.xp}<br>擁有 ${s.inv.ember}`,btn:`<button class="btn pri" id="eatEmber">給牠吃</button>`});
    if(tl.length){out.push({head:'🧰 道具'});out.push(...tl)}
    out.push({head:'💎 進化素材'});
-   for(const el of PC.ROUTES){const n=(s.inv.mats||{})[el]||0;out.push({id:'mat_'+el,name:C.materials[el],sub:`${ROUTE_ICON[el]}｜×${n}`,dim:!n,icon:'mat_'+el,desc:`${ROUTE_ICON[el]}${ROUTE_LABEL[el]}進化到高階必須的素材（進化時用掉 1 個）<br>打贏該屬性區域的 Boss 會掉落（第一次必掉，之後 ${Math.round(C.matDrop*100)}%）<br>擁有 ${n}`,btn:''})}}
+   for(const el of PC.ROUTES){const n=(s.inv.mats||{})[el]||0;out.push({id:'mat_'+el,name:C.materials[el],sub:`${ROUTE_ICON[el]}｜×${n}`,dim:!n,icon:'mat_'+el,desc:`${ROUTE_ICON[el]}${ROUTE_LABEL[el]}${ROUTE_LABEL[el]}的終極素材，進化到高階要 ${C.ascend.mats} 個（不夠可以用星辰碎片補）<br>第 ${C.ascend.bigBoss.join('、')} 關大王各掉一次（依你那時這隻的屬性）<br>擁有 ${n}`,btn:''})}
+   out.push({head:'🌟 星辰寶物'});
+   out.push({id:'shards',name:'星辰碎片',sub:`×${s.inv.shards||0}`,dim:!s.inv.shards,icon:'gem',desc:`可以抵 1 個任何屬性的終極素材（例如羽毛只有 2 個，加 1 個碎片就能湊滿 ${C.ascend.mats} 個）。<br>第 ${C.starHeart.stage} 關大王：每個屬性第一次打贏必掉，之後 ${Math.round(C.starHeart.shardRepeat*100)}%<br>擁有 ${s.inv.shards||0}`,btn:''});
+   {const w=PC.canAwaken(s);out.push({id:'hearts',name:'星辰之心',sub:`×${s.inv.hearts||0}`,dim:!s.inv.hearts,icon:'star',desc:`給<b>高階</b>的幻獸使用：星耀覺醒！全部能力 +${Math.round((C.starHeart.statX-1)*100)}%、存錢筒 ×${C.starHeart.piggyX}、名字前加「星耀」、身上有星光。<br>每個屬性第一次打倒第 ${C.starHeart.stage} 關大王得到<br>擁有 ${s.inv.hearts||0}${s.awake?'<br>✨ '+esc(s.name)+' 已經星耀覺醒了':''}`,btn:w?`<button class="btn" disabled>${w}</button>`:`<button class="btn pri" id="useHeart">✨ 給 ${esc(s.name)} 使用</button>`})}}
   return out};
  const render=()=>{const list=entries(),items=list.filter(e=>!e.head);if(!items.length){$('shopBody').innerHTML='<p class="small">背包是空的</p>';return}if(!items.find(e=>e.id===SHOP_SEL[tab]))SHOP_SEL[tab]=items[0].id;const cur=items.find(e=>e.id===SHOP_SEL[tab]);
   $('shopBody').innerHTML=`<div class="shopgrid"><div class="slist">${list.map(e=>e.head?`<div class="shead">${e.head}</div>`:`<button class="sitem ${e.id===cur.id?'on':''} ${e.fresh?'fresh':''} ${e.dim?'dim':''}" data-si="${e.id}"><b>${e.name}</b><span>${e.sub}</span></button>`).join('')}</div>
@@ -1573,6 +1577,7 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
   document.querySelectorAll('#shopBody canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));
   document.querySelectorAll('[data-feedk]').forEach(b=>b.onclick=()=>{closeModal();FEED.kind=b.dataset.feedk;act('feed')});
   if($('goFarm'))$('goFarm').onclick=()=>{closeModal();farmDialog()};
+  if($('useHeart'))$('useHeart').onclick=()=>{const r=PC.awaken(s,Date.now());if(!r.ok){toast('❌ '+r.msg);return}closeModal();save();renderUI();flashUntil=performance.now()+700;sfx('evolve');buzz(40);playAnim('happy',1400);spawn('star',14,{y:66,vy:-30,jx:60,life:1.6,stagger:.05});say(r.msg)};
   if($('eatEmber'))$('eatEmber').onclick=()=>{const x0=s.xp,r=PC.useEmber(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}toast(r.msg+`　經驗 +${r.xp}`);sfx('level');spawn('star',6,{x:petX+24,y:60,vy:-20,life:1.2});save();renderUI();afterChange(x0);render()};
   if($('eatCandy'))$('eatCandy').onclick=()=>{const x0=s.xp,r=PC.useCandy(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}
    closeModal();playAnim('eat');sfx('eat');spawn('star',4,{y:66,life:1.1,stagger:.15});spawn('heart',3,{y:70,life:1.1});say(r.msg+(r.xp?`　經驗 +${r.xp}`:''));save();renderUI();afterChange(x0)}};
@@ -1601,6 +1606,7 @@ ${why&&why!=='這一關還沒解鎖'?'<p class="err">'+why+'</p>':''}${list}`);
  document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{const n=+b.dataset.st,w=PC.canAdventure(s,n);if(w){toast(w);return}closeModal();startBattle(n)})}
 function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();petX=PET_X;const r=PC.startAdventure(s,n,Date.now());if(!r.ok){toast(r.msg);return}save();renderUI();
  const me=PC.mkFighter(s.name,formKey(),lvl(),s.route,tier(),s.mood,s.bond),foe=foeFighter(n);
+ if(s.awake)for(const k of['max','hp','atk','def'])me[k]=k==='max'||k==='hp'?Math.round(me[k]*CONFIG.starHeart.statX):me[k]*CONFIG.starHeart.statX;   // 星耀覺醒：全能力 +20%
  const duo=PC.pairAdventureCost(s),P=s.pair,me2=duo?PC.mkFighter(P.name,pairKey(),PC.level(P.xp),P.route,tier(),P.mood,P.bond):null;   // 第二隻有體力就一起上場
  if(duo){foe.max=foe.hp=Math.round(foe.max*CONFIG.pair.foeHp);save()}
  const fx0=()=>({dx:0,dy:0,flash:0,faint:0,anim:null,t0:0});
@@ -1746,7 +1752,7 @@ function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond
  if(r.food)rows.push(['apple','蘋果','+1','']);
  if(r.potion)rows.push(['potion','回復藥水','+1','']);
  if(r.ember)rows.push(['ember','經驗火種','+1','Boss 寶物！']);
- if(r.mat)rows.push(['mat_'+r.mat,CONFIG.materials[r.mat],'+1',`💎 終極素材 ${Math.min(r.matN,CONFIG.ascend.mats)}/${CONFIG.ascend.mats}`]);
+ if(r.heart)rows.push(['star','星辰之心','+1','🌟 最終大王的寶物！']);if(r.shard)rows.push(['gem','星辰碎片','+1','可抵 1 個終極素材']);if(r.mat)rows.push(['mat_'+r.mat,CONFIG.materials[r.mat],'+1',`💎 終極素材 ${Math.min(r.matN,CONFIG.ascend.mats)}/${CONFIG.ascend.mats}`]);
  const notes=[];if(r.trial)notes.push(`🏅 通過${ROUTE_LABEL[r.trial]}的高階試煉！`);if(r.unlocked)notes.push(`🗺️ 發現新地點！解鎖第 ${r.unlocked} 關`);for(const e of r.events)if(e!=='place')notes.push(`✨ 發生了「${PC.EVENT_TEXT[e]}」事件！`);
  if(win&&!B.full)notes.push('今天的冒險獎勵次數用完了，只拿到少量經驗');
  if(win){blog('🎉 勝利！');sfx('level');spawn('star',10,{x:40,y:70,vy:-30,jx:50,life:1.4},bparts)}
