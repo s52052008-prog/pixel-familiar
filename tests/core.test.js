@@ -43,7 +43,7 @@ t('撫摸 30 分鐘內只有第一次有收益（重新載入也一樣）', () =
 for (const [label, hrs] of [['2 小時', 2], ['24 小時', 24], ['7 天', 168]]) {
   t(`離線 ${label}：狀態最多變化 12 小時，年齡 ${hrs} 小時`, () => {
     const s = hatched(); s.hunger = 80; s.mood = 80; s.energy = 20; const now = T0 + hrs * H; C.applyTime(s, now);
-    const eff = Math.min(hrs, 12); assert.equal(Math.round(s.hunger * 100) / 100, 80 - 4 * eff); assert.equal(s.mood, 80 - 3 * eff); assert.equal(s.energy, Math.min(100, 20 + 8 * eff));
+    const eff = Math.min(hrs, 12); assert.equal(Math.round(s.hunger * 100) / 100, hrs >= 20 ? 0 : 80 - 4 * eff); assert.equal(s.mood, 80 - 3 * eff); assert.equal(!!s.runaway, hrs >= 32);   // 飽食用真實時間：20 小時餓到 0、再 12 小時離家出走 assert.equal(s.energy, Math.min(100, 20 + 8 * eff));
     assert.equal(C.ageHours(s, now), hrs);
   });
 }
@@ -208,7 +208,7 @@ t('野生怪會跟著玩家等級變強', () => { assert.equal(C.foeFor(1, 20).l
 t('猜拳：贏＝0 倍（躲開）、平手 0.8、輸 1.2、沒選算輸', () => { assert.deepEqual(C.rps('rock', 'scissors'), { result: 'win', mult: 0 }); assert.deepEqual(C.rps('paper', 'paper'), { result: 'tie', mult: .8 }); assert.deepEqual(C.rps('scissors', 'rock'), { result: 'lose', mult: 1.2 }); assert.equal(C.rps(null, 'rock').mult, 1.2); });
 // V1.22：屬性特性與弱點、水費、球會爆
 t('洗澡要付水費 3 金幣；土系 5 金幣而且洗不太乾淨', () => { const s = hatched(); s.clean = 40; s.coins = 10; C.act(s, 'wash', T0); assert.equal(s.coins, 7); assert.equal(s.clean, 75);
-  const e = hatched(); e.route = 'earth'; e.clean = 40; e.coins = 10; C.act(e, 'wash', T0); assert.equal(e.coins, 5); assert.equal(e.clean, 68); e.coins = 2; e.care.bathLastAt = 0; e.clean = 10; assert.equal(C.act(e, 'wash', T0 + 99 * H).code, 'nocoin'); });
+  const e = hatched(); e.route = 'earth'; e.clean = 40; e.coins = 10; C.act(e, 'wash', T0); assert.equal(e.coins, 5); assert.equal(e.clean, 68); e.coins = 2; e.care.bathLastAt = 0; e.clean = 10; assert.equal(C.act(e, 'wash', T0 + 2 * H).code, 'nocoin'); });
 t('球每玩 3 次就爆掉，下次玩要付 3 金幣買新球；沒錢就不能玩', () => { const s = hatched(); s.coins = 3; for (let i = 0; i < 3; i++) { s.energy = 100; const r = C.act(s, 'play', T0); assert.equal(!!r.popped, i === 2); } assert.ok(s.ballBroken);
   s.energy = 100; const r = C.act(s, 'play', T0); assert.ok(r.ok); assert.equal(r.bought, 3); assert.equal(s.coins, 0); assert.ok(!s.ballBroken);
   s.ballBroken = true; assert.ok(C.canAct(s, 'play', T0)); assert.equal(C.act(s, 'play', T0).code, 'noball'); });
@@ -231,6 +231,12 @@ t('能力水果：給對的屬性吃，體力 +10、經驗 +15 額外加成', ()
 t('高階進化要有該屬性的素材，進化時用掉；Boss 第一次必掉素材', () => { const s = hatched(); s.xp = 2000; s.route = 'flame'; s.events.volcano = true; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult'); assert.equal(C.stageReq(s, T0 + 200 * H).mat, '火種源');
   s.inv.mats.flame = 1; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended'); assert.equal(s.inv.mats.flame, 0);
   const b = hatched(); b.energy = 100; b.adv.stage = 15; const st = C.startAdventure(b, 15, T0); const o = C.finishAdventure(b, 15, 'win', st.full, T0, () => .99); assert.equal(o.mat, 'flame'); assert.equal(b.inv.mats.flame, 1); });
+t('太久沒餵：餓到 0 再過 12 小時就離家出走；走 1 萬步找回來', () => { const s = hatched(); s.hunger = 40; C.applyTime(s, T0 + 9 * H); assert.equal(s.hunger, 4); assert.equal(s.runaway, null);
+  C.applyTime(s, T0 + 10 * H + 11 * H); assert.equal(s.hunger, 0); assert.equal(s.runaway, null); const r = C.applyTime(s, T0 + 10 * H + 12 * H); assert.ok(s.runaway); assert.ok(r.events.includes('runaway'));
+  assert.equal(C.act(s, 'feed', T0 + 23 * H).code, 'runaway'); assert.ok(C.canAdventure(s, 1, T0 + 23 * H)); s.bond = 50;
+  C.creditSteps(s, 6000, C.dayKey(T0 + 23 * H), T0 + 23 * H); assert.ok(s.runaway); const o = C.creditSteps(s, 10000, C.dayKey(T0 + 23 * H), T0 + 23 * H); assert.ok(o.found); assert.equal(s.runaway, null); assert.equal(s.hunger, 40); assert.equal(s.bond, 35); });
+t('離開很久（超過 12 小時上限）也會真的餓到離家出走', () => { const s = hatched(); s.hunger = 60; C.applyTime(s, T0 + 30 * H); assert.ok(s.runaway); const k = hatched(); k.hunger = 60; C.applyTime(k, T0 + 20 * H); assert.equal(k.runaway, null); assert.equal(k.hunger, 0); });
+t('餓到 0 之後餵食，飽食會正常回升，倒數取消', () => { const s = hatched(); s.hunger = 8; C.applyTime(s, T0 + 3 * H); assert.equal(s.hunger, 0); assert.ok(s.starveSince); s.inv.food = 3; C.act(s, 'feed', T0 + 3 * H); assert.equal(s.hunger, 10); C.applyTime(s, T0 + 3 * H + 60000); assert.ok(s.hunger > 9); assert.equal(s.starveSince, 0); });
 // 頂球
 t('頂球：結算套用玩耍規則、記錄最佳分數', () => { const s = hatched(); s.energy = 50; s.mood = 40; const r = C.finishBallGame(s, 2, T0); assert.ok(r.ok); assert.equal(s.mood, 55); assert.equal(s.ball.best, 2); assert.equal(s.ball.goals, 2); C.finishBallGame(s, 1, T0); assert.equal(s.ball.best, 2); s.energy = 5; assert.ok(!C.finishBallGame(s, 3, T0).ok); assert.equal(s.ball.best, 2); });
 // 小窩

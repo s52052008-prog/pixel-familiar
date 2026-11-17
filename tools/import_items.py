@@ -57,22 +57,28 @@ def outline(im, col):
     return im
 
 
-def main(path):
+# 第二張總表（2 列 × 7）：能力水果、高階進化素材
+ITEMS2 = [(n, 16, 16, 1) for n in ['dragon', 'melonw', 'melon', 'potato', 'nut', 'coconut', 'banana',
+                                   'mat_flame', 'mat_tide', 'mat_forest', 'mat_earth', 'mat_bird', 'mat_metal', 'mat_elec']]
+
+
+def main(path, items=None, rows=5, cols=5, preview='preview-items.png'):
+    items = items or ITEMS
     a = np.asarray(Image.open(path).convert('RGB'))
     fg = mask_of(a)
     lab, n = ndimage.label(fg)
     objs = ndimage.find_objects(lab)
     areas = ndimage.sum(fg, lab, range(1, n + 1))
-    big = sorted(range(n), key=lambda i: -areas[i])[:25]
+    big = sorted(range(n), key=lambda i: -areas[i])[:rows * cols]
     H = a.shape[0]
-    rows = sorted(big, key=lambda i: (objs[i][0].start + objs[i][0].stop) / 2)
+    rws = sorted(big, key=lambda i: (objs[i][0].start + objs[i][0].stop) / 2)
     order = []
-    for r in range(5):
-        order += sorted(rows[r * 5:(r + 1) * 5], key=lambda i: objs[i][1].start)
+    for r in range(rows):
+        order += sorted(rws[r * cols:(r + 1) * cols], key=lambda i: objs[i][1].start)
     outdir = os.path.join(ROOT, 'sprites', 'items')
     os.makedirs(outdir, exist_ok=True)
     prev = []
-    for (name, mw, mh, keep), i in zip(ITEMS, order):
+    for (name, mw, mh, keep), i in zip(items, order):
         # 同一格附近的小碎塊（例如星星、葉子）一起算進來
         cy, cx = (objs[i][0].start + objs[i][0].stop) / 2, (objs[i][1].start + objs[i][1].stop) / 2
         ids = [i + 1] + [k + 1 for k in range(n) if k not in big and areas[k] > 30 and abs((objs[k][0].start + objs[k][0].stop) / 2 - cy) < 110 and abs((objs[k][1].start + objs[k][1].stop) / 2 - cx) < 110]
@@ -96,8 +102,11 @@ def main(path):
     x = 5
     for _, im in prev:
         pv.alpha_composite(Image.fromarray(im, 'RGBA').resize((im.shape[1] * sc, im.shape[0] * sc), Image.NEAREST), (x, 10)); x += im.shape[1] * sc + 10
-    pv.save(os.path.join(ROOT, 'art', 'preview-items.png'))
+    pv.save(os.path.join(ROOT, 'art', preview))
 
 
 if __name__ == '__main__':
-    main(sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'art', 'src', 'sheets', 'items.png'))
+    if len(sys.argv) > 1 and sys.argv[1] == 'items2':
+        main(os.path.join(ROOT, 'art', 'src', 'sheets', 'items2.png'), ITEMS2, 2, 7, 'preview-items2.png')
+    else:
+        main(sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'art', 'src', 'sheets', 'items.png'))
