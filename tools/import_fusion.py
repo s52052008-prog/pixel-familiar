@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """血繼幻獸圖（綠底，4 欄＝幼年／少年／成年／高階 × 2 排＝睜眼／閉眼）→ sprites/fusion/<名>_<1..4>_<open|closed>.png
 用法：python3 tools/import_fusion.py <名稱> [原圖路徑] [--base=主屬性] [--eyes=左眼x,右眼x,y] [--iris=#深色,#亮色]
+  --mouth=x,y：補一個小小的 ω 嘴
+  --clean=x0,y0,x1,y1：先把臉上這塊範圍的深色殘影清掉（避免看起來像多一隻眼睛）
   --eyesize=beast：四腳獸的高階用兇兇的獸眼；--eyesize=4：臉比較小時用 4×4 的眼睛；--keepclosed：閉眼保留原圖（原本就畫得好時）
   --eyes：高階縮圖後眼睛糊掉時，在這兩個位置重畫 5×5 的像素大眼（睜眼）和「︶」（閉眼）
 例：python3 tools/import_fusion.py blossom --base=flame --eyes=13,22,17 --iris=#8a3a10,#f0a030
@@ -65,7 +67,20 @@ def fix_eyes(im, xs, y, iris, closed, size=5):
     return a
 
 
-def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esize=5, keepclosed=False):
+def clean_face(a, box, keep):
+    """box 範圍裡的深色殘影（keep 是新畫的眼睛格子，不動）換成左右最近的淺色"""
+    a = a.copy(); x0, y0, x1, y1 = box
+    dark = lambda c: c[3] and int(c[0]) + int(c[1]) + int(c[2]) < 330
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            if (x, y) in keep or not dark(a[y, x]): continue
+            for d in range(1, 6):
+                cand = [a[y, xx] for xx in (x - d, x + d) if x0 - 3 <= xx < x1 + 3 and (xx, y) not in keep and not dark(a[y, xx])]
+                if cand: a[y, x] = cand[0]; break
+    return a
+
+
+def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esize=5, keepclosed=False, clean=None, mouth=None):
     path = path or os.path.join(ROOT, 'art', 'src', 'fusion', name + '.png')
     a = np.asarray(Image.open(path).convert('RGB')); m = mask_of(a)
     rows = runs(ndimage.binary_closing(m.sum(1) > 0, iterations=6), 40)[:2]
@@ -83,7 +98,13 @@ def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esi
             ims.append(downsample(a, mm, b, tw, th, (CELL - tw) // 2, 46 - th))
         ims, pal = quantize(ims, 24); oc = min(pal.tolist(), key=lambda q: lum(q)); ims = [add_outline(i, oc) for i in ims]
         if eyes and st == 4:
-            ir = [hexc(c) for c in iris]; ims = [fix_eyes(ims[0], eyes[:2], eyes[2], ir, False, esize), ims[1] if keepclosed else fix_eyes(ims[1], eyes[:2], eyes[2], ir, True, esize)]
+            ir = [hexc(c) for c in iris]
+            if clean:   # 先清掉臉上的深色殘影，再畫眼睛
+                ims = [clean_face(im, clean, set()) for im in ims]
+            ims = [fix_eyes(ims[0], eyes[:2], eyes[2], ir, False, esize), ims[1] if keepclosed else fix_eyes(ims[1], eyes[:2], eyes[2], ir, True, esize)]
+            if mouth:   # 小小的 ω 嘴（清殘影時會被一起清掉，補回來）
+                for im in ims:
+                    for dx, dy in ((0, 0), (1, 1), (2, 1), (3, 0)): im[mouth[1] + dy, mouth[0] + dx] = (70, 30, 20, 255)
         for kind, im in zip(('open', 'closed'), ims): Image.fromarray(im, 'RGBA').save(os.path.join(out, f'{name}_{st}_{kind}.png'))
         res.append(ims)
     S = 4; pv = Image.new('RGBA', (4 * (CELL * S * 2 + 20), CELL * S * 2 + 30), (70, 110, 70, 255))
@@ -99,4 +120,4 @@ if __name__ == '__main__':
     opt = lambda k: next((x[len(k) + 3:] for x in sys.argv[1:] if x.startswith('--' + k + '=')), None)
     args = [x for x in sys.argv[1:] if not x.startswith('--')]
     ey = opt('eyes'); ir = opt('iris')
-    main(args[0], args[1] if len(args) > 1 else None, opt('base'), [int(v) for v in ey.split(',')] if ey else None, ir.split(',') if ir else ('#2a3a8a', '#e8a030'), (opt('eyesize') if opt('eyesize') == 'beast' else int(opt('eyesize') or 5)), '--keepclosed' in sys.argv)
+    main(args[0], args[1] if len(args) > 1 else None, opt('base'), [int(v) for v in ey.split(',')] if ey else None, ir.split(',') if ir else ('#2a3a8a', '#e8a030'), (opt('eyesize') if opt('eyesize') == 'beast' else int(opt('eyesize') or 5)), '--keepclosed' in sys.argv, [int(v) for v in opt('clean').split(',')] if opt('clean') else None, [int(v) for v in opt('mouth').split(',')] if opt('mouth') else None)
