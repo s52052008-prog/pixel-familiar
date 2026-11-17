@@ -137,6 +137,10 @@ def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esi
                 src = im.copy()
                 for yy in range(my0, my1 + 1):
                     for xx in range(mx0, mx1 + 1): im[yy, ax2 - xx] = src[yy, xx]
+        for pst, pts in PX:   # --px=階段:x,y,RRGGBB;…：最後手動修幾格（例如鬍鬚），睜眼閉眼都套
+            if pst == st:
+                for x, y, c in pts:
+                    for im in ims: im[y, x] = hexc(c)
         for kind, im in zip(('open', 'closed'), ims): Image.fromarray(im, 'RGBA').save(os.path.join(out, f'{name}_{st}_{kind}.png'))
         res.append(ims)
     S = 4; pv = Image.new('RGBA', (4 * (CELL * S * 2 + 20), CELL * S * 2 + 30), (70, 110, 70, 255))
@@ -149,6 +153,7 @@ def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esi
 
 
 SYMS = {int(x[5]): {'src': [int(v) for v in x[7:].split(',')[:4]], 'from': x[7:].split(',')[4], 'r': int(x[7:].split(',')[5]) if len(x[7:].split(',')) > 5 else 3} for x in sys.argv[1:] if x[:5] == '--sym' and x[5:6].isdigit()}   # --sym1=…～--sym4=：每個階段各自鏡像
+PX = [(int(x[5:].split(':')[0]), [(int(q.split(',')[0]), int(q.split(',')[1]), '#' + q.split(',')[2]) for q in x[5:].split(':')[1].split(';')]) for x in sys.argv[1:] if x.startswith('--px=')]
 MIR = [[int(v) for v in x[6:].replace(':', ',').split(',')] for x in sys.argv[1:] if x.startswith('--mir=')]   # --mir=階段:x0,x1,y0,y1,軸2（可重複）
 
 if __name__ == '__main__':
