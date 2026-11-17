@@ -233,7 +233,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.36.0';
+const VERSION='1.37.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1110,9 +1110,10 @@ function afterChange(x0){
  if(L1>L0){say(`升到 Lv.${L1}！`,{q:true});sfx('level');spawn('star',6,{y:70,vy:-30,jx:40,life:1.3})}
  runStages()}
 const evoQueue=[];
-function runStages(){if(!s.hatched)return;
+function runStages(){if(!s.hatched)return;const wasAdult=s.stage==='adult';
  if(s.pair){const pt=PC.pairStages(s,Date.now());if(pt.length){save();renderUI();const e=pt[pt.length-1];toast(`🎉 ${e.name} 長成${STAGE_NAME[e.to]}了！`,3500)}}
- const tr=PC.checkStages(s,Date.now());if(!tr.length)return;save();evoQueue.push(...tr);if(!evo)setTimeout(nextEvo,600)}
+ const tr=PC.checkStages(s,Date.now());if(!tr.length)return;
+ if(!wasAdult&&tr.some(e=>e.to==='adult'))setTimeout(()=>{const A=PC.ascendInfo(s);if(A.task){toast(`🔔 專屬任務出現！${A.task.text}，再集滿 ${CONFIG.ascend.mats} 個「${CONFIG.materials[s.route]}」就能邁入高階`,6000);sfx('level')}},5200);save();evoQueue.push(...tr);if(!evo)setTimeout(nextEvo,600)}
 function nextEvo(){
  const t=evoQueue.shift();if(!t){renderUI();return}if(evo){evoQueue.unshift(t);return}
  const id=gidOf(s),fromK=petKey(id,formCode(t.from,t.route)),toK=petKey(id,formCode(t.to,t.route)),TF=formOf(toK);
@@ -1165,7 +1166,7 @@ function buildStats(){$('stats').innerHTML=STATS.map(([k,l,ic,c])=>`<div class="
 function dayCount(){return Math.floor((Date.now()-s.hatchedAt)/86400000)+1}
 function growLine(){
  if(!s.hatched)return'';const now=Date.now(),q=PC.stageReq(s,now),hint=PC.tendencyHint(s);let g=`💗 親密度 ${Math.round(s.bond)}`;
- if(q){const left=[];if(!q.ageOk)left.push(`${Math.ceil(q.hours-q.age)} 小時`);if(!q.xpOk)left.push(`${q.xp-s.xp} XP`);if(!q.eventOk){const A=PC.ascendInfo(s);if(!A.trial)left.push(`打贏第 ${CONFIG.ascend.trialStage} 關以後的 Boss`);if(A.task&&!A.task.done)left.push(`${A.task.text}（${A.task.need>1?fmtN(A.task.have)+' / '+fmtN(A.task.need):'未完成'}）`)}if(!q.matOk&&q.mat)left.push(`素材「${q.mat}」`);
+ if(q){const left=[];if(!q.ageOk)left.push(`${Math.ceil(q.hours-q.age)} 小時`);if(!q.xpOk)left.push(`${q.xp-s.xp} XP`);if(!q.eventOk){const A=PC.ascendInfo(s);if(A.task&&!A.task.done)left.push(`🔔 ${A.task.text}（${A.task.alts.map(a=>fmtN(a.have)+'/'+fmtN(a.need)).join('、')}）`)}if(!q.matOk&&q.mat)left.push(`素材「${q.mat}」${q.matHave}/${CONFIG.ascend.mats}（第 ${CONFIG.ascend.bigBoss.join('、')} 關大王）`);
   g+=left.length?` · 距離${STAGE_NAME[q.next]}：${left.join('、')}`:` · 即將長成${STAGE_NAME[q.next]}！`}
  return g+(hint?` · ${hint}`:'')}
 const sexMark=p=>p&&p.sex==='m'?' ♂':p&&p.sex==='f'?' ♀':'';
@@ -1284,8 +1285,8 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',`
 <p><b>🪺 小窩：</b>點院子裡的小窩可以升級（4 級，最多住 4 隻）。迎接新蛋時，小窩有空位的話，現在的夥伴會搬進去休息，不用告別。</p>
 <p><b>🛒 商店：</b>用金幣買家具，擺進小窩裡（在畫面上點兩下小窩就能進去，裡面右上角「🛠 小窩」可以升級、換夥伴）。家具是裝飾，晚上有燈的房間會比較亮。商店也賣食物、種子和星星糖。</p>
 <p><b>🎯 每日任務：</b>每天 3 個（★ 簡單、★★ 普通、★★★ 困難），越難獎勵越好；3 個都完成任務等級 +1，之後更難、獎勵更好。</p>
-<p><b>高階條件（七個屬性都一樣）：</b>① 打贏第 ${C.ascend.trialStage} 關以後任一隻 Boss（通過試煉，第一次必掉自己屬性的素材）② 完成專屬任務 ③ 用掉 1 個該屬性素材。</p>
-<p><b>專屬任務：</b>${PC.ROUTES.map(r=>ROUTE_ICON[r]+' '+C.ascend.tasks[r][2]).join('；')}。</p>
+<p><b>高階條件（七個屬性都一樣）：</b>① 長到成年期時會跳出 🔔 專屬任務，從那時開始算 ② 集滿 3 個該屬性的終極素材：第 ${C.ascend.bigBoss.join('、')} 關的大王各掉一次（依你目前這隻的屬性；換別的屬性的幻獸可以再拿）。每 5 關有小王、每 10 關有大王。</p>
+<p><b>專屬任務：</b>${PC.ROUTES.map(r=>ROUTE_ICON[r]+' '+C.ascend.tasks[r].map(([k,n])=>({wins:'打贏 '+n+' 場',washes:'洗澡 '+n+' 次',harvests:'收成 '+n+' 次',steps:'走 '+n.toLocaleString('en-US')+' 步',earthWins:'打贏 '+n+' 隻土屬性怪',goals:'頂球進 '+n+' 球',bondUses:'羈絆之力 '+n+' 次',cleanups:'清理 '+n+' 次'})[k]).join('或')).join('；')}。</p>
 <p><b>親密度：</b>20 解鎖撒嬌與早安問候、50 每天收到小禮物、80 戰鬥時撐住一次。</p>
 <p><b>⚔️ 戰鬥技巧：</b>戰鬥地點依怪獸屬性變成草原、岩石地、水邊、森林或星之塔。招式有撞擊、屬性技、蓄力（下一擊 ×2）、防禦、回復藥水和逃跑，按鈕上會顯示預估傷害（▲效果好、▼效果差）。快被打倒時會出現「💗 羈絆之力」：花 10 金幣買加油棒，倒數後 2 秒內連打螢幕，20 下 2.2 倍、22 下 2.5 倍、25 下 2.7 倍、28 下以上 3 倍（每場一次）；發揮超常能力後要休息 2 小時才能再冒險。敵人出招前會猜拳：猜贏完全躲開，平手受 0.8 倍傷害，猜輸或沒選受 1.2 倍。</p>
 <p><b>每天：</b>第一次打開送金幣 +${C.daily.coins}、食物 +${C.daily.food}。沒食物又沒錢時可以免費「採集」。冒險不限次數，有體力就能出發。</p>
@@ -1588,12 +1589,12 @@ const AREAS=['青草原','迷霧湖','火山口','古森林','大地峽谷','天
 function areaName(n){return AREAS[Math.min(8,Math.floor((n-1)/5))]+' '+(n>40?n-40:((n-1)%5)+1)}
 /* 野生怪獸用另一套（程式繪製）的外型，不會跟 7 系幻獸長得一樣 */
 function foeFighter(n){const f=PC.foeFor(n,lvl()),key=petKey(f.id,formCode(f.stage,f.route))+'|wild',F=formOf(key);
- const ft=PC.mkFighter((f.boss?'Boss ':'野生的 ')+F.name,key,f.level,f.route,0,80,0);ft.max=ft.hp=Math.round(ft.max*(f.boss?1.25:1.3));return ft}   // 野生怪比較耐打（V1.33：1.4→1.3）
+ const ft=PC.mkFighter((f.big?'👑大王 ':f.boss?'小王 ':'野生的 ')+F.name,key,f.level,f.route,0,80,0);ft.max=ft.hp=Math.round(ft.max*(f.big?1.6:f.boss?1.25:1.3));return ft}   // 野生怪比較耐打（V1.33：1.4→1.3）
 let B=null;const bparts=[];const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function advDialog(){PC.claimDaily(s,Date.now());tick();
  const why=PC.canAdventure(s,s.adv.stage);let list='';const top=s.adv.stage,A=CONFIG.adventure;
  for(let n=top;n>=Math.max(1,top-5);n--){const f=foeFighter(n),ev=Object.keys(CONFIG.bossStages).find(k=>CONFIG.bossStages[k]===n);
-  list+=`<button class="btn stagebtn ${n===top?'pri':''}" data-st="${n}"><span>${n%5===0?'👑 ':''}第 ${n} 關 · ${areaName(n)}${ev&&!s.events[ev]?' ✨':''}</span><span class="small" style="color:inherit">Lv.${f.level} ${EL_NAME[f.el]}</span></button>`}
+  list+=`<button class="btn stagebtn ${n===top?'pri':''}" data-st="${n}"><span>${n%10===0?'👑 大王 ':n%5===0?'⭐ 小王 ':''}第 ${n} 關 · ${areaName(n)}${ev&&!s.events[ev]?' ✨':''}</span><span class="small" style="color:inherit">Lv.${f.level} ${EL_NAME[f.el]}</span></button>`}
  openModal('⚔️ 冒險',`<p>體力：<b>${Math.round(s.energy)}</b>（出發需要 ${A.minEnergy}，會消耗 20）　戰績：${s.adv.wins} 勝 ${s.adv.losses} 敗</p>
 <p class="small">不限次數，有體力就能出發。<br>完成：經驗 +${A.xp}、金幣 +${A.coinsMin}～${A.coinsMax}、🔥 焰系 +${A.flame}；勝利再加經驗 +10、金幣 +4、🔥 +2。失敗不扣東西，經驗 +3。<br>第一次打通新關卡＝發現新地點（🌿 森系 +2）。✨ 標記的 Boss 關有特殊事件。<br>屬性相剋：🔥 剋 🌿、🌿 剋 💧、💧 剋 🔥（屬性技 1.5 倍）。</p>
 ${why&&why!=='這一關還沒解鎖'?'<p class="err">'+why+'</p>':''}${list}`);
@@ -1745,7 +1746,7 @@ function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond
  if(r.food)rows.push(['apple','蘋果','+1','']);
  if(r.potion)rows.push(['potion','回復藥水','+1','']);
  if(r.ember)rows.push(['ember','經驗火種','+1','Boss 寶物！']);
- if(r.mat)rows.push(['mat_'+r.mat,CONFIG.materials[r.mat],'+1','💎 高階進化素材！']);
+ if(r.mat)rows.push(['mat_'+r.mat,CONFIG.materials[r.mat],'+1',`💎 終極素材 ${Math.min(r.matN,CONFIG.ascend.mats)}/${CONFIG.ascend.mats}`]);
  const notes=[];if(r.trial)notes.push(`🏅 通過${ROUTE_LABEL[r.trial]}的高階試煉！`);if(r.unlocked)notes.push(`🗺️ 發現新地點！解鎖第 ${r.unlocked} 關`);for(const e of r.events)if(e!=='place')notes.push(`✨ 發生了「${PC.EVENT_TEXT[e]}」事件！`);
  if(win&&!B.full)notes.push('今天的冒險獎勵次數用完了，只拿到少量經驗');
  if(win){blog('🎉 勝利！');sfx('level');spawn('star',10,{x:40,y:70,vy:-30,jx:50,life:1.4},bparts)}
