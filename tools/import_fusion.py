@@ -91,6 +91,9 @@ def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esi
     bgc = np.median(np.concatenate([a[:8].reshape(-1, 3), a[-8:].reshape(-1, 3)]), axis=0)   # 背景綠
     m &= np.abs(a.astype(int) - bgc).sum(2) > 70   # 被圈起來的綠底（觸角的圈圈裡面）也要去掉；樹葉的黃綠色離背景綠夠遠，不會被去掉
     rows = runs(ndimage.binary_closing(m.sum(1) > 0, iterations=6), 40)[:2]
+    if len(rows) < 2:   # 上下兩排貼太近（高階的頭髮／翅膀幾乎碰到）：在中間找最空的那一列切開
+        H = m.shape[0]; s = m.sum(1); cut = H * 2 // 5 + int(np.argmin(s[H * 2 // 5: H * 3 // 5])); r0 = rows[0]
+        rows = [(r0[0], cut), (cut, r0[1])]
     cols = columns(m)
     out = os.path.join(ROOT, 'sprites', 'fusion'); os.makedirs(out, exist_ok=True); res = []
     for c, (x0, x1) in enumerate(cols):
@@ -122,7 +125,16 @@ def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esi
                 src = im.copy()
                 for yy in range(cy - h, cy + h + 1):
                     for xo in range(-h, h + 1): im[yy, dx - xo] = src[yy, sx + xo]
-        ims, pal = quantize(ims, 24); oc = min(pal.tolist(), key=lambda q: lum(q)); ims = [add_outline(i, oc) for i in ims]
+        if WARM:   # --warm：整隻幾乎都是藍白色時，小小的橘色嘴喙、腳、粉紅臉頰會在減色時被吃掉：先記下來，減色後補回去
+            acc = np.array([[245, 170, 60], [225, 130, 35], [170, 85, 25], [245, 150, 150], [215, 110, 115]])
+            wk = []
+            for im in ims:
+                c = im[..., :3].astype(int); r, g, bl = c[..., 0], c[..., 1], c[..., 2]
+                sel = (im[..., 3] > 0) & (r > 150) & (r - bl > 70) & (r - g > 20)
+                wk.append((sel, acc[((c[sel][:, None, :] - acc[None]) ** 2).sum(-1).argmin(1)]))
+        ims, pal = quantize(ims, 24)
+        for im, (sel, cc) in zip(ims, wk if WARM else []): im[sel, :3] = cc
+        ims, pal = ims, pal; oc = min(pal.tolist(), key=lambda q: lum(q)); ims = [add_outline(i, oc) for i in ims]
         if eyes and st == 4:
             ir = [hexc(c) for c in iris]
             if clean:   # 先清掉臉上的深色殘影，再畫眼睛
@@ -154,6 +166,7 @@ def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esi
 
 SYMS = {int(x[5]): {'src': [int(v) for v in x[7:].split(',')[:4]], 'from': x[7:].split(',')[4], 'r': int(x[7:].split(',')[5]) if len(x[7:].split(',')) > 5 else 3} for x in sys.argv[1:] if x[:5] == '--sym' and x[5:6].isdigit()}   # --sym1=…～--sym4=：每個階段各自鏡像
 PX = [(int(x[5:].split(':')[0]), [(int(q.split(',')[0]), int(q.split(',')[1]), '#' + q.split(',')[2]) for q in x[5:].split(':')[1].split(';')]) for x in sys.argv[1:] if x.startswith('--px=')]
+WARM = '--warm' in sys.argv
 MIR = [[int(v) for v in x[6:].replace(':', ',').split(',')] for x in sys.argv[1:] if x.startswith('--mir=')]   # --mir=階段:x0,x1,y0,y1,軸2（可重複）
 
 if __name__ == '__main__':
