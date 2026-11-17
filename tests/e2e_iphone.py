@@ -76,12 +76,12 @@ async def main():
         for _ in range(80):
             if await p.evaluate("!PF.mode"): break
             await p.wait_for_timeout(100)
-        s = await st(p); ok('走過去吃完：用掉食物、飽食 +25、XP +5、留下果核', s['inv']['food'] == 3 and round(s['hunger']) == 75 and s['xp'] == 5 and len(s['cores']) == 1, (s['inv'], round(s['hunger']), s['xp'], s['cores']))
+        s = await st(p); ok('走過去吃完：用掉蘋果、飽食 +10、XP +3、留下果核', s['inv']['food'] == 3 and round(s['hunger']) == 60 and s['xp'] == 3 and len(s['cores']) == 1, (s['inv'], round(s['hunger']), s['xp'], s['cores']))
         await p.wait_for_timeout(5000); await p.screenshot(path=f'{OUT}/02b_core.png')
         await p.mouse.click(*await scene_xy(p, s['cores'][0]['x'], 98)); await p.wait_for_timeout(300)
         ok('點果核清掉', len((await st(p))['cores']) == 0)
         await do_play(p); s = await st(p)
-        ok('頂球一回合：心情 +15、體力 -10、記錄分數', round(s['mood']) == 65 and round(s['energy']) == 50 and s['ball']['goals'] >= 0, (round(s['mood']), round(s['energy']), s['ball']))
+        ok('頂球一回合：心情 +15、體力 -10、記錄分數', round(s['mood']) == 65 and round(s['energy']) == 55 and s['ball']['goals'] >= 0, (round(s['mood']), round(s['energy']), s['ball']))
         await p.click('[data-act=wash]'); await p.wait_for_timeout(300); await p.click('[data-act=wash]'); await p.wait_for_timeout(300)
         ok('再按一次可以取消', await p.evaluate("PF.mode") is None)
         c0 = (await st(p))['clean']; await do_wash(p); s = await st(p); ok('海綿刷 3 秒：清潔 +35', round(s['clean'] - c0) == 35, (c0, round(s['clean'])))
@@ -132,7 +132,7 @@ async def main():
         await p.evaluate("(()=>{const s=PF.state;s.plots[0].at=Date.now()-2*3600000-1000;PF.debug.set({})})()"); await p.wait_for_timeout(600)
         await p.screenshot(path=f'{OUT}/09b_ripe_in_scene.png')
         x0 = (await st(p))['xp']; await p.click('#bFarm'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/09c_farm_ripe.png'); await p.click('[data-pa="0"]'); await p.wait_for_timeout(300)
-        s = await st(p); ok('2 小時後收成：蘋果 +1、莓果 +2、XP +5、收成次數 1', s['inv']['food'] == 2 and s['inv']['berry'] == 2 and s['xp'] == x0 + 5 and s['harvests'] == 1, (s['inv'], s['xp'] - x0)); await closeall(p)
+        s = await st(p); ok('2 小時後收成：蘋果、莓果各 1～2 顆、XP +5、收成次數 1', 2 <= s['inv']['food'] <= 3 and 1 <= s['inv']['berry'] <= 2 and s['xp'] == x0 + 5 and s['harvests'] == 1, (s['inv'], s['xp'] - x0)); await closeall(p)
         # ---------- 每日小目標 ----------
         await p.click('#bGoals'); await p.wait_for_timeout(300); s = await st(p)
         ok('每日 3 個小目標', len(s['goals']['list']) == 3)

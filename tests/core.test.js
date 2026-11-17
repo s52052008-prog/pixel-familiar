@@ -15,8 +15,8 @@ t('孵化後為嬰兒期並記錄日記與圖鑑', () => { const s = hatched(); 
 t('存檔 JSON 往返不變（檢查是冪等的）', () => { const s = C.sanitize(hatched(), T0); const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.deepStrictEqual(r, s); });
 
 // 2. 行為扣費與加值，不會出現負數
-t('餵食：先用庫存食物', () => { const s = hatched(); s.hunger = 50; const r = C.act(s, 'feed', T0); assert.ok(r.ok); assert.equal(s.inv.food, 2); assert.equal(s.coins, 50); assert.equal(s.hunger, 75); assert.equal(s.xp, 5); assert.equal(s.path.tide, 1); });
-t('餵食：沒食物就花 5 金幣', () => { const s = hatched(); s.hunger = 50; s.inv.food = 0; C.act(s, 'feed', T0); assert.equal(s.coins, 45); });
+t('餵食：先用庫存食物', () => { const s = hatched(); s.hunger = 50; const r = C.act(s, 'feed', T0); assert.ok(r.ok); assert.equal(s.inv.food, 2); assert.equal(s.coins, 50); assert.equal(s.hunger, 60); assert.equal(s.xp, 3); assert.equal(s.path.tide, 1); });
+t('餵食：沒食物就花 10 金幣買蘋果', () => { const s = hatched(); s.hunger = 50; s.inv.food = 0; C.act(s, 'feed', T0); assert.equal(s.coins, 40); });
 t('餵食：已滿不消耗也不給 XP', () => { const s = hatched(); s.hunger = 96; const r = C.act(s, 'feed', T0); assert.ok(!r.ok); assert.equal(s.inv.food, 3); assert.equal(s.xp, 0); });
 t('玩耍：體力 < 10 不能玩', () => { const s = hatched(); s.energy = 9; assert.ok(!C.act(s, 'play', T0).ok); });
 t('玩耍：心情 +15、體力 -10、會變餓變髒、XP +10', () => { const s = hatched(); s.mood = 50; s.energy = 50; s.hunger = 50; s.clean = 50; C.act(s, 'play', T0); assert.equal(s.mood, 65); assert.equal(s.hunger, 45); assert.equal(s.clean, 44); assert.equal(s.energy, 40); assert.equal(s.xp, 10); });
@@ -94,7 +94,7 @@ t('每日保底：同一天只能領一次，時間倒退不能重領', () => {
 t('冒險：每日前 5 次全額，之後只給 20% XP', () => {
   const s = hatched(); C.claimDaily(s, T0); const res = [];
   for (let i = 0; i < 7; i++) { s.energy = 100; const st = C.startAdventure(s, 1, T0); res.push(C.finishAdventure(s, 1, 'win', st.full, T0, () => .99)); }
-  assert.equal(res[4].coins, 12); assert.equal(res[5].coins, 0); assert.equal(res[5].xp, 5);
+  assert.equal(res[4].coins, 30); assert.equal(res[4].seeds, 1); assert.equal(res[5].coins, 0); assert.equal(res[5].xp, 5);
 });
 t('冒險：體力不足不能出發；失敗只給 XP +3', () => { const s = hatched(); s.energy = 19; assert.ok(!C.startAdventure(s, 1, T0).ok); s.energy = 50; C.startAdventure(s, 1, T0); const xp0 = s.xp; const r = C.finishAdventure(s, 1, 'loss', true, T0); assert.equal(s.xp - xp0, 3); assert.equal(r.coins, 0); assert.equal(s.energy, 30); });
 t('首次打通新關卡＝探索發現（森林 +2、XP +10）；第 15 關觸發火山遺跡', () => {
@@ -140,8 +140,8 @@ t('日期以台北時區計算', () => { assert.equal(C.dayKey(Date.parse('2026-
 // 家園種植
 t('種植：用掉種子，2 小時前不能收成，2 小時整可以', () => {
   const s = hatched(); assert.ok(C.plant(s, 0, T0).ok); assert.equal(s.inv.seeds, 1); assert.ok(!C.plant(s, 0, T0).ok);
-  assert.ok(!C.harvest(s, 0, T0 + 2 * H - 1).ok); const r = C.harvest(s, 0, T0 + 2 * H); assert.ok(r.ok);
-  assert.equal(s.inv.food, 4); assert.equal(s.inv.berry, 2); assert.equal(s.xp, 5); assert.equal(s.path.forest, 3); assert.equal(s.harvests, 1); assert.ok(C.plotState(s, 0, T0).empty);
+  assert.ok(!C.harvest(s, 0, T0 + 2 * H - 1).ok); const r = C.harvest(s, 0, T0 + 2 * H, () => .99); assert.ok(r.ok);
+  assert.equal(s.inv.food, 5); assert.equal(s.inv.berry, 2); assert.deepEqual(s.inv.fresh, { food: 2, berry: 2 }); assert.equal(s.xp, 5); assert.equal(s.path.forest, 3); assert.equal(s.harvests, 1); assert.ok(C.plotState(s, 0, T0).empty);
 });
 t('種植：沒種子不能種；每格只能一株；金幣買種子', () => { const s = hatched(); s.inv.seeds = 0; assert.equal(C.plant(s, 1, T0).code, 'noseed'); assert.ok(C.buySeed(s).ok); assert.equal(s.coins, 47); assert.ok(C.plant(s, 1, T0).ok); assert.ok(!C.plant(s, 9, T0).ok); });
 t('種植：時間倒退不會變成負進度', () => { const s = hatched(); C.plant(s, 0, T0); const q = C.plotState(s, 0, T0 - H); assert.equal(q.progress, 0); assert.ok(!q.ripe); });
@@ -197,8 +197,11 @@ t('果核：10 分鐘內清掉沒事；發臭後每小時心情 −4（每顆）
 t('果核：最多 8 顆、存檔往返保留', () => { const s = hatched(); for (let i = 0; i < 11; i++) C.addCore(s, i * 10, T0); assert.equal(s.cores.length, 8); const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(r.cores.length, 8); });
 t('canAct 只檢查不改變狀態', () => { const s = hatched(); s.hunger = 50; const before = JSON.stringify(s); assert.equal(C.canAct(s, 'feed', T0), null); assert.equal(JSON.stringify(s), before); s.hunger = 99; assert.ok(C.canAct(s, 'feed', T0)); });
 // V1.19：難度與食物
-t('多種食物：魚是潮系最愛（心情 +10、經驗 +3），吃完留下魚骨', () => { const s = hatched(); s.route = 'tide'; s.hunger = 30; s.mood = 50; s.inv.fish = 1; const r = C.act(s, 'feed', T0, 'fish'); assert.ok(r.ok && r.fav); assert.equal(r.left, 'bone'); assert.equal(s.inv.fish, 0); assert.equal(s.hunger, 65); assert.equal(s.mood, 64); assert.equal(s.xp, 9); });
-t('食物沒有就用金幣買；商店可以買各種食物', () => { const s = hatched(); s.coins = 20; s.hunger = 10; s.inv.meat = 0; assert.ok(C.act(s, 'feed', T0, 'meat').ok); assert.equal(s.coins, 8); assert.ok(C.buyItem(s, 'berry').ok); assert.equal(s.inv.berry, 1); });
+t('多種食物：魚是水系愛吃的（心情 +10、經驗 +5），體力 +20，吃完留下魚骨', () => { const s = hatched(); s.route = 'tide'; s.hunger = 30; s.mood = 50; s.energy = 50; s.inv.fish = 1; const r = C.act(s, 'feed', T0, 'fish'); assert.ok(r.ok && r.fav); assert.equal(r.left, 'bone'); assert.equal(s.inv.fish, 0); assert.equal(s.hunger, 50); assert.equal(s.mood, 60); assert.equal(s.energy, 70); assert.equal(s.xp, 10); });
+t('火系不愛吃魚、愛吃肉排；蛋糕大家都愛', () => { const s = hatched(); s.route = 'flame'; s.hunger = 10; s.coins = 999; assert.ok(!C.act(s, 'feed', T0, 'fish').fav); assert.ok(C.act(s, 'feed', T0, 'meat').fav); assert.ok(C.act(s, 'feed', T0, 'cake').fav); });
+t('只有自己種的水果能賣 15 元；田可以花 30／60／90 擴建到 6 格', () => { const s = hatched(); s.coins = 0; assert.ok(!C.sellFruit(s, 'food').ok); C.plant(s, 0, T0); C.harvest(s, 0, T0 + 2 * H, () => 0); assert.ok(C.sellFruit(s, 'food').ok); assert.equal(s.coins, 15); assert.ok(!C.sellFruit(s, 'food').ok); s.coins = 180; for (const p of [30, 60, 90]) { assert.equal(C.expandPrice(s), p); assert.ok(C.expandFarm(s).ok); } assert.equal(s.plots.length, 6); assert.equal(s.coins, 0); assert.ok(!C.expandFarm(s).ok); const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(r.plots.length, 6); });
+t('打贏 Boss 有機會得到經驗火種：心情 +10、體力 +20、經驗 +20', () => { const s = hatched(); s.energy = 100; s.adv.stage = 99; const n = [...Array(40).keys()].find(i => i > 0 && C.foeFor(i).boss); const st = C.startAdventure(s, n, T0); const o = C.finishAdventure(s, n, 'win', st.full, T0, () => 0); assert.equal(o.ember, 1); s.mood = 50; s.energy = 50; const x = s.xp; assert.ok(C.useEmber(s, T0).ok); assert.equal(s.mood, 60); assert.equal(s.energy, 70); assert.equal(s.xp, x + 20); });
+t('食物沒有就用金幣買；商店可以買各種食物', () => { const s = hatched(); s.coins = 30; s.hunger = 10; s.inv.meat = 0; assert.ok(C.act(s, 'feed', T0, 'meat').ok); assert.equal(s.coins, 10); assert.ok(C.buyItem(s, 'berry').ok); assert.equal(s.inv.berry, 1); });
 t('冒險會變餓變髒；輸了心情下降', () => { const s = hatched(); s.energy = 100; s.hunger = 80; s.clean = 80; s.mood = 60; C.startAdventure(s, 1, T0); assert.equal(s.hunger, 65); assert.equal(s.clean, 60); C.finishAdventure(s, 1, 'loss', true, T0); assert.equal(s.mood, 48); });
 t('沒照顧好親密度會掉；心情低時摸摸不加親密度', () => { const s = hatched(); s.bond = 30; s.hunger = 10; C.applyTime(s, T0 + 2 * H); assert.ok(s.bond < 30); s.hunger = 90; s.clean = 90; s.mood = 30; C.applyTime(s, T0 + 3 * H); const b = s.bond; C.pet(s, T0 + 3 * H); assert.equal(s.bond, b); });
 t('野生怪會跟著玩家等級變強', () => { assert.equal(C.foeFor(1, 20).level, 18); assert.equal(C.foeFor(1, 1).level, 1); assert.equal(C.foeFor(12, 20).level, 19); });

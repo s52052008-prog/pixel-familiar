@@ -111,6 +111,30 @@ ol.howto{padding-left:22px;margin:6px 0}ol.howto li{margin:4px 0}code{background
 #toast{pointer-events:none}#toast.off{opacity:0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 body.rm *{transition:none!important;animation:none!important}
+
+/* ===== V1.21 木頭質感主題：深色胡桃木底、木板面板、淺色木頭按鈕 ===== */
+:root{--bg:#1e130b;--panel:#6b4423;--line:#2a170a;--hi:#b07a44;--text:#fff3dc;--muted:#ecd6b4}
+#app{background:repeating-linear-gradient(90deg,#2a1a0e 0 3px,#24160c 3px 41px,#2e1d10 41px 44px,#24160c 44px 88px)}
+.wood,.stat,.panel,.tip,.item,.plot,.coin,.goal,.eggrow{background:repeating-linear-gradient(180deg,#7a4e2a 0 9px,#6e4524 9px 10px,#76492a 10px 19px,#683f22 19px 20px)!important;border:3px solid #2a170a!important;box-shadow:inset 0 0 0 2px #b8854e,inset 0 3px 0 2px #d9a066,0 3px 0 #120a04!important}
+.stagewrap{border:7px solid #6b4423;box-shadow:0 0 0 3px #2a170a,inset 0 0 0 2px #2a170a,0 0 0 5px #b8854e,0 0 0 8px #2a170a,0 8px 0 6px #0009;margin:8px 6px 6px}
+.stagewrap::before,.stagewrap::after{content:'';position:absolute;width:7px;height:7px;background:#e8c070;box-shadow:inset -2px -2px 0 #8a5a2a;top:-7px;left:-7px;z-index:2}
+.stagewrap::after{left:auto;right:-7px}
+.act{background:repeating-linear-gradient(180deg,#e2b072 0 10px,#d6a264 10px 11px)!important;color:#3a2210!important;border:3px solid #2a170a!important;box-shadow:inset 0 -5px 0 #a8703e,inset 0 3px 0 #ffe2a8,0 3px 0 #120a04!important}
+.act:active{box-shadow:inset 0 -2px 0 #a8703e,inset 0 3px 0 #ffe2a8!important}
+.act.on{background:repeating-linear-gradient(180deg,#9cd47a 0 10px,#8cc46a 10px 11px)!important;box-shadow:inset 0 -5px 0 #5a9440,inset 0 3px 0 #e0ffc8!important}
+.btn{background:repeating-linear-gradient(180deg,#8a5a32 0 8px,#7e5230 8px 9px);border:3px solid #2a170a;box-shadow:inset 0 -3px 0 #4a2c14,inset 0 2px 0 #c08850;color:#fff3dc}
+.btn.pri{background:repeating-linear-gradient(180deg,#f0c27a 0 8px,#e4b46c 8px 9px);color:#3a2210;box-shadow:inset 0 -3px 0 #a8703e,inset 0 2px 0 #fff0c8}
+.btn:disabled{filter:grayscale(.6) brightness(.75)}
+.sheet{background:repeating-linear-gradient(180deg,#5a381c 0 12px,#52331a 12px 13px);border-top:6px solid #b8854e;box-shadow:0 -3px 0 #2a170a}
+.viewbtn{background:#5a381ce6;border:3px solid #2a170a;box-shadow:inset 0 0 0 2px #b8854e}
+.bar,.xpbar{background:#2a170a;border-color:#2a170a}
+.foodbar .food{background:repeating-linear-gradient(180deg,#7a4e2a 0 8px,#6e4524 8px 9px);border:3px solid #2a170a;box-shadow:inset 0 0 0 2px #b8854e}
+.foodbar .food.on{background:#ffd86a;color:#3a2210}
+#battle{background:repeating-linear-gradient(90deg,#2a1a0e 0 3px,#24160c 3px 41px)}
+#rpsZone{background:#2a170af2;border-top:4px solid #b8854e}.rpsbtns button{background:repeating-linear-gradient(180deg,#8a5a32 0 8px,#7e5230 8px 9px);border:3px solid #2a170a;box-shadow:inset 0 0 0 2px #c08850}
+.shoptabs .btn.on{background:#ffd86a;color:#3a2210}
+.tool,.tool.big{background:repeating-linear-gradient(180deg,#8a5a32 0 8px,#7e5230 8px 9px)!important;border:3px solid #2a170a!important;box-shadow:inset 0 0 0 2px #c08850,inset 0 -3px 0 2px #4a2c14,0 3px 0 #120a04!important;color:#fff3dc}
+.tool.big{background:repeating-linear-gradient(180deg,#a0683a 0 8px,#946036 8px 9px)!important}
 </style>
 </head>
 <body>
@@ -184,7 +208,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.20.0';
+const VERSION='1.21.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -467,16 +491,19 @@ function artVariant(im,G,key){const ck=key+'|'+im.src;if(ART_VAR[ck])return ART_
 const CLOSED_EYES=new Set(['blink','happy','sleep','squint','tired']);
 function drawArtFrame(ctx,A,F,fr,ox,key){
  const im=artVariant(CLOSED_EYES.has(fr.eye)?A.closed:A.open,F.genome,key);
- const sx=fr.sx||1,sy=fr.sy||1,w=Math.round(CELL*sx),h=Math.round(CELL*sy),dy=Math.round((fr.dy||0)*.8);
- const base=Math.round(46-46*sy),top=Math.floor(artTop(im)*sy),dyIn=Math.max(dy,-(base+top));   // 跳太高會超出格子：格子內只移到頂，剩下的高度畫的時候再往上移
- const x=ox+Math.round(24-w/2)+(fr.dx||0),y=base+dyIn;   // 以腳底中央為錨點壓扁／拉長
+ const bx=artBox(im),aw=bx.right-bx.left,ah=46-bx.top;   // 壓扁／拉長時不要超出 48×48 格子（左右、上方）
+ const sx=Math.min(fr.sx||1,Math.max(1,(CELL-2)/aw)),sy=Math.min(fr.sy||1,Math.max(1,46/ah)),w=Math.round(CELL*sx),h=Math.round(CELL*sy),dy=Math.round((fr.dy||0)*.8);
+ const base=Math.round(46-46*sy),top=Math.floor(bx.top*sy),dyIn=Math.max(dy,-(base+top));   // 跳太高會超出格子：格子內只移到頂，剩下的高度畫的時候再往上移
+ const ddx=aw*sx>CELL-4?0:(fr.dx||0),x=ox+Math.round(24-w/2)+ddx,y=base+dyIn;   // 很寬的造型就不左右晃，免得被切到   // 以腳底中央為錨點壓扁／拉長
  ctx.save();ctx.beginPath();ctx.rect(ox,0,CELL,CELL);ctx.clip();ctx.drawImage(im,x,y,w,h);
  if(fr.eye==='sad'||fr.eye==='tired'){ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(40,60,120,.22)';ctx.fillRect(ox,0,CELL,CELL)}
  if(fr.blush===2){ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(255,90,140,.18)';ctx.fillRect(ox,0,CELL,CELL)}
  ctx.restore();return dy-dyIn}
 const ART_TOP=new Map();
-function artTop(im){if(ART_TOP.has(im))return ART_TOP.get(im);const c=im.getContext?im:(()=>{const k=document.createElement('canvas');k.width=CELL;k.height=CELL;k.getContext('2d').drawImage(im,0,0);return k})();
- const d=c.getContext('2d').getImageData(0,0,CELL,CELL).data;let y=0;outer:for(;y<CELL;y++)for(let x=0;x<CELL;x++)if(d[(y*CELL+x)*4+3]){break outer}ART_TOP.set(im,y);return y}
+function artTop(im){return artBox(im).top}
+function artBox(im){if(ART_TOP.has(im))return ART_TOP.get(im);const c=im.getContext?im:(()=>{const k=document.createElement('canvas');k.width=CELL;k.height=CELL;k.getContext('2d').drawImage(im,0,0);return k})();
+ const d=c.getContext('2d').getImageData(0,0,CELL,CELL).data;let top=CELL,left=CELL,right=0;for(let y=0;y<CELL;y++)for(let x=0;x<CELL;x++)if(d[(y*CELL+x)*4+3]){top=Math.min(top,y);left=Math.min(left,x);right=Math.max(right,x+1)}
+ const b={top,left,right};ART_TOP.set(im,b);return b}
 function buildSheet(key){
  const isEgg=key.startsWith('egg'),EC=isEgg?eggColors(key):null,F=isEgg?null:formOf(key);
  const names=isEgg?EGG_FRAMES:FRAME_NAMES,cv=document.createElement('canvas');cv.width=CELL*names.length;cv.height=CELL;
@@ -527,12 +554,23 @@ const ICONS={
  cake:{o:'#3a1a1a',p:{c:'#fff3e0',p:'#f59ab0',P:'#ffc8d8',b:'#c8884a',r:'#e8433f',y:'#ffe066'},m:['....r....','...ryr...','.ppPpPpp.','pPpppppPp','ccccccccc','bbbbbbbbb','ccccccccc','bbbbbbbbb']},
  bone:{o:'#3a3020',p:{w:'#f4ecd8',d:'#c8b898'},m:['ww....ww','wwwwwwww','.dwwwwd.','ww....ww']},
  boneRot:{o:'#2a2010',p:{w:'#a89a70',d:'#7a6a48'},m:['ww....ww','wwwwwwww','.dwwwwd.','ww....ww']},
+ ember:{o:'#3a1008',p:{r:'#e8433f',o:'#ff9a3a',y:'#ffe066',w:'#fff8d0',b:'#6a3a1a',B:'#a8703e'},m:['...r....','..ror...','.roy.r..','.oyyor..','royywor.','royywyo.','.oyyyo..','.BbbbB..']},
  fly:{o:null,p:{w:'#d8f0ff',k:'#1a1a1a'},m:['w.w','.k.']},
  note:{o:'#2a1a3a',p:{n:'#ffffff'},m:['..nnn','..n.n','..n.n','nnn..','nnn..']}
 };
 const ICV={};
+const ITEM_ICON={food:'apple',berry:'berry',fish:'fish',meat:'meat',cake:'cake',seeds:'seed',candy:'candy',potion:'potion',ember:'ember'};
 function buildIcons(){for(const k in ICONS){const I=ICONS[k],h=I.m.length,w=I.m[0].length,g=grid(w+2,h+2);
  I.m.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!=='.')px(g,x+1,y+1,I.p[ch])}));if(I.o)outline(g,I.o);ICV[k]=gridCanvas(g)}}
+/* 手繪道具圖（tools/import_items.py 產生）：載入後取代程式畫的家具與圖示 */
+const ITEM_NAMES=['bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone'];
+const ITEM_ICONS=new Set(['potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone']);
+function tintCanvas(src,rgba){const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const x=c.getContext('2d');x.drawImage(src,0,0);x.globalCompositeOperation='source-atop';x.fillStyle=rgba;x.fillRect(0,0,c.width,c.height);return c}
+function loadItems(){let left=ITEM_NAMES.length;for(const n of ITEM_NAMES){const im=new Image();
+ im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);
+  if(ITEM_ICONS.has(n))ICV[n]=c;else DSPR[n]=c;if(n==='core')ICV.coreRot=tintCanvas(c,'rgba(90,70,20,.55)');if(n==='bone')ICV.boneRot=tintCanvas(c,'rgba(90,80,30,.5)');if(n==='toy_ball')toyCv=null;done()};
+ im.onerror=done;im.src=`sprites/items/${n}.png`}
+ function done(){if(--left)return;document.querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));if(typeof renderFoodBar==='function')renderFoodBar()}}
 function paintIcon(cv,name){const src=ICV[name];if(!src)return;const sc=+(cv.dataset.s||3);cv.width=src.width;cv.height=src.height;
  cv.style.width=src.width*sc+'px';cv.style.height=src.height*sc+'px';const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);c.drawImage(src,0,0)}
 
@@ -620,7 +658,7 @@ function plotStage(q){return!q||q.empty?0:q.ripe?4:q.progress<.34?1:q.progress<.
    🏠 房間（室內場景）與家具像素圖
    ========================================================= */
 const PAPER={paper_cream:['#f2e2c4','#e6d0a8'],paper_mint:['#c4ead8','#a8dcc4'],paper_night:['#26305e','#1e2750']};
-const DECOR_POS={wall:[74,10],lamp:[92,0],plant:[111,0],bed:[0,0],rug:[36,95],toy:[94,0],toilet:[50,52]};   // y=0 → 對齊地板（底部在 y=104）
+const DECOR_POS={wall:[74,10],lamp:[92,0],plant:[110,0],bed:[4,0],rug:[36,95],toy:[94,0],toilet:[72,0]};   // y=0 → 對齊地板（底部在 y=104）
 const DSPR={};
 function makeDecor(id){if(DSPR[id])return DSPR[id];let g;const R=(x,y,w,h,c)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)px(g,x+i,y+j,c)};
  if(id==='wall_frame'){g=grid(28,22);R(0,0,28,22,'#7a4a2a');R(2,2,24,18,'#8fd0f0');R(2,12,24,8,'#6fbf5a');ellipse(g,9,15,8,4,()=> '#4f9a4a');ellipse(g,20,5,3,3,()=> '#fff3a6');R(1,1,26,1,'#a8703e')}
@@ -1069,11 +1107,12 @@ let farmTimer=0;
 function fmtLeft(ms){const m=Math.ceil(ms/60000);return m>=60?`${Math.floor(m/60)} 小時 ${m%60} 分`:`${m} 分鐘`}
 function farmDialog(){PC.claimDaily(s,Date.now());
  const F=CONFIG.farm;
- openModal('🌱 家園',`<p class="small">種下種子，${F.growHours} 小時後收成：食物 +${F.food}${s.hatched?`、經驗 +${F.xp}、🌿 森系 +${F.forest}`:''}。每塊田一次種一株。已收成 <b>${s.harvests}</b> 次${s.harvests<CONFIG.harvestsForOldTree?`（森系高階需要 ${CONFIG.harvestsForOldTree} 次）`:''}。</p>
-<p>🌱 種子 <b id="fSeeds">${s.inv.seeds}</b>　🍎 食物 <b id="fFood">${s.inv.food}</b>　🪙 <b id="fCoins">${s.coins}</b></p>
+ openModal('🌱 家園',`<p class="small">種下種子，${F.growHours} 小時後收成：蘋果、莓果各 ${F.fruitMin}～${F.fruitMax} 顆${s.hatched?`、經驗 +${F.xp}、🌿 森系 +${F.forest}`:''}。每塊田一次種一株。已收成 <b>${s.harvests}</b> 次${s.harvests<CONFIG.harvestsForOldTree?`（森系高階需要 ${CONFIG.harvestsForOldTree} 次）`:''}。</p>
+<p>🌱 種子 <b id="fSeeds">${s.inv.seeds}</b>　🍎 <b id="fFood">${s.inv.food}</b>　🫐 <b id="fBerry">${s.inv.berry||0}</b>　🪙 <b id="fCoins">${s.coins}</b></p>
 <div class="plots" id="plots"></div><div class="err" id="fErr"></div>
-<div class="row"><button class="btn" id="fBuy">買 1 顆種子（${F.seedPrice} 金幣）</button></div>
-<p class="small">種子也可以在冒險中撿到，或從每日目標領取。</p>`);
+<div class="row"><button class="btn" id="fBuy">買 1 顆種子（${F.seedPrice} 金幣）</button><button class="btn" id="fExp"></button></div>
+<div class="row"><button class="btn" id="fSellA"></button><button class="btn" id="fSellB"></button></div>
+<p class="small">自己種的水果可以吃，也可以賣（一顆 ${CONFIG.sellFruit.food} 金幣），拿錢去買肉排、烤魚、蛋糕或更多種子。種子也會在冒險打贏時得到。</p>`);
  const draw=()=>{const box=$('plots');if(!box){clearInterval(farmTimer);return}const now=Date.now();
   box.innerHTML=s.plots.map((p,i)=>{const q=PC.plotState(s,i,now);return`<div class="plot"><canvas data-p="${i}" width="20" height="16"></canvas>${q.empty?'空地':q.ripe?'<b>成熟了！</b>':'還要 '+fmtLeft(q.left)}
    <button class="btn ${q.empty||q.ripe?'pri':''}" data-pa="${i}" ${!q.empty&&!q.ripe?'disabled':''}>${q.empty?'種植':q.ripe?'收成':'成長中'}</button></div>`}).join('');
@@ -1081,7 +1120,11 @@ function farmDialog(){PC.claimDaily(s,Date.now());
   box.querySelectorAll('[data-pa]').forEach(b=>b.onclick=()=>{const i=+b.dataset.pa,q=PC.plotState(s,i,Date.now()),x0=s.xp;
    const r=q.empty?PC.plant(s,i,Date.now()):PC.harvest(s,i,Date.now());$('fErr').textContent=r.ok?'':'❌ '+r.msg;
    if(r.ok){toast(r.msg,2500);sfx(q.empty?'tap':'eat');save();renderUI();afterChange(x0);if(!q.empty)spawn('apple',2,{y:90,x:20,vy:-30,life:1.2})}draw()});
-  $('fSeeds').textContent=s.inv.seeds;$('fFood').textContent=s.inv.food;$('fCoins').textContent=s.coins};
+  $('fSeeds').textContent=s.inv.seeds;$('fFood').textContent=s.inv.food;$('fBerry').textContent=s.inv.berry||0;$('fCoins').textContent=s.coins;
+  const ep=PC.expandPrice(s);$('fExp').textContent=ep?`擴建田地（第 ${s.plots.length+1} 格，${ep} 金幣）`:'田地已經最大（6 格）';$('fExp').disabled=!ep;
+  PC.fixFresh(s);for(const[id,k,n]of[['fSellA','food','🍎 蘋果'],['fSellB','berry','🫐 莓果']]){const c=s.inv.fresh[k]||0;$(id).textContent=`賣 ${n}（可賣 ${c}）+${CONFIG.sellFruit[k]}`;$(id).disabled=!c}};
+ $('fExp').onclick=()=>{const r=PC.expandFarm(s);$('fErr').textContent=r.ok?'':'❌ '+r.msg;if(r.ok){toast(r.msg);sfx('level');save();renderUI()}draw()};
+ for(const[id,k]of[['fSellA','food'],['fSellB','berry']])$(id).onclick=()=>{const r=PC.sellFruit(s,k);$('fErr').textContent=r.ok?'':'❌ '+r.msg;if(r.ok){toast(r.msg);sfx('tap');save();renderUI()}draw()};
  $('fBuy').onclick=()=>{const r=PC.buySeed(s);$('fErr').textContent=r.ok?'':'❌ '+r.msg;if(r.ok){toast(r.msg);save();renderUI()}draw()};
  draw();clearInterval(farmTimer);farmTimer=setInterval(draw,5000)}
 
@@ -1109,14 +1152,16 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
   return`<div class="item"><canvas data-dp="${id}"></canvas><b>${it.name}</b><div class="small">${SLOT_NAME[sl]} · ${own?'已擁有':'🪙 '+it.price}${id==='toilet_pot'?'<br>牠會自己上廁所，不會再亂大便':''}</div>
   <button class="btn ${!own||!on?'pri':''}" data-dz="${id}" ${(sl==='paper'&&on)?'disabled':''}>${!own?'購買':on?(sl==='paper'?'使用中':'收起'):'擺上'}</button></div>`}).join('')).join('');
  const C=CONFIG;
- const itemsHtml=()=>[...Object.keys(C.foods).map(k=>{const F=C.foods[k];return[k,{food:'🍎',berry:'🫐',fish:'🐟',meat:'🍖',cake:'🍰'}[k]+' '+F.name,F.price,`飽食 +${F.hunger}${F.mood?`、心情 +${F.mood}`:''}${F.clean?`、清潔 ${F.clean}`:''}<br>最愛：${F.fav.map(r=>ROUTE_ICON[r]+ROUTE_LABEL[r]).join('、')}`]}),['seeds','🌱 種子',C.farm.seedPrice,'種在家園的田裡'],['candy','🍬 星星糖',C.candy.price,`心情 +${C.candy.mood}、飽食 +${C.candy.hunger}`],['potion','🧪 回復藥水',C.potion.price,'戰鬥中回復 50% HP']]
-  .map(([k,n,p,d])=>`<div class="item"><div style="font-size:30px">${n.split(' ')[0]}</div><b>${n.split(' ')[1]}</b><div class="small">🪙 ${p}｜擁有 ${s.inv[k]}<br>${d}</div><button class="btn pri" data-bi="${k}">買 1 個</button>${k==='candy'?`<button class="btn" id="eatCandy" ${s.inv.candy?'':'disabled'}>給牠吃</button>`:''}</div>`).join('');
+ const itemsHtml=()=>[...Object.keys(C.foods).map(k=>{const F=C.foods[k];return[k,{food:'🍎',berry:'🫐',fish:'🐟',meat:'🍖',cake:'🍰'}[k]+' '+F.name,F.price,`飽食 +${F.hunger}${F.mood?`、心情 +${F.mood}`:''}${F.energy?`、體力 +${F.energy}`:''}<br>${!F.fav.length?'大家都能吃':F.fav.length>=7?'❤️ 大家都愛吃（心情 +10、經驗 +5）':'❤️ 愛吃：'+F.fav.map(r=>ROUTE_ICON[r]+ROUTE_LABEL[r]).join('、')}`]}),['seeds','🌱 種子',C.farm.seedPrice,'種在家園的田裡'],['candy','🍬 星星糖',C.candy.price,`心情 +${C.candy.mood}、飽食 +${C.candy.hunger}`],['potion','🧪 回復藥水',C.potion.price,'戰鬥中回復 50% HP'],...(s.inv.ember?[['ember','🔥 經驗火種',0,`打贏 Boss 得到的寶物<br>心情 +${C.ember.mood}、體力 +${C.ember.energy}、經驗 +${C.ember.xp}`]]:[])]
+  .map(([k,n,p,d])=>`<div class="item"><canvas class="picon" data-icon="${ITEM_ICON[k]||'apple'}" data-s="4"></canvas><b>${n.split(' ')[1]}</b><div class="small">${p?'🪙 '+p+'｜':''}擁有 ${s.inv[k]||0}<br>${d}</div>${k==='ember'?'':`<button class="btn pri" data-bi="${k}">買 1 個</button>`}${k==='candy'?`<button class="btn" id="eatCandy" ${s.inv.candy?'':'disabled'}>給牠吃</button>`:''}${k==='ember'?`<button class="btn pri" id="eatEmber">給牠吃</button>`:''}</div>`).join('');
  const render=()=>{$('shopBody').innerHTML=`<div class="items">${tab==='decor'?decorHtml():itemsHtml()}</div>`;$('shopCoins').textContent=s.coins;
   document.querySelectorAll('.shoptabs .btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
   document.querySelectorAll('[data-dp]').forEach(c=>{const sp=decorPreview(c.dataset.dp);if(!sp)return;c.width=sp.width;c.height=sp.height;c.style.width=Math.min(120,sp.width*2.5)+'px';c.style.height='auto';const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(sp,0,0)});
   document.querySelectorAll('[data-dz]').forEach(b=>b.onclick=()=>{const id=b.dataset.dz,own=s.decor.owned.includes(id),r=own?PC.placeDecor(s,id):PC.buyDecor(s,id);toast(r.ok?r.msg:'❌ '+r.msg);
    if(r.ok){sfx(own?'tap':'level');if(s.hatched&&s.view!=='room'){s.view='room'}if(!own)PC.journal(s,Date.now(),`買了「${D[id].name}」`);save();renderUI()}render()});
   document.querySelectorAll('[data-bi]').forEach(b=>b.onclick=()=>{const r=PC.buyItem(s,b.dataset.bi);toast(r.ok?r.msg:'❌ '+r.msg);if(r.ok){sfx('tap');save();renderUI()}render()});
+  document.querySelectorAll('#shopBody canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));
+  if($('eatEmber'))$('eatEmber').onclick=()=>{const x0=s.xp,r=PC.useEmber(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}toast(r.msg+`　經驗 +${r.xp}`);sfx('level');spawn('star',6,{x:petX+24,y:60,vy:-20,life:1.2});save();renderUI();afterChange(x0);render()};
   if($('eatCandy'))$('eatCandy').onclick=()=>{const x0=s.xp,r=PC.useCandy(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}
    closeModal();playAnim('eat');sfx('eat');spawn('star',4,{y:66,life:1.1,stagger:.15});spawn('heart',3,{y:70,life:1.1});say(r.msg+(r.xp?`　經驗 +${r.xp}`:''));save();renderUI();afterChange(x0)}};
  openModal('🛒 商店',`<p>🪙 金幣 <b id="shopCoins">${s.coins}</b>　<span class="small">家具是裝飾，買了會自動擺進小屋（點畫面左下「🏠 進屋」看看）。</span></p>
@@ -1265,7 +1310,7 @@ async function onMove(mv){if(!B||B.busy||B.over)return;unlockAudio();
  B.busy=false;bUI();if(dangerNow()&&!B.bondUsed)blog('⚠️ 下一擊可能撐不住了！可以喝藥水，或用「💗 羈絆之力」為牠打氣！')}
 function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond').classList.add('hidden');$('bDone').classList.remove('hidden');const n=B.n,x0=s.xp;
  const res=win===null?'run':win?'win':'loss',r=PC.finishAdventure(s,n,res,B.full,Date.now()),items=[];
- if(r.xp)items.push(`經驗 +${r.xp}`);if(r.coins)items.push(`金幣 +${r.coins}`);if(r.food)items.push('食物 +1');if(r.seeds)items.push('種子 +1');if(r.potion)items.push('藥水 +1');
+ if(r.xp)items.push(`經驗 +${r.xp}`);if(r.coins)items.push(`金幣 +${r.coins}`);if(r.food)items.push('蘋果 +1');if(r.seeds)items.push(`種子 +${r.seeds}`);if(r.potion)items.push('藥水 +1');if(r.ember)items.push('🔥 經驗火種 +1！');
  if(win){let m=`🎉 勝利！${items.join('、')}`;if(r.unlocked)m+=`\n🗺️ 發現新地點！解鎖第 ${r.unlocked} 關`;
   for(const e of r.events)if(e!=='place')m+=`\n✨ 發生了「${PC.EVENT_TEXT[e]}」事件！`;blog(m);sfx('level');spawn('star',10,{x:40,y:70,vy:-30,jx:50,life:1.4},bparts)}
  else if(win===false){blog(`輸了…沒關係，回家休息吧。${items.join('、')}\n下次可以先蓄力、帶藥水，或在危險時用羈絆之力！`);sfx('no')}
@@ -1349,6 +1394,7 @@ function toyRelease(){if(!DRAG.on)return;DRAG.on=false;TOY.held=false;
  TOY.vx=clamp(DRAG.vx,-220,220);TOY.vy=clamp(DRAG.vy,-260,200);sfx('tap');TOY.chaseAt=0}
 let toyCv=null;
 function drawToy(){if(mode==='play'||!s.hatched)return;
+ if(!toyCv&&DSPR.toy_ball){const b=DSPR.toy_ball;toyCv=[[1,1],[-1,1],[-1,-1],[1,-1]].map(([fx,fy])=>{const c=document.createElement('canvas');c.width=15;c.height=15;const x=c.getContext('2d');x.translate(fx<0?15:0,fy<0?15:0);x.scale(fx,fy);x.drawImage(b,Math.round((15-b.width)/2),Math.round((15-b.height)/2));return c})}   // 手繪皮球：翻轉做出滾動感
  if(!toyCv){toyCv=[0,1,2,3].map(k=>{const g=grid(15,15);ellipse(g,7.5,7.5,6.4,6.4,(x,y,nx,ny)=>{const band=Math.floor(((nx*.8-ny*.6)*2.2+k*.5+4))%2,shade=nx*.45+ny*.6>.42;
    if((nx+.38)**2+(ny+.42)**2<.05)return'#ffffff';return shade?(band?'#c8303a':'#d0d0dc'):(band?'#f0505a':'#fbfbff')});outline(g,'#3a1a20');return gridCanvas(g)})}
  const fr=toyCv[((Math.floor(TOY.rot)%4)+4)%4];
@@ -1456,7 +1502,7 @@ $('homeTipX').onclick=()=>{$('homeTip').classList.add('hidden');store.set(TIP_KE
 /* ---------------- 啟動 ---------------- */
 function init(){
  $('ver').textContent=VERSION;
- buildIcons();buildPlots();cloudCv=gridCanvas(CLOUD);
+ buildIcons();loadItems();buildPlots();cloudCv=gridCanvas(CLOUD);
  buildStats();document.querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));
  const raw=parse(store.get(SAVE_KEY)),upgraded=!!(raw&&!(Number(raw.v)>=6));
  const L=load();s=L.s;
@@ -1478,7 +1524,7 @@ function init(){
  if(!inFrame&&'serviceWorker'in navigator&&(location.protocol==='https:'||location.hostname==='localhost')&&!/claude|anthropic/.test(location.hostname))
   navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{});
 }
-window.PF={get state(){return s},toy:TOY,arena:makeArena,bUI:()=>bUI(),get mode(){return mode},get ball(){return BALL},get apple(){return FEED.apple},get petX(){return petX},PC,playAnim:(...a)=>playAnim(...a),formKey:()=>formKey(),creditSteps,mateCode,decodeMate,encodeGenome,decodeGenome,startBattle,onMove,get B(){return B},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
+window.PF={get state(){return s},toy:TOY,arena:makeArena,bUI:()=>bUI(),get mode(){return mode},get ball(){return BALL},get apple(){return FEED.apple},get petX(){return petX},PC,makeDecor:id=>makeDecor(id),playAnim:(...a)=>playAnim(...a),formKey:()=>formKey(),creditSteps,mateCode,decodeMate,encodeGenome,decodeGenome,startBattle,onMove,get B(){return B},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
  debug:{info(){return{busy:busyUntil-Date.now(),evo:!!evo,modal:!$('modal').classList.contains('hidden'),taps:s.eggTaps,h:s.hatched,battle:!!B}},skip(min){s.lastTick-=min*60000;tick();renderUI();save()},age(h){s.hatchedAt-=h*3600000;save();runStages();renderUI()},xp(n){const x0=s.xp;PC.addXP(s,n);save();renderUI();afterChange(x0)},set(o){Object.assign(s,o);renderUI();save()}}};
 try{init()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<div style="padding:12px;background:#a8394c;color:#fff">啟動錯誤：${esc(e.message)}</div>`);throw e}
 </script>
