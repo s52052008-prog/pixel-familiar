@@ -1,0 +1,39 @@
+# 不需要 Apple 帳號：在雲端 Mac 上編譯一次（模擬器版、不簽名），確認 iOS 專案和健康步數外掛沒有錯誤
+name: iOS 編譯檢查（不需帳號）
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ios/**'
+      - 'native/**'
+      - 'package.json'
+      - 'capacitor.config.json'
+      - '.github/workflows/ios-build-check.yml'
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 安裝 Capacitor、打包網頁檔案
+        run: |
+          npm ci
+          npm run build:www
+          npx cap sync ios
+      - name: 選擇 Xcode
+        run: |
+          XC=$(ls -d /Applications/Xcode_16*.app /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          [ -n "$XC" ] && sudo xcode-select -s "$XC"
+          xcodebuild -version
+      - name: 編譯（模擬器、不簽名）
+        run: |
+          xcodebuild build \
+            -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
+          echo "✅ iOS 專案編譯成功" >> "$GITHUB_STEP_SUMMARY"
