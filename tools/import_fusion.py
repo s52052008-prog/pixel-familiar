@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """血繼幻獸圖（綠底，4 欄＝幼年／少年／成年／高階 × 2 排＝睜眼／閉眼）→ sprites/fusion/<名>_<1..4>_<open|closed>.png
 用法：python3 tools/import_fusion.py <名稱> [原圖路徑] [--base=主屬性] [--eyes=左眼x,右眼x,y] [--iris=#深色,#亮色]
-  --eyesize=4：臉比較小時用 4×4 的眼睛；--keepclosed：閉眼保留原圖（原本就畫得好時）
+  --eyesize=beast：四腳獸的高階用兇兇的獸眼；--eyesize=4：臉比較小時用 4×4 的眼睛；--keepclosed：閉眼保留原圖（原本就畫得好時）
   --eyes：高階縮圖後眼睛糊掉時，在這兩個位置重畫 5×5 的像素大眼（睜眼）和「︶」（閉眼）
 例：python3 tools/import_fusion.py blossom --base=flame --eyes=13,22,17 --iris=#8a3a10,#f0a030
 會另外輸出 art/preview-fusion-<名稱>.png（和主屬性同階段並排比較）
@@ -45,10 +45,15 @@ def hexc(h): h = h.lstrip('#'); return tuple(int(h[i:i + 2], 16) for i in (0, 2,
 def fix_eyes(im, xs, y, iris, closed, size=5):
     """在 xs 兩個位置重畫眼睛。只把原本眼睛的深色殘影換成上下最近的毛色，不會蓋出一塊淺色方框"""
     a = im.copy(); B, G = iris
-    if size == 4: tpl = ['....', '.KK.', 'K..K', '....'] if closed else ['.KK.', 'KWBK', 'KBGK', '.KK.']
+    if size == 'beast':   # 獸眼（四腳獸的高階）：斜斜的兇眉＋小小的紅眼珠；閉眼是一條斜線。左眼的範本，右眼左右鏡像
+        size = 5; tplL = ['KK...', '.KKK.', '..KKK', '.....', '.....'] if closed else ['KK...', '.KKKK', '.KBWK', '..KKK', '.....']
+        tpls = [tplL, [r[::-1] for r in tplL]]
+    elif size == 4: tpl = ['....', '.KK.', 'K..K', '....'] if closed else ['.KK.', 'KWBK', 'KBGK', '.KK.']
     else: tpl = ['.....', '.....', '.KKK.', 'K...K', '.....'] if closed else ['.KKK.', 'KWWBK', 'KWBBK', 'KBGGK', '.KKK.']
+    if 'tpls' not in dir(): tpls = [tpl, tpl]
     dark = lambda c: c[3] and (int(c[0]) + int(c[1]) + int(c[2]) < 260 or (c[0] > 150 and c[1] < 80 and c[2] < 80))
-    for x0 in xs:
+    for n, x0 in enumerate(xs):
+        tpl = tpls[n]
         for i in range(size):
             x = x0 + i; col = [a[yy, x] for yy in list(range(y - 1, y - 4, -1)) + list(range(y + size, y + size + 3)) if 0 <= yy < a.shape[0] and a[yy, x, 3] and not dark(a[yy, x])]
             fill = col[0] if col else (253, 235, 200, 255)
@@ -94,4 +99,4 @@ if __name__ == '__main__':
     opt = lambda k: next((x[len(k) + 3:] for x in sys.argv[1:] if x.startswith('--' + k + '=')), None)
     args = [x for x in sys.argv[1:] if not x.startswith('--')]
     ey = opt('eyes'); ir = opt('iris')
-    main(args[0], args[1] if len(args) > 1 else None, opt('base'), [int(v) for v in ey.split(',')] if ey else None, ir.split(',') if ir else ('#2a3a8a', '#e8a030'), int(opt('eyesize') or 5), '--keepclosed' in sys.argv)
+    main(args[0], args[1] if len(args) > 1 else None, opt('base'), [int(v) for v in ey.split(',')] if ey else None, ir.split(',') if ir else ('#2a3a8a', '#e8a030'), (opt('eyesize') if opt('eyesize') == 'beast' else int(opt('eyesize') or 5)), '--keepclosed' in sys.argv)
