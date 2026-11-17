@@ -6,7 +6,7 @@ const H = 3600000, MIN = 60000;
 let pass = 0, fail = 0;
 function t(name, fn) { try { fn(); pass++; console.log('PASS ' + name); } catch (e) { fail++; console.log('FAIL ' + name + ' — ' + e.message); } }
 const T0 = Date.parse('2026-11-16T02:00:00Z');           // 台北 10:00
-function hatched(now = T0) { const s = C.fresh(now); C.hatch(s, now); s.name = '測試'; return s; }
+function hatched(now = T0) { const s = C.fresh(now); C.hatch(s, now); s.name = '測試'; s.route = null; return s; }   // 屬性特性另外測：預設不帶屬性，數值才固定
 const nonNeg = s => ['hunger', 'mood', 'clean', 'energy', 'bond'].every(k => s[k] >= 0 && s[k] <= 100) && s.coins >= 0 && s.xp >= 0 && s.inv.food >= 0 && s.inv.seeds >= 0;
 
 // 1. 全新存檔與檢查
@@ -206,6 +206,20 @@ t('冒險會變餓變髒；輸了心情下降', () => { const s = hatched(); s.e
 t('沒照顧好親密度會掉；心情低時摸摸不加親密度', () => { const s = hatched(); s.bond = 30; s.hunger = 10; C.applyTime(s, T0 + 2 * H); assert.ok(s.bond < 30); s.hunger = 90; s.clean = 90; s.mood = 30; C.applyTime(s, T0 + 3 * H); const b = s.bond; C.pet(s, T0 + 3 * H); assert.equal(s.bond, b); });
 t('野生怪會跟著玩家等級變強', () => { assert.equal(C.foeFor(1, 20).level, 18); assert.equal(C.foeFor(1, 1).level, 1); assert.equal(C.foeFor(12, 20).level, 19); });
 t('猜拳：贏＝0 倍（躲開）、平手 0.8、輸 1.2、沒選算輸', () => { assert.deepEqual(C.rps('rock', 'scissors'), { result: 'win', mult: 0 }); assert.deepEqual(C.rps('paper', 'paper'), { result: 'tie', mult: .8 }); assert.deepEqual(C.rps('scissors', 'rock'), { result: 'lose', mult: 1.2 }); assert.equal(C.rps(null, 'rock').mult, 1.2); });
+// V1.22：屬性特性與弱點、水費、球會爆
+t('洗澡要付水費 3 金幣；土系 5 金幣而且洗不太乾淨', () => { const s = hatched(); s.clean = 40; s.coins = 10; C.act(s, 'wash', T0); assert.equal(s.coins, 7); assert.equal(s.clean, 75);
+  const e = hatched(); e.route = 'earth'; e.clean = 40; e.coins = 10; C.act(e, 'wash', T0); assert.equal(e.coins, 5); assert.equal(e.clean, 68); e.coins = 2; e.care.bathLastAt = 0; e.clean = 10; assert.equal(C.act(e, 'wash', T0 + 99 * H).code, 'nocoin'); });
+t('球每玩 3 次就爆掉，下次玩要付 3 金幣買新球；沒錢就不能玩', () => { const s = hatched(); s.coins = 3; for (let i = 0; i < 3; i++) { s.energy = 100; const r = C.act(s, 'play', T0); assert.equal(!!r.popped, i === 2); } assert.ok(s.ballBroken);
+  s.energy = 100; const r = C.act(s, 'play', T0); assert.ok(r.ok); assert.equal(r.bought, 3); assert.equal(s.coins, 0); assert.ok(!s.ballBroken);
+  s.ballBroken = true; assert.ok(C.canAct(s, 'play', T0)); assert.equal(C.act(s, 'play', T0).code, 'noball'); });
+t('火系攻擊高、心情掉得快；水系防禦高、容易餓', () => { const f = C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0), n = C.mkFighter('a', 'k', 5, 'earth', 0, 80, 0), w = C.mkFighter('a', 'k', 5, 'tide', 0, 80, 0); assert.ok(f.atk > n.atk * 1.1); assert.ok(w.def > n.def * 1.1);
+  const s = hatched(); s.route = 'flame'; s.mood = 80; C.applyTime(s, T0 + H); assert.equal(s.mood, 75.5); const t2 = hatched(); t2.route = 'tide'; t2.hunger = 80; C.applyTime(t2, T0 + H); assert.equal(t2.hunger, 74); });
+t('森系體力恢復快但容易髒；鳥系、電系體力恢復慢', () => { const e = r => { const s = hatched(); s.route = r; s.energy = 20; s.clean = 80; C.applyTime(s, T0 + H); return s; }; assert.equal(e('forest').energy, 30.4); assert.equal(e('forest').clean, 77); assert.equal(e('bird').energy, 25.6); assert.equal(e('elec').energy, 24.8); });
+t('鳥系食量小：同樣食物飽比較多', () => { const s = hatched(); s.route = 'bird'; s.hunger = 50; s.inv.food = 1; C.act(s, 'feed', T0); assert.equal(s.hunger, 63); });
+t('金系經驗只吸收 7 成，戰鬥常拿 1.5 倍金幣；土系撿莓果、鳥系撿種子', () => { const s = hatched(); s.route = 'metal'; s.energy = 100; let st = C.startAdventure(s, 1, T0); let o = C.finishAdventure(s, 1, 'win', st.full, T0, () => 0); assert.equal(o.coins, 30); assert.ok(o.coinBonus); assert.equal(o.xp, Math.round(25 * .7));
+  const e = hatched(); e.route = 'earth'; e.energy = 100; st = C.startAdventure(e, 1, T0); o = C.finishAdventure(e, 1, 'win', st.full, T0, () => 0); assert.equal(o.berry, 1);
+  const b = hatched(); b.route = 'bird'; b.energy = 100; st = C.startAdventure(b, 1, T0); o = C.finishAdventure(b, 1, 'win', st.full, T0, () => 0); assert.equal(o.bonusSeed, 1); assert.equal(b.inv.seeds, 4); });
+t('電系攻擊有機會麻痺對手', () => { assert.equal(C.mkFighter('a', 'k', 5, 'elec', 0, 80, 0).stunChance, .25); assert.equal(C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0).stunChance, 0); });
 // 頂球
 t('頂球：結算套用玩耍規則、記錄最佳分數', () => { const s = hatched(); s.energy = 50; s.mood = 40; const r = C.finishBallGame(s, 2, T0); assert.ok(r.ok); assert.equal(s.mood, 55); assert.equal(s.ball.best, 2); assert.equal(s.ball.goals, 2); C.finishBallGame(s, 1, T0); assert.equal(s.ball.best, 2); s.energy = 5; assert.ok(!C.finishBallGame(s, 3, T0).ok); assert.equal(s.ball.best, 2); });
 // 小窩

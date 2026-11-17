@@ -14,7 +14,7 @@ async def tap(p, x=64, y=80):
     await p.mouse.click(b['x'] + x / 128 * b['width'], b['y'] + y / 112 * b['height'])
 async def newpage(br, dev, init=None):
     ctx = await br.new_context(**dev); p = await ctx.new_page()
-    await p.add_init_script('window.PF_NO_WANDER=1;window.PF_NO_RPS=1')   # 測試時關掉待命亂走與猜拳（猜拳另外測）
+    await p.add_init_script('window.PF_NO_WANDER=1;window.PF_NO_RPS=1;window.PF_NO_TRAITS=1')   # 測試時關掉待命亂走與猜拳（猜拳另外測）
     p.on('pageerror', lambda e: errors.append(str(e)))
     p.on('console', lambda m: errors.append(m.text) if m.type == 'error' and 'favicon' not in m.text else None)
     if init: await p.add_init_script(init)

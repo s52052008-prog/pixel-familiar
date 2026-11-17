@@ -75,7 +75,20 @@ const CONFIG = {
     meat:  { name: '肉排', icon: 'meat',  hunger: 20, mood: 0,  energy: 20, xp: 5, price: 20, left: 'bone', fav: ['flame', 'elec', 'bird'] },
     cake:  { name: '蛋糕', icon: 'cake',  hunger: 10, mood: 20, energy: 10, xp: 5, price: 25, left: null,   fav: ['flame', 'tide', 'forest', 'earth', 'bird', 'elec', 'metal'] }
   },
-  sellFruit: { food: 15, berry: 15 },      // 自己種出來的水果可以賣
+  sellFruit: { food: 15, berry: 15 },
+  washCost: 3,                              // 洗澡要付水費
+  ballLife: 3, ballCost: 3,                 // 球每玩 3 次就會爆掉，換新球 3 金幣
+  traitsOn: true,
+  /* 7 個屬性的特性與弱點（rate＝狀態下降速度倍率；energyUp＝體力恢復倍率） */
+  traits: {
+    flame:  { good: '攻擊力較高', bad: '心情容易變差（要多摸摸、陪牠玩）', atk: 1.15, rate: { mood: 1.5 } },
+    tide:   { good: '防禦力較高', bad: '肚子容易餓（要多餵食）', def: 1.15, rate: { hunger: 1.5 } },
+    forest: { good: '體力恢復快', bad: '容易髒（要多洗澡）', energyUp: 1.3, rate: { clean: 1.5 } },
+    bird:   { good: '戰鬥容易撿到種子、食量小好餵飽', bad: '體力恢復慢（要多休息）', seedChance: .6, feed: 1.3, energyUp: .7 },
+    earth:  { good: '戰鬥容易撿到莓果', bad: '容易髒又洗不乾淨，洗澡水費 5 金幣', berryChance: .6, rate: { clean: 1.3 }, washCost: 5, washGain: .8 },
+    metal:  { good: '戰鬥常拿到 1.5 倍金幣', bad: '容易分心，經驗只吸收 7 成', coinChance: .6, coinX: 1.5, xp: .7 },
+    elec:   { good: '攻擊有機會讓對手麻痺一回合', bad: '一直在發電，體力恢復慢', stun: .25, energyUp: .6 }
+  },      // 自己種出來的水果可以賣
   ember: { mood: 10, energy: 20, xp: 20, bossDrop: .5 },   // 經驗火種：打贏 Boss 有機會得到
   favBonus: { mood: 10, xp: 5 }
 };
@@ -166,7 +179,7 @@ function fresh(now = Date.now()) {
     inv: { food: S.food, seeds: S.seeds, candy: 0, potion: 1, berry: 0, fish: 0, meat: 0, cake: 0, ember: 0, fresh: { food: 0, berry: 0 } }, harvests: 0,
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] },
-    decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0,
+    decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0, ballUses: 0, ballBroken: false,
     cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [],
     events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
     daily: { date: '', adv: 0, gift: false },
@@ -220,7 +233,7 @@ function sanitize(o, now = Date.now()) {
   if (!(Number(o.v) >= 7) && !r.decor.placed.bed) r.decor.placed.bed = 'bed_round';   // 舊存檔：送一張小圓床
   r.view = o.view === 'room' ? 'room' : 'yard';
   r.digest = Array.isArray(o.digest) ? o.digest.map(Number).filter(Number.isFinite).slice(0, 10) : [];
-  r.toiletUses = int(o.toiletUses, 0, 0, 1e7);
+  r.toiletUses = int(o.toiletUses, 0, 0, 1e7); r.ballUses = int(o.ballUses, 0, 0, CONFIG.ballLife - 1); r.ballBroken = o.ballBroken === true;
   r.cores = Array.isArray(o.cores) ? o.cores.filter(c => c && typeof c === 'object').slice(-CONFIG.core.max).map(c => ({ x: num(c.x, 64, 4, 124), at: num(c.at, now, 0, 9e15), v: c.v === 'room' ? 'room' : 'yard', k: c.k === 'poop' ? 'poop' : 'core' })) : [];
   const bl = o.ball && typeof o.ball === 'object' ? o.ball : {}; r.ball = { best: int(bl.best, 0, 0, 99), goals: int(bl.goals, 0, 0, 1e7) };
   r.den = { level: int(o.den && o.den.level, 1, 1, CONFIG.den.length) };
@@ -266,8 +279,8 @@ function applyTime(st, now = Date.now()) {
   const last = st.lastTick; st.lastTick = now;
   const events = digest(st, now);
   if (st.hatched && eff > 0) {
-    const R = CONFIG.rates[st.sleeping ? 'sleep' : 'awake'];
-    for (const k in R) st[k] = clamp(st[k] + R[k] * eff);
+    const R = CONFIG.rates[st.sleeping ? 'sleep' : 'awake'], T = trait(st);
+    for (const k in R) { let v = R[k]; if (v < 0 && T.rate && T.rate[k]) v *= T.rate[k]; if (k === 'energy' && v > 0 && T.energyUp) v *= T.energyUp; st[k] = clamp(st[k] + v * eff); }   // 屬性特性：某些狀態掉得比較快、體力恢復快慢不同
     // 發臭的果核：只算「已經發臭」的那段時間，同樣最多 12 小時
     let rotH = 0; for (const c of st.cores) { const from = Math.max(last, c.at + rotMin(c) * MIN); if (now > from) rotH += Math.min((now - from) / H, CONFIG.offlineCapHours); }
     if (rotH > 0) st.mood = clamp(st.mood - rotH * CONFIG.core.moodPerHour);
@@ -310,7 +323,10 @@ function gather(st, now = Date.now()) {
 }
 
 /* ---------------- 照顧行為（GDD 第 3 節表格） ---------------- */
-function addXP(st, n) { n = Math.max(0, Math.round(n)); st.xp += n; return n; }
+const trait = st => (CONFIG.traitsOn && st && CONFIG.traits[st.route]) || {};
+const traitOf = route => (CONFIG.traitsOn && CONFIG.traits[route]) || {};
+function addXP(st, n) { n = Math.max(0, Math.round(n * (trait(st).xp || 1))); st.xp += n; return n; }
+const washCost = st => trait(st).washCost || CONFIG.washCost;
 function act(st, a, now = Date.now(), opt) {
   const tm = applyTime(st, now);
   if (!st.hatched) return { ok: false, msg: '先把蛋孵出來吧！', tm };
@@ -329,25 +345,28 @@ function act(st, a, now = Date.now(), opt) {
     else if (st.coins >= FD.price) { st.coins -= FD.price; paid = `花 ${FD.price} 金幣買${FD.name}`; }
     else return { ok: false, code: 'nofood', msg: `沒有${FD.name}也沒有金幣了…可以去「採集」或種田`, tm };
     const fav = !!(st.route && FD.fav.includes(st.route)), B = CONFIG.favBonus;
-    st.hunger = clamp(st.hunger + FD.hunger); st.mood = clamp(st.mood + FD.mood + (fav ? B.mood : 0)); if (FD.energy) st.energy = clamp(st.energy + FD.energy); fixFresh(st);
+    st.hunger = clamp(st.hunger + FD.hunger * (trait(st).feed || 1)); st.mood = clamp(st.mood + FD.mood + (fav ? B.mood : 0)); if (FD.energy) st.energy = clamp(st.energy + FD.energy); fixFresh(st);
     st.path.tide += CONFIG.feed.tide; track(st, 'feed', now); st.digest.push(now + CONFIG.poop.delayMin * MIN);
     return { ok: true, anim: 'eat', sfx: 'eat', kind, left: FD.left, fav, xp: addXP(st, FD.xp + (fav ? B.xp : 0)), msg: (fav ? `最愛的${FD.name}！超好吃！` : `好吃的${FD.name}！`) + `（${paid}）`, tm };
   }
   if (a === 'play') {
     const C = CONFIG.play;
     if (st.energy < C.minEnergy) return { ok: false, msg: '太累了…先讓牠休息或睡一下', tm };
+    let bought = 0; if (st.ballBroken) { if (st.coins < CONFIG.ballCost) return { ok: false, code: 'noball', msg: `球爆掉了，要 ${CONFIG.ballCost} 金幣買新球`, tm }; st.coins -= CONFIG.ballCost; st.ballBroken = false; bought = CONFIG.ballCost; }
     st.care.playXpAt = st.care.playXpAt.filter(t => now - t < C.xpWindowMin * MIN && t <= now);
     let xp = 0;
     if (st.care.playXpAt.length < C.xpPerWindow) { st.care.playXpAt.push(now); xp = addXP(st, C.xp); }
     st.mood = clamp(st.mood + C.mood); st.energy = clamp(st.energy + C.energy); st.hunger = clamp(st.hunger + C.hunger); st.clean = clamp(st.clean + C.clean); track(st, 'play', now);
-    return { ok: true, anim: 'play', sfx: 'play', xp, msg: xp ? '玩得好開心！' : '玩得好開心！（玩太多次了，暫時沒有經驗）', tm };
+    st.ballUses = (st.ballUses || 0) + 1; const popped = st.ballUses >= CONFIG.ballLife; if (popped) { st.ballUses = 0; st.ballBroken = true; }   // 球玩久了會爆掉
+    return { ok: true, anim: 'play', sfx: 'play', xp, popped, bought, msg: (bought ? `買了新球（−${bought} 金幣）。` : '') + (xp ? '玩得好開心！' : '玩得好開心！（玩太多次了，暫時沒有經驗）') + (popped ? `\n💥 球被玩壞，爆掉了！下次玩要花 ${CONFIG.ballCost} 金幣買新球` : ''), tm };
   }
   if (a === 'wash') {
     const C = CONFIG.wash, wait = st.care.bathLastAt + C.cooldownMin * MIN - now;
     if (st.clean >= F) return { ok: false, msg: '已經很乾淨了！', tm };
     if (wait > 0) return { ok: false, msg: `剛洗過澡，${Math.ceil(wait / MIN)} 分鐘後再洗吧`, tm };
-    st.care.bathLastAt = now; st.clean = clamp(st.clean + C.clean); st.path.metal += 1; track(st, 'wash', now);
-    return { ok: true, anim: 'wash', sfx: 'wash', xp: addXP(st, C.xp), msg: '洗得香噴噴～', tm };
+    const cost = washCost(st); if (st.coins < cost) return { ok: false, code: 'nocoin', msg: `沒有錢付水費了（洗一次 ${cost} 金幣）`, tm };
+    st.coins -= cost; st.care.bathLastAt = now; st.clean = clamp(st.clean + C.clean * (trait(st).washGain || 1)); st.path.metal += 1; track(st, 'wash', now);
+    return { ok: true, anim: 'wash', sfx: 'wash', cost, xp: addXP(st, C.xp), msg: `洗得香噴噴～（水費 −${cost}）`, tm };
   }
   return { ok: false, msg: '未知動作', tm };
 }
@@ -470,9 +489,9 @@ function startAdventure(st, n, now = Date.now()) {
   return { ok: true, full: st.daily.adv <= CONFIG.adventure.dailyFull };
 }
 function mkFighter(name, key, lvl, route, tierN, mood, bond) {
-  const k = 1 + .1 * tierN, cond = mood < 30 ? .85 : 1;
-  return { name, key, level: lvl, el: ELEM[route] || 'none', max: Math.round((30 + lvl * 6) * k), hp: Math.round((30 + lvl * 6) * k),
-    atk: (8 + lvl * 2) * k * cond, def: (6 + lvl * 1.5) * k, spd: 5 + lvl + tierN, cd: 0, guard: false, endure: bond >= 80 };
+  const k = 1 + .1 * tierN, cond = mood < 30 ? .85 : 1, T = traitOf(route);
+  return { name, key, level: lvl, el: ELEM[route] || 'none', max: Math.round((30 + lvl * 6) * k), hp: Math.round((30 + lvl * 6) * k), stunChance: T.stun || 0, stun: 0,
+    atk: (8 + lvl * 2) * k * cond * (T.atk || 1), def: (6 + lvl * 1.5) * k * (T.def || 1), spd: 5 + lvl + tierN, cd: 0, guard: false, endure: bond >= 80 };
 }
 /* 冒險區域（每 5 關一區）主要出現的屬性 */
 const AREA_ROUTE = [null, 'tide', 'flame', 'forest', 'earth', 'bird', 'elec', 'metal', null];
@@ -521,7 +540,8 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
   if (result === 'win') {
     st.adv.wins++; track(st, 'win', now);
     const xp = A.xp + CONFIG.battleWin.xp;
-    if (full) { out.xp = addXP(st, xp); out.coins = A.coinsMin + Math.floor(r() * (A.coinsMax - A.coinsMin + 1)); st.coins += out.coins; st.inv.seeds += A.seeds; out.seeds = A.seeds; st.path.flame += A.flame + CONFIG.battleWin.flame;
+    if (full) { const T = trait(st); out.xp = addXP(st, xp); out.coins = A.coinsMin + Math.floor(r() * (A.coinsMax - A.coinsMin + 1)); if (T.coinX && r() < T.coinChance) { out.coins = Math.round(out.coins * T.coinX); out.coinBonus = true; } st.coins += out.coins;
+      if (T.seedChance && r() < T.seedChance) { st.inv.seeds++; out.bonusSeed = 1; } if (T.berryChance && r() < T.berryChance) { const b = 1 + Math.floor(r() * 2); st.inv.berry = (st.inv.berry || 0) + b; out.berry = b; } st.inv.seeds += A.seeds; out.seeds = A.seeds; st.path.flame += A.flame + CONFIG.battleWin.flame;
       if (foeFor(n).boss && r() < CONFIG.ember.bossDrop) { st.inv.ember = (st.inv.ember || 0) + 1; out.ember = 1; } }
     else out.xp = addXP(st, Math.round(xp * A.overCapXpRate));
     if (r() < A.dropFood) { st.inv.food++; out.food = 1; }
@@ -626,7 +646,8 @@ function canAct(st, a, now = Date.now()) {
   if (a === 'feed') { if (st.hunger >= CONFIG.full) return '飽飽的，吃不下了～'; if (!Object.keys(CONFIG.foods).some(k => (st.inv[k] || 0) > 0) && st.coins < Math.min(...Object.values(CONFIG.foods).map(f => f.price))) return '沒有食物也沒有金幣了…可以去「採集」或種田'; }
   if (a === 'play' && st.energy < CONFIG.play.minEnergy) return '太累了…先讓牠休息或睡一下';
   if (a === 'sleep' && st.view !== 'room') return '外面不能睡覺，要回小窩裡睡喔';
-  if (a === 'wash') { if (st.clean >= CONFIG.full) return '已經很乾淨了！'; const w = st.care.bathLastAt + CONFIG.wash.cooldownMin * MIN - now; if (w > 0) return `剛洗過澡，${Math.ceil(w / MIN)} 分鐘後再洗吧`; }
+  if (a === 'wash') { if (st.clean >= CONFIG.full) return '已經很乾淨了！'; const w = st.care.bathLastAt + CONFIG.wash.cooldownMin * MIN - now; if (w > 0) return `剛洗過澡，${Math.ceil(w / MIN)} 分鐘後再洗吧`; if (st.coins < washCost(st)) return `沒有錢付水費了（洗一次 ${washCost(st)} 金幣）`; }
+  if (a === 'play' && st.ballBroken && st.coins < CONFIG.ballCost) return `球爆掉了，要 ${CONFIG.ballCost} 金幣買新球`;
   return null;
 }
 const rotMin = c => c.k === 'poop' ? CONFIG.poop.rotMin : CONFIG.core.rotMin;
@@ -734,6 +755,6 @@ const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
   canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
-  ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, expectDamage, bondBoost, rps, RPS, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
+  ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, expectDamage, bondBoost, rps, RPS, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
