@@ -14,7 +14,7 @@ async def tap(p, x=64, y=80):
     await p.mouse.click(b['x'] + x / 128 * b['width'], b['y'] + y / 112 * b['height'])
 async def newpage(br, dev, init=None):
     ctx = await br.new_context(**dev); p = await ctx.new_page()
-    await p.add_init_script('window.PF_NO_WANDER=1')   # 測試時關掉待命亂走，點擊位置才固定
+    await p.add_init_script('window.PF_NO_WANDER=1;window.PF_NO_RPS=1')   # 測試時關掉待命亂走與猜拳（猜拳另外測）
     p.on('pageerror', lambda e: errors.append(str(e)))
     p.on('console', lambda m: errors.append(m.text) if m.type == 'error' and 'favicon' not in m.text else None)
     if init: await p.add_init_script(init)
@@ -64,7 +64,7 @@ async def main():
         await p.screenshot(path=f'{OUT}/01_egg.png')
         s = await st(p); ok('新存檔：蛋、金幣 50+每日 10、食物 3+1', s['stage'] == 'egg' and s['coins'] == 60 and s['inv']['food'] == 4, (s['coins'], s['inv']))
         await hatch(p, '露米')
-        s = await st(p); ok('孵化並命名、孵化時就有屬性', s['hatched'] and s['stage'] == 'juvenile' and s['name'] == '露米' and s['route'] in ['flame','tide','forest','earth','bird','elec','metal'], s['route'])
+        s = await st(p); ok('孵化並命名、孵化時就有屬性（嬰兒期）', s['hatched'] and s['stage'] == 'baby' and s['name'] == '露米' and s['route'] in ['flame','tide','forest','earth','bird','elec','metal'], s['route'])
         stx = await p.inner_text('#stageText'); ok('畫面顯示屬性', any(k in stx for k in ['焰系','潮系','森系','土系','鳥系','電系','金系']), stx)
         await p.reload(); await p.wait_for_timeout(700); s = await st(p); ok('刷新後保留', s['hatched'] and s['name'] == '露米')
         ok('每日禮物刷新後不重複', s['coins'] == 60, s['coins'])
@@ -105,14 +105,14 @@ async def main():
             s = await st(p); eff = min(hrs, 12)
             ok(f'離線 {hrs} 小時 → 只計算 {eff} 小時', abs(s['hunger'] - (80 - 4 * eff)) < .2 and abs(s['energy'] - min(100, 20 + 8 * eff)) < .2, (round(s['hunger'], 1), round(s['energy'], 1)))
         # ---------- 5. 成長門檻（用 debug 把孵化時間往前移） ----------
-        await p.evaluate("PF.debug.set({xp:99})"); await p.evaluate("PF.debug.age(12)"); await p.wait_for_timeout(400)
-        ok('12h 但 99 XP：還是幼年期', (await st(p))['stage'] == 'juvenile')
-        await p.evaluate("PF.debug.set({xp:100})"); await p.evaluate("PF.debug.age(0)"); await p.wait_for_timeout(1000)
+        await p.evaluate("PF.debug.set({xp:299})"); await p.evaluate("PF.debug.age(12)"); await p.wait_for_timeout(4500)
+        ok('12h、299 XP：嬰兒期 → 幼年期，但還不到少年期', (await st(p))['stage'] == 'juvenile')
+        await p.evaluate("PF.debug.set({xp:300})"); await p.evaluate("PF.debug.age(0)"); await p.wait_for_timeout(1000)
         await p.screenshot(path=f'{OUT}/05_evolving.png'); await p.wait_for_timeout(3500)
-        ok('12h + 100 XP：少年期', (await st(p))['stage'] == 'adolescent')
+        ok('12h + 300 XP：少年期', (await st(p))['stage'] == 'adolescent')
         await p.screenshot(path=f'{OUT}/06_teen.png')
-        el0 = (await st(p))['route']; await p.evaluate("PF.debug.set({xp:400,path:{flame:99,tide:0,forest:0}})"); await p.evaluate("PF.debug.age(36)"); await p.wait_for_timeout(5500)
-        s = await st(p); ok('48h + 350 XP → 成年期，屬性維持孵化時的那一系', s['stage'] == 'adult' and s['route'] == el0, (s['stage'], s['route'], el0))
+        el0 = (await st(p))['route']; await p.evaluate("PF.debug.set({xp:800,path:{flame:99,tide:0,forest:0}})"); await p.evaluate("PF.debug.age(36)"); await p.wait_for_timeout(5500)
+        s = await st(p); ok('48h + 800 XP → 成年期，屬性維持孵化時的那一系', s['stage'] == 'adult' and s['route'] == el0, (s['stage'], s['route'], el0))
         await p.screenshot(path=f'{OUT}/07_adult.png', full_page=True)
         await p.evaluate("PF.debug.set({xp:1200})"); await p.evaluate("PF.debug.age(200)"); await p.wait_for_timeout(1500)
         ok('沒有特殊事件不能高階', (await st(p))['stage'] == 'adult')
@@ -279,6 +279,20 @@ async def main():
         ok('點皮球會滾', abs(await q.evaluate('PF.toy.x') - tx) > 5, (tx, await q.evaluate('PF.toy.x')))
         ok('野生怪獸不用 7 系手繪造型', await q.evaluate("(()=>{const k=PF.petKey('g:5','flame')+'|wild';return PF.formOf(k).wild===true&&/怪$/.test(PF.formOf(k).name)})()"))
         await q.evaluate("PF.state.settings.light=false"); s = await st(q); ok('開燈設定可存', s['settings']['light'] is False)
+        # 猜拳與嬰兒期
+        ok('孵化後是嬰兒期', (await st(q))['stage'] == 'baby')
+        await q.evaluate("window.PF_NO_RPS=0;PF.debug.set({energy:100,hp:100})"); await q.evaluate("PF.startBattle(1)"); await q.wait_for_timeout(600)
+        seen = False
+        for _ in range(6):
+            await q.click('#mvTk'); 
+            for _ in range(20):
+                await q.wait_for_timeout(150)
+                if await q.is_visible('#rpsZone'): seen = True; break
+            if seen: break
+        ok('敵人攻擊前跳出猜拳', seen)
+        if seen:
+            await q.click('[data-rps=rock]'); await q.wait_for_timeout(300); m = await q.inner_text('#rpsMsg')
+            ok('猜拳有結果（贏／平手／輸）', any(k in m for k in ['躲開', '0.8', '1.2']), m)
         await ctx7.close()
         # ---------- 小螢幕 ----------
         ctx6, q = await newpage(br, pw.devices['iPhone SE']); await q.screenshot(path=f'{OUT}/14_iphoneSE.png', full_page=True)

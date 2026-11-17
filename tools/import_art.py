@@ -23,8 +23,8 @@ OPEN = {'elec': 9}          # 各屬性去除細線的強度（像素）
 KEEP_FRAC = 0.04           # 比最大塊小很多的碎點（閃光、水花）不算進角色
 DARK = 0.42                # 區塊裡深色超過這個比例才畫成線條
 GROUND = 46               # 腳底所在的列
-FIT = {1: (35, 33), 2: (39, 39), 3: (44, 43), 4: (48, 45)}   # 各階段最大 寬、高
-STAGES = {1: 'juvenile', 2: 'teen', 3: 'adult', 4: 'ascended'}
+FIT = {0: (30, 28), 1: (35, 33), 2: (39, 39), 3: (44, 43), 4: (48, 45)}   # 各階段最大 寬、高
+STAGES = {0: 'baby', 1: 'juvenile', 2: 'teen', 3: 'adult', 4: 'ascended'}
 
 
 def mask_of(a):
@@ -130,7 +130,11 @@ def process(el):
         pair = {}
         for eye in ('open', 'closed'):
             p = os.path.join(src, f'{el}_{st}_{name}_{eye}.png')
+            if not os.path.exists(p):
+                break
             pair[eye] = load(p)
+        if len(pair) < 2:
+            continue
         # 每張各自裁切、縮放（AI 畫的睜眼／閉眼兩張大小常常不一樣），再以腳底中央對齊
         imgs, sizes = [], []
         mw, mh = FIT[st]

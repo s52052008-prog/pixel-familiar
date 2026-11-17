@@ -68,8 +68,36 @@ def eggs(path):
     print('sliced eggs')
 
 
+def pair(el, path, stage='0_baby'):
+    """一張圖裡左右兩隻：左＝睜眼、右＝閉眼（嬰兒期用）。"""
+    import numpy as np
+    from scipy import ndimage
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from import_art import mask_of
+    a = np.asarray(Image.open(path).convert('RGB'))
+    fg = mask_of(a)
+    lab, n = ndimage.label(fg)
+    objs = ndimage.find_objects(lab)
+    areas = ndimage.sum(fg, lab, range(1, n + 1))
+    main = sorted(sorted(range(n), key=lambda i: -areas[i])[:2], key=lambda i: objs[i][1].start)
+    out = os.path.join(ROOT, 'art', 'src', el)
+    os.makedirs(out, exist_ok=True)
+    for eye, m in zip(['open', 'closed'], main):
+        cx = (objs[m][1].start + objs[m][1].stop) / 2
+        ids = [i + 1 for i in range(n) if i == m or abs((objs[i][1].start + objs[i][1].stop) / 2 - cx) < abs((objs[i][1].start + objs[i][1].stop) / 2 - (sum((objs[k][1].start + objs[k][1].stop) / 2 for k in main) - cx))]
+        sel = np.isin(lab, ids)
+        ys, xs = np.where(sel)
+        y0, y1, x0, x1 = max(0, ys.min() - 12), ys.max() + 12, max(0, xs.min() - 12), xs.max() + 12
+        crop = a[y0:y1, x0:x1].copy()
+        crop[~sel[y0:y1, x0:x1]] = (0, 255, 0)
+        Image.fromarray(crop).save(os.path.join(out, f'{el}_{stage}_{eye}.png'))
+    print('sliced pair', el)
+
+
 if __name__ == '__main__':
-    if sys.argv[1] == 'creature':
+    if sys.argv[1] == 'pair':
+        pair(sys.argv[2], sys.argv[3])
+    elif sys.argv[1] == 'creature':
         creature(sys.argv[2], sys.argv[3])
     else:
         eggs(sys.argv[2])

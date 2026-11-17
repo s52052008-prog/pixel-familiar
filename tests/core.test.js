@@ -11,7 +11,7 @@ const nonNeg = s => ['hunger', 'mood', 'clean', 'energy', 'bond'].every(k => s[k
 
 // 1. 全新存檔與檢查
 t('全新存檔：蛋、50 金幣、3 食物、2 種子', () => { const s = C.fresh(T0); assert.equal(s.stage, 'egg'); assert.equal(s.coins, 50); assert.equal(s.inv.food, 3); assert.equal(s.inv.seeds, 2); });
-t('孵化後為幼年期並記錄日記與圖鑑', () => { const s = hatched(); assert.equal(s.stage, 'juvenile'); assert.equal(s.dex.length, 1); assert.ok(s.journal.length >= 1); });
+t('孵化後為嬰兒期並記錄日記與圖鑑', () => { const s = hatched(); assert.equal(s.stage, 'baby'); assert.equal(s.dex.length, 1); assert.ok(s.journal.length >= 1); });
 t('存檔 JSON 往返不變（檢查是冪等的）', () => { const s = C.sanitize(hatched(), T0); const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.deepStrictEqual(r, s); });
 
 // 2. 行為扣費與加值，不會出現負數
@@ -52,17 +52,21 @@ t('時間倒退：不回溯、記錄警告', () => { const s = hatched(); s.hung
 t('大幅快轉：照上限處理並提示', () => { const s = hatched(); const r = C.applyTime(s, T0 + 40 * 24 * H); assert.equal(r.warn, 'jump'); assert.equal(r.eff, 12); });
 
 // 5. 進化門檻邊界
-t('少年期：12h 與 100 XP 都要達到', () => {
-  const s = hatched(); s.xp = 100; assert.equal(C.checkStages(s, T0 + 12 * H - 1).length, 0);
-  s.xp = 99; assert.equal(C.checkStages(s, T0 + 12 * H).length, 0); s.xp = 100; assert.equal(C.checkStages(s, T0 + 12 * H)[0].to, 'adolescent');
+t('幼年期：4h 與 100 XP 都要達到', () => {
+  const s = hatched(); s.xp = 100; assert.equal(C.checkStages(s, T0 + 4 * H - 1).length, 0);
+  s.xp = 99; assert.equal(C.checkStages(s, T0 + 4 * H).length, 0); s.xp = 100; assert.equal(C.checkStages(s, T0 + 4 * H)[0].to, 'juvenile');
 });
-t('成年期：48h 與 350 XP 邊界', () => { const s = hatched(); s.xp = 349; assert.equal(C.checkStages(s, T0 + 48 * H).map(x => x.to).join(), 'adolescent'); s.xp = 350; assert.equal(C.checkStages(s, T0 + 48 * H)[0].to, 'adult'); });
-t('高階：168h、1000 XP 且完成特殊事件', () => {
-  const s = hatched(); s.xp = 1000; s.route = 'flame'; const tr = C.checkStages(s, T0 + 168 * H);
-  assert.deepEqual(tr.map(x => x.to), ['adolescent', 'adult']); assert.equal(s.route, 'flame');
+t('少年期：12h 與 300 XP 都要達到', () => {
+  const s = hatched(); s.xp = 300; assert.equal(C.checkStages(s, T0 + 12 * H - 1).map(x => x.to).join(), 'juvenile');
+  s.xp = 299; assert.equal(C.checkStages(s, T0 + 12 * H).length, 0); s.xp = 300; assert.equal(C.checkStages(s, T0 + 12 * H)[0].to, 'adolescent');
+});
+t('成年期：48h 與 800 XP 邊界', () => { const s = hatched(); s.xp = 799; assert.equal(C.checkStages(s, T0 + 48 * H).map(x => x.to).join(), 'juvenile,adolescent'); s.xp = 800; assert.equal(C.checkStages(s, T0 + 48 * H)[0].to, 'adult'); });
+t('高階：168h、2000 XP 且完成特殊事件', () => {
+  const s = hatched(); s.xp = 2000; s.route = 'flame'; const tr = C.checkStages(s, T0 + 168 * H);
+  assert.deepEqual(tr.map(x => x.to), ['juvenile', 'adolescent', 'adult']); assert.equal(s.route, 'flame');
   s.events.volcano = true; assert.equal(C.checkStages(s, T0 + 168 * H - 1).length, 0); assert.equal(C.checkStages(s, T0 + 168 * H)[0].to, 'ascended');
 });
-t('一次跨越多個門檻時依序記錄', () => { const s = hatched(); s.xp = 5000; const tr = C.checkStages(s, T0 + 500 * H); assert.deepEqual(tr.map(x => x.to), ['adolescent', 'adult']); assert.ok(s.journal.length >= 3); });
+t('一次跨越多個門檻時依序記錄', () => { const s = hatched(); s.xp = 5000; const tr = C.checkStages(s, T0 + 500 * H); assert.deepEqual(tr.map(x => x.to), ['juvenile', 'adolescent', 'adult']); assert.ok(s.journal.length >= 3); });
 
 // 6. 三種路線與平手處理可重現
 t('路線：點數最高者勝', () => { const s = hatched(); s.path = { flame: 1, tide: 2, forest: 9 }; assert.equal(C.pickRoute(s), 'forest'); s.path = { flame: 9, tide: 2, forest: 1 }; assert.equal(C.pickRoute(s), 'flame'); });
@@ -198,6 +202,7 @@ t('食物沒有就用金幣買；商店可以買各種食物', () => { const s =
 t('冒險會變餓變髒；輸了心情下降', () => { const s = hatched(); s.energy = 100; s.hunger = 80; s.clean = 80; s.mood = 60; C.startAdventure(s, 1, T0); assert.equal(s.hunger, 65); assert.equal(s.clean, 60); C.finishAdventure(s, 1, 'loss', true, T0); assert.equal(s.mood, 48); });
 t('沒照顧好親密度會掉；心情低時摸摸不加親密度', () => { const s = hatched(); s.bond = 30; s.hunger = 10; C.applyTime(s, T0 + 2 * H); assert.ok(s.bond < 30); s.hunger = 90; s.clean = 90; s.mood = 30; C.applyTime(s, T0 + 3 * H); const b = s.bond; C.pet(s, T0 + 3 * H); assert.equal(s.bond, b); });
 t('野生怪會跟著玩家等級變強', () => { assert.equal(C.foeFor(1, 20).level, 18); assert.equal(C.foeFor(1, 1).level, 1); assert.equal(C.foeFor(12, 20).level, 19); });
+t('猜拳：贏＝0 倍（躲開）、平手 0.8、輸 1.2、沒選算輸', () => { assert.deepEqual(C.rps('rock', 'scissors'), { result: 'win', mult: 0 }); assert.deepEqual(C.rps('paper', 'paper'), { result: 'tie', mult: .8 }); assert.deepEqual(C.rps('scissors', 'rock'), { result: 'lose', mult: 1.2 }); assert.equal(C.rps(null, 'rock').mult, 1.2); });
 // 頂球
 t('頂球：結算套用玩耍規則、記錄最佳分數', () => { const s = hatched(); s.energy = 50; s.mood = 40; const r = C.finishBallGame(s, 2, T0); assert.ok(r.ok); assert.equal(s.mood, 55); assert.equal(s.ball.best, 2); assert.equal(s.ball.goals, 2); C.finishBallGame(s, 1, T0); assert.equal(s.ball.best, 2); s.energy = 5; assert.ok(!C.finishBallGame(s, 3, T0).ok); assert.equal(s.ball.best, 2); });
 // 小窩
@@ -230,7 +235,7 @@ t('新存檔與舊存檔都有小圓床', () => { assert.equal(C.fresh(T0).decor
 // 戰鬥擴充
 t('藥水：開局 1 瓶、商店 20 金幣', () => { const s = hatched(); assert.equal(s.inv.potion, 1); C.buyItem(s, 'potion'); assert.equal(s.inv.potion, 2); assert.equal(s.coins, 30); });
 t('蓄力：下一擊 2 倍，用完就消失', () => { const a = C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0), d = C.mkFighter('b', 'k', 5, 'flame', 0, 80, 0); const n = C.expectDamage(a, d, false); a.charged = true; assert.ok(Math.abs(C.expectDamage(a, d, false) - n * 2) <= 1); C.damage(a, d, false, () => .5); assert.ok(!a.charged); });
-t('羈絆之力：點越多下越強，最多 5 倍', () => { assert.equal(C.bondBoost(0, 0), 1); assert.ok(C.bondBoost(6, 0) > C.bondBoost(3, 0)); assert.equal(C.bondBoost(50, 100), 5); const a = C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0), d = C.mkFighter('b', 'k', 30, 'tide', 0, 80, 0); const r = C.damage(a, d, false, () => .5, 3); assert.ok(r.dmg >= C.expectDamage(a, d, false) * 2.5); });
+t('羈絆之力：3 秒連打，12／15／18／20 下＝2.2／2.5／2.7／3 倍', () => { assert.equal(C.bondBoost(0), 1); assert.equal(C.bondBoost(6), 1.6); assert.equal(C.bondBoost(12), 2.2); assert.equal(C.bondBoost(15), 2.5); assert.equal(C.bondBoost(18), 2.7); assert.equal(C.bondBoost(20), 3); assert.equal(C.bondBoost(50), 3); const a = C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0), d = C.mkFighter('b', 'k', 30, 'tide', 0, 80, 0); const r = C.damage(a, d, false, () => .5, 3); assert.ok(r.dmg >= C.expectDamage(a, d, false) * 2.5); });
 t('預估傷害與實際平均一致（隨機 0.5、無會心）', () => { const a = C.mkFighter('a', 'k', 8, 'tide', 0, 80, 0), d = C.mkFighter('b', 'k', 8, 'flame', 0, 80, 0); const e = C.expectDamage(a, d, true); const r = C.damage(a, d, true, () => .5); assert.equal(r.dmg, e); });
 
 // 七種屬性
@@ -248,7 +253,7 @@ t('新路線點數來源：步數→土、進球→鳥、蓄力與羈絆→電�
 });
 t('屬性在蛋裡就決定：孵化就有屬性，長到成年、高階都不會變', () => {
   for (let i = 0; i < 30; i++) { const s = C.fresh(T0); const el = C.genomeFromId(C.gidOf(s)).el; assert.ok(C.EL_LIST.includes(el)); C.hatch(s, T0); assert.equal(s.route, el);
-    s.xp = 400; s.path.flame = 999; C.checkStages(s, T0 + 50 * H); assert.equal(s.stage, 'adult'); assert.equal(s.route, el); }
+    s.xp = 900; s.path.flame = 999; C.checkStages(s, T0 + 50 * H); assert.equal(s.stage, 'adult'); assert.equal(s.route, el); }
 });
 t('7 種屬性的蛋都會出現（分布大致平均）', () => { const c = {}; for (let i = 0; i < 7000; i++) { const el = C.makeGenome(i * 2654435761 >>> 0).el; c[el] = (c[el] || 0) + 1; } for (const el of C.EL_LIST) assert.ok(c[el] > 800 && c[el] < 1200, el + ':' + c[el]); });
 t('加上屬性不會改變舊蛋的外觀', () => { const G = C.makeGenome(12345); assert.equal(G.hue, C.makeGenome(12345).hue); const { el, ...rest } = G; assert.ok(el); assert.ok(!('el' in rest)); });

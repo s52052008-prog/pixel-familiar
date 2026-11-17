@@ -29,7 +29,7 @@ const CONFIG = {
   steps: { per: 1000, xpPer: 10, forestEvery: 2000, dayCap: 50000, tier: 100000, tierCoins: 100, backDays: 7 },
   daily: { coins: 10, food: 1 },
   gather: { cooldownMin: 2, food: 1 },
-  stages: { adolescent: { hours: 12, xp: 100 }, adult: { hours: 48, xp: 350 }, ascended: { hours: 168, xp: 1000 } },
+  stages: { juvenile: { hours: 4, xp: 100 }, adolescent: { hours: 12, xp: 300 }, adult: { hours: 48, xp: 800 }, ascended: { hours: 168, xp: 2000 } },   // V1.20：嬰兒期＋門檻提高
   routeTie: ['tide', 'forest', 'flame', 'earth', 'bird', 'elec', 'metal'],   // 平手時的固定順序（GDD 前三個 + V1.11 新增四個）
   bondTiers: [20, 50, 80],
   moonspringBond: 60,
@@ -43,7 +43,8 @@ const CONFIG = {
   core: { rotMin: 10, moodPerHour: 4, max: 8 },          // 果核：10 分鐘沒清會發臭長果蠅，每顆每小時心情 −4
   poop: { delayMin: 40, rotMin: 3 },                      // 每吃一次，40 分鐘後大便；大便 3 分鐘沒清就發臭
   potion: { price: 20, heal: .5, drop: .15 },             // 回復藥水：回復 50% 最大 HP
-  bond: { tapBoost: .35, maxBoost: 5 },                   // 羈絆之力：每點一下 +35% 威力，最多 5 倍
+  rps: { seconds: 2, win: 0, tie: .8, lose: 1.2 },          // 敵人出招前猜拳：贏＝躲開、平手 0.8 倍、輸或超時 1.2 倍
+  bond: { seconds: 3, steps: [[0, 1], [12, 2.2], [15, 2.5], [18, 2.7], [20, 3]] },   // 羈絆之力：3 秒內連打；12 下 2.2 倍、15 下 2.5、18 下 2.7、20 下以上 3 倍（中間按比例）
   ballGame: { balls: 3 },                                 // 頂球：一回合 3 顆球
   den: [ { name: '草叢小窩', cap: 1, cost: 0 }, { name: '稻草窩', cap: 2, cost: 120 }, { name: '樹根洞窟', cap: 3, cost: 300 }, { name: '大樹屋', cap: 4, cost: 600 } ],                            // 商店零食「星星糖」
   decorSlots: ['paper', 'wall', 'lamp', 'plant', 'bed', 'rug', 'toy', 'toilet'],
@@ -78,7 +79,7 @@ const CONFIG = {
 };
 const ROUTES = ['flame', 'tide', 'forest', 'earth', 'bird', 'elec', 'metal'];
 const ROUTE_EVENT = { flame: 'volcano', tide: 'moonspring', forest: 'oldtree', earth: 'canyon', bird: 'skypeak', elec: 'thunder', metal: 'mine' };
-const STAGES = ['egg', 'juvenile', 'adolescent', 'adult', 'ascended'];
+const STAGES = ['egg', 'baby', 'juvenile', 'adolescent', 'adult', 'ascended'];
 
 /* ---------------- 小工具 ---------------- */
 const clamp = (x, a = 0, b = 100) => Math.max(a, Math.min(b, x));
@@ -145,6 +146,7 @@ function okId(id) { return typeof id === 'string' && (id === 'classic' || /^g:\d
 /* 角色外觀代碼：juv / teen / flame|tide|forest / asc-<路線> */
 function formCode(stage, route) {
   if (stage === 'adolescent') return route ? 'teen-' + route : 'teen';
+  if (stage === 'baby') return route ? 'baby-' + route : 'baby';
   if (stage === 'juvenile' && route) return 'juv-' + route;
   if (stage === 'adult' && route) return route;
   if (stage === 'ascended' && route) return 'asc-' + route;
@@ -394,21 +396,21 @@ function specialDone(st, route) {
 }
 function stageReq(st, now) {
   const age = ageHours(st, now), S = CONFIG.stages;
-  const nxt = st.stage === 'juvenile' ? 'adolescent' : st.stage === 'adolescent' ? 'adult' : st.stage === 'adult' ? 'ascended' : null;
+  const nxt = st.stage === 'baby' ? 'juvenile' : st.stage === 'juvenile' ? 'adolescent' : st.stage === 'adolescent' ? 'adult' : st.stage === 'adult' ? 'ascended' : null;
   if (!nxt) return null;
   return { next: nxt, hours: S[nxt].hours, xp: S[nxt].xp, ageOk: age >= S[nxt].hours, xpOk: st.xp >= S[nxt].xp, eventOk: nxt !== 'ascended' || specialDone(st, st.route), age };
 }
 const ROUTE_CH = { flame: '焰', tide: '潮', forest: '森', earth: '土', bird: '鳥', elec: '電', metal: '金' };
 function checkStages(st, now = Date.now()) {
   const out = [];
-  for (let guard = 0; guard < 4 && st.hatched; guard++) {
+  for (let guard = 0; guard < 5 && st.hatched; guard++) {
     const q = stageReq(st, now);
     if (!q || !q.ageOk || !q.xpOk || !q.eventOk) break;
     const from = st.stage;
     if (q.next === 'adult' && !st.route) st.route = pickRoute(st);
     st.stage = q.next;
     out.push({ from, to: st.stage, route: st.route });
-    journal(st, now, { adolescent: '長成少年期了！', adult: `進化成成年期（${ROUTE_CH[st.route]}系）！`, ascended: '達到高階型態！' }[st.stage]);
+    journal(st, now, { juvenile: '長成幼年期了！', adolescent: '長成少年期了！', adult: `進化成成年期（${ROUTE_CH[st.route]}系）！`, ascended: '達到高階型態！' }[st.stage]);
     const e = st.dex.find(x => x.id === gidOf(st)); if (e) { e.stage = st.stage; e.route = st.route; }
   }
   return out;
@@ -420,9 +422,9 @@ function tendencyHint(st) {
 
 /* ---------------- 孵化 ---------------- */
 function hatch(st, now = Date.now()) {
-  st.hatched = true; st.eggTaps = 0; st.hatchedAt = now; st.lastTick = now; st.stage = 'juvenile';
+  st.hatched = true; st.eggTaps = 0; st.hatchedAt = now; st.lastTick = now; st.stage = 'baby';
   st.route = genomeFromId(gidOf(st)).el || 'tide';   // V1.12：屬性在蛋裡就決定，一路長到高階
-  const id = gidOf(st); if (!st.dex.find(x => x.id === id)) st.dex.push({ id, route: st.route, stage: 'juvenile', petName: st.name, at: now });
+  const id = gidOf(st); if (!st.dex.find(x => x.id === id)) st.dex.push({ id, route: st.route, stage: 'baby', petName: st.name, at: now });
   journal(st, now, '孵化了！');
 }
 
@@ -485,7 +487,20 @@ function expectDamage(a, d, special, boost = 1) {
   let dmg = Math.max(1, Math.round(a.atk * pow * (a.atk / (a.atk + d.def)) * 1.6 * elemMult(a, d, special) * ch * boost));
   if (d.guard) dmg = Math.max(1, Math.round(dmg * .5)); return dmg;
 }
-const bondBoost = (taps, bond = 0) => clamp(1 + taps * CONFIG.bond.tapBoost + bond / 100, 1, CONFIG.bond.maxBoost);
+const RPS = ['rock', 'scissors', 'paper'];
+/* 猜拳：me 為 null（沒選）算輸。回傳 { result, mult } */
+function rps(me, foe) {
+  const R = CONFIG.rps;
+  if (!RPS.includes(me)) return { result: 'lose', mult: R.lose };
+  if (me === foe) return { result: 'tie', mult: R.tie };
+  const win = (me === 'rock' && foe === 'scissors') || (me === 'scissors' && foe === 'paper') || (me === 'paper' && foe === 'rock');
+  return win ? { result: 'win', mult: R.win } : { result: 'lose', mult: R.lose };
+}
+function bondBoost(taps) {
+  const P = CONFIG.bond.steps; taps = Math.max(0, num(taps, 0));
+  for (let i = 1; i < P.length; i++) if (taps <= P[i][0]) { const [x0, y0] = P[i - 1], [x1, y1] = P[i]; return Math.round((y0 + (y1 - y0) * (taps - x0) / (x1 - x0)) * 100) / 100; }
+  return P[P.length - 1][1];
+}
 function damage(a, d, special, r = Math.random, boost = 1) {
   const pow = (special ? (a.el === 'none' ? 1.15 : 1.3) : 1) * (a.charged ? 2 : 1) * boost; a.charged = false;
   const mult = elemMult(a, d, special);
@@ -687,6 +702,6 @@ const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
   canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
-  ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, expectDamage, bondBoost, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
+  ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, expectDamage, bondBoost, rps, RPS, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
