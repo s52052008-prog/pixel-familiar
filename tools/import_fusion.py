@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """血繼幻獸圖（綠底，4 欄＝幼年／少年／成年／高階 × 2 排＝睜眼／閉眼）→ sprites/fusion/<名>_<1..4>_<open|closed>.png
 用法：python3 tools/import_fusion.py <名稱> [原圖路徑] [--base=主屬性] [--eyes=左眼x,右眼x,y] [--iris=#深色,#亮色]
+  --sym=X1,Y1,X2,Y2,L|R[,半徑]：不重畫眼睛，把左（L）或右（R）眼鏡像到另一邊，讓兩眼對稱（座標是原圖上的眼睛中心）
   --spark：有細電光的（電系組合）把混到綠底的藍綠色換回電光青
   --eyesrc=X1,Y1,X2,Y2：原圖上左右眼中心（高階那欄），自動換算位置（比 --eyes 準）
   --mouth=x,y：補一個小小的 ω 嘴
@@ -84,7 +85,7 @@ def clean_face(a, box, keep):
     return a
 
 
-def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esize=5, keepclosed=False, clean=None, mouth=None, eyesrc=None, spark=False):
+def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esize=5, keepclosed=False, clean=None, mouth=None, eyesrc=None, spark=False, sym=None):
     path = path or os.path.join(ROOT, 'art', 'src', 'fusion', name + '.png')
     a = np.asarray(Image.open(path).convert('RGB')); m = mask_of(a)
     rows = runs(ndimage.binary_closing(m.sum(1) > 0, iterations=6), 40)[:2]
@@ -109,6 +110,15 @@ def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esi
             r, g, bl = im[..., 0].astype(int), im[..., 1].astype(int), im[..., 2].astype(int)
             teal = (im[..., 3] > 0) & (r < 120) & (g > r + 40) & (bl > r + 30) & (np.abs(g - bl) < 70)   # 混到綠底的電光：紅很少、綠藍差不多；水的藍（藍比綠高很多）不會被改
             im[teal, 0] = np.clip(140 + (g[teal] - 120) // 2, 120, 220); im[teal, 1] = 235; im[teal, 2] = 255
+        if sym and st == 4:   # --sym：不重畫，只把比較好看的那隻眼睛左右鏡像到另一邊，兩眼對稱
+            b = bbox(ms[0]); tw = min(CELL - 2, round((b[2] - b[0]) * k)); th = min(45, round((b[3] - b[1]) * k)); ox, oy = (CELL - tw) // 2, 46 - th
+            mp = lambda X, Y: (round((X - b[0]) * tw / (b[2] - b[0]) + ox), round((Y - b[1]) * th / (b[3] - b[1]) + oy))
+            (lx, ly), (rx, ry) = mp(*sym['src'][:2]), mp(*sym['src'][2:4]); cy = round((ly + ry) / 2); h = sym['r']
+            (sx, dx) = (lx, rx) if sym['from'] == 'L' else (rx, lx); print('鏡像眼睛', sym['from'], (lx, rx, cy))
+            for im in ims:
+                src = im.copy()
+                for yy in range(cy - h, cy + h + 1):
+                    for xo in range(-h, h + 1): im[yy, dx - xo] = src[yy, sx + xo]
         ims, pal = quantize(ims, 24); oc = min(pal.tolist(), key=lambda q: lum(q)); ims = [add_outline(i, oc) for i in ims]
         if eyes and st == 4:
             ir = [hexc(c) for c in iris]
@@ -133,4 +143,4 @@ if __name__ == '__main__':
     opt = lambda k: next((x[len(k) + 3:] for x in sys.argv[1:] if x.startswith('--' + k + '=')), None)
     args = [x for x in sys.argv[1:] if not x.startswith('--')]
     ey = opt('eyes'); ir = opt('iris')
-    main(args[0], args[1] if len(args) > 1 else None, opt('base'), [int(v) for v in ey.split(',')] if ey else None, ir.split(',') if ir else ('#2a3a8a', '#e8a030'), (opt('eyesize') if opt('eyesize') == 'beast' else int(opt('eyesize') or 5)), '--keepclosed' in sys.argv, [int(v) for v in opt('clean').split(',')] if opt('clean') else None, [int(v) for v in opt('mouth').split(',')] if opt('mouth') else None, [int(v) for v in opt('eyesrc').split(',')] if opt('eyesrc') else None, '--spark' in sys.argv)
+    main(args[0], args[1] if len(args) > 1 else None, opt('base'), [int(v) for v in ey.split(',')] if ey else None, ir.split(',') if ir else ('#2a3a8a', '#e8a030'), (opt('eyesize') if opt('eyesize') == 'beast' else int(opt('eyesize') or 5)), '--keepclosed' in sys.argv, [int(v) for v in opt('clean').split(',')] if opt('clean') else None, [int(v) for v in opt('mouth').split(',')] if opt('mouth') else None, [int(v) for v in opt('eyesrc').split(',')] if opt('eyesrc') else None, '--spark' in sys.argv, ({'src': [int(v) for v in opt('sym').split(',')[:4]], 'from': opt('sym').split(',')[4], 'r': int(opt('sym').split(',')[5]) if len(opt('sym').split(',')) > 5 else 3} if opt('sym') else None))
