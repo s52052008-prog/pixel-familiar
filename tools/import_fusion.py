@@ -5,6 +5,8 @@
   --clean=x0,y0,x1,y1：先把臉上這塊範圍的深色殘影清掉（避免看起來像多一隻眼睛）
   --eyesize=beast：四腳獸的高階用兇兇的獸眼；--eyesize=4：臉比較小時用 4×4 的眼睛；--keepclosed：閉眼保留原圖（原本就畫得好時）
   --eyes：高階縮圖後眼睛糊掉時，在這兩個位置重畫 5×5 的像素大眼（睜眼）和「︶」（閉眼）
+例：python3 tools/import_fusion.py lava --base=earth --eyes=8,17,24 --eyesize=4 --iris=#c83a10,#f0a020 --clean=6,24,24,31 --mouth=12,28
+   （眼睛位置：先在原圖找眼睛中心，用同一個縮放比例換算成 48 格座標，不要用猜的）
 例：python3 tools/import_fusion.py blossom --base=flame --eyes=13,22,17 --iris=#8a3a10,#f0a030
 會另外輸出 art/preview-fusion-<名稱>.png（和主屬性同階段並排比較）
 """
