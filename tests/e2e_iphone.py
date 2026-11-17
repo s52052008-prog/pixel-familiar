@@ -139,7 +139,7 @@ async def main():
         # ---------- 每日小目標 ----------
         await p.click('#bGoals'); await p.wait_for_timeout(300); s = await st(p)
         ok('每日 3 個小目標', len(s['goals']['list']) == 3)
-        await p.evaluate("(()=>{const s=PF.state;s.goals.list[0].n=PF.PC.GOALS[s.goals.list[0].id].need;PF.debug.set({})})()"); await closeall(p); await p.wait_for_timeout(1200)
+        await p.evaluate("(()=>{const s=PF.state;s.goals.list[0].n=s.goals.list[0].need;PF.debug.set({})})()"); await closeall(p); await p.wait_for_timeout(1200)
         ok('完成目標時按鈕出現紅點', await p.is_visible('#goalDot'))
         await p.click('#bGoals'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/09d_goals.png')
         c0 = await st(p); await p.click('[data-g="0"]'); await p.wait_for_timeout(300); s = await st(p)
@@ -153,7 +153,7 @@ async def main():
         s = await st(p); ok('買 7 件家具、扣錢、自動擺上', len(s['decor']['owned']) == 9 and s['coins'] == 400 - 30 - 45 - 50 - 35 - 80 - 60 - 25 and s['decor']['placed']['bed'] == 'bed_cloud', s['coins'])
         await p.click('[data-si="toy_block"]'); await p.click('[data-dz="toy_block"]'); await p.wait_for_timeout(150); ok('收起家具', 'toy' not in (await st(p))['decor']['placed'])
         await p.click('[data-dz="toy_block"]'); await p.wait_for_timeout(150)
-        await p.click('[data-tab="items"]'); await p.wait_for_timeout(150); await p.click('[data-si="candy"]'); await p.click('[data-bi="candy"]'); await p.wait_for_timeout(150)
+        await p.click('[data-tab="tools"]'); await p.wait_for_timeout(150); await p.click('[data-si="candy"]'); await p.click('[data-bi="candy"]'); await p.wait_for_timeout(150)
         ok('買星星糖', (await st(p))['inv']['candy'] == 1); await p.click('#eatCandy'); await p.wait_for_timeout(1500)
         s = await st(p); ok('吃星星糖：心情 +20', s['inv']['candy'] == 0 and round(s['mood']) >= 69, round(s['mood']))
         ok('買完家具後切到室內', s['view'] == 'room'); await p.screenshot(path=f'{OUT}/09f_room.png')

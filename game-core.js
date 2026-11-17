@@ -38,7 +38,7 @@ const CONFIG = {
   newRoutes: { stepsForEarth: 100000, goalsForBird: 30, bondForElec: 5, cleanForMetal: 50, earthEvery: 2000 },
   breed: { cost: 20, cooldownH: 6, minMood: 50, basket: 6 },
   farm: { plots: 3, maxPlots: 6, expand: [30, 60, 90], growHours: 2, fruitMin: 2, fruitMax: 3, freshHours: 6, rotHours: 24, xp: 5, forest: 3, seedPrice: 3 },   // 收成：蘋果、莓果各隨機 1～2 顆；田可以花錢擴建到 6 格     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
-  goals: { perDay: 3, reward: { coins: 8 } },
+  goals: { perDay: 3, coins: [10, 20, 40], maxLv: 10, needPerLv: .2, rewardPerLv: .2 },   // 每天 ★／★★／★★★ 三個；每天 3 個都完成，任務等級 +1（更難、獎勵更好）
   candy: { price: 12, mood: 20, hunger: 10, xp: 3 },
   core: { rotMin: 10, moodPerHour: 4, max: 8 },          // 果核：10 分鐘沒清會發臭長果蠅，每顆每小時心情 −4
   poop: { delayMin: 40, rotMin: 3 },                      // 每吃一次，40 分鐘後大便；大便 3 分鐘沒清就發臭
@@ -191,7 +191,7 @@ function fresh(now = Date.now()) {
     care: { petLastRewardAt: 0, bathLastAt: 0, playXpAt: [], gatherAt: 0 },
     inv: Object.assign({ food: S.food, seeds: S.seeds, candy: 0, potion: 1, ember: 0, fresh: { food: 0, berry: 0 }, mats: {} }, ...Object.keys(CONFIG.foods).filter(k => k !== 'food').map(k => ({ [k]: 0 }))), harvests: 0,
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
-    goals: { date: '', list: [] },
+    goals: { date: '', list: [] }, goalLv: 0,
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
     cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [],
     events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
@@ -255,7 +255,8 @@ function sanitize(o, now = Date.now()) {
   r.harvests = int(o.harvests, 0, 0, 1e7); r.bondUses = int(o.bondUses, 0, 0, 1e7); r.cleanups = int(o.cleanups, 0, 0, 1e7);
   if (Array.isArray(o.plots)) r.plots = Array.from({ length: Math.max(CONFIG.farm.plots, Math.min(CONFIG.farm.maxPlots, o.plots.length)) }, (_, i) => ({ at: num(o.plots[i] && o.plots[i].at, 0, 0, 9e15), k: o.plots[i] && o.plots[i].k === 'berry' ? 'berry' : 'food' }));
   const gl = o.goals && typeof o.goals === 'object' ? o.goals : {};
-  if (/^\d{4}-\d\d-\d\d$/.test(gl.date) && Array.isArray(gl.list)) r.goals = { date: gl.date, list: gl.list.filter(g => g && GOALS[g.id]).slice(0, 5).map(g => ({ id: g.id, n: int(g.n, 0, 0, 1e6), claimed: g.claimed === true })) };
+  r.goalLv = int(o.goalLv, 0, 0, CONFIG.goals.maxLv);
+  if (/^\d{4}-\d\d-\d\d$/.test(gl.date) && Array.isArray(gl.list)) r.goals = { date: gl.date, list: gl.list.filter(g => g && GOALS[g.id]).slice(0, 5).map((g, i) => { const tier = int(g.tier, Math.min(i, 2), 0, 2); return { id: g.id, tier, need: int(g.need, goalNeed(g.id, tier, r.goalLv), 1, 1e6), n: int(g.n, 0, 0, 1e6), claimed: g.claimed === true }; }) };
   const ev = o.events && typeof o.events === 'object' ? o.events : {};
   for (const k in r.events) r.events[k] = ev[k] === true;
   const dl = o.daily && typeof o.daily === 'object' ? o.daily : {};
@@ -724,16 +725,17 @@ function swapPet(st, i, now = Date.now()) {
 }
 
 /* ---------------- 每日小目標（GDD 第 5 節：3 個任選，不強迫全清） ---------------- */
+/* need：★／★★／★★★ 三種難度的基本數量；{n} 會換成實際數量 */
 const GOALS = {
-  feed:    { t: '餵食 1 次', ev: 'feed', need: 1, item: 'food' },
-  play:    { t: '陪牠玩耍 2 次', ev: 'play', need: 2, item: 'coins' },
-  wash:    { t: '幫牠洗澡 1 次', ev: 'wash', need: 1, item: 'seeds' },
-  pet:     { t: '摸摸牠（有親密度的那種）1 次', ev: 'pet', need: 1, item: 'food' },
-  adv:     { t: '出發冒險 1 次', ev: 'adv', need: 1, item: 'seeds' },
-  win:     { t: '打贏 1 場戰鬥', ev: 'win', need: 1, item: 'coins' },
-  plant:   { t: '種下 1 顆種子', ev: 'plant', need: 1, item: 'food' },
-  harvest: { t: '收成 1 次', ev: 'harvest', need: 1, item: 'seeds' },
-  steps:   { t: '走 3,000 步', ev: 'steps', need: 3000, item: 'coins' }
+  feed:    { t: '餵食 {n} 次',            ev: 'feed',    need: [1, 3, 5] },
+  play:    { t: '陪牠玩耍 {n} 次',        ev: 'play',    need: [1, 3, 5] },
+  wash:    { t: '幫牠洗澡 {n} 次',        ev: 'wash',    need: [1, 2, 3] },
+  pet:     { t: '摸摸牠（有親密度）{n} 次', ev: 'pet',   need: [1, 2, 3] },
+  adv:     { t: '出發冒險 {n} 次',        ev: 'adv',     need: [1, 2, 4] },
+  win:     { t: '打贏 {n} 場戰鬥',        ev: 'win',     need: [1, 2, 3] },
+  plant:   { t: '種下 {n} 顆種子',        ev: 'plant',   need: [1, 2, 4] },
+  harvest: { t: '收成 {n} 次',            ev: 'harvest', need: [1, 2, 3] },
+  steps:   { t: '走 {n} 步',              ev: 'steps',   need: [3000, 6000, 10000] }
 };
 const GOAL_IDS = Object.keys(GOALS);
 function goalsFor(key) {   // 用日期當亂數種子：同一天每次打開都一樣
@@ -742,26 +744,38 @@ function goalsFor(key) {   // 用日期當亂數種子：同一天每次打開�
   while (out.length < CONFIG.goals.perDay) out.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
   return out;
 }
+/* 任務等級越高：需要的數量越多（每級 +20%）、獎勵越好（每級 +20%） */
+function goalNeed(id, tier, lv) { const b = GOALS[id].need[tier]; return id === 'steps' ? Math.round(b * (1 + CONFIG.goals.needPerLv * lv) / 500) * 500 : b + Math.floor(b * CONFIG.goals.needPerLv * lv + .0001 + (lv >= 3 ? 1 : 0) * (tier > 0 ? 1 : 0)); }
+function goalReward(tier, lv) { const G = CONFIG.goals, m = 1 + G.rewardPerLv * lv; return { coins: Math.round(G.coins[tier] * m), seeds: tier >= 1 ? 1 + (lv >= 5 ? 1 : 0) : 0, bonus: tier === 2 }; }
+function goalText(g) { return GOALS[g.id].t.replace('{n}', g.need >= 1000 ? g.need.toLocaleString('en-US') : g.need); }
 function ensureGoals(st, now = Date.now()) {
   const k = dayKey(now);
   if (st.goals.date === k) return false;
   if (st.goals.date && k < st.goals.date) return false;            // 時間倒退：不換新目標
-  st.goals = { date: k, list: goalsFor(k).map(id => ({ id, n: 0, claimed: false })) };
+  const lv = st.goalLv || 0;
+  st.goals = { date: k, list: goalsFor(k).map((id, tier) => ({ id, tier, need: goalNeed(id, tier, lv), n: 0, claimed: false })) };
   return true;
 }
 function track(st, ev, now = Date.now(), amount = 1) {
   ensureGoals(st, now);
-  for (const g of st.goals.list) if (GOALS[g.id].ev === ev && !g.claimed) g.n = Math.min(GOALS[g.id].need, g.n + amount);
+  for (const g of st.goals.list) if (GOALS[g.id].ev === ev && !g.claimed) g.n = Math.min(g.need, g.n + amount);
 }
-function claimGoal(st, idx, now = Date.now()) {
+function claimGoal(st, idx, now = Date.now(), r = Math.random) {
   ensureGoals(st, now); const g = st.goals.list[idx];
   if (!g) return { ok: false, msg: '沒有這個目標' };
   if (g.claimed) return { ok: false, msg: '已經領過了' };
-  if (g.n < GOALS[g.id].need) return { ok: false, msg: '還沒完成' };
-  g.claimed = true; const it = GOALS[g.id].item;
-  if (it === 'coins') { st.coins += CONFIG.goals.reward.coins; return { ok: true, msg: `金幣 +${CONFIG.goals.reward.coins}` }; }
-  if (it === 'food') { st.inv.food++; return { ok: true, msg: '食物 +1' }; }
-  st.inv.seeds++; return { ok: true, msg: '種子 +1' };
+  if (g.n < g.need) return { ok: false, msg: '還沒完成' };
+  g.claimed = true; const lv = st.goalLv || 0, rw = goalReward(g.tier, lv), got = [];
+  st.coins += rw.coins; got.push(`金幣 +${rw.coins}`);
+  if (rw.seeds) { st.inv.seeds += rw.seeds; got.push(`種子 +${rw.seeds}`); }
+  if (rw.bonus) {   // ★★★ 額外寶物：自己屬性的能力水果、回復藥水或星星糖
+    const own = Object.keys(CONFIG.foods).find(k => CONFIG.foods[k].power && CONFIG.foods[k].fav[0] === st.route), x = r();
+    const k = x < .45 && own ? own : x < .75 ? 'potion' : 'candy'; st.inv[k] = (st.inv[k] || 0) + 1;
+    got.push(`${k === 'potion' ? '回復藥水' : k === 'candy' ? '星星糖' : CONFIG.foods[k].name} +1`);
+  }
+  let up = false;
+  if (st.goals.list.every(x => x.claimed) && lv < CONFIG.goals.maxLv) { st.goalLv = lv + 1; up = true; journal(st, now, `每日任務全部完成！任務等級提升到 Lv.${st.goalLv}`); }
+  return { ok: true, up, msg: got.join('、') + (up ? `\n🌟 今天的任務全部完成！任務等級 Lv.${st.goalLv}：明天更難、獎勵更好` : '') };
 }
 
 /* ---------------- 電系：戰鬥中蓄力、羈絆之力 ---------------- */
@@ -794,6 +808,6 @@ const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
   canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
-  ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
+  ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

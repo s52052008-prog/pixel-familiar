@@ -158,14 +158,18 @@ t('每日目標：每天 3 個、同一天固定、隔天換新', () => {
   assert.deepEqual(C.goalsFor(C.dayKey(T0)), C.goalsFor(C.dayKey(T0)));
   C.ensureGoals(s, T0 + 86400000); assert.notEqual(s.goals.date, C.dayKey(T0));
 });
-t('每日目標：完成才能領、只能領一次、時間倒退不重置', () => {
-  const s = hatched(); C.ensureGoals(s, T0); s.goals.list = [{ id: 'feed', n: 0, claimed: false }, { id: 'steps', n: 0, claimed: false }, { id: 'plant', n: 0, claimed: false }];
+t('每日目標：★／★★／★★★ 由易到難；完成才能領、只能領一次、時間倒退不重置', () => {
+  const s = hatched(); C.ensureGoals(s, T0); assert.deepEqual(s.goals.list.map(g => g.tier), [0, 1, 2]);
+  s.goals.list = [{ id: 'feed', tier: 0, need: 1, n: 0, claimed: false }, { id: 'steps', tier: 1, need: 6000, n: 0, claimed: false }, { id: 'plant', tier: 2, need: 4, n: 0, claimed: false }];
   assert.ok(!C.claimGoal(s, 0, T0).ok); s.hunger = 10; C.act(s, 'feed', T0); assert.equal(s.goals.list[0].n, 1);
-  const f = s.inv.food; assert.ok(C.claimGoal(s, 0, T0).ok); assert.equal(s.inv.food, f + 1); assert.ok(!C.claimGoal(s, 0, T0).ok);
-  C.creditSteps(s, 3500, null, T0); assert.equal(s.goals.list[1].n, 3000); const c = s.coins; C.claimGoal(s, 1, T0); assert.equal(s.coins, c + 8);
-  C.plant(s, 0, T0); assert.equal(s.goals.list[2].n, 1);
+  let c = s.coins; assert.ok(C.claimGoal(s, 0, T0).ok); assert.equal(s.coins, c + 10); assert.ok(!C.claimGoal(s, 0, T0).ok);
+  C.creditSteps(s, 6500, null, T0); assert.equal(s.goals.list[1].n, 6000); c = s.coins; const sd = s.inv.seeds; C.claimGoal(s, 1, T0); assert.equal(s.coins, c + 20); assert.equal(s.inv.seeds, sd + 1);
+  s.inv.seeds = 9; for (let i = 0; i < 4; i++) C.plant(s, i % 3, T0 + i * 3 * H, () => 0) || C.harvest(s, i % 3, T0 + i * 3 * H); s.goals.list[2].n = 4; c = s.coins; const r = C.claimGoal(s, 2, T0, () => .9); assert.ok(r.ok && r.up); assert.equal(s.coins, c + 40); assert.equal(s.goalLv, 1);
   C.ensureGoals(s, T0 - 3 * 86400000); assert.equal(s.goals.date, C.dayKey(T0));
 });
+t('任務等級越高：數量越多、獎勵越好', () => { assert.equal(C.goalNeed('steps', 2, 0), 10000); assert.equal(C.goalNeed('steps', 2, 5), 20000); assert.ok(C.goalNeed('feed', 2, 5) > C.goalNeed('feed', 2, 0)); assert.equal(C.goalReward(2, 0).coins, 40); assert.equal(C.goalReward(2, 5).coins, 80); assert.equal(C.goalReward(1, 5).seeds, 2);
+  const s = hatched(); s.goalLv = 4; s.goals.date = ''; C.ensureGoals(s, T0); assert.ok(s.goals.list[2].need >= C.goalNeed(s.goals.list[2].id, 2, 0)); });
+
 t('每日目標：存檔亂碼目標被過濾', () => { const r = C.sanitize({ v: 6, goals: { date: '2026-11-16', list: [{ id: 'hack', n: 9 }, { id: 'feed', n: -3 }] } }, T0); assert.equal(r.goals.list.length, 1); assert.equal(r.goals.list[0].n, 0); });
 
 // 商店與裝飾

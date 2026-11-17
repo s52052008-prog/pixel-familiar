@@ -34,7 +34,7 @@ h1{margin:0;font-size:20px;letter-spacing:1px;white-space:nowrap}
 #bubble{position:absolute;top:8px;left:50%;transform:translateX(-50%);max-width:90%;width:max-content;background:#fff9e8;color:#273753;border:3px solid #273753;box-shadow:3px 3px 0 #0006;padding:5px 10px;font-size:14px;font-weight:700;text-align:center;line-height:1.35;transition:opacity .25s;pointer-events:none}
 #bubble.off{opacity:0}
 .viewbtn{position:absolute;left:6px;top:6px;min-width:44px;min-height:44px;background:#2b4264e6;border:2px solid var(--line);box-shadow:inset 0 0 0 2px #50698f;padding:6px 10px;font-size:13px;font-weight:800}
-.shoptabs{display:flex;gap:6px;margin-bottom:8px}.shoptabs .btn{min-width:0}.shoptabs .btn.on{background:#e8c98c;color:#3a2a2a}
+.shoptabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}.shoptabs .btn{min-width:0;flex:1 1 30%;padding:9px 2px;font-size:13px}.sitem.dim{opacity:.5}.shoptabs .btn.on{background:#e8c98c;color:#3a2a2a}
 .items{display:grid;grid-template-columns:1fr 1fr;gap:8px}.item{background:#14203a;border:2px solid var(--line);box-shadow:inset 0 0 0 2px #3f5a88;padding:8px;text-align:center;font-size:12.5px}
 .item canvas{height:56px;image-rendering:pixelated;display:block;margin:0 auto 4px;max-width:100%}.item .btn{width:100%;min-width:0;margin-top:6px;padding:10px 2px}
 .nameplate{text-align:center;line-height:1.25}
@@ -153,6 +153,7 @@ body.rm *{transition:none!important;animation:none!important}
 .rrow{display:flex;align-items:center;gap:10px;background:#2a170a66;border:2px solid #2a170a;padding:6px 10px;margin-bottom:6px}
 .rrow canvas{flex:0 0 auto}.rrow b{font-size:15px}.rrow i{margin-left:auto;font-style:normal;font-weight:900;font-size:18px;color:#ffe066}.rtag{font-size:11px;color:#ffd0a0}
 #rNote{margin:8px 0;color:#ffe2a8;line-height:1.5}#bResult .btn{width:100%;margin-top:6px;font-size:17px;padding:13px}
+.gstar{display:inline-block;font-size:11px;font-weight:900;padding:1px 6px;border:2px solid #2a170a;margin-bottom:3px}.gstar.t0{background:#9cd47a;color:#1a3a10}.gstar.t1{background:#ffd86a;color:#3a2210}.gstar.t2{background:#ff8a6a;color:#3a1008}
 </style>
 </head>
 <body>
@@ -189,7 +190,7 @@ body.rm *{transition:none!important;animation:none!important}
   <button class="tool big" id="bAdv">⚔️ 冒險</button>
   <button class="tool big" id="bFarm">🌱 家園</button>
   <button class="tool big" id="bShop">🛒 商店</button>
-  <button class="tool big" id="bGoals">🎯 目標<span id="goalDot" class="dot hidden"></span></button>
+  <button class="tool big" id="bGoals">🎯 任務<span id="goalDot" class="dot hidden"></span></button>
   <button class="tool big" id="bSteps">👟 步數</button>
   <button class="tool big" id="bMate">💞 配對</button>
  </nav>
@@ -227,7 +228,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.26.1';
+const VERSION='1.27.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -638,16 +639,22 @@ function makeBg(ph,lvl=1){
  const canopy=(g,cx,cy,rx,ry)=>ellipse(g,cx,cy,rx,ry,(x,y,nx,ny)=>{const l=-nx*.45-ny*.75,h=hsh(x,y)%9,d=nx*nx+ny*ny;if(d>.62&&hsh(x>>1,y)%3===0)return null;if(d>.8&&h%2)return null;   // 邊緣參差不齊，像一片片葉子
   if(d<.5&&hsh(x,y>>1)%23===0)return L[2];   // 葉間小縫隙
   if(l>.45)return h<3?L[4]:L[3];if(l>.05)return h<2?L[3]:L[0];if(l>-.4)return h<2?L[0]:L[1];return h<3?L[1]:L[2]});
- const tree=(ox,oy,s,fruit)=>{const w=Math.round(34*s),h=Math.round(40*s),g=grid(w,h),tx=Math.round(w/2),bark=night?['#3a2416','#4a2e18','#5a3a20']:['#4a2e18','#6a4428','#8a5a34'];
-  for(let y=Math.round(h*.45);y<h;y++){const tw=Math.max(2,Math.round(3*s+(y>h-4?2:0)));for(let x=tx-tw;x<=tx+tw;x++)px(g,x,y,x===tx-tw?bark[2]:x===tx+tw?bark[0]:((x+y)%5===0?bark[0]:bark[1]))}
-  for(const[dx,dy]of[[-1,-1],[1,-1]])for(let k=0;k<Math.round(6*s);k++)px(g,tx+dx*(2+k),Math.round(h*.55)+dy*k,bark[1]);   // 分枝
-  const cl=[[0,-.05,.42,.3],[-.28,.05,.3,.24],[.28,.06,.3,.24],[-.14,-.2,.27,.22],[.16,-.22,.26,.2],[0,.14,.34,.18]];
-  for(const[dx,dy,rx,ry]of cl.slice().sort((a,b)=>a[1]-b[1]).reverse())canopy(g,w/2+dx*w,h*.36+dy*h,rx*w,ry*h);
-  if(fruit&&!night)for(const[fx,fy]of[[-.22,-.05],[.2,.02],[.02,-.22],[.3,-.12],[-.08,.08]]){const x=Math.round(w/2+fx*w),y=Math.round(h*.36+fy*h);px(g,x,y,'#e8433f');px(g,x+1,y,'#c83030');px(g,x,y-1,'#ff9a8a')}
-  outline(g,night?'#0e2418':'#163a24');c.drawImage(gridCanvas(g),ox-tx,oy-h)};
- const bush=(cx,cy,rx,ry)=>{const g=grid(rx*2+4,ry*2+4);canopy(g,rx+2-rx*.35,ry+3,rx*.6,ry*.8);canopy(g,rx+2+rx*.35,ry+3,rx*.6,ry*.8);canopy(g,rx+2,ry+2,rx*.7,ry);outline(g,'#163a24');c.drawImage(gridCanvas(g),cx-rx-2,cy-ry-2)};
- tree(58,66,.62,false);
- tree(104,67,.9,true);   // 不要超出畫面右邊
+ // 樹：畫布四周留很大空間（不會被「框框」切成平的邊），樹幹往下變粗、有樹根，分枝末端各長一團葉子，左右不對稱
+ const tree=(ox,oy,s,fruit,seed)=>{const w=Math.round(34*s),h=Math.round(40*s),P=Math.round(14*s),g=grid(w+2*P,h+P),tx=Math.round(w/2)+P,base=h+P-1,bark=night?['#3a2416','#4a2e18','#5a3a20']:['#4a2e18','#6a4428','#8a5a34'];
+  let sd=seed||7;const rr=()=>(sd=(sd*16807)%2147483647)/2147483647;
+  const trunkTop=base-Math.round(h*.55);
+  for(let y=trunkTop;y<=base;y++){const k=(y-trunkTop)/(base-trunkTop),tw=Math.max(1,Math.round(2*s+k*k*3*s));for(let x=tx-tw;x<=tx+tw;x++)px(g,x,y,x===tx-tw?bark[2]:x===tx+tw?bark[0]:((x*3+y)%7===0?bark[0]:bark[1]))}
+  for(const d of[-1,1])for(let k=0;k<Math.round(4*s);k++)px(g,tx+d*(Math.round(3*s)+k),base-Math.floor(k/2),bark[k%2?0:1]);   // 樹根
+  const br=[[-1,.55,.5],[1,.62,.45],[-.3,.85,.35]],ends=[];   // 分枝：方向、高度、長度
+  for(const[d,hh,len]of br){let x=tx,y=base-Math.round(h*hh*.75);const n=Math.round(len*w*.5);for(let k=0;k<n;k++){x+=d*(k%3===2?0:1)*.9;y-=k%2?1:0;px(g,x,y,bark[1]);px(g,x,y+1,bark[0])}ends.push([x,y])}
+  const top=base-Math.round(h*.95);
+  const cl=[[tx,top+h*.28,w*.36,h*.24],...ends.map(([x,y],i)=>[x+(i===0?-2:2),y-h*.06,w*(.22+rr()*.08),h*(.16+rr()*.06)]),[tx+w*.08,top+h*.12,w*.22,h*.15],[tx-w*.12,top+h*.16,w*.2,h*.14]];
+  for(const[x,y,rx,ry]of cl.sort((a,b)=>a[1]-b[1]))canopy(g,x,y,rx,ry);
+  if(fruit&&!night)for(let i=0;i<6;i++){const[x,y,rx,ry]=cl[i%cl.length],a=rr()*6.28,x2=Math.round(x+Math.cos(a)*rx*.6),y2=Math.round(y+Math.sin(a)*ry*.6);px(g,x2,y2,'#e8433f');px(g,x2+1,y2,'#c83030');px(g,x2,y2-1,'#ff9a8a')}
+  outline(g,night?'#0e2418':'#163a24');c.drawImage(gridCanvas(g),ox-tx,oy-base-1)};
+ const bush=(cx,cy,rx,ry)=>{const P=4,g=grid(rx*2+4+2*P,ry*2+4+P);canopy(g,P+rx+2-rx*.35,P+ry+3,rx*.6,ry*.8);canopy(g,P+rx+2+rx*.35,P+ry+3,rx*.6,ry*.8);canopy(g,P+rx+2,P+ry+2,rx*.7,ry);outline(g,'#163a24');c.drawImage(gridCanvas(g),cx-rx-2-P,cy-ry-2-P)};
+ tree(58,66,.62,false,11);
+ tree(104,67,.9,true,29);   // 不要超出畫面右邊
  for(const[x,r]of[[48,5],[74,6]])bush(x,64,r,3);
  // 草地
  const g1=night?'#2f6a3a':dusk?'#5a8a4a':'#6fbf5a',g2=night?'#285a32':dusk?'#4a7a42':'#5fae4f',g3=night?'#3a7a46':dusk?'#6a9a5a':'#86d06a';
@@ -1006,7 +1013,7 @@ function renderUI(){
  $('xptext').textContent=!s.hatched?'—':q?(s.xp>=goal?`${s.xp} XP（${STAGE_NAME[q.next]} XP 已達標 ✓）`:`${s.xp} / ${goal} XP（${STAGE_NAME[q.next]}）`):`${s.xp} XP`;$('xpbar').style.width=(!s.hatched?0:q?Math.min(100,s.xp/goal*100):100)+'%';
  document.body.classList.toggle('rm',rm());
  $('viewBtn').classList.toggle('hidden',!s.hatched||s.view!=='room');$('viewBtn').textContent='🌳 出門';$('denBtn').classList.toggle('hidden',!s.hatched||s.view!=='room');   // 進窩改成點兩下建築物
- $('goalDot').classList.toggle('hidden',!(s.goals.list||[]).some(g=>!g.claimed&&g.n>=PC.GOALS[g.id].need))}
+ $('goalDot').classList.toggle('hidden',!(s.goals.list||[]).some(g=>!g.claimed&&g.n>=g.need))}
 
 /* =========================================================
    對話框（取代 prompt / alert / confirm）
@@ -1044,7 +1051,7 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',`
 <p><b>🌱 家園：</b>種子種下 ${CONFIG.farm.growHours} 小時後收成，食物 +${CONFIG.farm.food}、經驗 +${CONFIG.farm.xp}、🌿 森 +${CONFIG.farm.forest}。</p>
 <p><b>🪺 小窩：</b>點院子裡的小窩可以升級（4 級，最多住 4 隻）。迎接新蛋時，小窩有空位的話，現在的夥伴會搬進去休息，不用告別。</p>
 <p><b>🛒 商店：</b>用金幣買家具，擺進小窩裡（在畫面上點兩下小窩就能進去，裡面右上角「🛠 小窩」可以升級、換夥伴）。家具是裝飾，晚上有燈的房間會比較亮。商店也賣食物、種子和星星糖。</p>
-<p><b>🎯 小目標：</b>每天 3 個，任選完成就能領獎勵，沒做完也沒關係。</p>
+<p><b>🎯 每日任務：</b>每天 3 個（★ 簡單、★★ 普通、★★★ 困難），越難獎勵越好；3 個都完成任務等級 +1，之後更難、獎勵更好。</p>
 <p><b>新屬性的高階條件：</b>🪨 打通第 25 關「大地裂谷」＋累積 10 萬步；🐦 第 30 關「天空之巔」＋頂球進球 30 顆；⚡ 第 35 關「雷雲祭壇」＋發動羈絆之力 5 次；⚙️ 第 40 關「鋼鐵礦坑」＋清理 50 次。</p>
 <p><b>特殊事件：</b>🔥 打通第 ${C.bossStages.volcano} 關「火山遺跡」；💧 親密度 60 以上、晚上摸摸觸發「月泉」；🌿 打通第 ${C.bossStages.oldtree} 關「古樹」並收成 10 次。</p>
 <p><b>親密度：</b>20 解鎖撒嬌與早安問候、50 每天收到小禮物、80 戰鬥時撐住一次。</p>
@@ -1154,10 +1161,9 @@ function stepsDialog(){
 <p class="small">突破 ${'✦'.repeat(tier())||'0'}（每 10 萬步突破一次，戰鬥能力 +10%）距離下一次：${fmtN(nx-tot)} 步</p>
 <div class="prog"><i style="width:${(tot%STEP_TIER)/STEP_TIER*100}%"></i></div>
 <p class="small">每 1,000 步 → 經驗 +10；每 2,000 步 → 🪨 土系點數 +1。每天最多計算 5 萬步，可以補登最近 7 天。</p>
-<div class="row"><button class="btn pri" id="sPaste">📋 從剪貼簿貼上步數</button></div>
-<div class="row"><input type="text" id="sIn" inputmode="numeric" placeholder="或手動輸入今天的步數" style="flex:1 1 60%"><button class="btn" id="sOk" style="min-width:70px;flex:0 0 auto">登記</button></div>
+<p class="small">🔒 步數只能從 iPhone「健康」App 透過捷徑自動帶進來，不能手動輸入，這樣才公平。</p>
 <div class="err" id="sErr"></div>
-<details style="margin-top:8px"><summary><b>📱 設定一次，以後自動登記步數（點我看做法）</b></summary>
+<details style="margin-top:8px" ${td?'':'open'}><summary><b>📱 設定捷徑，自動登記步數（點我看做法）</b></summary>
 <p class="small"><b>做法：</b>做一個 iPhone「捷徑」，它會讀健康 App 的步數，再幫你打開遊戲。以後<b>從這個捷徑圖示開遊戲</b>，步數就自動算進去，不用再輸入。</p>
 <p><b>A. 做捷徑（只做一次，約 3 分鐘）</b></p>
 <ol class="howto">
@@ -1177,10 +1183,8 @@ function stepsDialog(){
 <p class="small">💡 如果你的預設瀏覽器是 Chrome，捷徑會用 Chrome 開。想固定用 Safari 開，把文字裡網址開頭的 <code>https://</code> 改成 <code>x-safari-https://</code>。<br>⚠️ 捷徑會用 <b>Safari</b> 開遊戲。iPhone 上「Safari」和「主畫面 App 版」的存檔是分開的，如果你原本在主畫面 App 版玩，請先在主畫面 App 版按「💾 存檔」→「複製存檔碼」，再到 Safari 版的「💾 存檔」匯入。<br>網址：<code>${esc(url)}</code></p>
 </details>`);
  const done=r=>{const m=stepResultMsg(r);if(r.err){$('sErr').textContent=m;return}closeModal();toast(m,4000);say(m.split('\n')[0]);if(r.delta)spawn('shoe',3,{y:70,life:1.2,stagger:.2})};
- $('sOk').onclick=()=>done(creditSteps($('sIn').value));
  $('sCopyUrl').onclick=async()=>{try{await navigator.clipboard.writeText(url);toast('✅ 已複製網址')}catch(e){toast('請長按網址手動複製')}};
- if(inFrame||!navigator.clipboard||!navigator.clipboard.readText)$('sPaste').classList.add('hidden');
- $('sPaste').onclick=async()=>{try{const txt=await navigator.clipboard.readText();const m=/\d[\d,]*/.exec(txt||'');if(!m){$('sErr').textContent='剪貼簿裡沒有步數數字';return}done(creditSteps(m[0]))}catch(e){$('sErr').textContent='無法讀取剪貼簿，請改用手動輸入'}}}
+ void done}
 
 /* =========================================================
    💞 配對（配對碼交換，不需伺服器）
@@ -1260,12 +1264,13 @@ function farmDialog(){PC.claimDaily(s,Date.now());
    🎯 每日小目標（任選，不強迫）
    ========================================================= */
 function goalsDialog(){PC.claimDaily(s,Date.now());PC.ensureGoals(s,Date.now());
- const RW={coins:`🪙 金幣 +${CONFIG.goals.reward.coins}`,food:'🍎 食物 +1',seeds:'🌱 種子 +1'};
- const html=()=>s.goals.list.map((g,i)=>{const G=PC.GOALS[g.id],done=g.n>=G.need,pct=Math.round(g.n/G.need*100);
-  return`<div class="goal ${g.claimed?'done':''}"><div class="gt"><div><b>${G.t}</b><div class="small">獎勵：${RW[G.item]}　進度 ${G.need>1?fmtN(g.n)+' / '+fmtN(G.need):(done?'完成':'未完成')}</div></div>
+ const lv=s.goalLv||0,STAR=['★','★★','★★★'],TN=['簡單','普通','困難'];
+ const rwText=g=>{const r=PC.goalReward(g.tier,lv);return`🪙 ${r.coins}${r.seeds?`＋🌱${r.seeds}`:''}${r.bonus?'＋🎁 寶物':''}`};
+ const html=()=>s.goals.list.map((g,i)=>{const done=g.n>=g.need,pct=Math.round(g.n/g.need*100);
+  return`<div class="goal ${g.claimed?'done':''}"><div class="gt"><div><span class="gstar t${g.tier}">${STAR[g.tier]} ${TN[g.tier]}</span><br><b>${PC.goalText(g)}</b><div class="small">獎勵：${rwText(g)}　進度 ${g.need>1?fmtN(g.n)+' / '+fmtN(g.need):(done?'完成':'未完成')}</div></div>
   <button class="btn ${done&&!g.claimed?'pri':''}" data-g="${i}" ${!done||g.claimed?'disabled':''}>${g.claimed?'已領取':done?'領取':'進行中'}</button></div><div class="prog"><i style="width:${pct}%"></i></div></div>`}).join('');
- openModal('🎯 今天的小目標',`<p class="small">每天 3 個，<b>任選完成 1～2 個就很棒了</b>。沒做完不會有任何懲罰，明天會換新的目標。</p><div id="gl">${html()}</div>`);
- const bind=()=>document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const r=PC.claimGoal(s,+b.dataset.g,Date.now());toast(r.ok?'🎉 '+r.msg:r.msg);if(r.ok){sfx('level');save();renderUI()}$('gl').innerHTML=html();bind()});bind()}
+ openModal('🎯 每日任務',`<p><b>任務等級 Lv.${lv}</b>${lv>=CONFIG.goals.maxLv?'（最高級）':''}</p><p class="small">每天 3 個任務，由簡單到困難，越難獎勵越好（★★★ 還有寶物）。<b>3 個全部完成，任務等級 +1</b>：明天的任務會更難、獎勵也更好。</p><div id="gl">${html()}</div>`);
+ const bind=()=>document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const r=PC.claimGoal(s,+b.dataset.g,Date.now());toast(r.ok?'🎉 '+r.msg:r.msg,r.up?4500:2500);if(r.ok){sfx('level');save();renderUI()}$('gl').innerHTML=html();bind()});bind()}
 
 /* =========================================================
    🛒 商店與房間裝飾
@@ -1275,7 +1280,7 @@ const SLOT_NAME={paper:'壁紙',wall:'牆上',lamp:'燈',plant:'植物',bed:'床
 function decorPreview(id){if(id.startsWith('paper_')){const c=document.createElement('canvas');c.width=24;c.height=16;const x=c.getContext('2d'),[a,b]=PAPER[id];x.fillStyle=a;x.fillRect(0,0,24,16);x.fillStyle=b;
   if(id==='paper_night'){x.fillStyle='#fff3a6';for(let i=0;i<8;i++)x.fillRect((i*7)%24,(i*5)%16,1,1)}else for(let i=0;i<24;i+=6)x.fillRect(i,0,2,16);return c}return makeDecor(id)}
 /* 商店：左欄物品名稱、右邊大圖＋說明＋按鈕 */
-const SHOP_SEL={decor:null,items:null};
+const SHOP_SEL={};
 function shopDialog(tab){PC.claimDaily(s,Date.now());
  const D=CONFIG.decor,C=CONFIG;
  const foodDesc=F=>`飽食 +${F.hunger}${F.mood?`、心情 +${F.mood}`:''}${F.energy?`、體力 +${F.energy}`:''}<br>${F.power?`⚡ 能力水果：${ROUTE_ICON[F.fav[0]]}${ROUTE_LABEL[F.fav[0]]}吃了心情 +10、體力 +${C.powerBonus.energy+F.energy}、經驗 +${C.powerBonus.xp+C.favBonus.xp+F.xp}`:!F.fav.length?'大家都能吃':F.fav.length>=7?'❤️ 大家都愛吃（心情 +10、經驗 +5）':'❤️ 愛吃：'+F.fav.map(r=>ROUTE_ICON[r]+ROUTE_LABEL[r]).join('、')}`;
@@ -1284,20 +1289,25 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
  const entries=()=>{if(tab==='decor'){const out=[];for(const sl of C.decorSlots){out.push({head:SLOT_NAME[sl]});for(const id of Object.keys(D).filter(id=>D[id].slot===sl)){const it=D[id],own=s.decor.owned.includes(id),on=s.decor.placed[sl]===id;
    out.push({id,name:it.name,sub:own?(on?'使用中':'已擁有'):'🪙 '+it.price,dp:id,desc:`${SLOT_NAME[sl]}${DECOR_NOTE[id]?'<br>'+DECOR_NOTE[id]:''}<br>${own?'已擁有':'價格 🪙 '+it.price}`,
     btn:`<button class="btn ${!own||!on?'pri':''}" data-dz="${id}" ${(sl==='paper'&&on)?'disabled':''}>${!own?'購買':on?(sl==='paper'?'使用中':'收起'):'擺上'}</button>`})}}return out}
-  const fr=k=>(s.inv.fresh&&s.inv.fresh[k])||0,out=[{head:'🍽️ 食物'}];
-  for(const k of Object.keys(C.foods).filter(k=>!C.foods[k].power)){const F=C.foods[k];out.push({id:k,name:F.name,sub:`🪙${F.price}｜×${s.inv[k]||0}`,icon:ITEM_ICON[k],fresh:fr(k),desc:`${foodDesc(F)}<br>擁有 ${s.inv[k]||0}${fr(k)?`（✨自己種的 ${fr(k)}）`:''}`,btn:`<button class="btn pri" data-bi="${k}">買 1 個（🪙 ${F.price}）</button>`})}
-  out.push({head:'⚡ 能力水果'});
-  for(const k of Object.keys(C.foods).filter(k=>C.foods[k].power)){const F=C.foods[k];out.push({id:k,name:F.name,sub:`${ROUTE_ICON[F.fav[0]]}🪙${F.price}｜×${s.inv[k]||0}`,icon:ITEM_ICON[k],desc:`${foodDesc(F)}<br>擁有 ${s.inv[k]||0}`,btn:`<button class="btn pri" data-bi="${k}">買 1 個（🪙 ${F.price}）</button>`})}
-  out.push({head:'🎒 道具'});
-  out.push({id:'seeds',name:'種子',sub:`🪙${C.farm.seedPrice}｜×${s.inv.seeds}`,icon:'seed',desc:`種在家園的田裡，${C.farm.growHours} 小時後長出蘋果或莓果<br>擁有 ${s.inv.seeds}`,btn:`<button class="btn pri" data-bi="seeds">買 1 個（🪙 ${C.farm.seedPrice}）</button>`});
-  out.push({id:'candy',name:'星星糖',sub:`🪙${C.candy.price}｜×${s.inv.candy||0}`,icon:'candy',desc:`心情 +${C.candy.mood}、飽食 +${C.candy.hunger}<br>擁有 ${s.inv.candy||0}`,btn:`<button class="btn pri" data-bi="candy">買 1 個（🪙 ${C.candy.price}）</button><button class="btn" id="eatCandy" ${s.inv.candy?'':'disabled'}>給牠吃</button>`});
-  out.push({id:'potion',name:'回復藥水',sub:`🪙${C.potion.price}｜×${s.inv.potion||0}`,icon:'potion',desc:`戰鬥中回復 50% HP<br>擁有 ${s.inv.potion||0}`,btn:`<button class="btn pri" data-bi="potion">買 1 個（🪙 ${C.potion.price}）</button>`});
-  if(s.inv.ember)out.push({id:'ember',name:'經驗火種',sub:`×${s.inv.ember}`,icon:'ember',desc:`打贏 Boss 得到的寶物<br>心情 +${C.ember.mood}、體力 +${C.ember.energy}、經驗 +${C.ember.xp}<br>擁有 ${s.inv.ember}`,btn:`<button class="btn pri" id="eatEmber">給牠吃</button>`});
-  out.push({head:'💎 進化素材'});
-  for(const el of PC.ROUTES){const n=(s.inv.mats||{})[el]||0;out.push({id:'mat_'+el,name:C.materials[el],sub:`${ROUTE_ICON[el]}｜×${n}`,icon:'mat_'+el,desc:`${ROUTE_ICON[el]}${ROUTE_LABEL[el]}進化到高階必須的素材（進化時用掉 1 個）<br>打贏該屬性區域的 Boss 會掉落（第一次必掉，之後 ${Math.round(C.matDrop*100)}%）<br>擁有 ${n}`,btn:''})}
+  const fr=k=>(s.inv.fresh&&s.inv.fresh[k])||0,out=[];
+  const foodEntry=(k,bag)=>{const F=C.foods[k];return{id:k,name:F.name,sub:bag?`×${s.inv[k]||0}${fr(k)?` ✨${fr(k)}`:''}`:`🪙${F.price}｜×${s.inv[k]||0}`,icon:ITEM_ICON[k],fresh:fr(k),desc:`${foodDesc(F)}<br>擁有 ${s.inv[k]||0}${fr(k)?`（✨自己種的 ${fr(k)}）`:''}`,
+   btn:bag?`<button class="btn pri" data-feedk="${k}">🍽️ 拿去餵牠</button>`:`<button class="btn pri" data-bi="${k}">買 1 個（🪙 ${F.price}）</button>`}};
+  const tools={seeds:()=>({id:'seeds',name:'種子',sub:`🪙${C.farm.seedPrice}｜×${s.inv.seeds}`,icon:'seed',desc:`種在家園的田裡，${C.farm.growHours} 小時後長出蘋果或莓果<br>擁有 ${s.inv.seeds}`,btn:`<button class="btn pri" data-bi="seeds">買 1 個（🪙 ${C.farm.seedPrice}）</button>`}),
+   candy:()=>({id:'candy',name:'星星糖',sub:`🪙${C.candy.price}｜×${s.inv.candy||0}`,icon:'candy',desc:`心情 +${C.candy.mood}、飽食 +${C.candy.hunger}<br>擁有 ${s.inv.candy||0}`,btn:`<button class="btn pri" data-bi="candy">買 1 個（🪙 ${C.candy.price}）</button><button class="btn" id="eatCandy" ${s.inv.candy?'':'disabled'}>給牠吃</button>`}),
+   potion:()=>({id:'potion',name:'回復藥水',sub:`🪙${C.potion.price}｜×${s.inv.potion||0}`,icon:'potion',desc:`戰鬥中回復 50% HP（在戰鬥畫面使用）<br>擁有 ${s.inv.potion||0}`,btn:`<button class="btn pri" data-bi="potion">買 1 個（🪙 ${C.potion.price}）</button>`})};
+  if(tab==='food')for(const k of Object.keys(C.foods).filter(k=>!C.foods[k].power))out.push(foodEntry(k));
+  else if(tab==='power')for(const k of Object.keys(C.foods).filter(k=>C.foods[k].power))out.push(Object.assign(foodEntry(k),{sub:`${ROUTE_ICON[C.foods[k].fav[0]]}🪙${C.foods[k].price}｜×${s.inv[k]||0}`}));
+  else if(tab==='tools'){for(const k in tools)out.push(tools[k]())}
+  else{   // 🎒 背包：自己有的東西
+   const own=Object.keys(C.foods).filter(k=>(s.inv[k]||0)>0);if(own.length){out.push({head:'🍽️ 食物'});for(const k of own)out.push(foodEntry(k,true))}
+   const tl=[];if(s.inv.seeds)tl.push(Object.assign(tools.seeds(),{sub:`×${s.inv.seeds}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`}));if(s.inv.candy)tl.push(Object.assign(tools.candy(),{sub:`×${s.inv.candy}`,btn:`<button class="btn pri" id="eatCandy">給牠吃</button>`}));if(s.inv.potion)tl.push(Object.assign(tools.potion(),{sub:`×${s.inv.potion}`,btn:''}));
+   if(s.inv.ember)tl.push({id:'ember',name:'經驗火種',sub:`×${s.inv.ember}`,icon:'ember',desc:`打贏 Boss 得到的寶物<br>心情 +${C.ember.mood}、體力 +${C.ember.energy}、經驗 +${C.ember.xp}<br>擁有 ${s.inv.ember}`,btn:`<button class="btn pri" id="eatEmber">給牠吃</button>`});
+   if(tl.length){out.push({head:'🧰 道具'});out.push(...tl)}
+   out.push({head:'💎 進化素材'});
+   for(const el of PC.ROUTES){const n=(s.inv.mats||{})[el]||0;out.push({id:'mat_'+el,name:C.materials[el],sub:`${ROUTE_ICON[el]}｜×${n}`,dim:!n,icon:'mat_'+el,desc:`${ROUTE_ICON[el]}${ROUTE_LABEL[el]}進化到高階必須的素材（進化時用掉 1 個）<br>打贏該屬性區域的 Boss 會掉落（第一次必掉，之後 ${Math.round(C.matDrop*100)}%）<br>擁有 ${n}`,btn:''})}}
   return out};
- const render=()=>{const list=entries(),items=list.filter(e=>!e.head);if(!items.find(e=>e.id===SHOP_SEL[tab]))SHOP_SEL[tab]=items[0].id;const cur=items.find(e=>e.id===SHOP_SEL[tab]);
-  $('shopBody').innerHTML=`<div class="shopgrid"><div class="slist">${list.map(e=>e.head?`<div class="shead">${e.head}</div>`:`<button class="sitem ${e.id===cur.id?'on':''} ${e.fresh?'fresh':''}" data-si="${e.id}"><b>${e.name}</b><span>${e.sub}</span></button>`).join('')}</div>
+ const render=()=>{const list=entries(),items=list.filter(e=>!e.head);if(!items.length){$('shopBody').innerHTML='<p class="small">背包是空的</p>';return}if(!items.find(e=>e.id===SHOP_SEL[tab]))SHOP_SEL[tab]=items[0].id;const cur=items.find(e=>e.id===SHOP_SEL[tab]);
+  $('shopBody').innerHTML=`<div class="shopgrid"><div class="slist">${list.map(e=>e.head?`<div class="shead">${e.head}</div>`:`<button class="sitem ${e.id===cur.id?'on':''} ${e.fresh?'fresh':''} ${e.dim?'dim':''}" data-si="${e.id}"><b>${e.name}</b><span>${e.sub}</span></button>`).join('')}</div>
    <div class="sdetail ${cur.fresh?'fresh':''}"><div class="spic">${cur.dp?`<canvas data-dp="${cur.dp}"></canvas>`:`<canvas class="picon" data-icon="${cur.icon}" data-s="6"></canvas>`}</div><h3>${cur.name}</h3><div class="small">${cur.desc}</div><div class="sbtns">${cur.btn}</div></div></div>`;
   $('shopCoins').textContent=s.coins;
   document.querySelectorAll('.shoptabs .btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
@@ -1307,11 +1317,13 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
    if(r.ok){sfx(own?'tap':'level');if(s.hatched&&s.view!=='room'){s.view='room'}if(!own)PC.journal(s,Date.now(),`買了「${D[id].name}」`);save();renderUI()}render()});
   document.querySelectorAll('[data-bi]').forEach(b=>b.onclick=()=>{const r=PC.buyItem(s,b.dataset.bi);toast(r.ok?r.msg:'❌ '+r.msg);if(r.ok){sfx('tap');save();renderUI()}render()});
   document.querySelectorAll('#shopBody canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));
+  document.querySelectorAll('[data-feedk]').forEach(b=>b.onclick=()=>{closeModal();FEED.kind=b.dataset.feedk;act('feed')});
+  if($('goFarm'))$('goFarm').onclick=()=>{closeModal();farmDialog()};
   if($('eatEmber'))$('eatEmber').onclick=()=>{const x0=s.xp,r=PC.useEmber(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}toast(r.msg+`　經驗 +${r.xp}`);sfx('level');spawn('star',6,{x:petX+24,y:60,vy:-20,life:1.2});save();renderUI();afterChange(x0);render()};
   if($('eatCandy'))$('eatCandy').onclick=()=>{const x0=s.xp,r=PC.useCandy(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}
    closeModal();playAnim('eat');sfx('eat');spawn('star',4,{y:66,life:1.1,stagger:.15});spawn('heart',3,{y:70,life:1.1});say(r.msg+(r.xp?`　經驗 +${r.xp}`:''));save();renderUI();afterChange(x0)}};
  openModal('🛒 商店',`<p>🪙 金幣 <b id="shopCoins">${s.coins}</b>　<span class="small">左邊選東西，右邊看說明。家具買了會自動擺進小窩。</span></p>
-<div class="shoptabs"><button class="btn" data-tab="decor">🛋️ 家具</button><button class="btn" data-tab="items">🎒 道具</button></div><div id="shopBody"></div>`);
+<div class="shoptabs"><button class="btn" data-tab="decor">🛋️ 家具</button><button class="btn" data-tab="food">🍽️ 食物</button><button class="btn" data-tab="power">⚡ 能力水果</button><button class="btn" data-tab="tools">🧰 道具</button><button class="btn" data-tab="bag">🎒 背包</button></div><div id="shopBody"></div>`);
  document.querySelectorAll('.shoptabs .btn').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render()});render()}
 
 /* =========================================================
