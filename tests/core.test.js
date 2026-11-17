@@ -172,8 +172,8 @@ t('家具：存檔亂碼被過濾（沒買的、放錯格的、不存在的）',
   assert.deepEqual(r.decor.owned, ['paper_cream', 'bed_round', 'rug_red']); assert.deepEqual(r.decor.placed, { paper: 'paper_cream', rug: 'rug_red', bed: 'bed_round' });
 });
 t('道具：買食物／種子／星星糖、吃星星糖', () => {
-  const s = hatched(); C.buyItem(s, 'candy'); assert.equal(s.coins, 38); assert.equal(s.inv.candy, 1); s.mood = 50; s.hunger = 50;
-  const r = C.useCandy(s, T0); assert.ok(r.ok); assert.equal(s.mood, 70); assert.equal(s.hunger, 60); assert.equal(s.xp, 3); assert.ok(!C.useCandy(s, T0).ok);
+  const s = hatched(); s.coins = 250; C.buyItem(s, 'candy'); assert.equal(s.coins, 50); assert.equal(s.inv.candy, 1); s.mood = 50; s.hunger = 50;
+  const r = C.useCandy(s, T0); assert.ok(r.ok); assert.equal(s.mood, 70); assert.equal(s.hunger, 60); assert.equal(s.xp, 8); assert.ok(!C.useCandy(s, T0).ok);
   s.coins = 2; assert.ok(!C.buyItem(s, 'food').ok); assert.ok(nonNeg(s));
 });
 
@@ -331,6 +331,11 @@ t('第 40 關大王：星辰之心＋碎片；碎片可以抵終極素材；星�
 t('新蛋不重複：優先給還沒玩過的屬性', () => { const s = hatched(); s.route = 'flame'; s.dex = [{ id: 'g:1', route: 'tide' }, { id: 'g:2', route: 'bird' }];
   const u = C.unplayedRoutes(s); assert.ok(!u.includes('flame') && !u.includes('tide') && !u.includes('bird')); assert.equal(u.length, 4);
   s.dex = C.EL_LIST.map((e, i) => ({ id: 'g:' + i, route: e })); assert.equal(C.unplayedRoutes(s).length, 7); assert.equal(C.genomeOfSeed(C.seedForEl('metal')).el, 'metal'); });
+t('星星糖 200 金幣，吃了直接升 1 級', () => { const s = hatched(); s.coins = 500; s.xp = 50; const L = C.level(50); assert.ok(C.buyItem(s, 'candy').ok); assert.equal(s.coins, 300);
+  const r = C.useCandy(s, T0); assert.ok(r.ok); assert.equal(C.level(s.xp), L + 1); assert.equal(s.xp, 8 * L * L); });
+t('第二張床：已擁有的床可以擺在右邊，存檔保留；買彈力球會換掉爆掉的球', () => { const s = hatched(); assert.ok(C.placeBed2(s, 'bed_round').ok); assert.equal(s.decor.placed.bed2, 'bed_round');
+  assert.ok(!C.placeBed2(s, 'bed_cloud').ok); assert.equal(C.sanitize(JSON.parse(JSON.stringify(s)), T0).decor.placed.bed2, 'bed_round'); assert.ok(C.placeBed2(s, 'bed_round').ok); assert.equal(s.decor.placed.bed2, undefined);
+  s.ballBroken = true; s.coins = 99; assert.ok(C.buyDecor(s, 'toy_ball').ok); assert.equal(s.ballBroken, false); });
 t('舊存檔沒有新路線欄位也能正常讀取', () => { const r = C.sanitize({ v: 7, hatched: true, path: { flame: 3, tide: 2, forest: 1 } }, T0); assert.equal(r.path.earth, 0); assert.equal(r.path.metal, 0); assert.equal(r.events.mine, false); });
 
 console.log(`\n${pass}/${pass + fail} passed`);

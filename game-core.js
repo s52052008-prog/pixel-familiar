@@ -48,7 +48,7 @@ const CONFIG = {
   pair: { rate: .5, advMinEnergy: 20, foeHp: 1.5, xpShare: .6 },   // 第二隻一起出來：狀態變化速度減半；一起冒險時敵人血量 ×1.5、第二隻分到 6 成經驗
   farm: { plots: 3, maxPlots: 6, expand: [30, 60, 90], growHours: 2, fruitMin: 2, fruitMax: 3, freshHours: 6, rotHours: 24, xp: 5, forest: 3, seedPrice: 3 },   // 收成：蘋果、莓果各隨機 1～2 顆；田可以花錢擴建到 6 格     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
   goals: { perDay: 3, coins: [10, 20, 40], maxLv: 10, needPerLv: .2, rewardPerLv: .2 },   // 每天 ★／★★／★★★ 三個；每天 3 個都完成，任務等級 +1（更難、獎勵更好）
-  candy: { price: 12, mood: 20, hunger: 10, xp: 3 },
+  candy: { price: 200, mood: 20, hunger: 10 },   // V1.39：星星糖 200 金幣，吃了直接升 1 級（不受屬性經驗加成影響）
   core: { rotMin: 10, moodPerHour: 4, max: 8 },          // 果核：10 分鐘沒清會發臭長果蠅，每顆每小時心情 −4
   poop: { delayMin: 40, rotMin: 3 },                      // 每吃一次，40 分鐘後大便；大便 3 分鐘沒清就發臭
   potion: { price: 20, heal: .5, drop: .15 },             // 回復藥水：回復 50% 最大 HP
@@ -259,7 +259,8 @@ function sanitize(o, now = Date.now()) {
   const dc = o.decor && typeof o.decor === 'object' ? o.decor : {};
   if (Array.isArray(dc.owned)) r.decor.owned = [...new Set(['paper_cream', 'bed_round', ...dc.owned.filter(id => CONFIG.decor[id])])];
   if (dc.placed && typeof dc.placed === 'object') { r.decor.placed = { paper: 'paper_cream' }; for (const sl of CONFIG.decorSlots) { const id = dc.placed[sl]; if (id && CONFIG.decor[id] && CONFIG.decor[id].slot === sl && r.decor.owned.includes(id)) r.decor.placed[sl] = id; } }
-  if (!(Number(o.v) >= 7) && !r.decor.placed.bed) r.decor.placed.bed = 'bed_round';   // 舊存檔：送一張小圓床
+  if (!(Number(o.v) >= 7) && !r.decor.placed.bed) r.decor.placed.bed = 'bed_round';
+  { const b2 = dc.placed && dc.placed.bed2; if (b2 && CONFIG.decor[b2] && CONFIG.decor[b2].slot === 'bed' && r.decor.owned.includes(b2)) r.decor.placed.bed2 = b2; }   // 右邊第二張床   // 舊存檔：送一張小圓床
   r.view = o.view === 'room' ? 'room' : 'yard';
   r.digest = Array.isArray(o.digest) ? o.digest.map(Number).filter(Number.isFinite).slice(0, 10) : [];
   r.toiletUses = int(o.toiletUses, 0, 0, 1e7); r.starveSince = num(o.starveSince, 0, 0, 9e15); r.runaway = o.runaway && typeof o.runaway === 'object' ? { at: num(o.runaway.at, 0, 0, 9e15), got: int(o.runaway.got, 0, 0, 1e7) } : null; r.bondRestUntil = num(o.bondRestUntil, 0, 0, 9e15); r.ballUses = int(o.ballUses, 0, 0, CONFIG.ballLife - 1); r.ballBroken = o.ballBroken === true;
@@ -679,12 +680,19 @@ function buyDecor(st, id) {
   if (st.decor.owned.includes(id)) return { ok: false, msg: '已經擁有了' };
   if (st.coins < it.price) return { ok: false, msg: `金幣不足（需要 ${it.price}）` };
   st.coins -= it.price; st.decor.owned.push(id); st.decor.placed[it.slot] = id;
+  if (id === 'toy_ball') { st.ballBroken = false; st.ballUses = 0; return { ok: true, msg: '買了「彈力球」！院子和房間都可以拿來玩' }; }
   return { ok: true, msg: `買了「${it.name}」，已經擺進房間！` };
 }
 function placeDecor(st, id) {
   const it = CONFIG.decor[id]; if (!it || !st.decor.owned.includes(id)) return { ok: false, msg: '還沒有這個家具' };
   if (st.decor.placed[it.slot] === id) { if (it.slot === 'paper') return { ok: false, msg: '壁紙不能拿掉，可以換別的' }; delete st.decor.placed[it.slot]; return { ok: true, msg: `收起「${it.name}」` }; }
   st.decor.placed[it.slot] = id; return { ok: true, msg: `擺上「${it.name}」` };
+}
+/* 第二張床（兩隻一起睡）：已擁有的床可以擺到右邊的床位，同一張床可以兩邊都擺 */
+function placeBed2(st, id) {
+  const it = CONFIG.decor[id]; if (!it || it.slot !== 'bed' || !st.decor.owned.includes(id)) return { ok: false, msg: '還沒有這張床' };
+  if (st.decor.placed.bed2 === id) { delete st.decor.placed.bed2; return { ok: true, msg: `收起右邊的「${it.name}」` }; }
+  st.decor.placed.bed2 = id; return { ok: true, msg: `右邊也擺上「${it.name}」，兩隻都有床睡了！` };
 }
 function buyItem(st, kind) {
   const price = CONFIG.foods[kind] ? CONFIG.foods[kind].price : kind === 'seeds' ? CONFIG.farm.seedPrice : kind === 'candy' ? CONFIG.candy.price : kind === 'potion' ? CONFIG.potion.price : 0;
@@ -726,7 +734,8 @@ function useCandy(st, now = Date.now()) {
   if (st.sleeping) return { ok: false, msg: '牠在睡覺，醒來再吃吧', tm };
   if (st.inv.candy < 1) return { ok: false, msg: '沒有星星糖了', tm };
   const C = CONFIG.candy; st.inv.candy--; st.mood = clamp(st.mood + C.mood); st.hunger = clamp(st.hunger + C.hunger);
-  return { ok: true, xp: addXP(st, C.xp), msg: '甜甜的星星糖！心情大好 ✨', tm };
+  const L = level(st.xp), gain = 8 * L * L - st.xp; st.xp += gain;   // 直接升到下一級（level＝1＋√(xp/8)）
+  return { ok: true, xp: gain, lv: L + 1, msg: `甜甜的星星糖！升到 Lv.${L + 1} 了 ✨`, tm };
 }
 
 /* ---------------- 果核（餵食後留下，要點一下清掉） ---------------- */
@@ -917,7 +926,7 @@ const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
-  piggyRate, piggyCap, collectPiggy, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

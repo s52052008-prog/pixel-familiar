@@ -44,10 +44,12 @@ async def do_play(p, timed=True, goals=2):
     await p.mouse.click(*tapxy)
     for _ in range(1500):
         if await p.evaluate("!PF.mode"): break
-        info = await p.evaluate("(()=>{const b=PF.ball.b;return b&&{y:b.y,vy:b.vy,hit:b.hit,tapped:b.tapped,score:PF.ball.score,head:PF.PET_Y+16}})()")
+        info = await p.evaluate("(()=>{const b=PF.ball.b;return b&&{y:b.y,vy:b.vy,g:b.g,x:b.x,hit:b.hit,tapped:b.tapped,score:PF.ball.score,head:PF.PET_Y+16}})()")
         if info and timed and not info['hit'] and not info['tapped'] and info['score'] < goals and info['vy'] > 0:
-            tt = (info['head'] - info['y']) / max(info['vy'], 1)
-            if tt < 0.13: await p.mouse.click(*tapxy)
+            g, d = info['g'], info['head'] - info['y']; tt = (-info['vy'] + (info['vy'] ** 2 + 2 * g * max(d, 0)) ** .5) / g   # 球還要多久到頭上
+            hold = max(.15, min(1, (110 - info['x']) / 95)) * .9   # 按住蓄力：離籃框越遠按越久
+            if tt < hold + 0.1:
+                await p.mouse.move(*tapxy); await p.mouse.down(); await p.wait_for_timeout(int(max(0, tt - 0.1) * 1000)); await p.mouse.up()
         await p.wait_for_timeout(12)
 async def closeall(p):
     if await p.is_visible('#modal'): await p.click('#mbtns .btn >> nth=0')
@@ -149,9 +151,10 @@ async def main():
         s = await st(p); ok('買 7 件家具、扣錢、自動擺上', len(s['decor']['owned']) == 9 and s['coins'] == 400 - 30 - 45 - 50 - 35 - 80 - 60 - 25 and s['decor']['placed']['bed'] == 'bed_cloud', s['coins'])
         await p.click('[data-si="toy_block"]'); await p.click('[data-dz="toy_block"]'); await p.wait_for_timeout(150); ok('收起家具', 'toy' not in (await st(p))['decor']['placed'])
         await p.click('[data-dz="toy_block"]'); await p.wait_for_timeout(150)
+        await p.evaluate("PF.state.coins+=300"); lv0 = await p.evaluate("PF.PC.level(PF.state.xp)")
         await p.click('[data-tab="tools"]'); await p.wait_for_timeout(150); await p.click('[data-si="candy"]'); await p.click('[data-bi="candy"]'); await p.wait_for_timeout(150)
         ok('買星星糖', (await st(p))['inv']['candy'] == 1); await p.click('#eatCandy'); await p.wait_for_timeout(1500)
-        s = await st(p); ok('吃星星糖：心情 +20', s['inv']['candy'] == 0 and round(s['mood']) >= 69, round(s['mood']))
+        s = await st(p); ok('吃星星糖：心情 +20、升 1 級', s['inv']['candy'] == 0 and round(s['mood']) >= 69 and await p.evaluate("PF.PC.level(PF.state.xp)") == lv0 + 1, round(s['mood']))
         ok('買完家具後切到室內', s['view'] == 'room'); await p.screenshot(path=f'{OUT}/09f_room.png')
         await p.click('#viewBtn'); await p.wait_for_timeout(400); ok('切換回戶外', (await st(p))['view'] == 'yard')
         ok('戶外沒有「進窩」按鈕', not await p.is_visible('#viewBtn'))
