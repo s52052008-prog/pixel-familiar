@@ -112,11 +112,12 @@ def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esi
             r, g, bl = im[..., 0].astype(int), im[..., 1].astype(int), im[..., 2].astype(int)
             teal = (im[..., 3] > 0) & (r < 120) & (g > r + 40) & (bl > r + 30) & (np.abs(g - bl) < 70)   # 混到綠底的電光：紅很少、綠藍差不多；水的藍（藍比綠高很多）不會被改
             im[teal, 0] = np.clip(140 + (g[teal] - 120) // 2, 120, 220); im[teal, 1] = 235; im[teal, 2] = 255
-        if sym and st == 4:   # --sym：不重畫，只把比較好看的那隻眼睛左右鏡像到另一邊，兩眼對稱
+        sy = SYMS.get(st) or (sym if st == 4 else None)
+        if sy:   # --sym：不重畫，只把比較好看的那隻眼睛左右鏡像到另一邊，兩眼對稱
             b = bbox(ms[0]); tw = min(CELL - 2, round((b[2] - b[0]) * k)); th = min(45, round((b[3] - b[1]) * k)); ox, oy = (CELL - tw) // 2, 46 - th
             mp = lambda X, Y: (round((X - b[0]) * tw / (b[2] - b[0]) + ox), round((Y - b[1]) * th / (b[3] - b[1]) + oy))
-            (lx, ly), (rx, ry) = mp(*sym['src'][:2]), mp(*sym['src'][2:4]); cy = round((ly + ry) / 2); h = sym['r']
-            (sx, dx) = (lx, rx) if sym['from'] == 'L' else (rx, lx); print('鏡像眼睛', sym['from'], (lx, rx, cy))
+            (lx, ly), (rx, ry) = mp(*sy['src'][:2]), mp(*sy['src'][2:4]); cy = round((ly + ry) / 2); h = sy['r']
+            (sx, dx) = (lx, rx) if sy['from'] == 'L' else (rx, lx); print('鏡像眼睛', sy['from'], (lx, rx, cy))
             for im in ims:
                 src = im.copy()
                 for yy in range(cy - h, cy + h + 1):
@@ -147,6 +148,7 @@ def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esi
     pv.save(os.path.join(ROOT, 'art', f'preview-fusion-{name}.png'))
 
 
+SYMS = {int(x[5]): {'src': [int(v) for v in x[7:].split(',')[:4]], 'from': x[7:].split(',')[4], 'r': int(x[7:].split(',')[5]) if len(x[7:].split(',')) > 5 else 3} for x in sys.argv[1:] if x[:5] == '--sym' and x[5:6].isdigit()}   # --sym1=…～--sym4=：每個階段各自鏡像
 MIR = [[int(v) for v in x[6:].replace(':', ',').split(',')] for x in sys.argv[1:] if x.startswith('--mir=')]   # --mir=階段:x0,x1,y0,y1,軸2（可重複）
 
 if __name__ == '__main__':
