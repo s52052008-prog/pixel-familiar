@@ -233,7 +233,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.34.0';
+const VERSION='1.35.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1288,7 +1288,7 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',`
 <p><b>特殊事件：</b>🔥 打通第 ${C.bossStages.volcano} 關「火山遺跡」；💧 親密度 60 以上、晚上摸摸觸發「月泉」；🌿 打通第 ${C.bossStages.oldtree} 關「古樹」並收成 10 次。</p>
 <p><b>親密度：</b>20 解鎖撒嬌與早安問候、50 每天收到小禮物、80 戰鬥時撐住一次。</p>
 <p><b>⚔️ 戰鬥技巧：</b>戰鬥地點依怪獸屬性變成草原、岩石地、水邊、森林或星之塔。招式有撞擊、屬性技、蓄力（下一擊 ×2）、防禦、回復藥水和逃跑，按鈕上會顯示預估傷害（▲效果好、▼效果差）。快被打倒時會出現「💗 羈絆之力」：花 10 金幣買加油棒，倒數後 2 秒內連打螢幕，20 下 2.2 倍、22 下 2.5 倍、25 下 2.7 倍、28 下以上 3 倍（每場一次）；發揮超常能力後要休息 2 小時才能再冒險。敵人出招前會猜拳：猜贏完全躲開，平手受 0.8 倍傷害，猜輸或沒選受 1.2 倍。</p>
-<p><b>每天：</b>第一次打開送金幣 +${C.daily.coins}、食物 +${C.daily.food}。沒食物又沒錢時可以免費「採集」。冒險每天前 ${C.adventure.dailyFull} 次全額獎勵。</p>
+<p><b>每天：</b>第一次打開送金幣 +${C.daily.coins}、食物 +${C.daily.food}。沒食物又沒錢時可以免費「採集」。冒險不限次數，有體力就能出發。</p>
 <p><b>👟 步數：</b>每 1,000 步經驗 +10、每 2,000 步森系點數 +1；每 10 萬步突破一次（戰鬥 +10%）。</p>
 <p><b>💞 配對：</b>成年期以後可以和朋友交換「配對碼」，生出混合雙方基因的蛋。</p>
 <p><b>存檔：</b>存在這台裝置的瀏覽器裡，可能被清除。請定期到「💾 存檔」匯出存檔碼。</p>`)}
@@ -1591,11 +1591,11 @@ function foeFighter(n){const f=PC.foeFor(n,lvl()),key=petKey(f.id,formCode(f.sta
  const ft=PC.mkFighter((f.boss?'Boss ':'野生的 ')+F.name,key,f.level,f.route,0,80,0);ft.max=ft.hp=Math.round(ft.max*(f.boss?1.25:1.3));return ft}   // 野生怪比較耐打（V1.33：1.4→1.3）
 let B=null;const bparts=[];const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function advDialog(){PC.claimDaily(s,Date.now());tick();
- const why=PC.canAdventure(s,s.adv.stage);let list='';const top=s.adv.stage,A=CONFIG.adventure,left=Math.max(0,A.dailyFull-s.daily.adv);
+ const why=PC.canAdventure(s,s.adv.stage);let list='';const top=s.adv.stage,A=CONFIG.adventure;
  for(let n=top;n>=Math.max(1,top-5);n--){const f=foeFighter(n),ev=Object.keys(CONFIG.bossStages).find(k=>CONFIG.bossStages[k]===n);
   list+=`<button class="btn stagebtn ${n===top?'pri':''}" data-st="${n}"><span>${n%5===0?'👑 ':''}第 ${n} 關 · ${areaName(n)}${ev&&!s.events[ev]?' ✨':''}</span><span class="small" style="color:inherit">Lv.${f.level} ${EL_NAME[f.el]}</span></button>`}
  openModal('⚔️ 冒險',`<p>體力：<b>${Math.round(s.energy)}</b>（出發需要 ${A.minEnergy}，會消耗 20）　戰績：${s.adv.wins} 勝 ${s.adv.losses} 敗</p>
-<p class="small">今天還有 <b>${left}</b> 次全額獎勵（每天前 ${A.dailyFull} 次；之後只給 20% 經驗和材料）。<br>完成：經驗 +${A.xp}、金幣 +${A.coins}、🔥 焰系 +${A.flame}；勝利再加經驗 +10、金幣 +4、🔥 +2。失敗不扣東西，經驗 +3。<br>第一次打通新關卡＝發現新地點（🌿 森系 +2）。✨ 標記的 Boss 關有特殊事件。<br>屬性相剋：🔥 剋 🌿、🌿 剋 💧、💧 剋 🔥（屬性技 1.5 倍）。</p>
+<p class="small">不限次數，有體力就能出發。<br>完成：經驗 +${A.xp}、金幣 +${A.coinsMin}～${A.coinsMax}、🔥 焰系 +${A.flame}；勝利再加經驗 +10、金幣 +4、🔥 +2。失敗不扣東西，經驗 +3。<br>第一次打通新關卡＝發現新地點（🌿 森系 +2）。✨ 標記的 Boss 關有特殊事件。<br>屬性相剋：🔥 剋 🌿、🌿 剋 💧、💧 剋 🔥（屬性技 1.5 倍）。</p>
 ${why&&why!=='這一關還沒解鎖'?'<p class="err">'+why+'</p>':''}${list}`);
  document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{const n=+b.dataset.st,w=PC.canAdventure(s,n);if(w){toast(w);return}closeModal();startBattle(n)})}
 function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();petX=PET_X;const r=PC.startAdventure(s,n,Date.now());if(!r.ok){toast(r.msg);return}save();renderUI();
@@ -1605,7 +1605,7 @@ function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');retu
  const fx0=()=>({dx:0,dy:0,flash:0,faint:0,anim:null,t0:0});
  B={n,full:r.full,arena:arenaFor(n,foe),bondUsed:false,me,me2,duo,foe,busy:false,over:false,fx:{me:fx0(),me2:fx0(),foe:fx0()}};bparts.length=0;
  $('battle').classList.remove('hidden');$('bResult').classList.add('hidden');$('moves').classList.remove('hidden');
- $('mvSp').textContent='✨ '+SP_NAME[me.el];blog(`📍 ${ARENA_NAME[arenaFor(n,foe)]}\n${foe.name} 出現了！（${EL_NAME[foe.el]} Lv.${foe.level}）${duo?`\n🐾 ${me.name} 和 ${me2.name} 一起上場！`:s.pair?`\n（${s.pair.name} 體力不夠，留在家休息）`:''}${r.full?'':'　今天的全額次數用完了，獎勵會減少'}`);bUI();sfx('play')}
+ $('mvSp').textContent='✨ '+SP_NAME[me.el];blog(`📍 ${ARENA_NAME[arenaFor(n,foe)]}\n${foe.name} 出現了！（${EL_NAME[foe.el]} Lv.${foe.level}）${duo?`\n🐾 ${me.name} 和 ${me2.name} 一起上場！`:s.pair?`\n（${s.pair.name} 體力不夠，留在家休息）`:''}`);bUI();sfx('play')}
 function blog(t){$('blog').textContent=t}
 /* ---------------- 戰鬥場地：依怪獸屬性決定 ---------------- */
 const ARENA_NAME={meadow:'🌼 草原',rock:'🌋 火山岩地',water:'🌊 水邊',forest:'🌲 森林深處',canyon:'🪨 大地峽谷',sky:'☁️ 天空之巔',storm:'⛈️ 雷雲山',mine:'⚙️ 鋼鐵礦坑',tower:'✨ 星之塔'};

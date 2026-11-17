@@ -22,7 +22,7 @@ const CONFIG = {
   wash: { cooldownMin: 30, clean: 35, xp: 5, rubSeconds: 3 },
   pet:  { cooldownMin: 30, bond: 2, mood: 3, tide: 2, minMood: 40 },   // 心情 40 以下摸摸不會加親密度
   neglect: { below: 25, bondPerHour: 1 },                 // 飽食／心情／清潔任一低於 25：親密度每小時 −1
-  adventure: { minEnergy: 20, energy: -20, hunger: -15, clean: -20, winMood: 8, lossMood: -12, xp: 15, coinsMin: 20, coinsMax: 30, seeds: 1, flame: 3, dailyFull: 5, overCapXpRate: 0.2, dropFood: 0.3, dropSeed: 0.4 },
+  adventure: { minEnergy: 20, energy: -20, hunger: -15, clean: -20, winMood: 8, lossMood: -12, xp: 15, coinsMin: 20, coinsMax: 30, seeds: 1, flame: 3, dailyFull: Infinity, overCapXpRate: 0.2, dropFood: 0.3, dropSeed: 0.4 },
   battleWin: { xp: 10, coins: 4, flame: 2 },
   battleLoss: { xp: 3 },
   discovery: { xp: 10, forest: 2 },
@@ -544,7 +544,7 @@ function startAdventure(st, n, now = Date.now()) {
   applyTime(st, now); claimDaily(st, now);
   const why = canAdventure(st, n); if (why) return { ok: false, msg: why };
   const A = CONFIG.adventure; st.energy = clamp(st.energy + A.energy); st.hunger = clamp(st.hunger + A.hunger); st.clean = clamp(st.clean + A.clean); st.daily.adv++; track(st, 'adv', now);
-  return { ok: true, full: st.daily.adv <= CONFIG.adventure.dailyFull };
+  return { ok: true, full: true };   // V1.35：不限次數，有體力就能冒險、每次都是全額獎勵
 }
 function mkFighter(name, key, lvl, route, tierN, mood, bond) {
   const k = 1 + .1 * tierN, cond = mood < 30 ? .85 : 1, T = traitOf(route);

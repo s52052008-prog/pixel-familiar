@@ -91,10 +91,10 @@ t('每日保底：同一天只能領一次，時間倒退不能重領', () => {
 });
 
 // 冒險與戰鬥
-t('冒險：每日前 5 次全額，之後只給 20% XP', () => {
+t('冒險：不限次數，每次都是全額獎勵', () => {
   const s = hatched(); C.claimDaily(s, T0); const res = [];
   for (let i = 0; i < 7; i++) { s.energy = 100; const st = C.startAdventure(s, 1, T0); res.push(C.finishAdventure(s, 1, 'win', st.full, T0, () => .99)); }
-  assert.equal(res[4].coins, 30); assert.equal(res[4].seeds, 1); assert.equal(res[5].coins, 0); assert.equal(res[5].xp, 5);
+  assert.equal(res[4].coins, 30); assert.equal(res[4].seeds, 1); assert.equal(res[6].coins, 30); assert.ok(res[6].xp > 5);
 });
 t('冒險：體力不足不能出發；失敗只給 XP +3', () => { const s = hatched(); s.energy = 19; assert.ok(!C.startAdventure(s, 1, T0).ok); s.energy = 50; C.startAdventure(s, 1, T0); const xp0 = s.xp; const r = C.finishAdventure(s, 1, 'loss', true, T0); assert.equal(s.xp - xp0, 3); assert.equal(r.coins, 0); assert.equal(s.energy, 30); });
 t('首次打通新關卡＝探索發現（森林 +2、XP +10）；第 15 關觸發火山遺跡', () => {
