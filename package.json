@@ -1,0 +1,19 @@
+{
+  "name": "pixel-familiar",
+  "version": "1.28.0",
+  "private": true,
+  "description": "幻獸日記 Pixel Familiar：網頁版（GitHub Pages）＋ iOS App（Capacitor，讀取健康步數）",
+  "scripts": {
+    "build:www": "node tools/build-www.mjs",
+    "ios:sync": "npm run build:www && npx cap sync ios",
+    "test": "node tests/core.test.js"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/ios": "^8.6.2",
+    "capacitor-health-steps": "file:native/health-steps"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.2"
+  }
+}

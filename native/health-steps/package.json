@@ -1,0 +1,10 @@
+{
+  "name": "capacitor-health-steps",
+  "version": "1.0.0",
+  "description": "幻獸日記：從 Apple 健康 App 讀取每天的步數（只讀，不寫入）",
+  "license": "MIT",
+  "main": "index.js",
+  "files": ["index.js", "ios/Sources", "Package.swift"],
+  "capacitor": { "ios": { "src": "ios" } },
+  "peerDependencies": { "@capacitor/core": ">=8.0.0" }
+}

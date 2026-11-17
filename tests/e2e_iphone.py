@@ -300,6 +300,15 @@ async def main():
             await q.click('[data-rps=rock]'); await q.wait_for_timeout(300); m = await q.inner_text('#rpsMsg')
             ok('猜拳有結果（贏／平手／輸）', any(k in m for k in ['躲開', '0.8', '1.2']), m)
         await ctx7.close()
+        # ---------- iOS App 版：模擬 Capacitor 健康外掛，打開就自動同步步數 ----------
+        mock = """window.PF_NO_WANDER=1;window.PF_NO_RPS=1;window.PF_NO_TRAITS=1;
+          const _d=n=>{const t=new Date(Date.now()-n*86400000);return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei'}).format(t)};
+          window.Capacitor={isNativePlatform:()=>true,Plugins:{HealthSteps:{requestAuthorization:async()=>({granted:true}),getDailySteps:async()=>({days:[{date:_d(1),steps:4200},{date:_d(0),steps:6800}]})}}};"""
+        ctx8 = await br.new_context(**I13); q = await ctx8.new_page(); await q.add_init_script(mock)
+        await q.goto(URL); await q.wait_for_timeout(2500); s = await st(q)
+        ok('App 版：打開就從健康 App 同步最近幾天的步數', s['steps']['total'] == 11000, s['steps'])
+        await q.click('#bSteps'); await q.wait_for_timeout(300); ok('App 版：步數畫面顯示已連接健康 App、沒有捷徑教學', await q.is_visible('#sSync') and not await q.is_visible('#sCopyUrl'))
+        await ctx8.close()
         # ---------- 小螢幕 ----------
         ctx6, q = await newpage(br, pw.devices['iPhone SE']); await q.screenshot(path=f'{OUT}/14_iphoneSE.png', full_page=True)
         ok('iPhone SE 無橫向捲動', await q.evaluate("document.documentElement.scrollWidth<=innerWidth"))

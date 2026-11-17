@@ -735,7 +735,7 @@ const GOALS = {
   win:     { t: '打贏 {n} 場戰鬥',        ev: 'win',     need: [1, 2, 3] },
   plant:   { t: '種下 {n} 顆種子',        ev: 'plant',   need: [1, 2, 4] },
   harvest: { t: '收成 {n} 次',            ev: 'harvest', need: [1, 2, 3] },
-  steps:   { t: '走 {n} 步',              ev: 'steps',   need: [3000, 6000, 10000] }
+  steps:   { t: '走 {n} 步',              ev: 'steps',   need: [2000, 4000, 6000] }   // 一天 8,000 步就很了不起：最多只要求 8,000
 };
 const GOAL_IDS = Object.keys(GOALS);
 function goalsFor(key) {   // 用日期當亂數種子：同一天每次打開都一樣
@@ -745,7 +745,7 @@ function goalsFor(key) {   // 用日期當亂數種子：同一天每次打開�
   return out;
 }
 /* 任務等級越高：需要的數量越多（每級 +20%）、獎勵越好（每級 +20%） */
-function goalNeed(id, tier, lv) { const b = GOALS[id].need[tier]; return id === 'steps' ? Math.round(b * (1 + CONFIG.goals.needPerLv * lv) / 500) * 500 : b + Math.floor(b * CONFIG.goals.needPerLv * lv + .0001 + (lv >= 3 ? 1 : 0) * (tier > 0 ? 1 : 0)); }
+function goalNeed(id, tier, lv) { const b = GOALS[id].need[tier]; return id === 'steps' ? Math.min(8000, Math.round(b * (1 + CONFIG.goals.needPerLv * lv) / 500) * 500) : b + Math.floor(b * CONFIG.goals.needPerLv * lv + .0001 + (lv >= 3 ? 1 : 0) * (tier > 0 ? 1 : 0)); }
 function goalReward(tier, lv) { const G = CONFIG.goals, m = 1 + G.rewardPerLv * lv; return { coins: Math.round(G.coins[tier] * m), seeds: tier >= 1 ? 1 + (lv >= 5 ? 1 : 0) : 0, bonus: tier === 2 }; }
 function goalText(g) { return GOALS[g.id].t.replace('{n}', g.need >= 1000 ? g.need.toLocaleString('en-US') : g.need); }
 function ensureGoals(st, now = Date.now()) {

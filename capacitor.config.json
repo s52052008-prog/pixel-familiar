@@ -1,0 +1,6 @@
+{
+  "appId": "com.s52052008.pixelfamiliar",
+  "appName": "幻獸日記",
+  "webDir": "www",
+  "ios": { "contentInset": "never", "backgroundColor": "#1e130b" }
+}
