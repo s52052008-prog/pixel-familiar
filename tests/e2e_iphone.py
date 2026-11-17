@@ -207,11 +207,12 @@ async def main():
         if not await p.evaluate("PF.B.over"):
             await p.evaluate("(()=>{PF.B.me.hp=1;PF.B.foe.hp=PF.B.foe.max;PF.bUI()})()"); await p.wait_for_timeout(200)
             ok('危險時出現羈絆之力按鈕', await p.is_visible('#mvBond')); await p.screenshot(path=f'{OUT}/11b_danger.png')
-            f0 = await p.evaluate("PF.B.foe.hp"); await p.click('#mvBond'); await p.wait_for_timeout(2300)
+            c0 = (await st(p))['coins']; f0 = await p.evaluate("PF.B.foe.hp"); await p.click('#mvBond'); await p.wait_for_timeout(2300)
             for i in range(8): await p.mouse.click(200, 400); await p.wait_for_timeout(60)
             for _ in range(60):
                 if await p.evaluate("!PF.B.busy||PF.B.over"): break
                 await p.wait_for_timeout(150)
+            s = await st(p); ok('羈絆之力花 10 金幣買加油棒、之後要休息 2 小時', c0 - s['coins'] == 10 and s['bondRestUntil'] > 0, (c0, s['coins']))
             ok('羈絆之力：連打造成大傷害、每場只能一次', await p.evaluate("PF.B.bondUsed") and f0 - await p.evaluate("PF.B.foe.hp") > 30)
         for _ in range(60):
             if await p.is_visible('#bDone'): break
