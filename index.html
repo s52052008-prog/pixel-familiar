@@ -57,6 +57,8 @@ h1{margin:0;font-size:20px;letter-spacing:1px;white-space:nowrap}
 .act:disabled{filter:grayscale(.85) brightness(.7)}
 .act.on{background:#a9c6f0;box-shadow:inset 0 -5px 0 #5f82b8,inset 0 3px 0 #e4efff}
 canvas.picon{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+canvas.picon.hi{image-rendering:auto}
+img.uic{width:22px;height:22px;vertical-align:-6px;margin-right:5px;display:inline-block}.tool img.uic{width:24px;height:24px}.shoptabs img.uic{width:18px;height:18px;vertical-align:-4px;margin-right:3px}
 .panel{background:var(--panel);border:2px solid var(--line);box-shadow:inset 0 0 0 2px var(--hi);padding:9px 11px;font-size:13px}
 .xph{display:flex;justify-content:space-between;font-weight:700}
 .xpbar{height:10px;background:#0a1020;margin-top:6px}
@@ -184,24 +186,24 @@ body.rm *{transition:none!important;animation:none!important}
   <button class="act" data-act="sleep" id="sleepBtn"><canvas class="picon" data-icon="moon" id="sleepIcon"></canvas><span id="sleepLabel">睡覺</span></button>
  </div>
  <section class="panel">
-  <div class="xph"><span>⭐ 成長經驗</span><span id="xptext"></span></div>
+  <div class="xph"><span><img class="uic" src="sprites/ui/star.png" alt="" style="width:18px;height:18px;vertical-align:-3px">成長經驗</span><span id="xptext"></span></div>
   <div class="xpbar"><i id="xpbar"></i></div>
   <p id="log">照顧幻獸，陪伴牠成長！</p>
   <div class="small" id="stepInfo"></div>
  </section>
  <nav class="toolbar three">
-  <button class="tool big" id="bAdv">⚔️ 冒險</button>
-  <button class="tool big" id="bFarm">🌱 家園</button>
-  <button class="tool big" id="bShop">🛒 商店</button>
-  <button class="tool big" id="bGoals">🎯 任務<span id="goalDot" class="dot hidden"></span></button>
-  <button class="tool big" id="bSteps">👟 步數</button>
-  <button class="tool big" id="bMate">💞 配對</button>
+  <button class="tool big" id="bAdv"><img class="uic" src="sprites/ui/swords.png" alt="">冒險</button>
+  <button class="tool big" id="bFarm"><img class="uic" src="sprites/ui/leaf.png" alt="">家園</button>
+  <button class="tool big" id="bShop"><img class="uic" src="sprites/ui/shop.png" alt="">商店</button>
+  <button class="tool big" id="bGoals"><img class="uic" src="sprites/ui/calendar.png" alt="">任務<span id="goalDot" class="dot hidden"></span></button>
+  <button class="tool big" id="bSteps"><img class="uic" src="sprites/ui/paw.png" alt="">步數</button>
+  <button class="tool big" id="bMate"><img class="uic" src="sprites/ui/heart.png" alt="">配對</button>
  </nav>
  <nav class="toolbar">
-  <button class="tool" id="bRename">✏️ 改名</button>
-  <button class="tool" id="bCodex">📖 圖鑑</button>
-  <button class="tool" id="bSave">💾 存檔</button>
-  <button class="tool" id="bMenu">⚙️ 選單</button>
+  <button class="tool" id="bRename"><img class="uic" src="sprites/ui/scroll.png" alt="">改名</button>
+  <button class="tool" id="bCodex"><img class="uic" src="sprites/ui/pawbook.png" alt="">圖鑑</button>
+  <button class="tool" id="bSave"><img class="uic" src="sprites/ui/floppy.png" alt="">存檔</button>
+  <button class="tool" id="bMenu"><img class="uic" src="sprites/ui/gear.png" alt="">選單</button>
  </nav>
 </div>
 <div id="battle" class="hidden"><div class="in">
@@ -231,7 +233,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.30.0';
+const VERSION='1.31.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -271,6 +273,10 @@ function speciesName(G,code,classic){const{lv,route}=parseCode(code),asc=lv===3,
  if(classic){const b=CLASSIC_NAMES[full?route:'juv'];return{name:(asc?'聖':'')+b[0],en:(asc?'Ascended ':'')+b[1]}}
  const hn=HUE_NAMES.find(([m])=>G.hue<m),sn=SIDE_NAMES[G.side],pre=(asc?'聖':'')+(G.rarity===3?'星':''),epre=(asc?'Ascended ':'')+(G.rarity===3?'Star ':'');
  return full?{name:pre+hn[1]+sn[0]+ROUTE_NAMES[route][0]+'獸',en:`${epre}${hn[2]} ${sn[1]} · ${ROUTE_NAMES[route][1]}`}:{name:pre+hn[1]+sn[0]+'獸',en:`${epre}${hn[2]} ${sn[1]}`}}
+/* 自己養的幻獸：名字跟著屬性和手繪造型（狐、螈、鹿…），不會出現「水系卻叫焰○獸」 */
+const SPECIES={flame:['焰狐','Ember Fox'],tide:['潮螈','Tide Axolotl'],forest:['森鹿','Grove Fawn'],bird:['翼雀','Sky Finch'],earth:['岩角','Rockhorn'],metal:['鋼鱗','Steelscale'],elec:['雷猴','Volt Monkey']};
+function petSpecies(F){const G=F.genome||{},r=F.route||G.el,b=SPECIES[r];if(!b||F.classic)return;const lv=parseCode(F.code).lv,star=G.rarity===3?'星':'',es=G.rarity===3?'Star ':'';
+ F.name=star+(lv<0?b[0]+'寶':lv===2?'大'+b[0]:lv===3?'聖'+b[0]:b[0]+'獸');F.en=es+(lv<0?'Baby ':lv===2?'Great ':lv===3?'Ascended ':'')+b[1]}
 /* 同一個屬性一路長大：幼年＝屬性配色＋尾巴，少年＋頭冠，成年＋完整部位，高階＋翅膀與光芒 */
 function genomeForm(G,code='juv',classic=false){
  const{lv:lv0,route}=parseCode(code),lv=Math.max(0,lv0),asc=lv===3,grow=lv;
@@ -475,7 +481,7 @@ function petKey(id,code){return`${id}|${code||'juv'}`}
 function eggKey(id){return id==='classic'?'egg':'egg|'+id}
 function formOf(key){if(FORMS[key])return FORMS[key];if(FCACHE[key])return FCACHE[key];
  if(key.startsWith('egg|')){const G=genomeFromId(key.slice(4)),e=G.el?`${ROUTE_ICON[G.el]} ${EGG_EL[G.el]}之蛋`:'神秘的蛋';return FCACHE[key]={name:(G.rarity===3?'閃著金光的':G.rarity===2?'有點特別的':'')+e,stage:0,genome:G}}
- const[id,code,wild]=key.split('|'),F=genomeForm(genomeFromId(id),code||'juv',id==='classic');if(wild){F.wild=true;F.name=F.name.replace(/獸$/,'怪')}return FCACHE[key]=F}
+ const[id,code,wild]=key.split('|'),F=genomeForm(genomeFromId(id),code||'juv',id==='classic');if(wild){F.wild=true;F.name=F.name.replace(/獸$/,'怪')}else petSpecies(F);return FCACHE[key]=F}
 function eggColors(key){if(!key.startsWith('egg|'))return{shell:'#fff1d0',shellD:'#e5c08c',spot:'#5cc2b0',spotD:'#3a8c8a',hole:'#5cc2b0'};
  const G=genomeFromId(key.slice(4)),E=genomeForm(G,G.el?'juv-'+G.el:'juv').pal,eh=EL_HUE[G.el]||[G.hue,30];   // 蛋殼與斑點＝屬性顏色
  if(G.rarity===3)return{shell:'#fff3c0',shellD:'#e8c070',spot:E.b,spotD:E.d,hole:E.b};
@@ -631,7 +637,12 @@ function loadItems(){let left=ITEM_NAMES.length;for(const n of ITEM_NAMES){const
   if(ITEM_ICONS.has(n))ICV[n]=c;else DSPR[n]=c;if(n==='core')ICV.coreRot=tintCanvas(c,'rgba(90,70,20,.55)');if(n==='bone')ICV.boneRot=tintCanvas(c,'rgba(90,80,30,.5)');if(n==='toy_ball')toyCv=null;done()};
  im.onerror=done;im.src=`sprites/items/${n}.png`}
  function done(){if(--left)return;document.querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));if(typeof renderFoodBar==='function')renderFoodBar()}}
-function paintIcon(cv,name){const src=ICV[name];if(!src)return;const sc=+(cv.dataset.s||3);cv.width=src.width;cv.height=src.height;
+/* 新版介面圖示（sprites/ui，高解析度）：愛心、閃電、月亮、星星 */
+const UI_OVR={heart:'heart',bolt:'bolt',moon:'moon',star:'star'},UIIMG={};
+for(const k in UI_OVR){const im=new Image();im.onload=()=>{UIIMG[k]=im;document.querySelectorAll(`canvas.picon[data-icon="${k}"]`).forEach(c=>paintIcon(c,k))};im.src=`sprites/ui/${UI_OVR[k]}.png`}
+function paintIcon(cv,name){const hi=UIIMG[name];if(hi){const sc=+(cv.dataset.s||3),base=ICV[name]?Math.max(ICV[name].width,ICV[name].height):12,sz=Math.round(base*sc*1.15);
+  cv.width=96;cv.height=96;cv.classList.add('hi');cv.style.width=sz+'px';cv.style.height=sz+'px';const c=cv.getContext('2d');c.imageSmoothingEnabled=true;c.clearRect(0,0,96,96);c.drawImage(hi,0,0,96,96);return}
+ cv.classList.remove('hi');const src=ICV[name];if(!src)return;const sc=+(cv.dataset.s||3);cv.width=src.width;cv.height=src.height;
  cv.style.width=src.width*sc+'px';cv.style.height=src.height*sc+'px';const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);c.drawImage(src,0,0)}
 
 /* =========================================================
@@ -1114,11 +1125,58 @@ function closeModal(){$('modal').classList.add('hidden');$('sheet').innerHTML=''
 $('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
 function confirmBox(title,text,okText,fn,cls='pri'){openModal(title,`<p>${text}</p>`,[{t:'取消'},{t:okText,cls,fn}])}
 
+/* ---------------- 性格測驗：決定拿到哪一屬性的蛋 ----------------
+   每個選項替一個屬性加分；各屬性出現次數不同，所以先換算成比例。最高分 70%、第二高 20%、其他 10%（保留隨機感） */
+const QUIZ=[
+ ['難得放假一天，你會？',[['去挑戰刺激的戶外活動','flame'],['約家人朋友一起吃飯','tide'],['去公園曬太陽、散步','forest'],['來一趟說走就走的旅行','bird']]],
+ ['突然多了一筆 2 萬元？',[['存起來或拿去投資','metal'],['請大家吃大餐','tide'],['買最新的潮流產品','elec'],['拿去旅行，自己享受花掉','bird']]],
+ ['朋友最常怎麼形容你？',[['熱血','flame'],['可靠','earth'],['點子王','elec'],['溫柔','forest']]],
+ ['遇到困難時，你會？',[['直接衝了再說','flame'],['一步一步慢慢解決','earth'],['上網找最快的方法','elec'],['先找信任的人聊聊','tide']]],
+ ['最喜歡的天氣？',[['大太陽','flame'],['陰天','tide'],['微風','bird'],['雷陣雨','elec']]],
+ ['理想的家在哪裡？',[['有公園花草的地方','forest'],['山上，空氣好','earth'],['海邊或溪流旁','tide'],['方便的市中心','metal']]],
+ ['你覺得什麼最重要？',[['夢想','bird'],['家人','forest'],['健康','earth'],['財富','metal']]],
+ ['心裡有重擔時，你最常？',[['禱告，把重擔交託給神','forest'],['去運動流汗發洩','flame'],['寫下來，整理思緒','elec'],['找弟兄姊妹聊聊','tide']]],
+ ['在聚會、團契裡，你通常是？',[['帶動氣氛的人','flame'],['默默服事、準備場地的人','earth'],['關心每個人近況的人','tide'],['負責音控投影、出新點子的人','elec']]],
+ ['最打動你的信仰主題？',[['有勇氣跨出去','flame'],['愛與饒恕','tide'],['安息與平安','forest'],['做忠心又有智慧的管家','metal']]],
+ ['你的運動習慣？',[['重訓、挑戰極限','flame'],['每天固定散步、慢跑','earth'],['沒什麼在運動，每天走路就好累','tide'],['登山或騎車','bird']]],
+ ['開始一個新訓練前，你會？',[['看影片研究課表','elec'],['直接開練','flame'],['有流汗就好','tide'],['跟朋友一起才好','metal']]],
+ ['你的飲食習慣？',[['精算熱量和蛋白質','metal'],['想吃什麼就吃，越辣越好','flame'],['多蔬果、原型食物','forest'],['三餐準時、規律','earth']]],
+ ['宵夜時間你會？',[['跟朋友揪團','tide'],['喝杯熱茶就好','forest'],['去吃最新的排隊美食','elec'],['不吃，明天早起','earth']]],
+ ['出任務時，你最想負責？',[['衝第一線','flame'],['規劃路線和戰術','elec'],['管後勤和預算','metal'],['偵察探路','bird']]]];
+const PERSONA={flame:['🔥 熱血行動家','想到就做、勇往直前，你的熱情會點燃身邊的人。和你最合的是火焰幻獸，牠也一樣停不下來！'],
+ tide:['💧 溫柔守護者','你重感情、懂得傾聽，大家都喜歡待在你身邊。水之幻獸會像你一樣溫柔地陪著你。'],
+ forest:['🌿 療癒園丁','你有耐心、心裡有平安，總能讓周圍慢慢長出好東西。森林幻獸會在你的照顧下好好長大。'],
+ bird:['🪽 自由冒險家','你好奇、愛探索，世界對你來說就是一張地圖。天空幻獸會陪你飛去更遠的地方。'],
+ earth:['🪨 踏實實踐家','一步一腳印、說到做到，是大家最可靠的後盾。大地幻獸和你一樣穩，每天多走一步就更強壯。'],
+ metal:['⚙️ 智慧管家','你懂得規劃、珍惜資源、目標明確。鋼鐵幻獸和你一樣，亮晶晶的金幣最迷人了。'],
+ elec:['⚡ 靈感發電機','你反應快、點子多，總是走在潮流前面。雷電幻獸和你一樣，充滿電就停不下來！']};
+function quizResult(ans){const cnt={},sc={};for(const[,ops]of QUIZ)for(const[,e]of ops)cnt[e]=(cnt[e]||0)+1;
+ ans.forEach((a,i)=>{const e=QUIZ[i][1][a][1];sc[e]=(sc[e]||0)+1});
+ const rank=Object.keys(cnt).map(e=>[e,(sc[e]||0)/cnt[e]+Math.random()*1e-6]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+ const r=Math.random(),pick=r<.7?rank[0]:r<.9?rank[1]:rank[2+Math.floor(Math.random()*(rank.length-2))];return{top:rank[0],pick,rank}}
+function seedFor(el){for(let i=0;i<500;i++){const sd=crypto.getRandomValues(new Uint32Array(1))[0];if(PC.genomeOfSeed(sd).el===el)return sd}return null}
+function quizIntro(first){if(s.hatched||s.eggTaps>0)return;
+ openModal('🔮 性格小測驗',`<p>${esc(ownerName())}，回答 ${QUIZ.length} 個小問題，看看你是什麼性格、和哪一種幻獸最合拍！</p><p class="small">大約 2 分鐘。結果會決定你拿到哪一顆蛋（保留一點點隨機的驚喜）。</p>`,
+  [{t:first?'跳過，隨機一顆':'不用了'},{t:'開始測驗',cls:'pri',fn:()=>{setTimeout(()=>quizStep([]),50);return true}}])}
+function quizStep(ans){const i=ans.length;if(i>=QUIZ.length){quizDone(ans);return}const[q,ops]=QUIZ[i];
+ openModal(`🔮 ${i+1} / ${QUIZ.length}`,`<div class="xpbar" style="margin:2px 0 12px"><i style="width:${i/QUIZ.length*100}%"></i></div><p style="font-size:17px"><b>${q}</b></p>
+ <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">${ops.map(([txt],k)=>`<button class="btn" data-qa="${k}" style="text-align:left;padding:12px 14px">${txt}</button>`).join('')}</div>`,
+  i?[{t:'⬅ 上一題',fn:()=>{setTimeout(()=>quizStep(ans.slice(0,-1)),50);return true}}]:[{t:'離開',fn:()=>true}]);
+ document.querySelectorAll('[data-qa]').forEach(b=>b.onclick=()=>{sfx('tap');quizStep(ans.concat(+b.dataset.qa))})}
+function quizDone(ans){const R2=quizResult(ans),P=PERSONA[R2.top],sd=seedFor(R2.pick);
+ if(sd!==null&&!s.hatched&&s.eggTaps===0){s.seed=sd;s.genes=null;save();renderUI()}
+ PC.journal(s,Date.now(),`性格測驗：${P[0].replace(/^\S+ /,'')}`);save();
+ const surprise=R2.pick!==R2.top;
+ openModal('🔮 你的性格分析',`<p style="font-size:20px;text-align:center;margin:4px 0"><b>${P[0]}</b></p><p>${P[1]}</p>
+ ${surprise?`<p class="small">✨ 不過…命運給了你一點驚喜：這次來找你的是 <b>${ROUTE_ICON[R2.pick]} ${EGG_EL[R2.pick]}之蛋</b>！</p>`:''}
+ <div style="text-align:center;margin-top:10px"><canvas id="qEgg" width="48" height="48" style="width:120px;height:120px;image-rendering:pixelated"></canvas><div><b>${esc(formOf(formKey()).name)}</b></div></div>`,
+  [{t:'收下這顆蛋！',cls:'pri',fn:()=>{say('輕點蛋看看？',{log:false});return true}}]);
+ thumb($('qEgg'),formKey(),'egg00');sfx('level')}
 /* 主人名字：幻獸會用這個名字叫你 */
 function ownerDialog(first){
  openModal(first?'👋 歡迎來到幻獸日記！':'👤 主人名字',`<p>${first?'在遇見你的幻獸之前…':''}主人，請問要怎麼稱呼你？</p><input type="text" id="ownIn" maxlength="24" autocomplete="off" enterkeyhint="done" placeholder="例如：冠宏"><p class="small">最多 12 個字。幻獸會用這個名字叫你，之後可以在「⚙️ 選單」修改。</p><div class="err" id="ownErr"></div>`,
   [...(first?[]:[{t:'取消'}]),{t:'就這樣叫我',cls:'pri',fn:()=>{const n=chars($('ownIn').value.replace(/[<>&"]/g,'').trim()).slice(0,12).join('');if(!n){$('ownErr').textContent='名字不能是空白喔';return false}
-   s.owner=n;save();renderUI();say(s.hatched?`${n}！我記住了～`:`${n}，蛋好像動了一下！`,{log:false});return true}}]);
+   s.owner=n;save();renderUI();say(s.hatched?`${n}！我記住了～`:`${n}，蛋好像動了一下！`,{log:false});if(first&&!s.hatched&&s.eggTaps===0)setTimeout(()=>quizIntro(true),300);return true}}]);
  const inp=$('ownIn');inp.value=s.owner||'';inp.addEventListener('keydown',e=>{if(e.key==='Enter')document.querySelector('#mbtns .pri').click()});if(first)setTimeout(()=>inp.focus(),200)}
 function renameDialog(first){
  if(!s.hatched){say('先把蛋孵出來吧！');return}
@@ -1204,17 +1262,17 @@ function menuDialog(){
  const snd=()=>s.settings.sound?'🔊 音效：開':'🔇 音效：關',mo=()=>s.settings.reducedMotion?'🐢 減少動畫：開':'✨ 減少動畫：關';
  openModal('⚙️ 選單',`
 <div class="row" style="margin-top:0"><button class="btn" id="mHelp">❔ 遊戲說明</button><button class="btn" id="mJournal">📔 成長日記</button></div>
-<div class="row"><button class="btn" id="mOwner">👤 主人名字：${esc(ownerName())}</button></div>
+<div class="row"><button class="btn" id="mOwner">👤 主人名字：${esc(ownerName())}</button>${!s.hatched&&s.eggTaps===0?'<button class="btn" id="mQuiz">🔮 性格測驗選蛋</button>':''}</div>
 <div class="row"><button class="btn" id="mSound">${snd()}</button><button class="btn" id="mMotion">${mo()}</button></div>
 <div class="row"><button class="btn" id="mBasketM">🧺 蛋籃（${s.eggs.length}）</button><button class="btn" id="mSprite">🎞️ Sprite Sheet</button></div>
 <div class="row"><button class="btn" id="mUpdate">🔄 檢查更新</button></div>
 <div class="row"><button class="btn pri" id="mReset">🥚 迎接新的蛋（重新開始）</button></div>
 <p class="small" style="margin-top:12px">版本 V${VERSION}｜存檔位置：${standalone()?'主畫面 App':'瀏覽器'}（${location.host||'本機'}）${store.ok?'':'｜⚠️ 無法寫入'}</p>`);
- $('mOwner').onclick=()=>ownerDialog(false);$('mHelp').onclick=helpDialog;$('mJournal').onclick=journalDialog;$('mBasketM').onclick=basketDialog;$('mSprite').onclick=spriteDialog;
+ $('mOwner').onclick=()=>ownerDialog(false);if($('mQuiz'))$('mQuiz').onclick=()=>quizIntro(false);$('mHelp').onclick=helpDialog;$('mJournal').onclick=journalDialog;$('mBasketM').onclick=basketDialog;$('mSprite').onclick=spriteDialog;
  $('mSound').onclick=()=>{s.settings.sound=!s.settings.sound;save();unlockAudio();sfx('tap');$('mSound').textContent=snd()};
  $('mMotion').onclick=()=>{s.settings.reducedMotion=!s.settings.reducedMotion;save();renderUI();$('mMotion').textContent=mo()};
  $('mUpdate').onclick=async()=>{try{const r=await navigator.serviceWorker?.getRegistration();if(r){await r.update()}}catch(e){}toast('正在重新載入最新版本…');setTimeout(()=>location.reload(),600)};
- $('mReset').onclick=()=>confirmBox('🥚 迎接新的蛋？',`${!s.hatched?'目前的蛋會被換掉':PC.petCount(s)<PC.denCap(s)?'小窩還有空位：「'+esc(s.name)+'」會搬進小窩休息，隨時可以換回來':'小窩已經滿了：「'+esc(s.name)+'」會告別（永遠留在「📖 圖鑑」裡）。升級小窩就能讓更多夥伴住下來'}。金幣、食物、步數、冒險進度、日記都會保留。<br><br>建議先到「存檔」匯出存檔碼備份。`,'迎接新蛋',()=>newPet(null))}
+ $('mReset').onclick=()=>confirmBox('🥚 迎接新的蛋？',`${!s.hatched?'目前的蛋會被換掉':PC.petCount(s)<PC.denCap(s)?'小窩還有空位：「'+esc(s.name)+'」會搬進小窩休息，隨時可以換回來':'小窩已經滿了：「'+esc(s.name)+'」會告別（永遠留在「📖 圖鑑」裡）。升級小窩就能讓更多夥伴住下來'}。金幣、食物、步數、冒險進度、日記都會保留。<br><br>建議先到「存檔」匯出存檔碼備份。`,'迎接新蛋',()=>{newPet(null);setTimeout(()=>quizIntro(false),900)})}
 function denDialog(){const D=CONFIG.den,L=s.den.level,cur=D[L-1],next=D[L],cap=PC.denCap(s);
  const rows=s.roster.map((p,i)=>`<div class="eggrow"><canvas data-r="${i}" width="48" height="48"></canvas><div style="flex:1"><b>${esc(p.name)}${sexMark(p)}</b><div class="small">${STAGE_NAME[p.stage]}・XP ${p.xp}・在小窩休息中</div></div><div style="display:flex;flex-direction:column;gap:4px;flex:0 0 auto">${s.pair?'':`<button class="btn pri" data-out="${i}" style="min-width:84px">一起出來玩</button>`}<button class="btn" data-sw="${i}" style="min-width:84px">換牠出來</button></div></div>`).join('');
  const prow=s.pair?`<div class="eggrow"><canvas id="dPair" width="48" height="48"></canvas><div style="flex:1"><b>🐾 ${esc(s.pair.name)}${sexMark(s.pair)}</b><div class="small">${STAGE_NAME[s.pair.stage]}・XP ${s.pair.xp}・正在外面陪你（狀態變化速度減半）</div></div><button class="btn" id="dIn2" style="min-width:84px;flex:0 0 auto">回小窩休息</button></div>`:'';
@@ -1437,7 +1495,7 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
   if($('eatCandy'))$('eatCandy').onclick=()=>{const x0=s.xp,r=PC.useCandy(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}
    closeModal();playAnim('eat');sfx('eat');spawn('star',4,{y:66,life:1.1,stagger:.15});spawn('heart',3,{y:70,life:1.1});say(r.msg+(r.xp?`　經驗 +${r.xp}`:''));save();renderUI();afterChange(x0)}};
  openModal('🛒 商店',`<p>🪙 金幣 <b id="shopCoins">${s.coins}</b>　<span class="small">左邊選東西，右邊看說明。家具買了會自動擺進小窩。</span></p>
-<div class="shoptabs"><button class="btn" data-tab="decor">🛋️ 家具</button><button class="btn" data-tab="food">🍽️ 食物</button><button class="btn" data-tab="power">⚡ 能力水果</button><button class="btn" data-tab="tools">🧰 道具</button><button class="btn" data-tab="bag">🎒 背包</button></div><div id="shopBody"></div>`);
+<div class="shoptabs"><button class="btn" data-tab="decor"><img class="uic" src="sprites/ui/house.png" alt="">家具</button><button class="btn" data-tab="food"><img class="uic" src="sprites/ui/meat.png" alt="">食物</button><button class="btn" data-tab="power"><img class="uic" src="sprites/ui/gem.png" alt="">能力水果</button><button class="btn" data-tab="tools"><img class="uic" src="sprites/ui/chest.png" alt="">道具</button><button class="btn" data-tab="bag">🎒 背包</button></div><div id="shopBody"></div>`);
  document.querySelectorAll('.shoptabs .btn').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render()});render()}
 
 /* =========================================================
