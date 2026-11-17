@@ -37,6 +37,8 @@ const CONFIG = {
   bossStages: { volcano: 15, oldtree: 20, canyon: 25, skypeak: 30, thunder: 35, mine: 40 },
   newRoutes: { stepsForEarth: 100000, goalsForBird: 30, bondForElec: 5, cleanForMetal: 50, earthEvery: 2000 },
   breed: { cost: 20, cooldownH: 6, minMood: 50, basket: 6 },
+  loveNest: { cost: 300, cooldownH: 12, mood: 10 },          // 愛的小窩：買一次，成年期以上的一公一母可以進去生蛋
+  pair: { rate: .5, advMinEnergy: 20, foeHp: 1.5, xpShare: .6 },   // 第二隻一起出來：狀態變化速度減半；一起冒險時敵人血量 ×1.5、第二隻分到 6 成經驗
   farm: { plots: 3, maxPlots: 6, expand: [30, 60, 90], growHours: 2, fruitMin: 2, fruitMax: 3, freshHours: 6, rotHours: 24, xp: 5, forest: 3, seedPrice: 3 },   // 收成：蘋果、莓果各隨機 1～2 顆；田可以花錢擴建到 6 格     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
   goals: { perDay: 3, coins: [10, 20, 40], maxLv: 10, needPerLv: .2, rewardPerLv: .2 },   // 每天 ★／★★／★★★ 三個；每天 3 個都完成，任務等級 +1（更難、獎勵更好）
   candy: { price: 12, mood: 20, hunger: 10, xp: 3 },
@@ -163,6 +165,7 @@ function breedGenome(A, B, r = Math.random) {
 }
 const GCACHE = {};
 function genomeOfSeed(seed) { return GCACHE[seed] || (GCACHE[seed] = makeGenome(seed)); }
+function sexOfId(id) { let h = 2166136261; for (const c of String(id)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return h % 2 ? 'm' : 'f'; }
 function gidOf(st) { return st.genes ? 'x:' + st.genes : (st.seed === null || st.seed === undefined ? 'classic' : 'g:' + st.seed); }
 function genomeFromId(id) {
   if (id === 'classic') return CLASSIC_G;
@@ -185,7 +188,7 @@ function formCode(stage, route) {
 function newSeed() { try { return (globalThis.crypto || require('crypto').webcrypto).getRandomValues(new Uint32Array(1))[0]; } catch (e) { return Math.floor(Math.random() * 4294967295); } }
 function fresh(now = Date.now()) {
   const S = CONFIG.start;
-  return { v: 7, rev: 0, seed: newSeed(), genes: null, name: '小露', hatched: false, eggTaps: 0, stage: 'egg', route: null,
+  return { v: 7, rev: 0, seed: newSeed(), genes: null, sex: null, name: '小露', hatched: false, eggTaps: 0, stage: 'egg', route: null,
     xp: 0, coins: S.coins, hunger: S.hunger, mood: S.mood, clean: S.clean, energy: S.energy, bond: 0, sleeping: false,
     path: { flame: 0, tide: 0, forest: 0, earth: 0, bird: 0, elec: 0, metal: 0 }, bondUses: 0, cleanups: 0,
     care: { petLastRewardAt: 0, bathLastAt: 0, playXpAt: [], gatherAt: 0 },
@@ -193,7 +196,7 @@ function fresh(now = Date.now()) {
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] }, goalLv: 0,
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
-    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [],
+    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0,
     events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
@@ -213,6 +216,7 @@ function sanitize(o, now = Date.now()) {
   r.seed = Number.isInteger(sd) && sd >= 0 && sd <= 4294967295 ? sd : (r.hatched ? null : r.seed);
   r.genes = typeof o.genes === 'string' && decodeGenome(o.genes) ? o.genes : null;
   if (typeof o.name === 'string') { const n = chars(o.name.trim()).slice(0, 10).join(''); if (n) r.name = n; }
+  r.sex = o.sex === 'm' || o.sex === 'f' ? o.sex : sexOfId(gidOf(r));   // 性別：舊存檔用基因決定（每隻固定）
   r.eggTaps = int(o.eggTaps, 0, 0, 4);
   // 經驗值：V1.x 是「目前等級內的 XP」，V1.6 起改為累積總 XP
   if (legacy) { const lv = int(o.level, 1, 1, 99); let tot = int(o.xp, 0, 0, 1e7); for (let l = 1; l < lv; l++) tot += l * 50; r.xp = tot; }
@@ -252,6 +256,10 @@ function sanitize(o, now = Date.now()) {
   const bl = o.ball && typeof o.ball === 'object' ? o.ball : {}; r.ball = { best: int(bl.best, 0, 0, 99), goals: int(bl.goals, 0, 0, 1e7) };
   r.den = { level: int(o.den && o.den.level, 1, 1, CONFIG.den.length) };
   r.roster = Array.isArray(o.roster) ? o.roster.filter(p => p && typeof p === 'object' && p.hatched).slice(0, CONFIG.den.length - 1).map(p => sanitizePet(p, now)) : [];
+  r.pair = o.pair && typeof o.pair === 'object' && o.pair.hatched && r.hatched ? sanitizePet(o.pair, now) : null;
+  if (r.pair && r.roster.length > CONFIG.den.length - 2) r.roster.length = CONFIG.den.length - 2;
+  r.owner = typeof o.owner === 'string' ? o.owner.replace(/[<>&"]/g, '').trim().slice(0, 12) : '';
+  r.loveNest = o.loveNest === true; r.loveAt = num(o.loveAt, 0, 0, 9e15);
   r.harvests = int(o.harvests, 0, 0, 1e7); r.bondUses = int(o.bondUses, 0, 0, 1e7); r.cleanups = int(o.cleanups, 0, 0, 1e7);
   if (Array.isArray(o.plots)) r.plots = Array.from({ length: Math.max(CONFIG.farm.plots, Math.min(CONFIG.farm.maxPlots, o.plots.length)) }, (_, i) => ({ at: num(o.plots[i] && o.plots[i].at, 0, 0, 9e15), k: o.plots[i] && o.plots[i].k === 'berry' ? 'berry' : 'food' }));
   const gl = o.goals && typeof o.goals === 'object' ? o.goals : {};
@@ -306,8 +314,16 @@ function applyTime(st, now = Date.now()) {
     if (st.hunger > 0) st.starveSince = 0;
     if (st.starveSince && !st.runaway && now - st.starveSince >= CONFIG.runaway.starveHours * H) { st.runaway = { at: now, got: 0 }; st.sleeping = false; journal(st, now, '肚子太餓，離家出走了…'); events.push('runaway'); }
     const N = CONFIG.neglect; if (Math.min(st.hunger, st.mood, st.clean) < N.below) st.bond = clamp(st.bond - N.bondPerHour * eff);   // 沒照顧好，親密度會掉
+    if (st.pair) decayPair(st, eff);
   }
   return { hours, eff, warn: hours > CONFIG.jumpWarnDays * 24 ? 'jump' : null, events };
+}
+/* 一起出來的第二隻：狀態變化速度只有一半（不會離家出走，餓到 0 只會心情、親密度往下掉） */
+function decayPair(st, eff) {
+  const p = st.pair, R = CONFIG.rates[st.sleeping ? 'sleep' : 'awake'], T = traitOf(p.route), k = eff * CONFIG.pair.rate;
+  for (const key in R) { let v = R[key]; if (v < 0 && T.rate && T.rate[key]) v *= T.rate[key]; if (key === 'energy' && v > 0 && T.energyUp) v *= T.energyUp; p[key] = clamp(p[key] + v * k); }
+  const N = CONFIG.neglect; if (Math.min(p.hunger, p.mood, p.clean) < N.below) p.bond = clamp(p.bond - N.bondPerHour * k);
+  if (p.hunger <= 0) p.mood = clamp(p.mood - 2 * k);
 }
 /* 消化：時間到了就大便；有寵物馬桶就自己去上廁所 */
 function digest(st, now) {
@@ -470,6 +486,7 @@ function tendencyHint(st) {
 /* ---------------- 孵化 ---------------- */
 function hatch(st, now = Date.now()) {
   st.hatched = true; st.eggTaps = 0; st.hatchedAt = now; st.lastTick = now; st.stage = 'baby';
+  if (st.sex !== 'm' && st.sex !== 'f') st.sex = sexOfId(gidOf(st));
   st.route = genomeFromId(gidOf(st)).el || 'tide';   // V1.12：屬性在蛋裡就決定，一路長到高階
   const id = gidOf(st); if (!st.dex.find(x => x.id === id)) st.dex.push({ id, route: st.route, stage: 'baby', petName: st.name, at: now });
   journal(st, now, '孵化了！');
@@ -705,11 +722,11 @@ function finishBallGame(st, score, now = Date.now()) {
 }
 
 /* ---------------- 小窩：升級、讓多隻寵物住進來 ---------------- */
-const PET_FIELDS = ['seed', 'genes', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
+const PET_FIELDS = ['seed', 'genes', 'sex', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
 function snapshotPet(st) { const p = {}; for (const k of PET_FIELDS) p[k] = JSON.parse(JSON.stringify(st[k])); p.sleeping = false; return p; }
-function sanitizePet(p, now = Date.now()) { const r = sanitize(Object.assign({ v: 6 }, p, { roster: [], dex: [] }), now); return snapshotPet(r); }
+function sanitizePet(p, now = Date.now()) { const r = sanitize(Object.assign({ v: 6 }, p, { roster: [], dex: [], pair: null }), now); return snapshotPet(r); }
 const denCap = st => CONFIG.den[st.den.level - 1].cap;
-const petCount = st => (st.hatched ? 1 : 0) + st.roster.length;
+const petCount = st => (st.hatched ? 1 : 0) + (st.pair ? 1 : 0) + st.roster.length;
 function upgradeDen(st) {
   const next = CONFIG.den[st.den.level]; if (!next) return { ok: false, msg: '已經是最大的小窩了' };
   if (st.coins < next.cost) return { ok: false, msg: `金幣不足（需要 ${next.cost}）` };
@@ -724,6 +741,62 @@ function swapPet(st, i, now = Date.now()) {
   Object.assign(st, JSON.parse(JSON.stringify(p))); st.sleeping = false; st.lastTick = now; st.eggTaps = 0;   // 在小窩休息時數值不變
   st.roster.splice(i, 1); if (out) st.roster.push(out);
   return { ok: true, msg: `${st.name} 出來陪你了！` };
+}
+
+/* ---------------- 兩隻一起出來 ---------------- */
+function bringOut(st, i, now = Date.now()) {
+  const p = st.roster[i]; if (!p) return { ok: false, msg: '小窩裡沒有這隻' };
+  if (!st.hatched) return { ok: false, msg: '先孵化現在的蛋' };
+  if (st.pair) return { ok: false, msg: `已經有 ${st.pair.name} 陪著了（最多兩隻一起出來）` };
+  applyTime(st, now); st.pair = JSON.parse(JSON.stringify(p)); st.roster.splice(i, 1);
+  return { ok: true, msg: `${st.pair.name} 也出來一起玩了！` };
+}
+function sendIn(st, now = Date.now()) {
+  if (!st.pair) return { ok: false, msg: '沒有第二隻在外面' };
+  applyTime(st, now); const p = st.pair; st.pair = null; st.roster.push(p);
+  return { ok: true, msg: `${p.name} 回小窩休息了` };
+}
+/* 換照顧另一隻：兩隻的資料互換（睡覺狀態、時間不變） */
+function switchPair(st, now = Date.now()) {
+  if (!st.pair || !st.hatched) return { ok: false, msg: '只有一隻在外面' };
+  if (st.runaway) return { ok: false, msg: '牠離家出走了，先把牠找回來吧' };
+  applyTime(st, now); const sl = st.sleeping, a = snapshotPet(st), b = st.pair;
+  Object.assign(st, JSON.parse(JSON.stringify(b))); st.pair = a; st.sleeping = sl;
+  return { ok: true, msg: `現在照顧 ${st.name}` };
+}
+/* 一起冒險：第二隻也要有體力；出發時一樣消耗 */
+function pairCanJoin(st) { const p = st.pair; return !!(p && p.hatched && p.energy >= CONFIG.pair.advMinEnergy); }
+function pairAdventureCost(st) { if (!pairCanJoin(st)) return false; const A = CONFIG.adventure, p = st.pair; p.energy = clamp(p.energy + A.energy); p.hunger = clamp(p.hunger + A.hunger); p.clean = clamp(p.clean + A.clean); return true; }
+function pairGain(st, xp, result) { const p = st.pair; if (!p) return 0; const n = Math.max(0, Math.round(xp * CONFIG.pair.xpShare * (traitOf(p.route).xp || 1))); p.xp += n;
+  if (result === 'win' || result === 'loss') p.mood = clamp(p.mood + (result === 'win' ? CONFIG.adventure.winMood : CONFIG.adventure.lossMood)); return n; }
+function pairStages(st, now = Date.now()) {   // 第二隻也會長大：暫時換成主角檢查一次
+  if (!st.pair) return []; const sl = st.sleeping, a = snapshotPet(st), b = st.pair; Object.assign(st, JSON.parse(JSON.stringify(b)));
+  const out = checkStages(st, now).map(e => Object.assign(e, { name: st.name })); const nb = snapshotPet(st); Object.assign(st, a); st.pair = nb; st.sleeping = sl; return out;
+}
+
+/* ---------------- 愛的小窩：自己的一公一母成年幻獸生蛋 ---------------- */
+function buyLoveNest(st) { const C = CONFIG.loveNest; if (st.loveNest) return { ok: false, msg: '已經有愛的小窩了' }; if (st.coins < C.cost) return { ok: false, msg: `金幣不足（需要 ${C.cost}）` }; st.coins -= C.cost; st.loveNest = true; return { ok: true, msg: '蓋好愛的小窩了！💕' }; }
+const isAdult = p => p && (p.stage === 'adult' || p.stage === 'ascended');
+function lovePartners(st) { const out = []; if (st.pair) out.push({ ref: 'pair', p: st.pair }); st.roster.forEach((p, i) => out.push({ ref: i, p })); return out.filter(x => isAdult(x.p) && x.p.sex !== st.sex); }
+function canLove(st, ref, now = Date.now()) {
+  const C = CONFIG.loveNest, B = CONFIG.breed;
+  if (!st.loveNest) return `要先花 ${C.cost} 金幣蓋「愛的小窩」`;
+  if (!isAdult(st)) return `${st.name} 要先長到成年期`;
+  const p = ref === 'pair' ? st.pair : st.roster[ref]; if (!p) return '找不到這隻';
+  if (!isAdult(p)) return `${p.name} 還沒長到成年期`;
+  if (p.sex === st.sex) return '要一公一母才能生蛋喔';
+  if (now < st.loveAt + C.cooldownH * H) return `⏳ 還要 ${Math.ceil((st.loveAt + C.cooldownH * H - now) / MIN)} 分鐘，牠們才想再進愛的小窩`;
+  if (st.mood < B.minMood) return `${st.name} 的心情要 ${B.minMood}% 以上`;
+  if (st.eggs.length >= B.basket) return `蛋籃滿了（最多 ${B.basket} 顆）`;
+  return null;
+}
+function love(st, ref, now = Date.now(), r = Math.random) {
+  applyTime(st, now); const why = canLove(st, ref, now); if (why) return { ok: false, msg: why };
+  const p = ref === 'pair' ? st.pair : st.roster[ref], G = breedGenome(genomeFromId(gidOf(st)), genomeFromId(gidOf(p)), r);
+  st.loveAt = now; st.mood = clamp(st.mood + CONFIG.loveNest.mood); p.mood = clamp(p.mood + CONFIG.loveNest.mood);
+  const egg = { id: 'x:' + encodeGenome(G), from: `${st.name} ♥ ${p.name}`, at: now }; st.eggs.push(egg);
+  journal(st, now, `和 ${p.name} 在愛的小窩裡生了一顆蛋 💕`);
+  return { ok: true, egg, G, partner: p.name };
 }
 
 /* ---------------- 每日小目標（GDD 第 5 節：3 個任選，不強迫全清） ---------------- */
@@ -809,7 +882,7 @@ const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
-  canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

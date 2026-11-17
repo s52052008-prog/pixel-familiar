@@ -311,6 +311,13 @@ t('冒險區域：21~40 關分別以土、鳥、電、金為主；Boss 關觸發
   assert.ok(count(21, 'earth') >= 2); assert.ok(count(26, 'bird') >= 2); assert.ok(count(31, 'elec') >= 2); assert.ok(count(36, 'metal') >= 2);
   const s = hatched(); s.adv.stage = 30; s.energy = 100; C.claimDaily(s, T0); const st = C.startAdventure(s, 30, T0); const r = C.finishAdventure(s, 30, 'win', st.full, T0, () => .99); assert.ok(r.events.includes('skypeak'));
 });
+t('兩隻一起：帶出來、換照顧、第二隻狀態減半、回小窩', () => { const s = hatched(); s.den.level = 2; s.roster.push(C.snapshotPet(Object.assign(hatched(), { name: '小火' }))); const r = C.bringOut(s, 0, T0); assert.ok(r.ok); assert.equal(s.pair.name, '小火'); assert.equal(s.roster.length, 0); assert.equal(C.petCount(s), 2);
+  s.hunger = 80; s.pair.hunger = 80; s.lastTick = T0; C.applyTime(s, T0 + 4 * 3600e3); const dMain = 80 - s.hunger, dPair = 80 - s.pair.hunger; assert.ok(Math.abs(dPair - dMain / 2) < 0.6, dMain + ' ' + dPair);
+  const nm = s.name; assert.ok(C.switchPair(s, T0 + 4 * 3600e3).ok); assert.equal(s.name, '小火'); assert.equal(s.pair.name, nm); assert.ok(C.sendIn(s, T0 + 4 * 3600e3).ok); assert.equal(s.pair, null); assert.equal(s.roster.length, 1); });
+t('存檔：pair、主人名字、性別、愛的小窩都會保留', () => { const s = hatched(); s.owner = '冠宏<b>'; s.pair = C.snapshotPet(Object.assign(hatched(), { name: '小火' })); s.loveNest = true; const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(r.owner, '冠宏b'); assert.equal(r.pair.name, '小火'); assert.ok(['m', 'f'].includes(r.sex)); assert.ok(['m', 'f'].includes(r.pair.sex)); assert.equal(r.loveNest, true); });
+t('愛的小窩：要買、要成年、要一公一母，生出一顆蛋', () => { const s = hatched(); s.stage = 'adult'; s.sex = 'm'; s.mood = 80; s.coins = 500; const p = C.snapshotPet(Object.assign(hatched(), { name: '小花', stage: 'adult', sex: 'f' })); s.pair = p;
+  assert.match(C.canLove(s, 'pair', T0), /愛的小窩/); assert.ok(C.buyLoveNest(s).ok); assert.equal(s.coins, 200); s.pair.sex = 'm'; assert.match(C.canLove(s, 'pair', T0), /一公一母/); s.pair.sex = 'f';
+  s.pair.stage = 'teen'; assert.match(C.canLove(s, 'pair', T0), /成年/); s.pair.stage = 'adult'; s.lastTick = T0; const r = C.love(s, 'pair', T0); assert.ok(r.ok, r.msg); assert.equal(s.eggs.length, 1); assert.match(C.canLove(s, 'pair', T0 + 1000), /分鐘/); assert.equal(C.lovePartners(s).length, 1); });
 t('舊存檔沒有新路線欄位也能正常讀取', () => { const r = C.sanitize({ v: 7, hatched: true, path: { flame: 3, tide: 2, forest: 1 } }, T0); assert.equal(r.path.earth, 0); assert.equal(r.path.metal, 0); assert.equal(r.events.mine, false); });
 
 console.log(`\n${pass}/${pass + fail} passed`);
