@@ -58,7 +58,7 @@ h1{margin:0;font-size:20px;letter-spacing:1px;white-space:nowrap}
 .act.on{background:#a9c6f0;box-shadow:inset 0 -5px 0 #5f82b8,inset 0 3px 0 #e4efff}
 canvas.picon{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 canvas.picon.hi{image-rendering:auto}
-img.uic{width:22px;height:22px;vertical-align:-6px;margin-right:5px;display:inline-block}.tool img.uic{width:24px;height:24px}.shoptabs img.uic{width:18px;height:18px;vertical-align:-4px;margin-right:3px}
+img.uic{width:21px;height:21px;vertical-align:-5px;margin-right:5px;display:inline-block;image-rendering:pixelated;image-rendering:crisp-edges}.tool img.uic{width:28px;height:28px;vertical-align:-8px}.shoptabs img.uic{width:21px;height:21px;vertical-align:-5px;margin-right:3px}
 .panel{background:var(--panel);border:2px solid var(--line);box-shadow:inset 0 0 0 2px var(--hi);padding:9px 11px;font-size:13px}
 .xph{display:flex;justify-content:space-between;font-weight:700}
 .xpbar{height:10px;background:#0a1020;margin-top:6px}
@@ -186,7 +186,7 @@ body.rm *{transition:none!important;animation:none!important}
   <button class="act" data-act="sleep" id="sleepBtn"><canvas class="picon" data-icon="moon" id="sleepIcon"></canvas><span id="sleepLabel">睡覺</span></button>
  </div>
  <section class="panel">
-  <div class="xph"><span><img class="uic" src="sprites/ui/star.png" alt="" style="width:18px;height:18px;vertical-align:-3px">成長經驗</span><span id="xptext"></span></div>
+  <div class="xph"><span><img class="uic" src="sprites/ui/star.png" alt="">成長經驗</span><span id="xptext"></span></div>
   <div class="xpbar"><i id="xpbar"></i></div>
   <p id="log">照顧幻獸，陪伴牠成長！</p>
   <div class="small" id="stepInfo"></div>
@@ -233,7 +233,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.31.0';
+const VERSION='1.31.1';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -639,10 +639,8 @@ function loadItems(){let left=ITEM_NAMES.length;for(const n of ITEM_NAMES){const
  function done(){if(--left)return;document.querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));if(typeof renderFoodBar==='function')renderFoodBar()}}
 /* 新版介面圖示（sprites/ui，高解析度）：愛心、閃電、月亮、星星 */
 const UI_OVR={heart:'heart',bolt:'bolt',moon:'moon',star:'star'},UIIMG={};
-for(const k in UI_OVR){const im=new Image();im.onload=()=>{UIIMG[k]=im;document.querySelectorAll(`canvas.picon[data-icon="${k}"]`).forEach(c=>paintIcon(c,k))};im.src=`sprites/ui/${UI_OVR[k]}.png`}
-function paintIcon(cv,name){const hi=UIIMG[name];if(hi){const sc=+(cv.dataset.s||3),base=ICV[name]?Math.max(ICV[name].width,ICV[name].height):12,sz=Math.round(base*sc*1.15);
-  cv.width=96;cv.height=96;cv.classList.add('hi');cv.style.width=sz+'px';cv.style.height=sz+'px';const c=cv.getContext('2d');c.imageSmoothingEnabled=true;c.clearRect(0,0,96,96);c.drawImage(hi,0,0,96,96);return}
- cv.classList.remove('hi');const src=ICV[name];if(!src)return;const sc=+(cv.dataset.s||3);cv.width=src.width;cv.height=src.height;
+for(const k in UI_OVR){const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);UIIMG[k]=c;document.querySelectorAll(`canvas.picon[data-icon="${k}"]`).forEach(c=>paintIcon(c,k))};im.src=`sprites/ui/${UI_OVR[k]}.png`}
+function paintIcon(cv,name){const src=UIIMG[name]||ICV[name];if(!src)return;const sc0=+(cv.dataset.s||3),sc=UIIMG[name]&&sc0>2?2:sc0;cv.width=src.width;cv.height=src.height;
  cv.style.width=src.width*sc+'px';cv.style.height=src.height*sc+'px';const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);c.drawImage(src,0,0)}
 
 /* =========================================================
