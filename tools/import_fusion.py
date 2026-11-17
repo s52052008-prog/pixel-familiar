@@ -130,6 +130,12 @@ def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esi
             if mouth:   # 小小的 ω 嘴（清殘影時會被一起清掉，補回來）
                 for im in ims:
                     for dx, dy in ((0, 0), (1, 1), (2, 1), (3, 0)): im[mouth[1] + dy, mouth[0] + dx] = (70, 30, 20, 255)
+        for mr in [q for q in MIR if q[0] == st]:   # --mir：在 48 格上精準鏡像（x → 軸2 − x），睜眼閉眼都套，兩眼一模一樣大
+            _, mx0, mx1, my0, my1, ax2 = mr
+            for im in ims:
+                src = im.copy()
+                for yy in range(my0, my1 + 1):
+                    for xx in range(mx0, mx1 + 1): im[yy, ax2 - xx] = src[yy, xx]
         for kind, im in zip(('open', 'closed'), ims): Image.fromarray(im, 'RGBA').save(os.path.join(out, f'{name}_{st}_{kind}.png'))
         res.append(ims)
     S = 4; pv = Image.new('RGBA', (4 * (CELL * S * 2 + 20), CELL * S * 2 + 30), (70, 110, 70, 255))
@@ -140,6 +146,8 @@ def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esi
         for r in range(2): pv.alpha_composite(Image.fromarray(res[c][r], 'RGBA').resize((CELL * S, CELL * S), Image.NEAREST), (X + CELL * S, r * (CELL * S + 30)))
     pv.save(os.path.join(ROOT, 'art', f'preview-fusion-{name}.png'))
 
+
+MIR = [[int(v) for v in x[6:].replace(':', ',').split(',')] for x in sys.argv[1:] if x.startswith('--mir=')]   # --mir=階段:x0,x1,y0,y1,軸2（可重複）
 
 if __name__ == '__main__':
     opt = lambda k: next((x[len(k) + 3:] for x in sys.argv[1:] if x.startswith('--' + k + '=')), None)
