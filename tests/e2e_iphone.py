@@ -132,7 +132,7 @@ async def main():
         await p.evaluate("(()=>{const s=PF.state;s.plots[0].at=Date.now()-2*3600000-1000;PF.debug.set({})})()"); await p.wait_for_timeout(600)
         await p.screenshot(path=f'{OUT}/09b_ripe_in_scene.png')
         x0 = (await st(p))['xp']; await p.click('#bFarm'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/09c_farm_ripe.png'); await p.click('[data-pa="0"]'); await p.wait_for_timeout(300)
-        s = await st(p); ok('2 小時後收成：蘋果、莓果各 1～2 顆、XP +5、收成次數 1', 2 <= s['inv']['food'] <= 3 and 1 <= s['inv']['berry'] <= 2 and s['xp'] == x0 + 5 and s['harvests'] == 1, (s['inv'], s['xp'] - x0)); await closeall(p)
+        s = await st(p); ok('2 小時後收成：紅＝蘋果或紫＝莓果 2～3 顆、XP +5、收成次數 1', (s['inv']['food'] - 1) + s['inv'].get('berry', 0) in (2, 3) and s['xp'] == x0 + 5 and s['harvests'] == 1, (s['inv'], s['xp'] - x0)); await closeall(p)
         # ---------- 每日小目標 ----------
         await p.click('#bGoals'); await p.wait_for_timeout(300); s = await st(p)
         ok('每日 3 個小目標', len(s['goals']['list']) == 3)
@@ -155,7 +155,9 @@ async def main():
         s = await st(p); ok('吃星星糖：心情 +20', s['inv']['candy'] == 0 and round(s['mood']) >= 69, round(s['mood']))
         ok('買完家具後切到室內', s['view'] == 'room'); await p.screenshot(path=f'{OUT}/09f_room.png')
         await p.click('#viewBtn'); await p.wait_for_timeout(400); ok('切換回戶外', (await st(p))['view'] == 'yard')
-        await tap(p, 20, 56); await p.wait_for_timeout(400); await p.click('#dIn'); await p.wait_for_timeout(400); ok('點小窩 →「進入小窩」', (await st(p))['view'] == 'room')
+        ok('戶外沒有「進窩」按鈕', not await p.is_visible('#viewBtn'))
+        await tap(p, 20, 56); await p.wait_for_timeout(200); ok('點一下小窩：提示點兩下', (await st(p))['view'] == 'yard')
+        await tap(p, 20, 56); await p.wait_for_timeout(150); await tap(p, 20, 56); await p.wait_for_timeout(500); ok('點兩下小窩 → 進入小窩', (await st(p))['view'] == 'room')
         # ---------- 大便、馬桶、回窩睡覺 ----------
         await p.evaluate("PF.debug.set({view:'yard',sleeping:false})"); await p.wait_for_timeout(300)
         await p.evaluate("(()=>{PF.state.digest=[Date.now()-1000];PF.debug.set({})})()"); await p.wait_for_timeout(1500)
@@ -165,7 +167,7 @@ async def main():
         await p.evaluate("PF.debug.set({coins:300})"); await p.click('#bShop'); await p.wait_for_timeout(300); await p.click('[data-dz="toilet_pot"]'); await p.wait_for_timeout(200); await closeall(p)
         await p.evaluate("(()=>{PF.state.digest=[Date.now()-1000];PF.debug.set({})})()"); await p.wait_for_timeout(1500); s = await st(p)
         ok('有寵物馬桶：自己上廁所、地上沒有大便', s['toiletUses'] == 1 and not [c for c in s['cores'] if c['k'] == 'poop'])
-        await p.evaluate("PF.debug.set({view:'yard',energy:40})"); await p.click('#viewBtn'); await p.wait_for_timeout(200); await p.click('#viewBtn'); await p.wait_for_timeout(200)
+        await p.evaluate("PF.debug.set({view:'yard',energy:40})"); await p.wait_for_timeout(200)
         await p.evaluate("PF.debug.set({view:'yard'})"); await p.wait_for_timeout(300); await p.click('[data-act=sleep]')
         for _ in range(40):
             if await p.evaluate("PF.state.sleeping"): break
@@ -212,7 +214,7 @@ async def main():
             for _ in range(60):
                 if await p.evaluate("!PF.B.busy||PF.B.over"): break
                 await p.wait_for_timeout(150)
-            s = await st(p); ok('羈絆之力花 10 金幣買加油棒、之後要休息 2 小時', c0 - s['coins'] == 10 and s['bondRestUntil'] > 0, (c0, s['coins']))
+            s = await st(p); ok('羈絆之力花 10 金幣買加油棒、之後要休息 2 小時', (c0 - s['coins'] == 10 or await p.evaluate('PF.B.over')) and s['bondRestUntil'] > 0, (c0, s['coins']))   # 一擊打倒就會先拿到獎金
             ok('羈絆之力：連打造成大傷害、每場只能一次', await p.evaluate("PF.B.bondUsed") and f0 - await p.evaluate("PF.B.foe.hp") > 30)
         for _ in range(60):
             if await p.is_visible('#bDone'): break
@@ -232,8 +234,8 @@ async def main():
         await p.click('#bMate'); await p.fill('#mIn', fcode); await p.click('#mGo'); await p.wait_for_timeout(200)
         ok('配對冷卻 6 小時', '⏳' in await p.inner_text('#mErr')); await closeall(p)
         # ---------- 小窩 ----------
-        await p.evaluate("PF.debug.set({view:'yard',coins:500})"); await p.wait_for_timeout(500)
-        await p.mouse.click(*await scene_xy(p, 22, 56)); await p.wait_for_timeout(300); ok('點小窩打開小窩畫面', '小窩' in await p.inner_text('#sheet'))
+        await p.evaluate("PF.debug.set({view:'room',coins:500})"); await p.wait_for_timeout(500)
+        await p.click('#denBtn'); await p.wait_for_timeout(300); ok('小窩裡按「🛠 小窩」打開小窩畫面', '小窩' in await p.inner_text('#sheet'))
         await p.screenshot(path=f'{OUT}/12b_den.png'); await p.click('#dUp'); await p.wait_for_timeout(300); s = await st(p)
         ok('升級小窩：扣 120 金幣、可住 2 隻', s['den']['level'] == 2 and s['coins'] == 380); await closeall(p)
         await p.wait_for_timeout(400); await p.screenshot(path=f'{OUT}/12c_den2.png')
@@ -242,8 +244,8 @@ async def main():
         await p.click('#bMenu'); await p.click('#mReset'); await p.click('#mbtns .pri'); await p.wait_for_timeout(400); s = await st(p)
         ok('迎接新蛋：保留金幣、圖鑑、日記、每日紀錄', s['stage'] == 'egg' and s['coins'] == before['coins'] and len(s['dex']) == 1 and len(s['journal']) >= 3 and s['daily']['date'] == before['daily']['date'])
         ok('小窩有空位：舊夥伴搬進小窩', len(s['roster']) == 1 and s['roster'][0]['name'] == '露米')
-        await hatch(p, '小二'); await p.click('#viewBtn'); await p.wait_for_timeout(500); await p.screenshot(path=f'{OUT}/12d_room_residents.png'); await p.click('#viewBtn')
-        await p.mouse.click(*await scene_xy(p, 22, 56)); await p.wait_for_timeout(300); await p.click('[data-sw="0"]'); await p.wait_for_timeout(300); s = await st(p)
+        await hatch(p, '小二'); await p.evaluate("PF.debug.set({view:'room'})"); await p.wait_for_timeout(500); await p.screenshot(path=f'{OUT}/12d_room_residents.png')
+        await p.click('#denBtn'); await p.wait_for_timeout(300); await p.click('[data-sw="0"]'); await p.wait_for_timeout(300); s = await st(p)
         ok('從小窩換夥伴出來', s['name'] == '露米' and s['roster'][0]['name'] == '小二')
         await p.click('#bSave'); await p.fill('#impText', code); await p.click('#bImp'); await p.wait_for_timeout(200); await p.click('#mbtns .pri'); await p.wait_for_timeout(400)
         s = await st(p); ok('匯入還原', s['name'] == '露米' and s['stage'] == 'adult' and s['den']['level'] == 2)

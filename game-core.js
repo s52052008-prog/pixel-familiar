@@ -37,7 +37,7 @@ const CONFIG = {
   bossStages: { volcano: 15, oldtree: 20, canyon: 25, skypeak: 30, thunder: 35, mine: 40 },
   newRoutes: { stepsForEarth: 100000, goalsForBird: 30, bondForElec: 5, cleanForMetal: 50, earthEvery: 2000 },
   breed: { cost: 20, cooldownH: 6, minMood: 50, basket: 6 },
-  farm: { plots: 3, maxPlots: 6, expand: [30, 60, 90], growHours: 2, fruitMin: 1, fruitMax: 2, xp: 5, forest: 3, seedPrice: 3 },   // 收成：蘋果、莓果各隨機 1～2 顆；田可以花錢擴建到 6 格     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
+  farm: { plots: 3, maxPlots: 6, expand: [30, 60, 90], growHours: 2, fruitMin: 2, fruitMax: 3, freshHours: 6, rotHours: 24, xp: 5, forest: 3, seedPrice: 3 },   // 收成：蘋果、莓果各隨機 1～2 顆；田可以花錢擴建到 6 格     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
   goals: { perDay: 3, reward: { coins: 8 } },
   candy: { price: 12, mood: 20, hunger: 10, xp: 3 },
   core: { rotMin: 10, moodPerHour: 4, max: 8 },          // 果核：10 分鐘沒清會發臭長果蠅，每顆每小時心情 −4
@@ -73,6 +73,13 @@ const CONFIG = {
     berry: { name: '莓果', icon: 'berry', hunger: 10, mood: 10, energy: 0,  xp: 3, price: 10, left: null,   fav: [] },
     fish:  { name: '烤魚', icon: 'fish',  hunger: 20, mood: 0,  energy: 20, xp: 5, price: 20, left: 'bone', fav: ['tide', 'metal', 'forest'] },
     meat:  { name: '肉排', icon: 'meat',  hunger: 20, mood: 0,  energy: 20, xp: 5, price: 20, left: 'bone', fav: ['flame', 'elec', 'bird'] },
+    dragon:  { name: '火龍果', icon: 'dragon',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, fav: ['flame'] },
+    melonw:  { name: '西瓜',   icon: 'melonw',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, fav: ['tide'] },
+    melon:   { name: '哈密瓜', icon: 'melon',   power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, fav: ['forest'] },
+    potato:  { name: '地瓜',   icon: 'potato',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, fav: ['earth'] },
+    nut:     { name: '堅果',   icon: 'nut',     power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, fav: ['bird'] },
+    coconut: { name: '椰子',   icon: 'coconut', power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, fav: ['metal'] },
+    banana:  { name: '香蕉',   icon: 'banana',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, fav: ['elec'] },
     cake:  { name: '蛋糕', icon: 'cake',  hunger: 10, mood: 20, energy: 10, xp: 5, price: 25, left: null,   fav: ['flame', 'tide', 'forest', 'earth', 'bird', 'elec', 'metal'] }
   },
   sellFruit: { food: 15, berry: 15 },
@@ -91,7 +98,11 @@ const CONFIG = {
     elec:   { good: '攻擊有機會讓對手麻痺一回合', bad: '一直在發電，體力恢復慢', stun: .25, energyUp: .8 }
   },      // 自己種出來的水果可以賣
   ember: { mood: 10, energy: 20, xp: 20, bossDrop: .5 },   // 經驗火種：打贏 Boss 有機會得到
-  favBonus: { mood: 10, xp: 5 }
+  favBonus: { mood: 10, xp: 5 },
+  powerBonus: { energy: 10, xp: 15 },     // 能力水果給對的屬性吃：再加體力 +10、經驗 +15
+  /* 進化到高階必備的素材：打贏該屬性區域的 Boss 掉落（第一次必掉，之後 35%） */
+  materials: { flame: '火種源', tide: '波賽頓水晶', forest: '精靈石', earth: '地核項鍊', bird: '彩色羽毛', metal: '古代金幣', elec: 'X元素電池' },
+  matDrop: .35
 };
 const ROUTES = ['flame', 'tide', 'forest', 'earth', 'bird', 'elec', 'metal'];
 const ROUTE_EVENT = { flame: 'volcano', tide: 'moonspring', forest: 'oldtree', earth: 'canyon', bird: 'skypeak', elec: 'thunder', metal: 'mine' };
@@ -177,7 +188,7 @@ function fresh(now = Date.now()) {
     xp: 0, coins: S.coins, hunger: S.hunger, mood: S.mood, clean: S.clean, energy: S.energy, bond: 0, sleeping: false,
     path: { flame: 0, tide: 0, forest: 0, earth: 0, bird: 0, elec: 0, metal: 0 }, bondUses: 0, cleanups: 0,
     care: { petLastRewardAt: 0, bathLastAt: 0, playXpAt: [], gatherAt: 0 },
-    inv: { food: S.food, seeds: S.seeds, candy: 0, potion: 1, berry: 0, fish: 0, meat: 0, cake: 0, ember: 0, fresh: { food: 0, berry: 0 } }, harvests: 0,
+    inv: Object.assign({ food: S.food, seeds: S.seeds, candy: 0, potion: 1, ember: 0, fresh: { food: 0, berry: 0 }, mats: {} }, ...Object.keys(CONFIG.foods).filter(k => k !== 'food').map(k => ({ [k]: 0 }))), harvests: 0,
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] },
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0, bondRestUntil: 0, ballUses: 0, ballBroken: false,
@@ -226,7 +237,8 @@ function sanitize(o, now = Date.now()) {
   r.care.playXpAt = Array.isArray(c.playXpAt) ? c.playXpAt.map(Number).filter(t => Number.isFinite(t) && t <= now && now - t < CONFIG.play.xpWindowMin * MIN).slice(-10) : [];
   const iv = o.inv && typeof o.inv === 'object' ? o.inv : {};
   r.inv.food = int(iv.food, CONFIG.start.food, 0, 9999); r.inv.seeds = int(iv.seeds, CONFIG.start.seeds, 0, 9999); r.inv.candy = int(iv.candy, 0, 0, 9999); r.inv.potion = int(iv.potion, 1, 0, 9999);
-  for (const k of ['berry', 'fish', 'meat', 'cake', 'ember']) r.inv[k] = int(iv[k], 0, 0, 9999);
+  for (const k of [...Object.keys(CONFIG.foods).filter(k => k !== 'food'), 'ember']) r.inv[k] = int(iv[k], 0, 0, 9999);
+  const mt = iv.mats && typeof iv.mats === 'object' ? iv.mats : {}; r.inv.mats = {}; for (const el of ROUTES) r.inv.mats[el] = int(mt[el], 0, 0, 99);
   const fr = iv.fresh && typeof iv.fresh === 'object' ? iv.fresh : {}; r.inv.fresh = { food: Math.min(int(fr.food, 0, 0, 9999), r.inv.food), berry: Math.min(int(fr.berry, 0, 0, 9999), r.inv.berry) };   // 自己種的、還沒賣的水果數
   const dc = o.decor && typeof o.decor === 'object' ? o.decor : {};
   if (Array.isArray(dc.owned)) r.decor.owned = [...new Set(['paper_cream', 'bed_round', ...dc.owned.filter(id => CONFIG.decor[id])])];
@@ -240,7 +252,7 @@ function sanitize(o, now = Date.now()) {
   r.den = { level: int(o.den && o.den.level, 1, 1, CONFIG.den.length) };
   r.roster = Array.isArray(o.roster) ? o.roster.filter(p => p && typeof p === 'object' && p.hatched).slice(0, CONFIG.den.length - 1).map(p => sanitizePet(p, now)) : [];
   r.harvests = int(o.harvests, 0, 0, 1e7); r.bondUses = int(o.bondUses, 0, 0, 1e7); r.cleanups = int(o.cleanups, 0, 0, 1e7);
-  if (Array.isArray(o.plots)) r.plots = Array.from({ length: Math.max(CONFIG.farm.plots, Math.min(CONFIG.farm.maxPlots, o.plots.length)) }, (_, i) => ({ at: num(o.plots[i] && o.plots[i].at, 0, 0, 9e15) }));
+  if (Array.isArray(o.plots)) r.plots = Array.from({ length: Math.max(CONFIG.farm.plots, Math.min(CONFIG.farm.maxPlots, o.plots.length)) }, (_, i) => ({ at: num(o.plots[i] && o.plots[i].at, 0, 0, 9e15), k: o.plots[i] && o.plots[i].k === 'berry' ? 'berry' : 'food' }));
   const gl = o.goals && typeof o.goals === 'object' ? o.goals : {};
   if (/^\d{4}-\d\d-\d\d$/.test(gl.date) && Array.isArray(gl.list)) r.goals = { date: gl.date, list: gl.list.filter(g => g && GOALS[g.id]).slice(0, 5).map(g => ({ id: g.id, n: int(g.n, 0, 0, 1e6), claimed: g.claimed === true })) };
   const ev = o.events && typeof o.events === 'object' ? o.events : {};
@@ -347,9 +359,10 @@ function act(st, a, now = Date.now(), opt) {
     else if (st.coins >= FD.price) { st.coins -= FD.price; paid = `花 ${FD.price} 金幣買${FD.name}`; }
     else return { ok: false, code: 'nofood', msg: `沒有${FD.name}也沒有金幣了…可以去「採集」或種田`, tm };
     const fav = !!(st.route && FD.fav.includes(st.route)), B = CONFIG.favBonus;
-    st.hunger = clamp(st.hunger + FD.hunger * (trait(st).feed || 1)); st.mood = clamp(st.mood + FD.mood + (fav ? B.mood : 0)); if (FD.energy || freshEat) st.energy = clamp(st.energy + (FD.energy || 0) + (freshEat ? CONFIG.freshBonus.energy : 0)); fixFresh(st);
+    st.hunger = clamp(st.hunger + FD.hunger * (trait(st).feed || 1)); st.mood = clamp(st.mood + FD.mood + (fav ? B.mood : 0)); const PB = fav && FD.power ? CONFIG.powerBonus : null;
+    if (FD.energy || freshEat || PB) st.energy = clamp(st.energy + (FD.energy || 0) + (freshEat ? CONFIG.freshBonus.energy : 0) + (PB ? PB.energy : 0)); fixFresh(st);
     st.path.tide += CONFIG.feed.tide; track(st, 'feed', now); st.digest.push(now + CONFIG.poop.delayMin * MIN);
-    return { ok: true, anim: 'eat', sfx: 'eat', kind, left: FD.left, fav, xp: addXP(st, FD.xp + (fav ? B.xp : 0)), fresh: freshEat, msg: (freshEat ? '✨自己種的' : '') + (fav ? `最愛的${FD.name}！超好吃！` : `好吃的${FD.name}！`) + (freshEat ? `體力多 +${CONFIG.freshBonus.energy}` : '') + `（${paid}）`, tm };
+    return { ok: true, anim: 'eat', sfx: 'eat', kind, left: FD.left, fav, xp: addXP(st, FD.xp + (fav ? B.xp : 0) + (PB ? PB.xp : 0)), power: !!PB, fresh: freshEat, msg: (freshEat ? '✨自己種的' : '') + (fav ? `最愛的${FD.name}！超好吃！` : `好吃的${FD.name}！`) + (freshEat ? `體力多 +${CONFIG.freshBonus.energy}` : '') + `（${paid}）`, tm };
   }
   if (a === 'play') {
     const C = CONFIG.play;
@@ -422,14 +435,15 @@ function stageReq(st, now) {
   const age = ageHours(st, now), S = CONFIG.stages;
   const nxt = st.stage === 'baby' ? 'juvenile' : st.stage === 'juvenile' ? 'adolescent' : st.stage === 'adolescent' ? 'adult' : st.stage === 'adult' ? 'ascended' : null;
   if (!nxt) return null;
-  return { next: nxt, hours: S[nxt].hours, xp: S[nxt].xp, ageOk: age >= S[nxt].hours, xpOk: st.xp >= S[nxt].xp, eventOk: nxt !== 'ascended' || specialDone(st, st.route), age };
+  return { next: nxt, hours: S[nxt].hours, xp: S[nxt].xp, ageOk: age >= S[nxt].hours, xpOk: st.xp >= S[nxt].xp, eventOk: nxt !== 'ascended' || specialDone(st, st.route), matOk: nxt !== 'ascended' || ((st.inv.mats || {})[st.route] || 0) > 0, mat: nxt === 'ascended' ? CONFIG.materials[st.route] : null, age };
 }
 const ROUTE_CH = { flame: '焰', tide: '潮', forest: '森', earth: '土', bird: '鳥', elec: '電', metal: '金' };
 function checkStages(st, now = Date.now()) {
   const out = [];
   for (let guard = 0; guard < 5 && st.hatched; guard++) {
     const q = stageReq(st, now);
-    if (!q || !q.ageOk || !q.xpOk || !q.eventOk) break;
+    if (!q || !q.ageOk || !q.xpOk || !q.eventOk || !q.matOk) break;
+    if (q.next === 'ascended') st.inv.mats[st.route]--;   // 進化用掉素材
     const from = st.stage;
     if (q.next === 'adult' && !st.route) st.route = pickRoute(st);
     st.stage = q.next;
@@ -549,6 +563,8 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
     else out.xp = addXP(st, Math.round(xp * A.overCapXpRate));
     if (r() < A.dropFood) { st.inv.food++; out.food = 1; }
     if (r() < CONFIG.potion.drop) { st.inv.potion++; out.potion = 1; }
+    const area = AREA_ROUTE[Math.min(AREA_ROUTE.length - 1, Math.floor((n - 1) / 5))];
+    if (full && n % 5 === 0 && area && (n === st.adv.stage || r() < CONFIG.matDrop)) { st.inv.mats[area] = (st.inv.mats[area] || 0) + 1; out.mat = area; }   // Boss 掉進化素材
     if (n === st.adv.stage) {                                   // 第一次打通：新地點 = 探索發現
       st.adv.stage++; out.unlocked = st.adv.stage; discover(st, now, null); out.events.push('place');
       for (const ev in CONFIG.bossStages) if (CONFIG.bossStages[ev] === n) { const e = discover(st, now, ev); if (e) out.events.push(e); }
@@ -562,24 +578,27 @@ function plotState(st, i, now = Date.now()) {
   const p = st.plots[i]; if (!p) return null;
   if (!p.at) return { empty: true, progress: 0, left: 0 };
   const grow = CONFIG.farm.growHours * H, el = Math.max(0, now - p.at);   // 時間倒退時不會變成負的
-  return { empty: false, progress: Math.min(1, el / grow), ripe: el >= grow, left: Math.max(0, grow - el) };
+  const F = CONFIG.farm, after = (el - grow) / H;   // 成熟後過了幾小時：太久沒收會過熟、再久會爛掉
+  return { empty: false, kind: p.k === 'berry' ? 'berry' : 'food', progress: Math.min(1, el / grow), ripe: el >= grow, left: Math.max(0, grow - el), over: after >= F.freshHours && after < F.rotHours, rotten: after >= F.rotHours, freshLeft: Math.max(0, (F.freshHours - after) * H) };
 }
-function plant(st, i, now = Date.now()) {
+function plant(st, i, now = Date.now(), r = Math.random) {
   const q = plotState(st, i, now); if (!q) return { ok: false, msg: '沒有這塊田' };
   if (!q.empty) return { ok: false, msg: '這塊田已經種了東西' };
   if (st.inv.seeds < 1) return { ok: false, code: 'noseed', msg: '沒有種子了（冒險有機會撿到，或花金幣買）' };
-  st.inv.seeds--; st.plots[i].at = now; track(st, 'plant', now);
-  return { ok: true, msg: '種下一顆種子 🌱（2 小時後可以收成）' };
+  st.inv.seeds--; st.plots[i].at = now; st.plots[i].k = r() < .5 ? 'food' : 'berry'; track(st, 'plant', now);   // 長出來才知道：紅色＝蘋果、紫色＝莓果
+  return { ok: true, msg: '種下一顆種子 🌱（2 小時後可以收成，長出紅色是蘋果、紫色是莓果）' };
 }
 function harvest(st, i, now = Date.now(), r = Math.random) {
   const q = plotState(st, i, now); if (!q || q.empty) return { ok: false, msg: '這塊田是空的' };
   if (!q.ripe) return { ok: false, msg: `還沒成熟，再等 ${Math.ceil(q.left / MIN)} 分鐘` };
-  const F = CONFIG.farm, ra = F.fruitMin + Math.floor(r() * (F.fruitMax - F.fruitMin + 1)), rb = F.fruitMin + Math.floor(r() * (F.fruitMax - F.fruitMin + 1)); st.plots[i].at = 0;
-  st.inv.food += ra; st.inv.berry = (st.inv.berry || 0) + rb; st.inv.fresh.food += ra; st.inv.fresh.berry += rb; st.harvests++;
+  const F = CONFIG.farm, k = q.kind, name = k === 'berry' ? '莓果' : '蘋果'; st.plots[i].at = 0;
+  if (q.rotten) { track(st, 'harvest', now); return { ok: true, rotten: true, n: 0, xp: 0, msg: `${name}放太久爛掉了…只好丟掉 🪰` }; }
+  const n = F.fruitMin + Math.floor(r() * (F.fruitMax - F.fruitMin + 1));
+  st.inv[k] = (st.inv[k] || 0) + n; if (!q.over) st.inv.fresh[k] += n; st.harvests++;   // 過熟的不算「自己種的好品質」：不發光、不能賣、沒有加成
   let xp = 0; if (st.hatched) { xp = addXP(st, F.xp); st.path.forest += F.forest; }
   track(st, 'harvest', now);
   if (st.harvests === CONFIG.harvestsForOldTree) journal(st, now, `收成第 ${st.harvests} 次了！`);
-  return { ok: true, food: F.food, xp, forest: st.hatched ? F.forest : 0, apple: ra, berry: rb, msg: `收成！蘋果 +${ra}、莓果 +${rb}` + (xp ? `、經驗 +${xp}、🌿 森 +${F.forest}` : '') };
+  return { ok: true, kind: k, n, over: q.over, xp, forest: st.hatched ? F.forest : 0, msg: (q.over ? `${name}有點過熟了…收成 ${n} 顆（吃起來沒那麼好）` : `收成！✨${name} +${n}`) + (xp ? `、經驗 +${xp}、🌿 森 +${F.forest}` : '') };
 }
 function buySeed(st) {
   const P = CONFIG.farm.seedPrice; if (st.coins < P) return { ok: false, msg: `金幣不足（種子 ${P} 金幣）` };
