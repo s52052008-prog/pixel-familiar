@@ -130,7 +130,7 @@ def main(name, path=None, base=None, eyes=None, iris=('#2a3a8a', '#e8a030'), esi
             wk = []
             for im in ims:
                 c = im[..., :3].astype(int); r, g, bl = c[..., 0], c[..., 1], c[..., 2]
-                sel = (im[..., 3] > 0) & (r > 150) & (r - bl > 70) & (r - g > 20)
+                sel = (im[..., 3] > 0) & (r > 150) & (r - bl > 70) & (r - g > 60)
                 wk.append((sel, acc[((c[sel][:, None, :] - acc[None]) ** 2).sum(-1).argmin(1)]))
         ims, pal = quantize(ims, 24)
         for im, (sel, cc) in zip(ims, wk if WARM else []): im[sel, :3] = cc
