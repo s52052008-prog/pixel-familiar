@@ -43,7 +43,7 @@ const CONFIG = {
     bird: [['goals', 30]], elec: [['bondUses', 5]], metal: [['cleanups', 40]] } },
   newRoutes: { stepsForEarth: 100000, goalsForBird: 30, bondForElec: 5, cleanForMetal: 50, earthEvery: 2000 },
   breed: { cost: 20, cooldownH: 6, minMood: 50, basket: 6 },
-  piggy: { base: 1, per: .35, maxLv: 30, capHours: 12, minMood: 30, sleepRate: .5, pairShare: .5,
+  piggy: { base: 2, per: .5, maxLv: 30, capHours: 12, minMood: 30, sleepRate: .5, pairShare: .5,
     rateX: [1, 1.25, 1.5, 1.8, 2.2, 3], capH: [12, 14, 16, 18, 20, 24], coreStages: [15, 20, 25, 30], corePrice: 1000 },   // V1.43 小豬撲滿等級 1～6：第 15／20／25／30 關王各掉一個核心碎片（+1 級），商店核心 1000 元（唯一，+1 級）   // 存錢筒（被動收入）：每小時 0.5＋等級×0.25（最多算到 Lv.30），最多存 12 小時
   loveNest: { cost: 300, cooldownH: 12, mood: 10 },          // 愛的小窩：買一次，成年期以上的一公一母可以進去生蛋
   pair: { rate: .5, advMinEnergy: 20, foeHp: 1.5, xpShare: .6 },   // 第二隻一起出來：狀態變化速度減半；一起冒險時敵人血量 ×1.5、第二隻分到 6 成經驗

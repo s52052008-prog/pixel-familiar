@@ -178,7 +178,7 @@ async def main():
         for _ in range(40):
             if await p.evaluate("PF.state.sleeping"): break
             await p.wait_for_timeout(150)
-        s = await st(p); ok('在外面按睡覺 → 自動回小窩、走到小圓床睡', s['sleeping'] and s['view'] == 'room' and abs(await p.evaluate("PF.petX") - 66) <= 2, (s['sleeping'], s['view']))
+        s = await st(p); ok('在外面按睡覺 → 自動回小窩、走到小圓床睡', s['sleeping'] and s['view'] == 'room' and abs(await p.evaluate("PF.petX") - 72) <= 2, (s['sleeping'], s['view']))
         await p.locator('#scene').screenshot(path=f'{OUT}/09h_sleep_bed.png')
         await p.click('#viewBtn'); await p.wait_for_timeout(200); ok('睡覺時不能出門', (await st(p))['view'] == 'room')
         await p.wait_for_timeout(700); await p.click('[data-act=sleep]'); await p.wait_for_timeout(1000); ok('叫醒', not (await st(p))['sleeping'])

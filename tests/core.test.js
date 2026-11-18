@@ -329,10 +329,10 @@ t('存檔：pair、主人名字、性別、愛的小窩都會保留', () => { co
 t('愛的小窩：要買、要成年、要一公一母，生出一顆蛋', () => { const s = hatched(); s.stage = 'adult'; s.sex = 'm'; s.mood = 80; s.coins = 500; const p = C.snapshotPet(Object.assign(hatched(), { name: '小花', stage: 'adult', sex: 'f' })); s.pair = p;
   assert.match(C.canLove(s, 'pair', T0), /愛的小窩/); assert.ok(C.buyLoveNest(s).ok); assert.equal(s.coins, 200); s.pair.sex = 'm'; assert.match(C.canLove(s, 'pair', T0), /一公一母/); s.pair.sex = 'f';
   s.pair.stage = 'teen'; assert.match(C.canLove(s, 'pair', T0), /成年/); s.pair.stage = 'adult'; s.lastTick = T0; const r = C.love(s, 'pair', T0); assert.ok(r.ok, r.msg); assert.equal(s.eggs.length, 1); assert.match(C.canLove(s, 'pair', T0 + 1000), /分鐘/); assert.equal(C.lovePartners(s).length, 1); });
-t('存錢筒：等級越高存越快、最多 12 小時、心情低不存、可以領', () => { const s = hatched(); s.xp = 800; s.mood = 90; s.route = 'tide'; s.lastTick = T0; const r = C.piggyRate(s); assert.ok(Math.abs(r - (1 + 0.35 * C.level(800))) < 1e-9);
+t('存錢筒：等級越高存越快、最多 12 小時、心情低不存、可以領', () => { const s = hatched(); s.xp = 800; s.mood = 90; s.route = 'tide'; s.lastTick = T0; const r = C.piggyRate(s); assert.ok(Math.abs(r - (2 + 0.5 * C.level(800))) < 1e-9);
   C.applyTime(s, T0 + 2 * 3600e3); assert.ok(Math.abs(s.piggy - r * 2) < .01, s.piggy); C.applyTime(s, T0 + 40 * 3600e3); assert.ok(s.piggy <= C.piggyCap(s) + 1e-9);
   const c0 = s.coins, got = C.collectPiggy(s, T0 + 40 * 3600e3); assert.ok(got.ok); assert.equal(s.coins, c0 + got.n); assert.ok(s.piggy < 1);
-  s.route = 'metal'; assert.ok(Math.abs(C.piggyRate(s) - r * 1.5) < 1e-9); s.xp = 1e6; assert.ok(Math.abs(C.piggyRate(s) - (1 + 0.35 * 30) * 1.5) < 1e-9);
+  s.route = 'metal'; assert.ok(Math.abs(C.piggyRate(s) - r * 1.5) < 1e-9); s.xp = 1e6; assert.ok(Math.abs(C.piggyRate(s) - (2 + 0.5 * 30) * 1.5) < 1e-9);
   const q = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(typeof q.piggy, 'number'); s.mood = 10; s.piggy = 0; s.lastTick = T0; C.applyTime(s, T0 + 3600e3); assert.equal(s.piggy, 0); });
 t('高階（V1.37）：168h、2000 XP、專屬任務（成年期才開始算）、3 個終極素材', () => {
   const s = hatched(); s.xp = 2000; s.route = 'flame'; s.adv.wins = 99; const tr = C.checkStages(s, T0 + 168 * H);

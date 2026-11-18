@@ -258,7 +258,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.49.0';
+const VERSION='1.50.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -908,7 +908,12 @@ function plotStage(q){return!q||q.empty?'empty':q.rotten?'rot':q.ripe?(q.over?q.
    🏠 房間（室內場景）與家具像素圖
    ========================================================= */
 const PAPER={paper_cream:['#f2e2c4','#e6d0a8'],paper_mint:['#c4ead8','#a8dcc4'],paper_night:['#26305e','#1e2750']};
-const DECOR_POS={wall:[74,10],toilet:[4,-80],toy:[30,-80],lamp:[52,-80],plant:[107,-80],rug:[30,92],bed:[72,-105],bed2:[12,-105]};   // V1.49 房間重新擺：負數＝底部的 y。馬桶、玩具、立燈、盆栽靠後排（底 80），床在前面（右邊偏中間、第二張在左邊）
+const DECOR_POS={wall:[74,10],toilet:[4,-80],toy:[23,-80],lamp:[74,-63],plant:[41,-63],bigplant:[80,-82],rug:[30,92],bed:[70,-106],bed2:[6,-106]};   // V1.50 負數＝底部的 y。五斗櫃在後排中間（42～74，櫃面 y=63）：檯燈靠右放櫃子上、小盆栽放櫃子上；向日葵大盆栽放地上；床加寬到 52
+const DRESSER={x:40,w:37,top:63,bot:80},BED_W=52;
+function drawDresser(c){const{x,w,top,bot}=DRESSER,h=bot-top;c.fillStyle='#5c3a20';c.fillRect(x,top,w,h);c.fillStyle='#a8703e';c.fillRect(x+1,top+1,w-2,h-3);c.fillStyle='#c48a4e';c.fillRect(x-1,top-1,w+2,2);c.fillStyle='#d8a060';c.fillRect(x-1,top-1,w+2,1);
+ for(let i=0;i<3;i++){const y=top+3+i*4;c.fillStyle='#8a5a30';c.fillRect(x+2,y,w-4,3);c.fillStyle='#b88050';c.fillRect(x+2,y,w-4,1);c.fillStyle='#f2c55c';c.fillRect(x+w/2-1,y+1,2,1)}
+ c.fillStyle='#5c3a20';c.fillRect(x+1,bot-2,2,2);c.fillRect(x+w-3,bot-2,2,2)}   // 五斗櫃（三層抽屜、金色把手）
+const bedCache={};function bigBed(id,sp){const k=id;if(bedCache[k]&&bedCache[k].src===sp)return bedCache[k].cv;const w=BED_W,h=Math.round(sp.height*1.15),cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.drawImage(sp,0,0,w,h);bedCache[k]={src:sp,cv};return cv}   // 床加寬（寵物比較大）
 const DSPR={};
 function makeDecor(id){if(DSPR[id])return DSPR[id];let g;const R=(x,y,w,h,c)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)px(g,x+i,y+j,c)};
  if(id==='wall_frame'){g=grid(28,22);R(0,0,28,22,'#7a4a2a');R(2,2,24,18,'#8fd0f0');R(2,12,24,8,'#6fbf5a');ellipse(g,9,15,8,4,()=> '#4f9a4a');ellipse(g,20,5,3,3,()=> '#fff3a6');R(1,1,26,1,'#a8703e')}
@@ -939,7 +944,8 @@ function makeRoom(ph,paper){const cv=document.createElement('canvas');cv.width=W
  c.fillStyle='#6a4428';c.fillRect(25,12,2,24);c.fillRect(12,23,28,2);c.fillStyle='#8a5a34';c.fillRect(8,37,36,3);return cv}
 function drawRoom(now){const ph=phase(),paper=s.decor.placed.paper||'paper_cream',k=ph+paper;if(k!==roomKey){roomKey=k;roomCache=makeRoom(ph,paper)}
  ctx.drawImage(roomCache,0,0);const P=s.decor.placed,FLOOR=104;
- for(const sl of['wall','toilet','toy','lamp','plant','rug','bed','bed2']){const id=P[sl];if(!id||id==='toy_ball')continue;const sp=makeDecor(id);if(!sp)continue;const[x,y]=DECOR_POS[sl];ctx.drawImage(sp,x,y<0?-y-sp.height:y)}
+ for(const sl of['wall','toilet','toy','dresser','plant','lamp','rug','bed','bed2']){if(sl==='dresser'){drawDresser(ctx);continue}const id=P[sl];if(!id||id==='toy_ball')continue;let sp=makeDecor(id);if(!sp)continue;
+  if(sl==='bed'||sl==='bed2')sp=bigBed(id,sp);let[x,y]=DECOR_POS[sl==='plant'&&id==='plant_flower'?'bigplant':sl];if(sl==='lamp')x=DRESSER.x+DRESSER.w-1-sp.width;ctx.drawImage(sp,x,y<0?-y-sp.height:y)}
  drawCeilingLamp(lightOn(ph));return ph}
 /* 天花板吊燈（免費、一直都在）：傍晚和晚上可以開關，開了是暖黃色的燈光 */
 const lightOn=ph=>(ph==='night'||ph==='dusk')&&s.settings.light!==false;
@@ -955,7 +961,7 @@ function drawRoomFront(now,ph){
   ctx.fillStyle=g2;ctx.beginPath();ctx.moveTo(61,13);ctx.lineTo(66,13);ctx.lineTo(92,108);ctx.lineTo(35,108);ctx.closePath();ctx.fill();
   const r=ctx.createRadialGradient(63.5,12,1,63.5,12,10);r.addColorStop(0,'rgba(255,246,200,.9)');r.addColorStop(1,'rgba(255,230,160,0)');ctx.fillStyle=r;ctx.fillRect(50,0,28,26)}
  else if(ph==='night'||ph==='dusk'){ctx.fillStyle=P.lamp?'rgba(10,15,40,.12)':'rgba(10,15,40,.38)';ctx.fillRect(0,0,W,H);
-  if(P.lamp){const lx=P.lamp==='lamp_moon'?100:97,ly=P.lamp==='lamp_moon'?72:92,g=ctx.createRadialGradient(lx,ly,2,lx,ly,34);g.addColorStop(0,'rgba(255,220,120,.35)');g.addColorStop(1,'rgba(255,220,120,0)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}}}
+  if(P.lamp){const lx=DRESSER.x+DRESSER.w-(P.lamp==='lamp_moon'?11:7),ly=P.lamp==='lamp_moon'?46:54,g=ctx.createRadialGradient(lx,ly,2,lx,ly,34);g.addColorStop(0,'rgba(255,220,120,.35)');g.addColorStop(1,'rgba(255,220,120,0)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}}}
 
 /* =========================================================
    遊戲狀態、動畫播放器、粒子
@@ -1908,7 +1914,7 @@ window.addEventListener('storage',e=>{if(e.key===SAVE_KEY&&e.newValue){const o=p
    ========================================================= */
 let mode=null,petX=PET_X,petTarget=null,walkCb=null,homeAt=0,petFace=-1,idleAt=0;   // petFace：-1 原本方向（朝左／正面），1 左右翻轉（朝右）
 const curView=()=>s.hatched&&s.view==='room'?'room':'yard';
-const BED_X=DECOR_POS.bed[0]+18-24,BED2_X=DECOR_POS.bed2[0]+18-24;   // 寵物睡在床上時的位置（床的中間）
+const BED_X=DECOR_POS.bed[0]+BED_W/2-24,BED2_X=DECOR_POS.bed2[0]+BED_W/2-24;   // 寵物睡在床上時的位置（床的中間）
 function walkTo(x,cb){petTarget=clamp(Math.round(x),0,W-CELL);walkCb=cb||null}
 const overPet=(x,y)=>x>=petX+6&&x<=petX+42&&y>=PET_Y+8&&y<=PET_Y+46;
 const FEED={apple:null},WASH={t:0,down:false,px:0,py:0,lastMove:0,sfxAt:0},BALL={lives:3,score:0,combo:0,b:null,tapAt:0,started:false,nextAt:0,over:false,wind:0},RING={x:110,y:44,r:7,bx:110,by:44,net:0};
