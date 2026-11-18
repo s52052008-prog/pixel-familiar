@@ -106,8 +106,9 @@ t('步數：每天上限 5 萬、只能補登 7 天、10 萬步突破 +100 金�
 
 // 配對
 t('配對：需要成年期、冷卻 6 小時、花 20 金幣', () => {
-  const s = hatched(); const f = { G: C.makeGenome(5), name: '阿花', adult: true };
+  const s = hatched(); s.sex = 'm'; const f = { G: C.makeGenome(5), name: '阿花', adult: true, sex: 'f' };
   assert.ok(!C.breed(s, f, T0).ok); s.stage = 'adult'; s.route = 'tide'; s.mood = 90;
+  assert.ok(!C.breed(s, Object.assign({}, f, { sex: 'm' }), T0).ok); assert.ok(!C.breed(s, Object.assign({}, f, { sex: undefined }), T0).ok);
   const r = C.breed(s, f, T0); assert.ok(r.ok); assert.equal(s.coins, 30); assert.equal(s.eggs.length, 1);
   assert.ok(!C.breed(s, f, T0 + 5 * H).ok); assert.ok(C.breed(s, f, T0 + 6 * H).ok);
 });
@@ -262,17 +263,22 @@ t('V1.41 綜合種子：蔓越莓／藍莓／草莓，賣 15／20／30；優良�
   assert.ok(C.sellFruit(s, 'strawberry').ok); assert.equal(s.coins, 30); assert.ok(!C.plant(s, 1, T0, Math.random, true).ok);
   const t2 = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(t2.inv.fresh.strawberry, 3); });
 t('V1.40 第一天不送金幣（開局 50）', () => { const s = C.fresh(T0); C.claimDaily(s, T0); assert.equal(s.coins, 50); C.claimDaily(s, T0 + 86400000); assert.equal(s.coins, 60); });
-t('V1.42 能力加成：進化階段、訓練成果（每次 +1%，最多 +20%）、大王固定等級、打贏王給金幣', () => { const s = hatched(); s.stage = 'adult'; s.trainLog = { dodge: 5, attack: 30, defense: 10 };
+t('V1.42 能力加成：進化階段、訓練成果（V1.44 每次 +2%，最多 +20%）、大王固定等級、打贏王給金幣', () => { const s = hatched(); s.stage = 'adult'; s.trainLog = { dodge: 5, attack: 30, defense: 3 };
   const base = C.mkFighter('a', 'k', 10, s.route, 0, 80, 0), f = C.buffFighter(C.mkFighter('a', 'k', 10, s.route, 0, 80, 0), s);
-  assert.ok(Math.abs(f.atk / base.atk - 1.3 * 1.2) < 1e-9); assert.ok(Math.abs(f.def / base.def - 1.3 * 1.1) < 1e-9); assert.equal(f.max, Math.round(base.max * 1.3 * 1.1)); assert.equal(f.dodge, .05);
+  assert.ok(Math.abs(f.atk / base.atk - 1.3 * 1.2) < 1e-9); assert.ok(Math.abs(f.def / base.def - 1.3 * 1.06) < 1e-9); assert.equal(f.max, Math.round(base.max * 1.3 * 1.06)); assert.equal(f.dodge, .1);
   s.stage = 'ascended'; s.awake = true; const g = C.buffFighter(C.mkFighter('a', 'k', 10, s.route, 0, 80, 0), s); assert.ok(Math.abs(g.atk / base.atk - 1.5 * 1.2 * 2) < 1e-9);
   assert.equal(C.foeFor(30, 1).level, C.foeFor(30, 60).level); assert.equal(C.foeFor(30, 1).level, 26); assert.equal(C.foeFor(15, 40).level, 15); assert.ok(C.foeFor(12, 30).level === 29);
   const t = hatched(); t.energy = 100; t.adv.stage = 99; const st = C.startAdventure(t, 10, T0); const c0 = t.coins; const o = C.finishAdventure(t, 10, 'win', st.full, T0, () => .99); assert.equal(o.bossCoins, 30); assert.ok(t.coins - c0 >= 30 + 20);
   const p = C.snapshotPet(s); assert.equal(p.trainLog.attack, 30); });
 t('V1.43 小豬撲滿 1～6 級：第 15／20／25／30 關王各掉一個核心碎片、商店核心 1000 元唯一', () => { const s = hatched(); s.xp = 8 * 81; const r1 = C.piggyRate(s), c1 = C.piggyCap(s); assert.equal(C.pigLevel(s), 1); assert.equal(c1, Math.round(r1 * 12));
   s.energy = 100; s.adv.stage = 99; for (const n of [15, 20, 25, 30, 15]) { s.energy = 100; const st = C.startAdventure(s, n, T0); C.finishAdventure(s, n, 'win', st.full, T0, () => .99); } assert.deepEqual(s.pigCores, [15, 20, 25, 30]); assert.equal(C.pigLevel(s), 5);
-  assert.ok(Math.abs(C.piggyRate(s) - r1 * 2.2) < 1e-9); s.coins = 999; assert.ok(!C.buyPigCore(s).ok); s.coins = 1000; assert.ok(C.buyPigCore(s).ok); assert.equal(C.pigLevel(s), 6); assert.equal(s.coins, 0); s.coins = 2000; assert.ok(!C.buyPigCore(s).ok);
-  assert.equal(C.piggyCap(s), Math.round(r1 * 3 * 24)); const z = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(C.pigLevel(z), 6); });
+  s.xp = 8 * 81; assert.ok(Math.abs(C.piggyRate(s) - r1 * 2.2) < 1e-9); s.coins = 999; assert.ok(!C.buyPigCore(s).ok); s.coins = 1000; assert.ok(C.buyPigCore(s).ok); assert.equal(C.pigLevel(s), 6); assert.equal(s.coins, 0); s.coins = 2000; assert.ok(!C.buyPigCore(s).ok);
+  s.xp = 8 * 81;   assert.equal(C.piggyCap(s), Math.round(r1 * 3 * 24)); const z = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(C.pigLevel(z), 6); });
+t('V1.44 等級上限 30、蛋 300／700／1000、傳承之力、星之塔', () => { const s = hatched(); s.xp = 99999; assert.equal(C.level(s.xp), 30); s.inv.candy = 1; assert.ok(!C.useCandy(s, T0).ok); assert.equal(s.inv.candy, 1);
+  s.coins = 3000; for (const p of [300, 700, 1000, 1000]) { assert.equal(C.eggPrice(s), p); assert.ok(C.buyEgg(s).ok); } assert.equal(s.coins, 0); assert.ok(!C.buyEgg(s).ok); assert.equal(s.eggBuys, 4);
+  const a = hatched(); a.xp = 0; const x1 = C.addXP(a, 10); a.roster = [Object.assign(C.snapshotPet(hatched()), { awake: true })]; const x2 = C.addXP(a, 10); assert.equal(x2, x1 * 3);
+  a.energy = 100; a.coins = 99; C.startTrain(a, 'zen', T0); C.finishTrain(a, 'zen', true, T0); assert.equal(a.trainLog.defense, 2);
+  assert.ok(C.foeFighter(35, 30).tower); assert.ok(!C.foeFighter(30, 30).tower); });
 t('V1.41 訓練場：每次 20 金幣，達成目標才有經驗', () => { const s = hatched(); s.energy = 100; s.coins = 30; s.xp = 512; const L = C.level(512);
   assert.ok(C.startTrain(s, 'dodge', T0).ok); assert.equal(s.coins, 10); assert.equal(s.energy, 85); const f = C.finishTrain(s, 'dodge', false); assert.equal(f.xp, 0); assert.equal(s.xp, 512);
   assert.ok(!C.startTrain(s, 'zen', T0).ok); s.coins = 20; assert.ok(C.startTrain(s, 'zen', T0).ok); const w = C.finishTrain(s, 'zen', true, T0); assert.equal(w.xp, Math.round(10 + 4 * L)); assert.equal(s.trainLog.defense, 1);
@@ -354,7 +360,7 @@ t('新蛋不重複：優先給還沒玩過的屬性', () => { const s = hatched(
   const u = C.unplayedRoutes(s); assert.ok(!u.includes('flame') && !u.includes('tide') && !u.includes('bird')); assert.equal(u.length, 4);
   s.dex = C.EL_LIST.map((e, i) => ({ id: 'g:' + i, route: e })); assert.equal(C.unplayedRoutes(s).length, 7); assert.equal(C.genomeOfSeed(C.seedForEl('metal')).el, 'metal'); });
 t('星星糖 200 金幣，吃了直接升 1 級', () => { const s = hatched(); s.coins = 500; s.xp = 50; const L = C.level(50); assert.ok(C.buyItem(s, 'candy').ok); assert.equal(s.coins, 300);
-  const r = C.useCandy(s, T0); assert.ok(r.ok); assert.equal(C.level(s.xp), L + 1); assert.equal(s.xp, 8 * L * L); });
+  const r = C.useCandy(s, T0); assert.ok(r.ok); assert.equal(C.level(s.xp), L + 1); assert.equal(s.xp, Math.ceil(7.5 * L * L)); });
 t('第二張床：已擁有的床可以擺在右邊，存檔保留；買彈力球會換掉爆掉的球', () => { const s = hatched(); assert.ok(C.placeBed2(s, 'bed_round').ok); assert.equal(s.decor.placed.bed2, 'bed_round');
   assert.ok(!C.placeBed2(s, 'bed_cloud').ok); assert.equal(C.sanitize(JSON.parse(JSON.stringify(s)), T0).decor.placed.bed2, 'bed_round'); assert.ok(C.placeBed2(s, 'bed_round').ok); assert.equal(s.decor.placed.bed2, undefined);
   s.ballBroken = true; s.coins = 99; assert.ok(C.buyDecor(s, 'toy_ball').ok); assert.equal(s.ballBroken, false); });

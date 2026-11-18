@@ -61,8 +61,11 @@ const CONFIG = {
     kinds: { dodge: { name: '閃避訓練：躲避球', skill: 'dodge' }, rush: { name: '攻擊訓練：沙包連打', skill: 'attack' }, combo: { name: '攻擊訓練：組合拳', skill: 'attack' }, flash: { name: '攻擊訓練：靈光一閃', skill: 'attack' }, zen: { name: '防禦訓練：瀑布打坐', skill: 'defense' } } },
   ult: { power: 2.2 },
   stageX: { egg: 1, baby: 1, juvenile: 1, adolescent: 1.1, adult: 1.3, ascended: 1.5 },   // V1.43 進化階段加能力：幼年 ×1.0、成長 ×1.1、成年 ×1.3、高階 ×1.5（星耀覺醒再 ×2）
-  trainBonus: { per: .01, max: .2 },                       // V1.42 訓練成功一次 +1%，每種最多 +20%：閃避＝猜拳輸也可能閃開、攻擊＝攻擊力、防禦＝防禦力和血量
-  bossCoins: { mini: 15, big: 30 },                        // V1.42 打贏小王／大王額外金幣                                    // V1.40 大絕招：屬性技 2.2 倍，每場一次
+  trainBonus: { per: .02, max: .2 },   // V1.44：每次 +2%，每種 10 次練滿                       // V1.42 訓練成功一次 +1%，每種最多 +20%：閃避＝猜拳輸也可能閃開、攻擊＝攻擊力、防禦＝防禦力和血量
+  bossCoins: { mini: 15, big: 30 },
+  foeHp: { normal: 1.3, mini: 1.5, big: 2 }, tower: { from: 31, hp: 1.8, atk: 1.3 },   // V1.44 野生怪血量；第 31～40 關「星之塔」更硬更痛
+  heritage: { xp: 3, train: 2 },                             // V1.44 傳承之力：已經有星耀覺醒的夥伴，其他幻獸經驗 ×2、訓練成果 ×2
+  eggPrice: [300, 700, 1000],                               // V1.44 迎接新的蛋：第 1 顆 300、第 2 顆 700、之後 1000                        // V1.42 打贏小王／大王額外金幣                                    // V1.40 大絕招：屬性技 2.2 倍，每場一次
   rps: { seconds: 2, win: 0, tie: .8, lose: 1.2 },          // 敵人出招前猜拳：贏＝躲開、平手 0.8 倍、輸或超時 1.2 倍
   bond: { seconds: 2, steps: [[0, 1], [20, 2.2], [22, 2.5], [25, 2.7], [28, 3]], cost: 10, restHours: 2 },   // 羈絆之力：2 秒內連打；20 下 2.2 倍、22 下 2.5、25 下 2.7、28 下以上 3 倍（中間按比例）。要花 10 金幣買加油棒，之後 2 小時要休息不能冒險
   ballGame: { lives: 3, max: 99, goalCap: 5, coinEvery: 3, coinMax: 10 },   // 頂球：3 條命一直玩到漏接 3 次；每 3 球 1 金幣（最多 10）；冒險路線最多算 5 球
@@ -146,7 +149,9 @@ function hourIn(ts, tz = CONFIG.tz) {
   try { return +new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', hourCycle: 'h23' }).format(ts); }
   catch (e) { return new Date(ts).getHours(); }
 }
-const level = xp => 1 + Math.floor(Math.sqrt(Math.max(0, xp) / 8));   // 顯示與戰鬥用等級，由總 XP 推算
+
+const MAX_LV = 30, XPK = 7.5;   // V1.44 等級上限 Lv.30（練滿）；升級曲線：需要經驗＝7.5×(等級−1)²（原本 8）
+const level = xp => Math.min(MAX_LV, 1 + Math.floor(Math.sqrt(Math.max(0, xp) / XPK)));   // 顯示與戰鬥用等級，由總 XP 推算
 
 /* ---------------- 物種基因（V1.4 起；順序不可更改） ---------------- */
 function rng(seed) { let a = seed >>> 0; return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -221,7 +226,7 @@ function fresh(now = Date.now()) {
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] }, goalLv: 0,
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
-    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
+    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, eggBuys: 0, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
     events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
@@ -285,7 +290,7 @@ function sanitize(o, now = Date.now()) {
   r.pair = o.pair && typeof o.pair === 'object' && o.pair.hatched && r.hatched ? sanitizePet(o.pair, now) : null;
   if (r.pair && r.roster.length > CONFIG.den.length - 2) r.roster.length = CONFIG.den.length - 2;
   r.owner = typeof o.owner === 'string' ? o.owner.replace(/[<>&"]/g, '').trim().slice(0, 12) : '';
-  r.piggy = num(o.piggy, 0, 0, 1e5); r.pigCores = Array.isArray(o.pigCores) ? [...new Set(o.pigCores.filter(n => CONFIG.piggy.coreStages.includes(n)))] : []; r.pigBought = o.pigBought === true;
+  r.piggy = num(o.piggy, 0, 0, 1e5); r.pigCores = Array.isArray(o.pigCores) ? [...new Set(o.pigCores.filter(n => CONFIG.piggy.coreStages.includes(n)))] : []; r.pigBought = o.pigBought === true; r.eggBuys = int(o.eggBuys, 0, 0, 999);
   r.awake = o.awake === true && r.stage === 'ascended';
   r.washes = int(o.washes, 0, 0, 1e7); r.earthWins = int(o.earthWins, 0, 0, 1e7);
   r.matGot = {}; if (o.matGot && typeof o.matGot === 'object') for (const k of ROUTES) if (Array.isArray(o.matGot[k])) r.matGot[k] = o.matGot[k].filter(n => [10, 20, 30, 40].includes(n)).slice(0, 4);
@@ -407,7 +412,7 @@ function gather(st, now = Date.now()) {
 /* ---------------- 照顧行為（GDD 第 3 節表格） ---------------- */
 const trait = st => (CONFIG.traitsOn && st && CONFIG.traits[st.route]) || {};
 const traitOf = route => (CONFIG.traitsOn && CONFIG.traits[route]) || {};
-function addXP(st, n) { n = Math.max(0, Math.round(n * (trait(st).xp || 1))); st.xp += n; return n; }
+function addXP(st, n) { n = Math.max(0, Math.round(n * (trait(st).xp || 1) * (!st.awake && hasHeritage(st) ? CONFIG.heritage.xp : 1))); st.xp += n; return n; }
 const washCost = st => trait(st).washCost || CONFIG.washCost;
 function act(st, a, now = Date.now(), opt) {
   const tm = applyTime(st, now);
@@ -591,8 +596,14 @@ function mkFighter(name, key, lvl, route, tierN, mood, bond) {
   return { name, key, level: lvl, el: ELEM[route] || 'none', max: Math.round((30 + lvl * 6) * k), hp: Math.round((30 + lvl * 6) * k), stunChance: T.stun || 0, stun: 0,
     atk: (8 + lvl * 2) * k * cond * (T.atk || 1), def: (6 + lvl * 1.5) * k * (T.def || 1), spd: 5 + lvl + tierN, cd: 0, guard: false, endure: bond >= 80 };
 }
+/* V1.44 野生怪戰鬥數值（畫面和模擬共用） */
+function foeFighter(n, myLvl, name = '野生怪', key = 'k') {
+  const f = foeFor(n, myLvl), H0 = CONFIG.foeHp, T = CONFIG.tower, ft = mkFighter(name, key, f.level, f.route, 0, 80, 0), tw = n >= T.from;
+  ft.max = ft.hp = Math.round(ft.max * (f.big ? H0.big : f.boss ? H0.mini : H0.normal) * (tw ? T.hp : 1)); if (tw) ft.atk *= T.atk; ft.tower = tw; return ft;
+}
+const hasHeritage = st => !!(st.awake || (st.pair && st.pair.awake) || (st.roster || []).some(p => p.awake));
 /* V1.42 我方加成：進化階段、訓練成果、星耀覺醒 */
-function trainBonus(p) { const T = CONFIG.trainBonus, L = (p && p.trainLog) || {}, f = k => Math.min(T.max, (L[k] || 0) * T.per); return { dodge: f('dodge'), attack: f('attack'), defense: f('defense') }; }
+function trainBonus(p) { const T = CONFIG.trainBonus, L = (p && p.trainLog) || {}, f = k => Math.min(T.max, Math.round((L[k] || 0) * T.per * 1000) / 1000); return { dodge: f('dodge'), attack: f('attack'), defense: f('defense') }; }
 function buffFighter(f, p) {
   if (!f || !p) return f; const sx = CONFIG.stageX[p.stage] || 1, tb = trainBonus(p), aw = p.awake ? CONFIG.starHeart.statX : 1;
   f.atk *= sx * (1 + tb.attack) * aw; f.def *= sx * (1 + tb.defense) * aw; f.max = f.hp = Math.round(f.max * sx * (1 + tb.defense) * aw); f.dodge = tb.dodge; f.stageX = sx; return f;
@@ -762,11 +773,14 @@ function finishTrain(st, kind, success, now = Date.now()) {
   const K = CONFIG.train.kinds[kind]; if (!K) return { ok: false, xp: 0 };
   if (!success) return { ok: true, success: false, xp: 0 };
   const xp = addXP(st, CONFIG.train.base + CONFIG.train.perLv * level(st.xp));
-  const tl = st.trainLog || (st.trainLog = { dodge: 0, attack: 0, defense: 0 }); tl[K.skill] = (tl[K.skill] || 0) + 1;
+  const tl = st.trainLog || (st.trainLog = { dodge: 0, attack: 0, defense: 0 }), gain = !st.awake && hasHeritage(st) ? CONFIG.heritage.train : 1, cap = Math.round(CONFIG.trainBonus.max / CONFIG.trainBonus.per); tl[K.skill] = Math.min(cap, (tl[K.skill] || 0) + gain);
   if (tl.dodge + tl.attack + tl.defense === 1) journal(st, now, '第一次訓練成功！');
   return { ok: true, success: true, xp };
 }
 const FRESH_KEYS = ['food', 'berry', 'cranberry', 'blueberry', 'strawberry'];   // 自己種的（會發光、能賣）
+/* V1.44 迎接新的蛋要花錢 */
+const eggPrice = st => CONFIG.eggPrice[Math.min(CONFIG.eggPrice.length - 1, st.eggBuys || 0)];
+function buyEgg(st) { const p = eggPrice(st); if (st.coins < p) return { ok: false, msg: `金幣不足（新的蛋要 ${p} 金幣）` }; st.coins -= p; st.eggBuys = (st.eggBuys || 0) + 1; return { ok: true, price: p }; }
 function fixFresh(st) { const f = st.inv.fresh || (st.inv.fresh = {}); for (const k of FRESH_KEYS) f[k] = Math.min(f[k] || 0, st.inv[k] || 0); }
 /* 賣自己種的水果（一顆 15 元）。商店買來的不能賣，避免買低賣高 */
 function sellFruit(st, kind) {
@@ -800,8 +814,9 @@ function useCandy(st, now = Date.now()) {
   if (!st.hatched) return { ok: false, msg: '先把蛋孵出來吧！', tm };
   if (st.sleeping) return { ok: false, msg: '牠在睡覺，醒來再吃吧', tm };
   if (st.inv.candy < 1) return { ok: false, msg: '沒有星星糖了', tm };
+  const L = level(st.xp); if (L >= MAX_LV) return { ok: false, msg: `已經是最高等級 Lv.${MAX_LV} 了`, tm };
   const C = CONFIG.candy; st.inv.candy--; st.mood = clamp(st.mood + C.mood); st.hunger = clamp(st.hunger + C.hunger);
-  const L = level(st.xp), gain = 8 * L * L - st.xp; st.xp += gain;   // 直接升到下一級（level＝1＋√(xp/8)）
+  const gain = Math.ceil(XPK * L * L) - st.xp; st.xp += gain;   // 直接升到下一級
   return { ok: true, xp: gain, lv: L + 1, msg: `甜甜的星星糖！升到 Lv.${L + 1} 了 ✨`, tm };
 }
 
@@ -974,6 +989,8 @@ function canBreed(st, friend, now = Date.now()) {
   const B = CONFIG.breed;
   if (!st.hatched || !(st.stage === 'adult' || st.stage === 'ascended')) return '你的幻獸要先長到成年期才能配對';
   if (!friend.adult) return '朋友的幻獸還沒長到成年期';
+  if (!friend.sex) return '這是舊版的配對碼，沒有性別資料，請朋友更新遊戲後重新複製';
+  if (friend.sex === st.sex) return `要一公一母才能配對喔（你的是${st.sex === 'm' ? '公' : '母'}的，朋友的也是）`;
   if (now < st.breedAt + B.cooldownH * H) return `⏳ 還要 ${Math.ceil((st.breedAt + B.cooldownH * H - now) / MIN)} 分鐘才能再配對`;
   if (st.mood < B.minMood) return `心情要 ${B.minMood}% 以上（先陪牠玩或摸摸）`;
   if (st.coins < B.cost) return `金幣不足（需要 ${B.cost}）`;
@@ -993,7 +1010,7 @@ const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
-  pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  MAX_LV, foeFighter, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -267,9 +267,11 @@ async def main():
         ok('捷徑網址登記步數', s['steps']['total'] == 12345 and 'steps' not in p.url, (s['steps']['total'], p.url))
         # ---------- 配對 ----------
         ctx2, f = await newpage(br, I13); await hatch(f, '阿花')
-        await f.evaluate("PF.debug.set({stage:'adult',route:'flame'})"); fcode = await f.evaluate("PF.mateCode()"); await ctx2.close()
-        await p.evaluate("PF.debug.set({mood:90,coins:100})")
-        await p.click('#bMate'); await p.fill('#mIn', fcode); await p.click('#mGo'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/12_mate.png')
+        await f.evaluate("PF.debug.set({stage:'adult',route:'flame',sex:'f'})"); fcode = await f.evaluate("PF.mateCode()")
+        await f.evaluate("PF.debug.set({sex:'m'})"); fcode_m = await f.evaluate("PF.mateCode()"); await ctx2.close()
+        await p.evaluate("PF.debug.set({mood:90,coins:100,sex:'m'})")
+        await p.click('#bMate'); await p.fill('#mIn', fcode_m); await p.click('#mGo'); await p.wait_for_timeout(300); ok('跟朋友配對也要一公一母', '一公一母' in await p.inner_text('#mErr'), await p.inner_text('#mErr'))
+        await p.fill('#mIn', fcode); await p.click('#mGo'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/12_mate.png')
         await p.click('#mConfirm'); await p.wait_for_timeout(500); s = await st(p)
         ok('配對得到蛋、扣 20 金幣', len(s['eggs']) == 1 and s['coins'] == 80)
         await p.click('#bMate'); await p.fill('#mIn', fcode); await p.click('#mGo'); await p.wait_for_timeout(200)
@@ -283,7 +285,7 @@ async def main():
         # ---------- 9. 匯出、迎接新蛋、匯入 ----------
         code = await p.evaluate("PF.exportCode()"); before = await st(p)
         await p.click('#bMenu'); await p.click('#mReset'); await p.click('#mbtns .pri'); await p.wait_for_timeout(400); s = await st(p)
-        ok('迎接新蛋：保留金幣、圖鑑、日記、每日紀錄', s['stage'] == 'egg' and s['coins'] == before['coins'] and len(s['dex']) == 1 and len(s['journal']) >= 3 and s['daily']['date'] == before['daily']['date'])
+        ok('迎接新蛋：第 1 顆扣 300 金幣、保留圖鑑、日記、每日紀錄', s['stage'] == 'egg' and s['coins'] == before['coins'] - 300 and s['eggBuys'] == 1 and len(s['dex']) == 1 and len(s['journal']) >= 3 and s['daily']['date'] == before['daily']['date'])
         ok('小窩有空位：舊夥伴搬進小窩', len(s['roster']) == 1 and s['roster'][0]['name'] == '露米')
         await hatch(p, '小二'); await p.evaluate("PF.debug.set({view:'room'})"); await p.wait_for_timeout(500); await p.screenshot(path=f'{OUT}/12d_room_residents.png')
         await p.click('#denBtn'); await p.wait_for_timeout(300); await p.click('[data-sw="0"]'); await p.wait_for_timeout(300); s = await st(p)
