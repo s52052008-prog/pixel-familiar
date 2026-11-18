@@ -63,6 +63,19 @@ const CONFIG = {
   stageX: { egg: 1, baby: 1, juvenile: 1, adolescent: 1.1, adult: 1.3, ascended: 1.5 },   // V1.43 進化階段加能力：幼年 ×1.0、成長 ×1.1、成年 ×1.3、高階 ×1.5（星耀覺醒再 ×2）
   trainBonus: { per: .02, max: .2 },   // V1.44：每次 +2%，每種 10 次練滿                       // V1.42 訓練成功一次 +1%，每種最多 +20%：閃避＝猜拳輸也可能閃開、攻擊＝攻擊力、防禦＝防禦力和血量
   bossCoins: { mini: 15, big: 30 },
+  // V1.52 固定的小王／大王（照長相決定屬性）與專屬寶物
+  bosses: { 5: { mon: '苔石巨人', route: 'earth', relic: 'mossHeart' }, 10: { mon: '熔岩犀', route: 'earth', relic: 'rhinoCharm' }, 15: { mon: '骷髏騎士', route: 'metal', relic: 'boneShield' },
+    20: { mon: '巫師幽靈', route: 'elec', relic: 'ghostHat' }, 25: { mon: '小死神', route: 'elec', relic: 'reaperBlade' }, 30: { mon: '火鳳', route: 'bird', relic: 'phoenixFeather' },
+    35: { mon: '赤龍', route: 'flame', relic: 'dragonFang' }, 40: { mon: '冰龍', route: 'tide', relic: 'iceScale' } },
+  relics: { repeatDrop: .2, sell: 999, slots: 2, items: {
+    rhinoCharm:     { name: '犀角護符',   icon: '📿', boss: '熔岩犀',   def: .1,   text: '防禦 +10%' },
+    reaperBlade:    { name: '死神鐮刃',   icon: '🌙', boss: '小死神',   crit: .1,  text: '會心一擊機率 +10%' },
+    boneShield:     { name: '骷髏騎士盾', icon: '🛡️', boss: '骷髏騎士', cut: .1,   text: '受到的傷害 −10%' },
+    iceScale:       { name: '冰龍鱗片',   icon: '💠', boss: '冰龍',     hp: .2,    text: '血量 +20%' },
+    mossHeart:      { name: '苔石之心',   icon: '💚', boss: '苔石巨人', regen: .15, text: '每回合回復 15% 血量' },
+    phoenixFeather: { name: '不死鳥羽毛', icon: '🪶', boss: '火鳳',     revive: .4, text: '每場戰鬥倒下一次時，用 40% 血量復活' },
+    dragonFang:     { name: '赤龍之牙',   icon: '🦷', boss: '赤龍',     atk: .2,   text: '攻擊 +20%' },
+    ghostHat:       { name: '幽靈魔帽',   icon: '🎩', boss: '巫師幽靈', sp: .2,    text: '屬性技和大絕招的傷害 +20%' } } },
   foeHp: { normal: 1.3, mini: 1.5, big: 2 }, tower: { from: 31, hp: 1.8, atk: 1.3 },   // V1.44 野生怪血量；第 31～40 關「星之塔」更硬更痛
   heritage: { xp: 3, train: 2 },                             // V1.44 傳承之力：已經有星耀覺醒的夥伴，其他幻獸經驗 ×2、訓練成果 ×2
   eggPrice: [300, 700, 1000],
@@ -224,11 +237,11 @@ function fresh(now = Date.now()) {
     xp: 0, coins: S.coins, hunger: S.hunger, mood: S.mood, clean: S.clean, energy: S.energy, bond: 0, sleeping: false,
     path: { flame: 0, tide: 0, forest: 0, earth: 0, bird: 0, elec: 0, metal: 0 }, bondUses: 0, cleanups: 0,
     care: { petLastRewardAt: 0, bathLastAt: 0, playXpAt: [], gatherAt: 0 },
-    inv: Object.assign({ food: S.food, seeds: S.seeds, seeds2: 0, candy: 0, potion: 1, potion2: 0, soup: 0, ember: 0, shards: 0, hearts: 0, fresh: { food: 0, berry: 0, cranberry: 0, blueberry: 0, strawberry: 0 }, mats: {} }, ...Object.keys(CONFIG.foods).filter(k => k !== 'food').map(k => ({ [k]: 0 }))), harvests: 0, trainLog: { dodge: 0, attack: 0, defense: 0 }, trains: 0,
+    inv: Object.assign({ food: S.food, seeds: S.seeds, seeds2: 0, candy: 0, potion: 1, potion2: 0, soup: 0, ember: 0, shards: 0, hearts: 0, relics: {}, fresh: { food: 0, berry: 0, cranberry: 0, blueberry: 0, strawberry: 0 }, mats: {} }, ...Object.keys(CONFIG.foods).filter(k => k !== 'food').map(k => ({ [k]: 0 }))), harvests: 0, trainLog: { dodge: 0, attack: 0, defense: 0 }, trains: 0,
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] }, goalLv: 0,
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
-    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, eggBuys: 0, foster: [], fusionHouse: false, fosterPaid: false, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
+    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, relics: [], relicGot: [], eggBuys: 0, foster: [], fusionHouse: false, fosterPaid: false, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
     events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
@@ -294,6 +307,8 @@ function sanitize(o, now = Date.now()) {
   r.pair = o.pair && typeof o.pair === 'object' && o.pair.hatched && r.hatched ? sanitizePet(o.pair, now) : null;
   if (r.pair && r.roster.length > CONFIG.den.length - 2) r.roster.length = CONFIG.den.length - 2;
   r.owner = typeof o.owner === 'string' ? o.owner.replace(/[<>&"]/g, '').trim().slice(0, 12) : '';
+  { const RI = CONFIG.relics.items, iv = o.inv && o.inv.relics && typeof o.inv.relics === 'object' ? o.inv.relics : {}; r.inv.relics = {}; for (const k in RI) { const n = int(iv[k], 0, 0, 999); if (n) r.inv.relics[k] = n; }
+    r.relics = Array.isArray(o.relics) ? [...new Set(o.relics.filter(k => RI[k]))].slice(0, CONFIG.relics.slots) : []; r.relicGot = Array.isArray(o.relicGot) ? [...new Set(o.relicGot.filter(n => CONFIG.bosses[n]))] : []; }
   r.piggy = num(o.piggy, 0, 0, 1e5); r.pigCores = Array.isArray(o.pigCores) ? [...new Set(o.pigCores.filter(n => CONFIG.piggy.coreStages.includes(n)))] : []; r.pigBought = o.pigBought === true; r.eggBuys = int(o.eggBuys, 0, 0, 999); r.fosterPaid = o.fosterPaid === true; r.fusionHouse = o.fusionHouse === true;
   r.awake = o.awake === true && r.stage === 'ascended';
   r.washes = int(o.washes, 0, 0, 1e7); r.earthWins = int(o.earthWins, 0, 0, 1e7);
@@ -610,17 +625,21 @@ const hasHeritage = st => !!(st.awake || (st.pair && st.pair.awake) || (st.roste
 function trainBonus(p) { const T = CONFIG.trainBonus, L = (p && p.trainLog) || {}, f = k => Math.min(T.max, Math.round((L[k] || 0) * T.per * 1000) / 1000); return { dodge: f('dodge'), attack: f('attack'), defense: f('defense') }; }
 function buffFighter(f, p) {
   if (!f || !p) return f; const sx = CONFIG.stageX[p.stage] || 1, tb = trainBonus(p), aw = p.awake ? CONFIG.starHeart.statX : 1;
-  f.atk *= sx * (1 + tb.attack) * aw; f.def *= sx * (1 + tb.defense) * aw; f.max = f.hp = Math.round(f.max * sx * (1 + tb.defense) * aw); f.dodge = tb.dodge; f.stageX = sx; return f;
+  f.atk *= sx * (1 + tb.attack) * aw; f.def *= sx * (1 + tb.defense) * aw; f.max = f.hp = Math.round(f.max * sx * (1 + tb.defense) * aw); f.dodge = tb.dodge; f.stageX = sx;
+  for (const k of (p.relics || [])) { const R = CONFIG.relics.items[k]; if (!R) continue;   // V1.52 寶物
+    if (R.def) f.def *= 1 + R.def; if (R.atk) f.atk *= 1 + R.atk; if (R.hp) f.max = f.hp = Math.round(f.max * (1 + R.hp));
+    if (R.crit) f.critUp = (f.critUp || 0) + R.crit; if (R.cut) f.dmgCut = (f.dmgCut || 0) + R.cut; if (R.regen) f.regen = (f.regen || 0) + R.regen; if (R.revive) f.revive = R.revive; if (R.sp) f.spUp = (f.spUp || 0) + R.sp; }
+  return f;
 }
 /* 冒險區域（每 5 關一區）主要出現的屬性 */
 const AREA_ROUTE = [null, 'tide', 'flame', 'forest', 'earth', 'bird', 'elec', 'metal', null];
 function foeFor(n, myLvl = 1) {
   const seed = (Math.imul(n, 2654435761) ^ 0x9e3779b9) >>> 0, G = makeGenome(seed), boss = n % 5 === 0, big = n % 10 === 0;   // 5 關一小王、10 關一大王
   if (boss) G.rarity = 3;
-  const area = AREA_ROUTE[Math.min(AREA_ROUTE.length - 1, Math.floor((n - 1) / 5))], route = area && (seed >>> 8) % 10 < 7 ? area : ROUTES[seed % ROUTES.length], stage = n >= 4 ? 'adult' : (n >= 2 ? 'adolescent' : 'juvenile');
+  const BS = CONFIG.bosses[n], area = AREA_ROUTE[Math.min(AREA_ROUTE.length - 1, Math.floor((n - 1) / 5))], route = BS ? BS.route : area && (seed >>> 8) % 10 < 7 ? area : ROUTES[seed % ROUTES.length], stage = n >= 4 ? 'adult' : (n >= 2 ? 'adolescent' : 'juvenile');
   const lvl = boss ? (n <= 5 ? n + 1 : Math.round(4 + n * .6) + (big ? 4 : 2))   // V1.42：小王／大王固定等級，不會跟著你變強（練功就打得贏）
     : n <= 5 ? Math.max(n, Math.round(myLvl) - 2) : Math.max(1, Math.round(4 + n * .6), Math.round(myLvl) - 1);   // 一般野生怪：新手區比你低 2 級；之後跟著你的等級（最低 ≈ 4＋關卡×0.6）   // 新手區（1–5 關）比你低 2 級；之後野生怪跟著你的等級，最低等級 ≈ 4＋關卡×0.6（V1.33 前是關卡數，後期太難）
-  return { id: 'x:' + encodeGenome(G), route, stage, level: lvl, boss, big };
+  return { id: 'x:' + encodeGenome(G), route, stage, level: lvl, boss, big, mon: BS ? BS.mon : null };
 }
 function elemMult(a, d, special) { if (!special || a.el === 'none' || d.el === 'none') return 1; return (BEATS[a.el] || []).includes(d.el) ? 1.4 : (BEATS[d.el] || []).includes(a.el) ? .75 : 1; }
 /* 預估傷害（不含隨機與會心一擊）：用來顯示「這一擊強不強」、判斷是不是快撐不住了 */
@@ -644,15 +663,16 @@ function bondBoost(taps) {
   return P[P.length - 1][1];
 }
 function damage(a, d, special, r = Math.random, boost = 1) {
-  const pow = (special ? (a.el === 'none' ? 1.15 : 1.3) : 1) * (a.charged ? 2 : 1) * boost; a.charged = false;
+  const pow = (special ? (a.el === 'none' ? 1.15 : 1.3) * (1 + (a.spUp || 0)) : 1) * (a.charged ? 2 : 1) * boost; a.charged = false;
   const mult = elemMult(a, d, special);
   let dmg = Math.max(1, Math.round(a.atk * pow * (a.atk / (a.atk + d.def)) * 1.6 * mult * (.85 + r() * .3)));
   if (d.guard) { dmg = Math.max(1, Math.round(dmg * .5)); d.guard = false; }
-  const crit = r() < .08; if (crit) dmg = Math.round(dmg * 1.5);
+  if (d.dmgCut) dmg = Math.max(1, Math.round(dmg * (1 - d.dmgCut)));
+  const crit = r() < .08 + (a.critUp || 0); if (crit) dmg = Math.round(dmg * 1.5);
   let endured = false;
   if (dmg >= d.hp && d.endure) { dmg = d.hp - 1; d.endure = false; endured = true; }
-  d.hp = Math.max(0, d.hp - dmg);
-  return { dmg, mult, crit, endured };
+  let revived = false; if (dmg >= d.hp && d.revive) { d.hp = Math.max(1, Math.round(d.max * d.revive)); d.revive = 0; revived = true; } else d.hp = Math.max(0, d.hp - dmg);   // V1.52 不死鳥羽毛
+  return { dmg, mult, crit, endured, revived };
 }
 function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random) {
   const A = CONFIG.adventure, out = { xp: 0, coins: 0, food: 0, seeds: 0, unlocked: 0, events: [] };
@@ -667,6 +687,9 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
     else out.xp = addXP(st, Math.round(xp * A.overCapXpRate));
     if (r() < A.dropFood) { st.inv.food++; out.food = 1; }
     if (r() < CONFIG.potion.drop) { st.inv.potion++; out.potion = 1; }
+    { const BS = CONFIG.bosses[n]; if (BS) { const got = st.relicGot || (st.relicGot = []), first = !got.includes(n);   // V1.52 王的寶箱：第一次一定掉，之後 20%
+      if (first || r() < CONFIG.relics.repeatDrop) { if (first) got.push(n); const iv = st.inv.relics || (st.inv.relics = {}); iv[BS.relic] = (iv[BS.relic] || 0) + 1; out.relic = BS.relic; out.chest = n % 10 === 0 ? 'gold' : 'bronze';
+        journal(st, now, `打開${n % 10 === 0 ? '金' : '銅'}寶箱，得到寶物「${CONFIG.relics.items[BS.relic].name}」！`); } } }
     if (CONFIG.piggy.coreStages.includes(n) && !(st.pigCores || (st.pigCores = [])).includes(n)) { st.pigCores.push(n); out.pigCore = pigLevel(st); journal(st, now, `第 ${n} 關王掉了「小豬撲滿核心碎片」！小豬撲滿升到 ${pigLevel(st)} 級`); }   // V1.43
     if (CONFIG.ascend.bigBoss.includes(n) && st.route) {   // 第 10／20／30 關大王：這個屬性各掉一次終極素材
       const got = st.matGot[st.route] || (st.matGot[st.route] = []);
@@ -852,7 +875,7 @@ function finishBallGame(st, score, now = Date.now()) {
 }
 
 /* ---------------- 小窩：升級、讓多隻寵物住進來 ---------------- */
-const PET_FIELDS = ['fosterPaid', 'trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
+const PET_FIELDS = ['relics', 'fosterPaid', 'trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
 function snapshotPet(st) { const p = {}; for (const k of PET_FIELDS) p[k] = JSON.parse(JSON.stringify(st[k])); p.sleeping = false; return p; }
 function sanitizePet(p, now = Date.now()) { const r = sanitize(Object.assign({ v: 6 }, p, { roster: [], dex: [], pair: null }), now); return snapshotPet(r); }
 /* V1.45 神秘老爺爺的家：寄養不想養的幻獸（不佔小窩、數值不會變），每隻付一次錢 */
@@ -1022,7 +1045,15 @@ function breed(st, friend, now = Date.now(), r = Math.random) {
   return { ok: true, egg, G };
 }
 
-const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars, dayKey, hourIn, level, rng, makeGenome, CLASSIC_G, encodeGenome, decodeGenome, breedGenome,
+/* ---------------- V1.52 寶物：每隻寵物 2 格，背包裡的可以戴給任何一隻、也可以賣 ---------------- */
+function relicCount(st, k) { return (st.inv.relics && st.inv.relics[k]) || 0; }
+function equipRelic(st, p, k) { const R = CONFIG.relics.items[k]; if (!R) return { ok: false, msg: '沒有這個寶物' }; if (relicCount(st, k) < 1) return { ok: false, msg: '背包裡沒有這個寶物' };
+  const L = p.relics || (p.relics = []); if (L.includes(k)) return { ok: false, msg: '同一種寶物只能戴一個' }; if (L.length >= CONFIG.relics.slots) return { ok: false, msg: `寶物欄位只有 ${CONFIG.relics.slots} 格，先卸下一個` };
+  st.inv.relics[k]--; if (!st.inv.relics[k]) delete st.inv.relics[k]; L.push(k); return { ok: true, msg: `${p.name} 戴上了「${R.name}」` }; }
+function unequipRelic(st, p, k) { const L = p.relics || []; const i = L.indexOf(k); if (i < 0) return { ok: false, msg: '沒有戴這個寶物' }; L.splice(i, 1); const iv = st.inv.relics || (st.inv.relics = {}); iv[k] = (iv[k] || 0) + 1; return { ok: true, msg: `卸下「${CONFIG.relics.items[k].name}」，放回背包` }; }
+function sellRelic(st, k) { const R = CONFIG.relics.items[k]; if (!R || relicCount(st, k) < 1) return { ok: false, msg: '背包裡沒有這個寶物' }; st.inv.relics[k]--; if (!st.inv.relics[k]) delete st.inv.relics[k]; st.coins += CONFIG.relics.sell; return { ok: true, msg: `賣掉「${R.name}」，得到 ${CONFIG.relics.sell} 金幣` }; }
+
+const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars, dayKey, hourIn, level, rng, makeGenome, CLASSIC_G, encodeGenome, decodeGenome, breedGenome,
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
