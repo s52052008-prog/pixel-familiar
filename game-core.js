@@ -50,7 +50,11 @@ const CONFIG = {
   farm: { plots: 3, maxPlots: 9, expand: [90, 150, 300, 500, 700, 999],   /* V1.64 開始 3 格，最多 9 格 */ growHours: 2, fruitMin: 2, fruitMax: 3, freshHours: 6, rotHours: 24, xp: 5, forest: 3, seedPrice: 5 },   // 收成：蘋果、莓果各隨機 1～2 顆；田可以花錢擴建到 6 格     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
   goals: { perDay: 3, coins: [15, 30, 50], maxLv: 10, needPerLv: .2, rewardPerLv: .2 },   // 每天 ★／★★／★★★ 三個；每天 3 個都完成，任務等級 +1（更難、獎勵更好）
   candy: { price: 200, mood: 20, hunger: 10 },   // V1.39：星星糖 200 金幣，吃了直接升 1 級（不受屬性經驗加成影響）
-  core: { rotMin: 10, moodPerHour: 4, max: 8 },          // 果核：10 分鐘沒清會發臭長果蠅，每顆每小時心情 −4
+  core: { rotMin: 10, moodPerHour: 4, max: 8 },
+  // V1.67 天氣：每 3 小時換一次（同一時段大家都一樣）；在外面淋雨、打雷會影響幻獸，在小窩裡就安全（雷雨還是會有點怕）
+  weatherOn: true,
+  weather: { slotHours: 3, odds: [['clear', .5], ['breeze', .25], ['rain', .17], ['storm', .08]], offlineCap: 3,
+    fx: { breeze: { out: { mood: 1 } }, rain: { out: { mood: -2, clean: -3 } }, storm: { out: { mood: -5, clean: -4, energy: -2 }, in: { mood: -1 } } } },          // 果核：10 分鐘沒清會發臭長果蠅，每顆每小時心情 −4
   poop: { delayMin: 40, rotMin: 3 },                      // 每吃一次，40 分鐘後大便；大便 3 分鐘沒清就發臭
   potion: { price: 40, heal: .5, drop: .15 },             // 回復藥水：回復 50% 最大 HP（V1.40：20 → 40 金幣）
   superPotion: { price: 100, heal: 1 },                   // V1.40 超級藥水：戰鬥中回復全部 HP
@@ -374,6 +378,12 @@ function sanitize(o, now = Date.now()) {
 }
 
 /* ---------------- 時間：離線模擬（GDD 第 2 節） ---------------- */
+function weatherAt(t = Date.now()) {
+  const W = CONFIG.weather, slot = Math.floor((t + 8 * H) / (W.slotHours * H));   // 以台灣時間切時段
+  let h = (slot * 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13; const r = (h % 10000) / 10000;
+  let acc = 0; for (const [k, p] of W.odds) { acc += p; if (r < acc) return k; } return 'clear';
+}
+function weatherFx(st, now) { if (!CONFIG.weatherOn) return null; const F = CONFIG.weather.fx[weatherAt(now)]; return F ? F[st.view === 'room' ? 'in' : 'out'] || null : null; }
 function applyTime(st, now = Date.now()) {
   if (now < st.lastTick) { st.clockWarn = now; return { warn: 'back', hours: 0, events: [] }; }   // 時間倒退：不回溯，記錄警告
   const hours = (now - st.lastTick) / H, eff = Math.min(hours, CONFIG.offlineCapHours);
@@ -393,6 +403,8 @@ function applyTime(st, now = Date.now()) {
     if (st.starveSince && !st.runaway && now - st.starveSince >= CONFIG.runaway.starveHours * H) { st.runaway = { at: now, got: 0 }; st.sleeping = false; journal(st, now, '肚子太餓，離家出走了…'); events.push('runaway'); }
     const N = CONFIG.neglect; if (Math.min(st.hunger, st.mood, st.clean) < N.below) st.bond = clamp(st.bond - N.bondPerHour * eff);   // 沒照顧好，親密度會掉
     if (st.pair) decayPair(st, eff);
+    const WF = !st.sleeping && !st.runaway && weatherFx(st, now);   // 天氣：離線最多算 3 小時
+    if (WF) { const wh = Math.min(eff, CONFIG.weather.offlineCap); for (const k in WF) { st[k] = clamp(st[k] + WF[k] * wh); if (st.pair && k in st.pair) st.pair[k] = clamp(st.pair[k] + WF[k] * wh); } }
     if (!st.runaway && st.mood >= CONFIG.piggy.minMood) st.piggy = Math.min(piggyCap(st), (st.piggy || 0) + piggyRate(st) * eff * (st.sleeping ? CONFIG.piggy.sleepRate : 1));
   }
   return { hours, eff, warn: hours > CONFIG.jumpWarnDays * 24 ? 'jump' : null, events };
@@ -1087,6 +1099,6 @@ const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, S
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
   toNextLv, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
-  trainBonus, buffFighter, useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
+  trainBonus, buffFighter, useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

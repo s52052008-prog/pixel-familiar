@@ -14,7 +14,7 @@ async def tap(p, x=64, y=80):
     await p.mouse.click(b['x'] + x / 128 * b['width'], b['y'] + y / 112 * b['height'])
 async def newpage(br, dev, init=None):
     ctx = await br.new_context(**dev); p = await ctx.new_page()
-    await p.add_init_script('window.PF_NO_WANDER=1;window.PF_NO_RPS=1;window.PF_NO_TRAITS=1;window.PF_SKIP_INTRO=1')   # 測試時關掉待命亂走與猜拳（猜拳另外測）
+    await p.add_init_script('window.PF_NO_WANDER=1;window.PF_NO_RPS=1;window.PF_NO_TRAITS=1;window.PF_NO_WEATHER=1;window.PF_SKIP_INTRO=1')   # 測試時關掉待命亂走與猜拳（猜拳另外測）
     p.on('pageerror', lambda e: errors.append(str(e)))
     p.on('console', lambda m: errors.append(m.text) if m.type == 'error' and 'favicon' not in m.text else None)
     if init: await p.add_init_script(init)
@@ -51,7 +51,9 @@ async def do_play(p, timed=True, goals=2):
                 await p.mouse.click(*tapxy)
         await p.wait_for_timeout(12)
 async def closeall(p):
-    if await p.is_visible('#modal'): await p.click('#mbtns .btn >> nth=0')
+    if await p.is_visible('#modal'):
+        if await p.is_visible('#mX'): await p.click('#mX')
+        else: await p.click('#mbtns .btn >> nth=0')
 async def move(p, mv):   # V1.40：技能、背包要先點開第二層
     if mv in ('tackle', 'special', 'charge', 'ult'): await p.click('#mvSkill'); await p.wait_for_timeout(80)
     elif mv in ('potion', 'potion2'): await p.click('#mvBag'); await p.wait_for_timeout(80)
@@ -130,7 +132,7 @@ async def main():
         ok('沒有特殊事件不能高階', (await st(p))['stage'] == 'adult')
         evname = await p.evaluate("PF.PC.ascendInfo(PF.state).task.text"); g = await p.evaluate("document.getElementById('growText').textContent"); ok('成年期顯示 🔔 專屬任務和終極素材進度', evname in g and '🔔' in g and '0/3' in g, g)
         # 日記
-        await p.click('#bMenu'); await p.click('#mJournal'); await p.wait_for_timeout(300); txt = await p.inner_text('#sheet')
+        await p.click('#bCodex'); await p.click('#cxJournal'); await p.wait_for_timeout(300); txt = await p.inner_text('#sheet')
         ok('日記自動記錄孵化與進化', '孵化' in txt and '少年期' in txt and '成年期' in txt); await p.screenshot(path=f'{OUT}/08_journal.png'); await closeall(p)
         # ---------- 7. 零資源不卡死 ----------
         await p.evaluate("PF.debug.set({coins:0,inv:{food:0,seeds:0,candy:0,potion:1},hunger:20,sleeping:false})"); await p.wait_for_timeout(1200)
@@ -256,7 +258,7 @@ async def main():
         if not await p.evaluate("PF.B.over"): await p.click('#mpMain [data-mv=run]'); await p.wait_for_timeout(1200)
         await p.wait_for_selector('#bDone', state='visible', timeout=8000); await p.click('#bDone'); await p.wait_for_timeout(300)
         await p.evaluate("PF.debug.set({energy:100,sleeping:false,xp:512,coins:100})"); x0 = (await st(p))['xp']
-        await p.click('#bAdv'); await p.wait_for_timeout(300); await p.click('#goTrain'); await p.wait_for_timeout(300); await p.click('[data-tk=combo]'); await p.wait_for_timeout(3200)
+        await p.click('#bTrain'); await p.wait_for_timeout(300); await p.click('[data-tk=combo]'); await p.wait_for_timeout(3200)
         seq = await p.evaluate('PF.TG.seq'); ok('組合拳節奏版：5 組 × 5 拳、有方向鍵與 AB 鍵', len(seq) == 25 and await p.locator('#tCtl [data-tb]').count() == 6, (len(seq), await p.locator('#tCtl [data-tb]').count()))
         await p.evaluate("""new Promise(r=>{const iv=setInterval(()=>{const G=PF.TG;if(!G||G.phase==='done'){clearInterval(iv);r(1);return}if(G.phase==='play'){const n=G.notes.find(n=>!n.st&&Math.abs(G.t-n.t)<.05);if(n)G.btn(n.k)}},8)})""")
         await p.wait_for_selector('#tResult', state='visible', timeout=8000); s = await st(p)
@@ -296,7 +298,7 @@ async def main():
         await hatch(p, '小二'); await p.evaluate("PF.debug.set({view:'room'})"); await p.wait_for_timeout(500); await p.screenshot(path=f'{OUT}/12d_room_residents.png')
         await p.click('#denBtn'); await p.wait_for_timeout(300); await p.click('[data-sw="0"]'); await p.wait_for_timeout(300); s = await st(p)
         ok('從小窩換夥伴出來', s['name'] == '露米' and s['roster'][0]['name'] == '小二')
-        await p.click('#bSave'); await p.fill('#impText', code); await p.click('#bImp'); await p.wait_for_timeout(200); await p.click('#mbtns .pri'); await p.wait_for_timeout(400)
+        await p.click('#bMenu'); await p.click('#mSave'); await p.fill('#impText', code); await p.click('#bImp'); await p.wait_for_timeout(200); await p.click('#mbtns .pri'); await p.wait_for_timeout(400)
         s = await st(p); ok('匯入還原', s['name'] == '露米' and s['stage'] == 'adult' and s['den']['level'] == 2)
         # 減少動畫、音效
         await p.click('#bMenu'); await p.click('#mMotion'); await p.click('#mSound'); s = await st(p); await closeall(p)
@@ -347,7 +349,7 @@ async def main():
             ok('猜拳有結果（贏／平手／輸）', any(k in m for k in ['躲開', '0.8', '1.2']), m)
         await ctx7.close()
         # ---------- iOS App 版：模擬 Capacitor 健康外掛，打開就自動同步步數 ----------
-        mock = """window.PF_NO_WANDER=1;window.PF_NO_RPS=1;window.PF_NO_TRAITS=1;window.PF_SKIP_INTRO=1;
+        mock = """window.PF_NO_WANDER=1;window.PF_NO_RPS=1;window.PF_NO_TRAITS=1;window.PF_NO_WEATHER=1;window.PF_SKIP_INTRO=1;
           const _d=n=>{const t=new Date(Date.now()-n*86400000);return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei'}).format(t)};
           window.Capacitor={isNativePlatform:()=>true,Plugins:{HealthSteps:{requestAuthorization:async()=>({granted:true}),getDailySteps:async()=>({days:[{date:_d(1),steps:4200},{date:_d(0),steps:6800}]})}}};"""
         ctx8 = await br.new_context(**I13); q = await ctx8.new_page(); await q.add_init_script(mock)

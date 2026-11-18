@@ -7,6 +7,7 @@ let pass = 0, fail = 0;
 function t(name, fn) { try { fn(); pass++; console.log('PASS ' + name); } catch (e) { fail++; console.log('FAIL ' + name + ' — ' + e.message); } }
 const T0 = Date.parse('2026-11-16T02:00:00Z');           // 台北 10:00
 function hatched(now = T0) { const s = C.fresh(now); C.hatch(s, now); s.name = '測試'; s.route = null; return s; }   // 屬性特性另外測：預設不帶屬性，數值才固定
+C.CONFIG.weatherOn = false;   // 天氣另外測
 const nonNeg = s => ['hunger', 'mood', 'clean', 'energy', 'bond'].every(k => s[k] >= 0 && s[k] <= 100) && s.coins >= 0 && s.xp >= 0 && s.inv.food >= 0 && s.inv.seeds >= 0;
 
 // 1. 全新存檔與檢查
@@ -404,6 +405,18 @@ t('V1.55 反擊技設定、大地壁壘／烈焰護盾／鋼鐵反擊的傷害�
   const f15 = C.foeFighter(15, 10), raw = C.mkFighter('x', 'k', f15.level, 'metal', 0, 80, 0); assert.equal(f15.max, Math.round(Math.round(raw.max * 1.5) * 1.05)); });
 t('V1.64 頂球進球有經驗：每球 +3、一場最多 30', () => { const s = hatched(); s.energy = 100; const x0 = s.xp, r = C.finishBallGame(s, 4, T0); assert.ok(r.ok); assert.equal(r.goalXp, 12); assert.ok(s.xp - x0 >= 12);
   const s2 = hatched(); s2.energy = 100; assert.equal(C.finishBallGame(s2, 20, T0).goalXp, 30); });
+
+t('V1.67 天氣：同一時段固定、四種都會出現；在外面淋雨會變髒變不開心、在小窩裡不會', () => {
+  const seen = new Set(); for (let i = 0; i < 400; i++) seen.add(C.weatherAt(T0 + i * 3 * H));
+  assert(['clear', 'breeze', 'rain', 'storm'].every(k => seen.has(k)), [...seen]);
+  assert.strictEqual(C.weatherAt(T0), C.weatherAt(T0 + 1000));
+  let tr = T0; while (C.weatherAt(tr) !== 'rain') tr += 3 * H;
+  C.CONFIG.weatherOn = true;
+  const a = hatched(tr), b = hatched(tr); a.view = 'yard'; b.view = 'room'; a.mood = b.mood = 80; a.clean = b.clean = 80;
+  C.applyTime(a, tr + H); C.applyTime(b, tr + H);
+  C.CONFIG.weatherOn = false;
+  assert(a.clean < b.clean && a.mood < b.mood, [a.clean, b.clean, a.mood, b.mood]);
+});
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);
