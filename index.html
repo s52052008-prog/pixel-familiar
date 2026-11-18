@@ -79,9 +79,18 @@ img.uic{width:21px;height:21px;vertical-align:-5px;margin-right:5px;display:inli
 .moves{display:block}.mpanel{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mpanel.hidden{display:none}.mpanel .back{grid-column:1/-1;min-height:40px!important}.moves .act{min-height:54px;font-size:14px;gap:2px}.moves .act small{font-size:11px;font-weight:700;opacity:.85}
 .btn.bond{background:#ff6a9a;color:#fff;box-shadow:inset 0 -3px 0 #c03a6a,0 0 0 3px #ffd0e0;font-size:16px;animation:pulse .8s steps(2) infinite}@keyframes pulse{50%{box-shadow:inset 0 -3px 0 #c03a6a,0 0 0 6px #ff9ac0}}
 #rpsZone{position:fixed;left:0;right:0;bottom:0;z-index:24;background:#101a30f0;border-top:3px solid var(--line);padding:12px 12px calc(12px + env(safe-area-inset-bottom));text-align:center;display:flex;flex-direction:column;gap:8px}#rpsMsg{font-size:18px;font-weight:900}.rpsbtns{display:flex;gap:8px}.rpsbtns button{flex:1;font-size:40px;min-height:84px;background:#2b4264;border:3px solid var(--line);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}.rpsbtns button span{font-size:14px;font-weight:800}.rpsbtns button.pick{background:#ffd86a;color:#273753}#rpsBar{height:6px;background:#0008}#rpsBar i{display:block;height:100%;background:#ff8a5a;width:100%}
+#trainZone{position:fixed;inset:0;z-index:23;background:#1a1008;display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:calc(10px + env(safe-area-inset-top)) 8px calc(12px + env(safe-area-inset-bottom));touch-action:manipulation;-webkit-user-select:none;user-select:none}
+#trainZone.hidden{display:none}#trainZone .tin{width:100%;max-width:460px;color:#fff3d0;display:flex;flex-direction:column;gap:6px;position:relative}
+#trainZone .thd{font-size:18px}#tGoal{color:#e8d0a0}#tHud{min-height:22px;font-weight:700}#tMsg{text-align:center;font-weight:700;min-height:22px;color:#ffd86a}
+#tcv{display:block;width:100%;aspect-ratio:128/112;image-rendering:pixelated;border:3px solid var(--line);touch-action:none}
+.tctl{display:flex;gap:8px}.tctl .tbtn{flex:1;min-height:64px;font-size:18px;touch-action:none}
+#tResult{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#1a1008b0}#tResult.hidden{display:none}#tResult .row{display:flex;gap:8px}
+.cmb{display:inline-block;border:2px solid #fff3d0;padding:0 4px;margin-right:3px}.cmb.ok{background:#6fcf5a;color:#1a1008}
+.thead{margin:10px 0 0;font-size:15px}.tgoal{margin:2px 0 4px}
 #tapZone{position:fixed;inset:0;z-index:25;background:#2a0a20cc;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;touch-action:none;-webkit-user-select:none;user-select:none;text-align:center}#tapZone b{font-size:72px;color:#ffd0e0}#tapMsg{font-size:22px;font-weight:900}
 #blog{white-space:pre-line;min-height:2.8em;background:#fff9e8;color:#273753;border:3px solid #273753;padding:7px 10px;font-weight:700;font-size:14px;line-height:1.4}
 .trainbox{display:flex;flex-direction:column;gap:6px;border:3px solid var(--line);background:#fff3d0;color:#3a2a2a;padding:8px;margin:8px 0}.trainbox .btn{width:100%}
+.sellrow{display:grid;grid-template-columns:1fr;gap:6px;margin-top:6px}
 .trainbox .small{color:#5a3a2a;opacity:1}
 .stagebtn{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;margin-top:6px}
 .eggrow{display:flex;gap:10px;align-items:center;background:#14203a;border:2px solid var(--line);padding:6px;margin-top:6px}.eggrow canvas{width:72px;height:72px;image-rendering:pixelated}
@@ -237,6 +246,8 @@ body.rm *{transition:none!important;animation:none!important}
  <div id="bResult" class="hidden"><div class="rcard"><h2 id="rTitle"></h2><div id="rRows"></div><div id="rNote" class="small"></div><button class="btn pri" id="bDone">確定</button></div></div>
 </div></div>
 <div id="rpsZone" class="hidden"><div id="rpsMsg">敵人要攻擊了！猜拳躲開它！</div><div id="rpsBar"><i></i></div><div class="rpsbtns"><button data-rps="rock">✊<span>石頭</span></button><button data-rps="scissors">✌️<span>剪刀</span></button><button data-rps="paper">✋<span>布</span></button></div><div class="small">贏：完全躲開｜平手：傷害 ×0.8｜輸或沒選：傷害 ×1.2</div></div>
+<div id="trainZone" class="hidden"><div class="tin"><div class="thd"><b id="tTitle"></b></div><div class="small" id="tGoal"></div><div id="tHud"></div><canvas id="tcv" width="128" height="112"></canvas><div id="tMsg"></div><div class="tctl" id="tCtl"></div>
+ <div id="tResult" class="hidden"><div class="rcard"><h2 id="tRTitle"></h2><p id="tRBody"></p><div class="row"><button class="btn pri" id="tAgain">再練一次</button><button class="btn" id="tClose">回家</button></div></div></div></div></div>
 <div id="tapZone" class="hidden"><div id="tapMsg"></div><b id="tapN"></b><div class="small">點螢幕任何地方都算</div></div>
 <div id="modal" class="hidden" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
 <div id="toast" class="off"></div>
@@ -247,7 +258,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.40.0';
+const VERSION='1.41.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -701,6 +712,10 @@ const ICONS={
  mat_metal:{o:'#4a3010',p:{y:'#ffd34a',Y:'#fff3a6',d:'#c8901a',k:'#6a4a10'},m:['..yyyyy...','.yYYyyyy..','yYyyyyyyd.','yyykkkyyd.','yyykkkyyd.','yyykkkyyd.','yyyyyyydd.','.yyyyydd..','..ddddd...']},
  mat_elec:{o:'#1a1a2a',p:{g:'#8a8a9a',G:'#c8c8d8',y:'#ffd84a',Y:'#fff3a0',p:'#a060e0',P:'#c890f0',k:'#3a3a4a'},m:['...kk.....','.GGGGGG...','.GpppPG...','.GpYypG...','.GpyYpG...','.GYypPG...','.GypppG...','.GpPppG...','.gggggg...']},
  fly:{o:null,p:{w:'#d8f0ff',k:'#1a1a1a'},m:['w.w','.k.']},
+ cranberry:{o:'#3a0a10',p:{r:'#b8202e',R:'#e8505a',w:'#ffd0d0',g:'#5fbf4a',d:'#7a1020'},m:['....g...','...gg...','.rr..rr.','rRwrrRwr','rrrdrrrd','.rd..rd.']},
+ blueberry:{o:'#141a40',p:{b:'#3a5ac8',B:'#7a9af0',d:'#26388a',w:'#d8e4ff',k:'#1a2050'},m:['..dkkd..','.bBBbbb.','bBwbbbbb','bbbbbbbd','bbbbbbdd','.bbbddd.','..ddd...']},
+ strawberry:{o:'#3a0a0a',p:{r:'#e8433f',R:'#ff8a7a',d:'#a8282e',y:'#ffe066',g:'#5fbf4a',G:'#3a8a3a'},m:['..gGgG..','.GgggGg.','rRrrrrrr','rRyrryrd','.rrrrrrd','.ryrryd.','..rrrd..','...dd...']},
+ worry:{o:'#3a3a4a',p:{g:'#9a9aaa',G:'#d8d8e8',k:'#4a4a5a'},m:['.GGGg.','G.kkkg','G.k.Gg','.Gkk.g','..G.g.','..k...']},
  note:{o:'#2a1a3a',p:{n:'#ffffff'},m:['..nnn','..n.n','..n.n','nnn..','nnn..']}
 };
 const ICV={};
@@ -872,8 +887,8 @@ function buildPlots(){const soil=g=>ellipse(g,10,12.5,9,3.2,(x,y,nx,ny)=>ny>.2?'
  mk('seed',g=>{soil(g);px(g,8,11,'#3a2416');px(g,12,11,'#3a2416');px(g,10,10,'#7ccc5a')});
  mk('sprout',g=>{soil(g);stem(g)});
  mk('leafy',g=>{soil(g);stem(g);bushy(g,false)});
- const fruitCol={food:['#e8433f','#ff9a8a','#a8282e'],berry:['#8a3ac8','#c890f0','#5a1a8a']};
- for(const k of['food','berry']){
+ const fruitCol={food:['#e8433f','#ff9a8a','#a8282e'],berry:['#8a3ac8','#c890f0','#5a1a8a'],cranberry:['#b8202e','#e8505a','#6a1018'],blueberry:['#3a5ac8','#8aa8f8','#1a2a6a'],strawberry:['#ff3a3a','#ffe066','#a8282e']};
+ for(const k of['food','berry','cranberry','blueberry','strawberry']){
   mk(k,g=>{soil(g);stem(g);bushy(g,true);for(const[x,y]of fruitAt){px(g,x,y,fruitCol[k][0]);px(g,x+1,y,fruitCol[k][0]);px(g,x,y-1,fruitCol[k][1])}});
   mk(k+'_over',g=>{soil(g);stem(g);ellipse(g,10,6.5,6,4.5,(x,y,nx,ny)=>nx*.5+ny*.6>.4?'#5a7a2a':'#8a9a3a');for(const[x,y]of fruitAt){px(g,x,y,fruitCol[k][2]);px(g,x+1,y,'#6a4a2a');px(g,x,y-1,fruitCol[k][0])}});   // 過熟：葉子變黃、果子變深有斑
  }
@@ -970,7 +985,7 @@ function draw(now){
   const ca=ph==='night'?.35:ph==='dusk'?.75:1;ctx.globalAlpha=ca;
   ctx.drawImage(cloudCv,Math.round(((t*2)%(W+60))-30),10);ctx.drawImage(cloudCv,Math.round(((t*1.3+80)%(W+60))-30),26);ctx.globalAlpha=1;
   drawAmbient(now,ph);drawPig(now);
-  const nowMs=Date.now();for(let i=0;i<s.plots.length;i++){const q=PC.plotState(s,i,nowMs),st=plotStage(q);ctx.drawImage(PLOT_SPR[st],1+i*13,91+(i%2)*6);if((st==='food'||st==='berry')&&Math.floor(now/400)%3===0){ctx.fillStyle='#ffffff';ctx.fillRect(6+i*13,89+(i%2)*6,1,1)}
+  const nowMs=Date.now();for(let i=0;i<s.plots.length;i++){const q=PC.plotState(s,i,nowMs),st=plotStage(q);ctx.drawImage(PLOT_SPR[st],1+i*13,91+(i%2)*6);if(['food','berry','cranberry','blueberry','strawberry'].includes(st)&&Math.floor(now/400)%3===0){ctx.fillStyle='#ffffff';ctx.fillRect(6+i*13,89+(i%2)*6,1,1)}
    if(st==='rot'&&!rm()){const a=now/300+i;ctx.drawImage(ICV.fly,Math.round(11+i*13+5*Math.cos(a)),Math.round(93+(i%2)*6+3*Math.sin(a*1.7)))}}}
  if(mode==='play')drawRing();
  drawPair(now);
@@ -1305,7 +1320,7 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',`
 <p><b>高階條件（七個屬性都一樣）：</b>① 長到成年期時會跳出 🔔 專屬任務，從那時開始算 ② 集滿 3 個該屬性的終極素材：第 ${C.ascend.bigBoss.join('、')} 關的大王各掉一次（依你目前這隻的屬性；換別的屬性的幻獸可以再拿）。每 5 關有小王、每 10 關有大王。</p>
 <p><b>專屬任務：</b>${PC.ROUTES.map(r=>ROUTE_ICON[r]+' '+C.ascend.tasks[r].map(([k,n])=>({wins:'打贏 '+n+' 場',washes:'洗澡 '+n+' 次',harvests:'收成 '+n+' 次',steps:'走 '+n.toLocaleString('en-US')+' 步',earthWins:'打贏 '+n+' 隻土屬性怪',goals:'頂球進 '+n+' 球',bondUses:'羈絆之力 '+n+' 次',cleanups:'清理 '+n+' 次'})[k]).join('或')).join('；')}。</p>
 <p><b>親密度：</b>20 解鎖撒嬌與早安問候、50 每天收到小禮物、80 戰鬥時撐住一次。</p>
-<p><b>⚔️ 戰鬥技巧：</b>戰鬥地點依怪獸屬性變成草原、岩石地、水邊、森林或星之塔。戰鬥選單有「⚔️ 技能、🛡️ 防禦、🎒 背包、🏃 逃跑」：技能點開有衝撞、輔助（蓄力，下一擊 ×2）、屬性技、大絕招（屬性技 2.2 倍，每場一次）；背包點開可以喝回復藥水（回復 50%）或超級藥水（回復全部）。按鈕上會顯示預估傷害（▲效果好、▼效果差）。打不贏的時候，可以在冒險畫面做「🏋️ 場外特訓」練經驗。快被打倒時會出現「💗 羈絆之力」：花 10 金幣買加油棒，倒數後 2 秒內連打螢幕，20 下 2.2 倍、22 下 2.5 倍、25 下 2.7 倍、28 下以上 3 倍（每場一次）；發揮超常能力後要休息 2 小時才能再冒險。敵人出招前會猜拳：猜贏完全躲開，平手受 0.8 倍傷害，猜輸或沒選受 1.2 倍。</p>
+<p><b>⚔️ 戰鬥技巧：</b>戰鬥地點依怪獸屬性變成草原、岩石地、水邊、森林或星之塔。戰鬥選單有「⚔️ 技能、🛡️ 防禦、🎒 背包、🏃 逃跑」：技能點開有衝撞、輔助（蓄力，下一擊 ×2）、屬性技、大絕招（屬性技 2.2 倍，每場一次）；背包點開可以喝回復藥水（回復 50%）或超級藥水（回復全部）。按鈕上會顯示預估傷害（▲效果好、▼效果差）。打不贏的時候，可以在冒險畫面去「🏋️ 訓練場」：閃避（躲避球）、攻擊（沙包連打、組合拳、靈光一閃）、防禦（瀑布打坐），每次 20 金幣，達成目標才有經驗。快被打倒時會出現「💗 羈絆之力」：花 10 金幣買加油棒，倒數後 2 秒內連打螢幕，20 下 2.2 倍、22 下 2.5 倍、25 下 2.7 倍、28 下以上 3 倍（每場一次）；發揮超常能力後要休息 2 小時才能再冒險。敵人出招前會猜拳：猜贏完全躲開，平手受 0.8 倍傷害，猜輸或沒選受 1.2 倍。</p>
 <p><b>每天：</b>第一次打開送金幣 +${C.daily.coins}、食物 +${C.daily.food}。沒食物又沒錢時可以免費「採集」。冒險不限次數，有體力就能出發。</p>
 <p><b>👟 步數：</b>每 1,000 步經驗 +10、每 2,000 步森系點數 +1；每 10 萬步突破一次（戰鬥 +10%）。</p>
 <p><b>💞 配對：</b>成年期以後可以和朋友交換「配對碼」，生出混合雙方基因的蛋。</p>
@@ -1510,25 +1525,25 @@ let farmTimer=0;
 function fmtLeft(ms){const m=Math.ceil(ms/60000);return m>=60?`${Math.floor(m/60)} 小時 ${m%60} 分`:`${m} 分鐘`}
 function farmDialog(){PC.claimDaily(s,Date.now());
  const F=CONFIG.farm;
- openModal('🌱 家園',`<p class="small">種下種子，${F.growHours} 小時後成熟：長出<b style="color:#ff8a7a">紅色</b>是蘋果、<b style="color:#d0a0ff">紫色</b>是莓果，每次 ${F.fruitMin}～${F.fruitMax} 顆。成熟後 ${F.freshHours} 小時內收最新鮮（會發光、能賣），太久會過熟，放 ${F.rotHours} 小時就爛掉${s.hatched?`、經驗 +${F.xp}、🌿 森系 +${F.forest}`:''}。每塊田一次種一株。已收成 <b>${s.harvests}</b> 次${s.harvests<CONFIG.harvestsForOldTree?`（森系高階需要 ${CONFIG.harvestsForOldTree} 次）`:''}。</p>
-<p>🌱 種子 <b id="fSeeds">${s.inv.seeds}</b>　🌟 優良 <b id="fSeeds2">${s.inv.seeds2||0}</b>　🍎 <b id="fFood">${s.inv.food}</b>　🫐 <b id="fBerry">${s.inv.berry||0}</b>　🪙 <b id="fCoins">${s.coins}</b></p>
+ openModal('🌱 家園',`<p class="small">種子都是綜合的，${F.growHours} 小時後成熟，會長出 <b style="color:#ff7a8a">蔓越莓</b>（賣 ${CONFIG.sellFruit.cranberry}）、<b style="color:#9ab8ff">藍莓</b>（賣 ${CONFIG.sellFruit.blueberry}）或 <b style="color:#ff5a5a">草莓</b>（賣 ${CONFIG.sellFruit.strawberry}），每次 ${F.fruitMin}～${F.fruitMax} 顆；🌟優良種子 ${CONFIG.goodSeed.fruitMin}～${CONFIG.goodSeed.fruitMax} 顆，也比較容易長出藍莓、草莓。成熟後 ${F.freshHours} 小時內收最新鮮（會發光、能賣），太久會過熟，放 ${F.rotHours} 小時就爛掉${s.hatched?`、經驗 +${F.xp}、🌿 森系 +${F.forest}`:''}。每塊田一次種一株。已收成 <b>${s.harvests}</b> 次${s.harvests<CONFIG.harvestsForOldTree?`（森系高階需要 ${CONFIG.harvestsForOldTree} 次）`:''}。</p>
+<p>🌱 種子 <b id="fSeeds">${s.inv.seeds}</b>　🌟 優良 <b id="fSeeds2">${s.inv.seeds2||0}</b>　🪙 <b id="fCoins">${s.coins}</b></p>
 <div class="plots" id="plots"></div><div class="err" id="fErr"></div>
 <div class="row"><button class="btn" id="fBuy">買 1 顆種子（${F.seedPrice} 金幣）</button><button class="btn" id="fBuy2">買 1 顆🌟優良種子（${CONFIG.goodSeed.price} 金幣）</button></div><div class="row"><button class="btn" id="fExp"></button></div>
-<div class="row"><button class="btn" id="fSellA"></button><button class="btn" id="fSellB"></button></div>
-<p class="small">自己種的水果可以吃，也可以賣（一顆 ${CONFIG.sellFruit.food} 金幣），拿錢去買肉排、烤魚、蛋糕或更多種子。種子也會在冒險打贏時得到。</p>`);
+<div class="sellrow" id="fSell"></div>
+<p class="small">自己種的水果可以吃，也可以賣，拿錢去買肉排、烤魚、蛋糕或更多種子。種子也會在冒險打贏時得到。</p>`);
  const draw=()=>{const box=$('plots');if(!box){clearInterval(farmTimer);return}const now=Date.now();
-  box.innerHTML=s.plots.map((p,i)=>{const q=PC.plotState(s,i,now),nm=q.kind==='berry'?'🫐 莓果':'🍎 蘋果';return`<div class="plot"><canvas data-p="${i}" width="20" height="16"></canvas>${q.empty?'空地':q.rotten?'<b>爛掉了…</b>':q.over?`<b>${nm}過熟了！</b><br><span class="small">快收，品質變差</span>`:q.ripe?`<b>✨${nm}成熟了！</b><br><span class="small">${fmtLeft(q.freshLeft)}內收最新鮮</span>`:'還要 '+fmtLeft(q.left)}
+  box.innerHTML=s.plots.map((p,i)=>{const q=PC.plotState(s,i,now),nm=q.kind?CONFIG.foods[q.kind].name:"";return`<div class="plot"><canvas data-p="${i}" width="20" height="16"></canvas>${q.empty?'空地':q.rotten?'<b>爛掉了…</b>':q.over?`<b>${nm}過熟了！</b><br><span class="small">快收，品質變差</span>`:q.ripe?`<b>✨${nm}成熟了！</b><br><span class="small">${fmtLeft(q.freshLeft)}內收最新鮮</span>`:'還要 '+fmtLeft(q.left)}
 ${!q.empty&&p.g?'<span class="small">🌟優良</span>':''}
    <button class="btn ${q.empty||q.ripe?'pri':''}" data-pa="${i}" ${!q.empty&&!q.ripe?'disabled':''}>${q.empty?'種植':q.rotten?'清掉':q.ripe?'收成':'成長中'}</button>${q.empty&&s.inv.seeds2?`<button class="btn pri" data-pg="${i}">🌟 種優良</button>`:''}</div>`}).join('');
   box.querySelectorAll('canvas').forEach(c=>{const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(PLOT_SPR[plotStage(PC.plotState(s,+c.dataset.p,now))],0,0)});
   box.querySelectorAll('[data-pa],[data-pg]').forEach(b=>b.onclick=()=>{const i=+(b.dataset.pa??b.dataset.pg),q=PC.plotState(s,i,Date.now()),x0=s.xp;
    const r=q.empty?PC.plant(s,i,Date.now(),Math.random,b.dataset.pg!==undefined||(s.inv.seeds<1&&(s.inv.seeds2||0)>0)):PC.harvest(s,i,Date.now());$('fErr').textContent=r.ok?'':'❌ '+r.msg;
    if(r.ok){toast(r.msg,2500);sfx(q.empty?'tap':'eat');save();renderUI();afterChange(x0);if(!q.empty)spawn('apple',2,{y:90,x:20,vy:-30,life:1.2})}draw()});
-  $('fSeeds').textContent=s.inv.seeds;$('fSeeds2').textContent=s.inv.seeds2||0;$('fFood').textContent=s.inv.food;$('fBerry').textContent=s.inv.berry||0;$('fCoins').textContent=s.coins;
+  $('fSeeds').textContent=s.inv.seeds;$('fSeeds2').textContent=s.inv.seeds2||0;$('fCoins').textContent=s.coins;
   const ep=PC.expandPrice(s);$('fExp').textContent=ep?`擴建田地（第 ${s.plots.length+1} 格，${ep} 金幣）`:'田地已經最大（6 格）';$('fExp').disabled=!ep;
-  PC.fixFresh(s);for(const[id,k,n]of[['fSellA','food','🍎 蘋果'],['fSellB','berry','🫐 莓果']]){const c=s.inv.fresh[k]||0;$(id).textContent=`賣 ✨${n}（自己種的 ${c} 顆）+${CONFIG.sellFruit[k]}`;$(id).disabled=!c}};
+  PC.fixFresh(s);$('fSell').innerHTML=PC.FRESH_KEYS.filter(k=>!['food','berry'].includes(k)||(s.inv.fresh[k]||0)>0).map(k=>{const c=s.inv.fresh[k]||0;return`<button class="btn" data-sell="${k}" ${c?'':'disabled'}>賣 ✨${CONFIG.foods[k].name}（${c} 顆）+${CONFIG.sellFruit[k]}</button>`}).join('');
+  $('fSell').querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>{const r=PC.sellFruit(s,b.dataset.sell);$('fErr').textContent=r.ok?'':'❌ '+r.msg;if(r.ok){toast(r.msg);sfx('tap');save();renderUI()}draw()})};
  $('fExp').onclick=()=>{const r=PC.expandFarm(s);$('fErr').textContent=r.ok?'':'❌ '+r.msg;if(r.ok){toast(r.msg);sfx('level');save();renderUI()}draw()};
- for(const[id,k]of[['fSellA','food'],['fSellB','berry']])$(id).onclick=()=>{const r=PC.sellFruit(s,k);$('fErr').textContent=r.ok?'':'❌ '+r.msg;if(r.ok){toast(r.msg);sfx('tap');save();renderUI()}draw()};
  $('fBuy2').onclick=()=>{const r=PC.buyItem(s,'seeds2');$('fErr').textContent=r.ok?'':'❌ '+r.msg;if(r.ok){toast(r.msg);save();renderUI()}draw()};
  $('fBuy').onclick=()=>{const r=PC.buySeed(s);$('fErr').textContent=r.ok?'':'❌ '+r.msg;if(r.ok){toast(r.msg);save();renderUI()}draw()};
  draw();clearInterval(farmTimer);farmTimer=setInterval(draw,5000)}
@@ -1571,8 +1586,8 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
    seeds2:()=>({id:'seeds2',name:'優良種子',sub:`🪙${C.goodSeed.price}｜×${s.inv.seeds2||0}`,icon:'seed2',desc:`比較會長的種子：每次收成 ${C.goodSeed.fruitMin}～${C.goodSeed.fruitMax} 顆（普通種子 ${C.farm.fruitMin}～${C.farm.fruitMax} 顆），新鮮收成還有 ${Math.round(C.goodSeed.powerChance*100)}% 多長一顆自己屬性的能力水果<br>擁有 ${s.inv.seeds2||0}`,btn:`<button class="btn pri" data-bi="seeds2">買 1 個（🪙 ${C.goodSeed.price}）</button>`}),
    potion:()=>({id:'potion',name:'回復藥水',sub:`🪙${C.potion.price}｜×${s.inv.potion||0}`,icon:'potion',desc:`戰鬥中回復 50% HP（戰鬥時點「🎒 背包」使用）<br>擁有 ${s.inv.potion||0}`,btn:`<button class="btn pri" data-bi="potion">買 1 個（🪙 ${C.potion.price}）</button>`}),
    potion2:()=>({id:'potion2',name:'超級藥水',sub:`🪙${C.superPotion.price}｜×${s.inv.potion2||0}`,icon:'potion2',desc:`戰鬥中<b>回復全部 HP</b>（戰鬥時點「🎒 背包」使用）<br>擁有 ${s.inv.potion2||0}`,btn:`<button class="btn pri" data-bi="potion2">買 1 個（🪙 ${C.superPotion.price}）</button>`}),
-   soup:()=>{const rest=(s.bondRestUntil||0)>Date.now();return{id:'soup',name:'神秘婆婆熬製雞湯',sub:`🪙${C.soup.price}｜×${s.inv.soup||0}`,icon:'soup',desc:`神秘婆婆用祕方熬了一整晚的雞湯。發動羈絆之力後要休息 ${C.bond.restHours} 小時才能冒險，喝了<b>馬上恢復</b>，可以立刻再出發！<br>${rest?`⏳ 現在還要休息 ${Math.ceil((s.bondRestUntil-Date.now())/60000)} 分鐘`:'現在不用休息'}<br>擁有 ${s.inv.soup||0}`,btn:`<button class="btn pri" data-bi="soup">買 1 碗（🪙 ${C.soup.price}）</button><button class="btn" id="drinkSoup" ${s.inv.soup&&rest?'':'disabled'}>給牠喝</button>`}}};
-  if(tab==='food')for(const k of Object.keys(C.foods).filter(k=>!C.foods[k].power))out.push(foodEntry(k));
+   soup:()=>{const rest=(s.bondRestUntil||0)>Date.now(),S=C.soup;return{id:'soup',name:'神秘婆婆熬製雞湯',sub:`🪙${S.price}｜×${s.inv.soup||0}`,icon:'soup',desc:`神秘婆婆用祕方熬了一整晚的雞湯。<br>飽食 +${S.hunger}、心情 +${S.mood}、體力 +${S.energy}，還能<b>馬上消除</b>羈絆之力後的 ${C.bond.restHours} 小時休息！<br>${rest?`⏳ 現在還要休息 ${Math.ceil((s.bondRestUntil-Date.now())/60000)} 分鐘`:''}<br>擁有 ${s.inv.soup||0}`,btn:`<button class="btn pri" data-bi="soup">買 1 碗（🪙 ${S.price}）</button><button class="btn" id="drinkSoup" ${s.inv.soup?'':'disabled'}>給牠喝</button>`}}};
+  if(tab==='food')for(const k of Object.keys(C.foods).filter(k=>!C.foods[k].power&&!C.foods[k].farm))out.push(foodEntry(k));
   else if(tab==='power')for(const k of Object.keys(C.foods).filter(k=>C.foods[k].power))out.push(Object.assign(foodEntry(k),{sub:`${ROUTE_ICON[C.foods[k].fav[0]]}🪙${C.foods[k].price}｜×${s.inv[k]||0}`}));
   else if(tab==='tools'){for(const k in tools)out.push(tools[k]())}
   else{   // 🎒 背包：自己有的東西
@@ -1602,7 +1617,7 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
   document.querySelectorAll('#shopBody canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));
   document.querySelectorAll('[data-feedk]').forEach(b=>b.onclick=()=>{closeModal();FEED.kind=b.dataset.feedk;act('feed')});
   if($('goFarm'))$('goFarm').onclick=()=>{closeModal();farmDialog()};
-  if($('drinkSoup'))$('drinkSoup').onclick=()=>{const r=PC.useSoup(s,Date.now());if(!r.ok){toast('❌ '+r.msg);return}closeModal();playAnim('eat');sfx('eat');spawn('heart',4,{y:70,life:1.1});say(r.msg);save();renderUI()};
+  if($('drinkSoup'))$('drinkSoup').onclick=()=>{const r=PC.useSoup(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}closeModal();playAnim('eat');sfx('eat');spawn('heart',4,{y:70,life:1.1});say(r.msg);save();renderUI()};
   if($('useHeart'))$('useHeart').onclick=()=>{const r=PC.awaken(s,Date.now());if(!r.ok){toast('❌ '+r.msg);return}closeModal();save();renderUI();flashUntil=performance.now()+700;sfx('evolve');buzz(40);playAnim('happy',1400);spawn('star',14,{y:66,vy:-30,jx:60,life:1.6,stagger:.05});say(r.msg)};
   if($('eatEmber'))$('eatEmber').onclick=()=>{const x0=s.xp,r=PC.useEmber(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}toast(r.msg+`　經驗 +${r.xp}`);sfx('level');spawn('star',6,{x:petX+24,y:60,vy:-20,life:1.2});save();renderUI();afterChange(x0);render()};
   if($('eatCandy'))$('eatCandy').onclick=()=>{const x0=s.xp,r=PC.useCandy(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}
@@ -1623,7 +1638,6 @@ function areaName(n){return AREAS[Math.min(8,Math.floor((n-1)/5))]+' '+(n>40?n-4
 function foeFighter(n){const f=PC.foeFor(n,lvl()),key=petKey(f.id,formCode(f.stage,f.route))+'|wild',F=formOf(key);
  const ft=PC.mkFighter((f.big?'👑大王 ':f.boss?'小王 ':'野生的 ')+F.name,key,f.level,f.route,0,80,0);ft.max=ft.hp=Math.round(ft.max*(f.big?1.6:f.boss?1.25:1.3));return ft}   // 野生怪比較耐打（V1.33：1.4→1.3）
 let B=null;const bparts=[];const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-function trainXp(m){return Math.round((CONFIG.train.base+CONFIG.train.perLv*PC.level(s.xp))*m*((PC.trait(s)||{}).xp||1))}
 function advDialog(){PC.claimDaily(s,Date.now());tick();
  const why=PC.canAdventure(s,s.adv.stage);let list='';const top=s.adv.stage,A=CONFIG.adventure;
  for(let n=top;n>=Math.max(1,top-5);n--){const f=foeFighter(n),ev=Object.keys(CONFIG.bossStages).find(k=>CONFIG.bossStages[k]===n);
@@ -1631,11 +1645,9 @@ function advDialog(){PC.claimDaily(s,Date.now());tick();
  openModal('⚔️ 冒險',`<p>體力：<b>${Math.round(s.energy)}</b>（出發需要 ${A.minEnergy}，會消耗 20）　戰績：${s.adv.wins} 勝 ${s.adv.losses} 敗</p>
 <p class="small">不限次數，有體力就能出發。<br>完成：經驗 +${A.xp}、金幣 +${A.coinsMin}～${A.coinsMax}、🔥 焰系 +${A.flame}；勝利再加經驗 +10、金幣 +4、🔥 +2。失敗不扣東西，經驗 +3。<br>第一次打通新關卡＝發現新地點（🌿 森系 +2）。✨ 標記的 Boss 關有特殊事件。<br>屬性相剋：🔥 剋 🌿、🌿 剋 💧、💧 剋 🔥（屬性技 1.5 倍）。</p>
 ${why&&why!=='這一關還沒解鎖'?'<p class="err">'+why+'</p>':''}
-<div class="trainbox"><b>🏋️ 場外特訓</b><span class="small">打不贏的時候先來練功！不用打怪，連打螢幕 2 秒，點越多下經驗越多（10 下 ×1、20 下 ×1.3、28 下 ×1.5）。消耗體力 ${-CONFIG.train.energy}、飽食 ${-CONFIG.train.hunger}。現在一次約 <b>${trainXp(1)}～${trainXp(1.5)}</b> 經驗（打贏一場約 ${A.xp+CONFIG.battleWin.xp}）。羈絆之力休息中也能練。</span><button class="btn pri" id="goTrain">🏋️ 開始特訓</button></div>
+<div class="trainbox"><b>🏋️ 訓練場</b><span class="small">打不贏的時候先來練功！閃避、攻擊、防禦三種小遊戲，每次 ${CONFIG.train.cost} 金幣，<b>達成目標</b>經驗 +${PC.trainXp(s)}（打贏一場約 ${A.xp+CONFIG.battleWin.xp}）。羈絆之力休息中也能練。</span><button class="btn pri" id="goTrain">🏋️ 去訓練場</button></div>
 ${list}`);
- $('goTrain').onclick=async()=>{const w=PC.canTrain(s);if(w){toast(w);return}if(modeBusy()){toast('先完成現在的互動吧');return}closeModal();unlockAudio();
-  const taps=await tapRush({ready:'特訓開始！準備…',go:'快點螢幕！用力練！'}),x0=s.xp,r=PC.train(s,taps,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}
-  playAnim('happy',1200);sfx('level');spawn('star',6,{x:petX+24,y:60,vy:-24,life:1.2});say(`🏋️ 特訓結束！連打 ${taps} 下（×${r.mult}），經驗 +${r.xp}`);save();renderUI();afterChange(x0)};
+ $('goTrain').onclick=()=>{closeModal();trainDialog()};
  document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{const n=+b.dataset.st,w=PC.canAdventure(s,n);if(w){toast(w);return}closeModal();startBattle(n)})}
 function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();petX=PET_X;const r=PC.startAdventure(s,n,Date.now());if(!r.ok){toast(r.msg);return}save();renderUI();
  const me=PC.mkFighter(s.name,formKey(),lvl(),s.route,tier(),s.mood,s.bond),foe=foeFighter(n);
@@ -1956,7 +1968,7 @@ function drawGlow(x,y,now){const g=ctx.createRadialGradient(x,y,1,x,y,10);const 
 /* 選食物（餵食模式時畫面下方出現） */
 function renderFoodBar(){const bar=$('foodBar');if(mode!=='feed'){bar.classList.add('hidden');return}bar.classList.remove('hidden');
  const F=CONFIG.foods;if(!FEED.kind)FEED.kind=Object.keys(F).find(k=>(s.inv[k]||0)>0)||'food';
- PC.fixFresh(s);bar.innerHTML=Object.keys(F).filter(k=>!F[k].power||(s.inv[k]||0)>0).map(k=>{const n=s.inv[k]||0,fav=s.route&&F[k].fav.includes(s.route),fr=(s.inv.fresh&&s.inv.fresh[k])||0;return`<button class="food ${FEED.kind===k?'on':''} ${fr?'fresh':''}" data-food="${k}"><canvas data-fi="${F[k].icon}" width="14" height="14"></canvas><span>${F[k].name}${fav?'❤️':''}</span><small>${n?'×'+n:'🪙'+F[k].price}${fr?` ✨${fr}`:''}</small></button>`}).join('');
+ PC.fixFresh(s);bar.innerHTML=Object.keys(F).filter(k=>!(F[k].power||F[k].farm)||(s.inv[k]||0)>0).map(k=>{const n=s.inv[k]||0,fav=s.route&&F[k].fav.includes(s.route),fr=(s.inv.fresh&&s.inv.fresh[k])||0;return`<button class="food ${FEED.kind===k?'on':''} ${fr?'fresh':''}" data-food="${k}"><canvas data-fi="${F[k].icon}" width="14" height="14"></canvas><span>${F[k].name}${fav?'❤️':''}</span><small>${n?'×'+n:'🪙'+F[k].price}${fr?` ✨${fr}`:''}</small></button>`}).join('');
  bar.querySelectorAll('canvas').forEach(c=>{const ic=ICV[c.dataset.fi];c.width=ic.width;c.height=ic.height;const x=c.getContext('2d');x.drawImage(ic,0,0)});
  bar.querySelectorAll('[data-food]').forEach(b=>b.onclick=e=>{e.stopPropagation();if(FEED.apple)return;FEED.kind=b.dataset.food;renderFoodBar();sfx('tap')})}
 function finishFeed(){const A=FEED.apple,x0=s.xp,r=PC.act(s,'feed',Date.now(),A.k);handleTime(r.tm);
@@ -2103,7 +2115,120 @@ function init(){
  if(!inFrame&&!NATIVE&&'serviceWorker'in navigator&&(location.protocol==='https:'||location.hostname==='localhost')&&!/claude|anthropic/.test(location.hostname))
   navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{});
 }
-window.PF={get state(){return s},PET_Y,toy:TOY,arena:makeArena,bUI:()=>bUI(),get mode(){return mode},get ball(){return BALL},get apple(){return FEED.apple},get petX(){return petX},PC,goDrink:()=>goDrink(),makeDecor:id=>makeDecor(id),playAnim:(...a)=>playAnim(...a),formKey:()=>formKey(),creditSteps,mateCode,decodeMate,encodeGenome,decodeGenome,startBattle,onMove,get B(){return B},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
+/* =========================================================
+   🏋️ 訓練場（V1.41）：每次 20 金幣，達成目標才拿到經驗
+   閃避：躲避球｜攻擊：沙包連打、組合拳、靈光一閃｜防禦：瀑布打坐
+   ========================================================= */
+const TRAIN_INFO={
+ dodge:{icon:'🤸',title:'閃避訓練：躲避球',goal:'球從前面丟過來，按左右移動閃開！共 12 球，被打中 3 次就失敗（後面的球會越來越快）'},
+ rush:{icon:'👊',title:'攻擊訓練：沙包連打',goal:'2 秒內連續打沙包 18 下以上'},
+ combo:{icon:'🥊',title:'攻擊訓練：組合拳',goal:'3 秒內打出一套「左右左右左」，按錯要從頭來'},
+ flash:{icon:'💡',title:'攻擊訓練：靈光一閃',goal:'飛盤飛進紅色攻擊範圍時點螢幕，5 個飛盤要打中 3 個'},
+ zen:{icon:'🧘',title:'防禦訓練：瀑布打坐',goal:'20 秒內把冒出來的意念泡泡點掉（食物、音符、雜念、水果…），飄走超過 3 個就分心失敗'}};
+let TG=null;const tcv=$('tcv'),tctx=tcv.getContext('2d');tctx.imageSmoothingEnabled=false;
+function trainDialog(){PC.claimDaily(s,Date.now());const T=CONFIG.train,L=s.trainLog||{dodge:0,attack:0,defense:0},why=PC.canTrain(s);
+ const card=(k)=>`<button class="btn stagebtn" data-tk="${k}"><span>${TRAIN_INFO[k].icon} ${TRAIN_INFO[k].title.split('：')[1]}</span><span class="small" style="color:inherit">🪙${T.cost}</span></button><div class="small tgoal">${TRAIN_INFO[k].goal}</div>`;
+ openModal('🏋️ 訓練場',`<p>🪙 金幣 <b>${s.coins}</b>　⚡ 體力 <b>${Math.round(s.energy)}</b></p>
+<p class="small">每次訓練 <b>${T.cost} 金幣</b>（器材＋場地費），消耗體力 ${-T.energy}、飽食 ${-T.hunger}。<b>達成目標</b>才拿到經驗：現在一次 <b>+${PC.trainXp(s)}</b>（打贏一場冒險約 ${CONFIG.adventure.xp+CONFIG.battleWin.xp}）。失敗的話錢和體力不會退喔。</p>
+${why?`<p class="err">${why}</p>`:''}
+<h3 class="thead">🤸 閃避（成功 ${L.dodge} 次）</h3>${card('dodge')}
+<h3 class="thead">👊 攻擊（成功 ${L.attack} 次）</h3>${card('rush')}${card('combo')}${card('flash')}
+<h3 class="thead">🧘 防禦（成功 ${L.defense} 次）</h3>${card('zen')}`);
+ document.querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>{const w=PC.canTrain(s);if(w){toast(w);sfx('no');return}closeModal();startTraining(b.dataset.tk)})}
+function startTraining(kind){if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();unlockAudio();
+ const r=PC.startTrain(s,kind,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}save();renderUI();
+ TG={kind,t:0,phase:'count',cd:3,x0:s.xp,S:sheet(formKey()),fx:[],shake:0,flash:0};TRAIN_INIT[kind](TG);
+ $('trainZone').classList.remove('hidden');$('tResult').classList.add('hidden');$('tTitle').textContent=TRAIN_INFO[kind].icon+' '+TRAIN_INFO[kind].title;$('tGoal').textContent=TRAIN_INFO[kind].goal;
+ $('tCtl').innerHTML=(TG.btns||[]).map(([id,t])=>`<button class="btn tbtn" data-tb="${id}">${t}</button>`).join('');
+ $('tCtl').querySelectorAll('[data-tb]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();if(TG&&TG.phase==='play'&&TG.btn)TG.btn(b.dataset.tb)}));
+ tMsg('準備…3');sfx('tap');let last=performance.now();
+ const loop=now=>{if(!TG)return;const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(TG.phase==='count'){TG.cd-=dt;const k=Math.ceil(TG.cd);if(TG.cd<=0){TG.phase='play';TG.t=0;tMsg('開始！');sfx('wake')}else if(k!==TG.lastK){TG.lastK=k;tMsg('準備…'+k);sfx('tap')}}
+  else if(TG.phase==='play'){TG.t+=dt;TG.update(dt)}
+  for(let i=TG.fx.length-1;i>=0;i--){const p=TG.fx[i];p.t+=dt;if(p.t>p.life){TG.fx.splice(i,1);continue}p.vy+=(p.g||0)*dt;p.x+=(p.vx||0)*dt;p.y+=(p.vy||0)*dt}
+  drawTraining(now);$('tHud').innerHTML=TG.hud?TG.hud():'';if(TG.phase!=='done')requestAnimationFrame(loop)};requestAnimationFrame(loop)}
+function tMsg(t){$('tMsg').textContent=t}
+function tPop(ic,x,y,n=3){for(let i=0;i<n;i++)TG.fx.push({ic,x:x+(Math.random()-.5)*10,y:y+(Math.random()-.5)*6,vx:(Math.random()-.5)*30,vy:-20-Math.random()*20,g:40,t:0,life:.7})}
+function endTraining(win,note){if(!TG||TG.phase==='done')return;const kind=TG.kind;TG.phase='done';
+ const r=PC.finishTrain(s,kind,win,Date.now());save();renderUI();
+ $('tResult').classList.remove('hidden');$('tRTitle').textContent=win?'🎉 訓練成功！':'😣 訓練失敗…';
+ $('tRBody').innerHTML=`${note||''}<br>${win?`經驗 <b>+${r.xp}</b>　（${{dodge:'閃避',attack:'攻擊',defense:'防禦'}[CONFIG.train.kinds[kind].skill]}訓練成功 ${(s.trainLog||{})[CONFIG.train.kinds[kind].skill]||0} 次）`:'沒有達成目標，這次沒有經驗。再試一次吧！'}`;
+ $('tAgain').textContent=`再練一次（🪙 ${CONFIG.train.cost}）`;$('tAgain').disabled=!!PC.canTrain(s);
+ sfx(win?'level':'no');buzz(win?30:60);if(win){TG.win=true;tPop('star',64,50,8)}drawTraining(performance.now());
+ if(win){const x0=TG.x0;setTimeout(()=>afterChange(x0),50)}}
+function closeTraining(){TG=null;$('trainZone').classList.add('hidden');renderUI()}
+$('tAgain').onclick=()=>{const k=TG&&TG.kind;closeTraining();if(k){const w=PC.canTrain(s);if(w){toast(w);return}startTraining(k)}};
+$('tClose').onclick=()=>closeTraining();
+tcv.addEventListener('pointerdown',e=>{e.preventDefault();if(!TG||TG.phase!=='play'||!TG.tap)return;const b=tcv.getBoundingClientRect();TG.tap((e.clientX-b.left)/b.width*128,(e.clientY-b.top)/b.height*112)});
+/* ---------- 畫面 ---------- */
+function tPet(c,fr,x,y,flip){const S=TG.S,i=S.idx[fr]??S.idx.idle0??0,src=TG.flash>performance.now()&&Math.floor(performance.now()/70)%2?S.sil:S.cv;
+ if(flip){c.save();c.translate(Math.round(x)+CELL,0);c.scale(-1,1);c.drawImage(src,i*CELL,0,CELL,CELL,0,Math.round(y),CELL,CELL);c.restore()}else c.drawImage(src,i*CELL,0,CELL,CELL,Math.round(x),Math.round(y),CELL,CELL)}
+function tGym(c){c.fillStyle='#e8d6b0';c.fillRect(0,0,128,72);c.fillStyle='#d8c49a';for(let x=0;x<128;x+=16)c.fillRect(x,0,1,72);
+ c.fillStyle='#8fd0f0';c.fillRect(12,10,22,16);c.fillStyle='#5a3a1a';c.fillRect(11,9,24,1);c.fillRect(11,26,24,1);c.fillRect(11,9,1,18);c.fillRect(34,9,1,18);c.fillRect(22,9,1,18);
+ c.fillStyle='#c8102e';c.fillRect(0,64,128,3);c.fillStyle='#b98a52';c.fillRect(0,72,128,40);c.fillStyle='#a8784a';for(let y=76;y<112;y+=8)c.fillRect(0,y,128,1);for(let y=72,k=0;y<112;y+=8,k++)for(let x=(k%2)*16;x<128;x+=32)c.fillRect(x,y,1,8)}
+function tFall(c,now){c.fillStyle='#7ab8e8';c.fillRect(0,0,128,112);c.fillStyle='#5a5a6a';c.fillRect(0,0,36,80);c.fillRect(92,0,36,80);c.fillStyle='#6a6a7a';for(let y=4;y<80;y+=12){c.fillRect(4+(y%24),y,20,6);c.fillRect(98-(y%24)/2,y+6,22,6)}
+ c.fillStyle='#d8f0ff';c.fillRect(36,0,56,80);const t=now/1000;c.fillStyle='#a8d8f8';for(let i=0;i<14;i++){const x=38+i*4,y=((t*90+i*37)%96)-16;c.fillRect(x,y,2,14)}
+ c.fillStyle='#3a8ac8';c.fillRect(0,80,128,32);c.fillStyle='#ffffff';for(let i=0;i<8;i++){const x=(i*17+t*10)%128;c.fillRect(x,84+(i%3)*8,6,1)}
+ c.fillStyle='#ffffff';for(let i=0;i<6;i++)c.fillRect(36+((i*9+Math.floor(t*20))%56),78+(i%2),3,2);
+ c.fillStyle='#6a6a7a';c.beginPath();c.ellipse(64,98,26,7,0,0,Math.PI*2);c.fill();c.fillStyle='#8a8a9a';c.fillRect(42,92,44,3)}
+function drawTraining(now){if(!TG)return;const c=tctx;c.save();if(TG.shake>0){TG.shake-=.016;c.translate(Math.round((Math.random()-.5)*4),0)}
+ TG.draw(c,now);for(const p of TG.fx){const ic=ICV[p.ic];if(!ic)continue;c.globalAlpha=Math.min(1,(p.life-p.t)/.3);c.drawImage(ic,Math.round(p.x-ic.width/2),Math.round(p.y-ic.height/2));c.globalAlpha=1}c.restore()}
+function tBar(c,x,y,w,p,col){c.fillStyle='#2a170a';c.fillRect(x-1,y-1,w+2,5);c.fillStyle=col;c.fillRect(x,y,Math.round(w*Math.max(0,Math.min(1,p))),3)}
+const TRAIN_INIT={
+ /* 閃避：三條路線，球從前方丟過來越飛越大，到身體時要不在那條路上 */
+ dodge(G){const LX=[26,64,102],N=12,SP=[[4,58,'普通'],[8,82,'快！'],[12,112,'更快！']];
+  Object.assign(G,{lane:1,px:64,balls:[],next:.4,thrown:0,done:0,hits:0,dodged:0,btns:[['L','◀ 左'],['R','右 ▶']],
+   btn(b){G.lane=Math.max(0,Math.min(2,G.lane+(b==='L'?-1:1)));sfx('tap')},
+   tap(x){G.btn(x<G.px?'L':'R')},
+   hud(){return`${'❤️'.repeat(3-G.hits)}${'🖤'.repeat(G.hits)}　躲過 ${G.dodged}/${N}　${G.cur||''}`},
+   update(dt){G.px+=(LX[G.lane]-G.px)*Math.min(1,dt*16);
+    if(G.thrown<N&&G.t>=G.next){const tier=SP.find(q=>G.thrown<q[0]);const lane=Math.random()<.6?G.lane:Math.floor(Math.random()*3);G.balls.push({lane,y:14,sp:tier[1],col:tier[1]>100?'#c070ff':tier[1]>70?'#ff9a3a':'#f4f4f4'});G.cur=tier[2];G.thrown++;G.next=G.t+Math.max(.7,1.35-G.thrown*.05)+Math.random()*.25;sfx('tap')}
+    for(let i=G.balls.length-1;i>=0;i--){const b=G.balls[i],y0=b.y;b.y+=b.sp*dt;
+     if(y0<84&&b.y>=84){const bx=64+(LX[b.lane]-64)*((84-14)/82);if(Math.abs(G.px-bx)<17){G.hits++;b.hit=true;G.flash=performance.now()+500;G.shake=.3;sfx('crack');buzz(40);tMsg('被打中了！');if(G.hits>=3){endTraining(false,`被打中 ${G.hits} 次…`);return}}else{G.dodged++;tMsg('閃開了！');tPop('star',G.px,70,1)}}
+     if(b.y>112){G.balls.splice(i,1);G.done++}}
+    if(G.done>=N&&!G.balls.length)endTraining(true,`12 球只被打中 ${G.hits} 次！`)},
+   draw(c,now){tGym(c);c.fillStyle='#6a6a7a';c.fillRect(56,6,16,10);c.fillStyle='#3a3a4a';c.fillRect(60,14,8,3);c.fillStyle='#e8433f';c.fillRect(58,8,2,2);
+    for(const x of LX){c.fillStyle='rgba(255,255,255,.18)';c.fillRect(x-12,74,24,36)}
+    const fr=G.phase==='done'?(G.win?'happy0':'sad0'):G.flash>now?'sad0':Math.abs(LX[G.lane]-G.px)>2?'jump0':['idle0','idle1'][Math.floor(now/400)%2];tPet(c,fr,G.px-24,56);
+    for(const b of G.balls){const k=(b.y-14)/82,x=64+(LX[b.lane]-64)*k,r=2+k*6;if(b.y>60&&!b.hit){c.fillStyle='rgba(0,0,0,.25)';c.beginPath();c.ellipse(64+(LX[b.lane]-64)*Math.min(1,(100-14)/82),102,r,2,0,0,Math.PI*2);c.fill()}
+     if(b.sp>100){c.fillStyle='rgba(192,112,255,.35)';c.beginPath();c.arc(x,b.y-r*1.6,r*.8,0,Math.PI*2);c.fill()}
+     c.fillStyle='#2a170a';c.beginPath();c.arc(x,b.y,r+1,0,Math.PI*2);c.fill();c.fillStyle=b.col;c.beginPath();c.arc(x,b.y,r,0,Math.PI*2);c.fill();c.fillStyle='#e8433f';c.fillRect(Math.round(x-r),Math.round(b.y),Math.round(r*2),1)}}})},
+ /* 沙包連打：2 秒內 18 下 */
+ rush(G){Object.assign(G,{n:0,sw:0,hit:0,btns:[['P','👊 打！（點螢幕也可以）']],
+   btn(){G.n++;G.sw=Math.min(1,G.sw+.35);G.hit=performance.now()+90;sfx('tap');buzz(6);if(G.n%3===0)tPop('spark',92,48,1)},tap(){G.btn()},
+   hud(){return`👊 <b>${G.n}</b> / 18　⏱ ${Math.max(0,2-G.t).toFixed(1)} 秒`},
+   update(dt){G.sw*=Math.pow(.05,dt);if(G.t>=2)endTraining(G.n>=18,`2 秒打了 ${G.n} 下！`)},
+   draw(c,now){tGym(c);const a=G.sw*.5*Math.sin(now/60);c.save();c.translate(94,0);c.rotate(a);c.fillStyle='#4a3a2a';c.fillRect(-1,0,2,22);c.fillStyle='#2a170a';c.fillRect(-10,21,20,42);c.fillStyle='#c8503a';c.fillRect(-9,22,18,40);c.fillStyle='#e8806a';c.fillRect(-9,22,4,40);c.fillStyle='#8a2a1a';c.fillRect(-9,40,18,2);c.restore();
+    tPet(c,G.phase==='done'?(G.win?'happy0':'sad0'):G.hit>now?'jump0':'idle0',38,58,true);tBar(c,8,104,112,G.n/18,G.n>=18?'#6fcf5a':'#ffd34a')}})},
+ /* 組合拳：3 秒內左右左右左 */
+ combo(G){const SEQ=['L','R','L','R','L'];Object.assign(G,{i:0,side:0,hit:0,btns:[['L','👊 左'],['R','右 👊']],
+   btn(b){if(b===SEQ[G.i]){G.i++;G.side=b==='L'?-1:1;G.hit=performance.now()+120;sfx('tap');buzz(8);tPop('spark',92+G.side*4,46,2);if(G.i>=SEQ.length)endTraining(true,`${G.t.toFixed(2)} 秒打完一套組合拳！`)}else{G.i=0;G.shake=.25;sfx('no');tMsg('按錯了！從頭來')}},
+   tap(x){G.btn(x<64?'L':'R')},
+   hud(){return SEQ.map((k,j)=>`<span class="cmb ${j<G.i?'ok':''}">${k==='L'?'左':'右'}</span>`).join('')+`　⏱ ${Math.max(0,3-G.t).toFixed(1)}`},
+   update(){if(G.t>=3)endTraining(false,`時間到，打到第 ${G.i} 拳`)},
+   draw(c,now){tGym(c);const a=G.hit>now?G.side*.35:0;c.save();c.translate(94,0);c.rotate(a);c.fillStyle='#4a3a2a';c.fillRect(-1,0,2,22);c.fillStyle='#2a170a';c.fillRect(-10,21,20,42);c.fillStyle='#3a6ac8';c.fillRect(-9,22,18,40);c.fillStyle='#7a9af0';c.fillRect(-9,22,4,40);c.restore();
+    tPet(c,G.phase==='done'?(G.win?'happy0':'sad0'):G.hit>now?'jump0':'idle0',38,58,true);tBar(c,8,104,112,1-G.t/3,'#ffd34a')}})},
+ /* 靈光一閃：飛盤進紅色範圍時點 */
+ flash(G){const ZX=[70,96];Object.assign(G,{n:0,hits:0,miss:0,f:null,next:.6,
+   tap(){const f=G.f;if(!f||f.tapped)return;f.tapped=true;if(f.x>=ZX[0]&&f.x<=ZX[1]){G.hits++;f.hit=true;tPop('star',f.x,f.y,5);sfx('crack');buzz(20);tMsg('打中了！靈光一閃！');G.atk=performance.now()+300}else{G.miss++;sfx('no');tMsg(f.x<ZX[0]?'太早了！':'太晚了！')}},
+   hud(){return`💡 打中 <b>${G.hits}</b> / 3　（飛盤 ${Math.min(5,G.n)}/5）`},
+   update(dt){const f=G.f;if(f){f.x+=f.sp*dt;f.y=f.y0+Math.sin(f.x/14)*f.wob;if(f.hit)f.y-=0;if(f.x>140||f.hit&&f.x>ZX[1]+30){if(!f.tapped){G.miss++;tMsg('錯過了…')}G.f=null;G.next=G.t+.5+Math.random()*.9;if(G.hits>=3){endTraining(true,`5 個飛盤打中 ${G.hits} 個！`);return}if(G.n>=5){endTraining(false,`只打中 ${G.hits} 個…`);return}}}
+    else if(G.t>=G.next){if(G.hits>=3||G.n>=5)return;G.n++;G.f={x:-8,y0:30+Math.random()*28,sp:75+G.n*14+Math.random()*25,wob:2+Math.random()*4,y:0}}},
+   draw(c,now){tGym(c);c.fillStyle='rgba(232,67,63,.22)';c.fillRect(ZX[0],0,ZX[1]-ZX[0],72);c.fillStyle='#e8433f';for(let y=0;y<72;y+=6){c.fillRect(ZX[0],y,1,3);c.fillRect(ZX[1],y,1,3)}
+    tPet(c,G.phase==='done'?(G.win?'happy0':'sad0'):G.atk>now?'jump1':['idle0','idle1'][Math.floor(now/400)%2],30,58,true);
+    const f=G.f;if(f&&!f.hit){const x=Math.round(f.x),y=Math.round(f.y);c.fillStyle='#2a170a';c.fillRect(x-6,y-2,12,5);c.fillStyle='#ffd34a';c.fillRect(x-5,y-1,10,3);c.fillStyle='#fff3a6';c.fillRect(x-3,y-1,6,1);c.fillStyle='#e8433f';c.fillRect(x-1,y,2,1)}}})},
+ /* 瀑布打坐：點掉往上飄的意念泡泡 */
+ zen(G){const IC=['apple','berry','note','fish','cake','worry','worry','meat'];Object.assign(G,{bubs:[],esc:0,popped:0,next:.3,
+   tap(x,y){for(let i=G.bubs.length-1;i>=0;i--){const b=G.bubs[i];if(Math.hypot(x-b.x,y-b.y)<11){G.bubs.splice(i,1);G.popped++;tPop('heart',b.x,b.y,1);sfx('tap');buzz(6);return}}},
+   hud(){return`🫧 點掉 ${G.popped}　💭 分心 ${G.esc}/3　⏱ ${Math.max(0,20-G.t).toFixed(0)} 秒`},
+   update(dt){if(G.t>=G.next&&G.t<19){G.bubs.push({x:14+Math.random()*100,y:116,vy:16+Math.random()*10+G.t*.6,ph:Math.random()*6,ic:IC[Math.floor(Math.random()*IC.length)]});G.next=G.t+Math.max(.45,1-G.t*.03)+Math.random()*.3}
+    for(let i=G.bubs.length-1;i>=0;i--){const b=G.bubs[i];b.y-=b.vy*dt;b.x+=Math.sin(G.t*2+b.ph)*.25;if(b.y<-8){G.bubs.splice(i,1);G.esc++;G.shake=.25;sfx('no');tMsg('分心了！');if(G.esc>3){endTraining(false,'雜念太多，分心了…');return}}}
+    if(G.t>=20&&!G.bubs.length)endTraining(true,`點掉 ${G.popped} 個念頭，心如止水！`);else if(G.t>=21)endTraining(G.esc<=3,'時間到')},
+   draw(c,now){tFall(c,now);tPet(c,G.phase==='done'&&!G.win?'sad0':'sleep0',40,52);
+    for(const b of G.bubs){const x=Math.round(b.x),y=Math.round(b.y);c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.arc(x,y,9,0,Math.PI*2);c.fill();c.strokeStyle='#ffffff';c.lineWidth=1;c.beginPath();c.arc(x+.5,y+.5,9,0,Math.PI*2);c.stroke();c.fillStyle='#ffffff';c.fillRect(x-5,y-6,2,2);
+     const ic=ICV[b.ic];if(ic)c.drawImage(ic,Math.round(x-ic.width/2),Math.round(y-ic.height/2))}}})}};
+
+window.PF={get state(){return s},startTraining:k=>startTraining(k),trainDialog:()=>trainDialog(),get TG(){return TG},PET_Y,toy:TOY,arena:makeArena,bUI:()=>bUI(),get mode(){return mode},get ball(){return BALL},get apple(){return FEED.apple},get petX(){return petX},PC,goDrink:()=>goDrink(),makeDecor:id=>makeDecor(id),playAnim:(...a)=>playAnim(...a),formKey:()=>formKey(),creditSteps,mateCode,decodeMate,encodeGenome,decodeGenome,startBattle,onMove,get B(){return B},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
  debug:{info(){return{busy:busyUntil-Date.now(),evo:!!evo,modal:!$('modal').classList.contains('hidden'),taps:s.eggTaps,h:s.hatched,battle:!!B}},skip(min){s.lastTick-=min*60000;tick();renderUI();save()},age(h){s.hatchedAt-=h*3600000;save();runStages();renderUI()},xp(n){const x0=s.xp;PC.addXP(s,n);save();renderUI();afterChange(x0)},set(o){Object.assign(s,o);renderUI();save()}}};
 try{init()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<div style="padding:12px;background:#a8394c;color:#fff">啟動錯誤：${esc(e.message)}</div>`);throw e}
 </script>

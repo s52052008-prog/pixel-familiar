@@ -138,7 +138,7 @@ async def main():
         await p.evaluate("(()=>{const s=PF.state;s.plots[0].at=Date.now()-2*3600000-1000;PF.debug.set({})})()"); await p.wait_for_timeout(600)
         await p.screenshot(path=f'{OUT}/09b_ripe_in_scene.png')
         x0 = (await st(p))['xp']; await p.click('#bFarm'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/09c_farm_ripe.png'); await p.click('[data-pa="0"]'); await p.wait_for_timeout(300)
-        s = await st(p); ok('2 小時後收成：紅＝蘋果或紫＝莓果 2～3 顆、XP +5、收成次數 1', (s['inv']['food'] - 1) + s['inv'].get('berry', 0) in (2, 3) and s['xp'] == x0 + 5 and s['harvests'] == 1, (s['inv'], s['xp'] - x0)); await closeall(p)
+        s = await st(p); ok('2 小時後收成：蔓越莓／藍莓／草莓 2～3 顆、XP +5、收成次數 1', sum(s['inv'].get(k, 0) for k in ('cranberry', 'blueberry', 'strawberry')) in (2, 3) and s['xp'] == x0 + 5 and s['harvests'] == 1, (s['inv'], s['xp'] - x0)); await closeall(p)
         # ---------- 每日小目標 ----------
         await p.click('#bGoals'); await p.wait_for_timeout(300); s = await st(p)
         ok('每日 3 個小目標', len(s['goals']['list']) == 3)
@@ -249,12 +249,18 @@ async def main():
             await p.wait_for_timeout(150)
         if not await p.evaluate("PF.B.over"): await p.click('#mpMain [data-mv=run]'); await p.wait_for_timeout(1200)
         await p.wait_for_selector('#bDone', state='visible', timeout=8000); await p.click('#bDone'); await p.wait_for_timeout(300)
-        await p.evaluate("PF.debug.set({energy:100,sleeping:false,xp:512})"); x0 = (await st(p))['xp']
-        await p.click('#bAdv'); await p.wait_for_timeout(300); await p.click('#goTrain'); await p.wait_for_timeout(2400)
-        for i in range(22): await p.mouse.click(200, 400); await p.wait_for_timeout(50)
-        await p.wait_for_timeout(1800); s = await st(p); ok('場外特訓：連打給經驗、扣體力', s['xp'] > x0 and round(s['energy']) == 85, (s['xp'] - x0, s['energy']))
-        await p.evaluate(f"PF.debug.set({{coins:200,bondRestUntil:Date.now()+3600000}})");         r = await p.evaluate("(()=>{const s=PF.state;const a=PF.PC.buyItem(s,'soup');const b=PF.PC.useSoup(s,Date.now());return [a.ok,b.ok,s.coins,s.bondRestUntil]})()")
-        ok('雞湯 69 金幣、喝了不用休息', r[0] and r[1] and r[2] == 131 and r[3] == 0, r)
+        await p.evaluate("PF.debug.set({energy:100,sleeping:false,xp:512,coins:100})"); x0 = (await st(p))['xp']
+        await p.click('#bAdv'); await p.wait_for_timeout(300); await p.click('#goTrain'); await p.wait_for_timeout(300); await p.click('[data-tk=combo]'); await p.wait_for_timeout(3200)
+        for b in 'LRLRL': await p.click(f'[data-tb={b}]'); await p.wait_for_timeout(40)
+        await p.wait_for_selector('#tResult', state='visible', timeout=5000); s = await st(p)
+        ok('訓練場：組合拳成功、扣 20 金幣、有經驗', s['coins'] == 80 and s['xp'] > x0 and '成功' in await p.inner_text('#tRTitle'), (s['coins'], s['xp'] - x0))
+        await p.click('#tAgain'); await p.wait_for_timeout(3200); x1 = (await st(p))['xp']; await p.click('[data-tb=R]'); await p.wait_for_timeout(3500)
+        await p.wait_for_selector('#tResult', state='visible', timeout=5000); s = await st(p)
+        ok('訓練失敗沒有經驗、錢不退', s['coins'] == 60 and s['xp'] == x1 and '失敗' in await p.inner_text('#tRTitle'), (s['coins'], s['xp'] - x1))
+        await p.click('#tClose'); await p.wait_for_timeout(300)
+        await p.evaluate(f"PF.debug.set({{coins:200,bondRestUntil:Date.now()+3600000,energy:40}})")
+        r = await p.evaluate("(()=>{const s=PF.state;const a=PF.PC.buyItem(s,'soup');const b=PF.PC.useSoup(s,Date.now());return [a.ok,b.ok,s.coins,s.bondRestUntil,Math.round(s.energy)]})()")
+        ok('雞湯 99 金幣、喝了不用休息、體力 +20', r[0] and r[1] and r[2] == 101 and r[3] == 0 and r[4] == 60, r)
         # ---------- 步數 ----------
         await p.goto(URL + '?steps=12345'); await p.wait_for_timeout(900); s = await st(p)
         ok('捷徑網址登記步數', s['steps']['total'] == 12345 and 'steps' not in p.url, (s['steps']['total'], p.url))
