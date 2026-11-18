@@ -19,7 +19,7 @@ const CONFIG = {
   full: 95,                          // 視為「已滿」的門檻
   feed: { hunger: 25, xp: 5, tide: 1, price: 5 },
   play: { minEnergy: 10, mood: 15, energy: -10, hunger: -5, clean: -6, xp: 10, xpWindowMin: 30, xpPerWindow: 3 },
-  wash: { cooldownMin: 30, clean: 35, xp: 5, rubSeconds: 3 },
+  wash: { cooldownMin: 10, clean: 35, xp: 5, rubSeconds: 3 },
   pet:  { cooldownMin: 30, bond: 2, mood: 3, tide: 2, minMood: 40 },   // 心情 40 以下摸摸不會加親密度
   neglect: { below: 25, bondPerHour: 1 },                 // 飽食／心情／清潔任一低於 25：親密度每小時 −1
   adventure: { minEnergy: 20, energy: -20, hunger: -15, clean: -20, winMood: 8, lossMood: -12, xp: 15, coinsMin: 20, coinsMax: 30, seeds: 1, flame: 3, dailyFull: Infinity, overCapXpRate: 0.2, dropFood: 0.3, dropSeed: 0.4 },
