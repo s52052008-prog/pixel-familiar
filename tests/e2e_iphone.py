@@ -65,6 +65,11 @@ async def main():
         ctx, p = await newpage(br, I13)
         await p.screenshot(path=f'{OUT}/01_egg.png')
         s = await st(p); ok('新存檔：蛋、金幣 50（第一天不送金幣）、食物 3+1', s['stage'] == 'egg' and s['coins'] == 50 and s['inv']['food'] == 4, (s['coins'], s['inv']))
+        await p.evaluate("quizIntro(true)"); await p.wait_for_timeout(300); await p.mouse.click(5, 5); await p.wait_for_timeout(200)
+        ok('V1.66 第一次測驗：點旁邊關不掉', await p.is_visible('#modal'))
+        await p.click('#mbtns .btn:not(.pri)'); await p.wait_for_timeout(400); t1 = await p.inner_text('#sheet h2')
+        await p.click('#mbtns .btn:not(.pri)'); await p.wait_for_timeout(500)
+        ok('V1.66 跳過會再問一次、第二次跳過才給隨機蛋', '真的不做' in t1 and not await p.is_visible('#modal'), t1)
         await hatch(p, '露米')
         s = await st(p); ok('孵化並命名、孵化時就有屬性（嬰兒期）', s['hatched'] and s['stage'] == 'baby' and s['name'] == '露米' and s['route'] in ['flame','tide','forest','earth','bird','elec','metal'], s['route'])
         stx = await p.evaluate("document.getElementById('stageText').textContent"); ok('畫面顯示屬性', any(k in stx for k in ['焰系','潮系','森系','土系','鳥系','電系','金系']), stx)
@@ -256,7 +261,7 @@ async def main():
         await p.evaluate("""new Promise(r=>{const iv=setInterval(()=>{const G=PF.TG;if(!G||G.phase==='done'){clearInterval(iv);r(1);return}if(G.phase==='play'){const n=G.notes.find(n=>!n.st&&Math.abs(G.t-n.t)<.05);if(n)G.btn(n.k)}},8)})""")
         await p.wait_for_selector('#tResult', state='visible', timeout=8000); s = await st(p)
         ok('訓練場：組合拳成功、扣 20 金幣、有經驗', s['coins'] == 80 and s['xp'] > x0 and '成功' in await p.inner_text('#tRTitle'), (s['coins'], s['xp'] - x0))
-        await p.click('#tAgain'); await p.wait_for_timeout(300); x1 = (await st(p))['xp']; await p.wait_for_timeout(7000)   # 都不按 → 漏拍太多失敗
+        await p.click('#tAgain'); await p.wait_for_timeout(300); x1 = (await st(p))['xp']; await p.wait_for_timeout(23000)   # V1.66 都不按 → 整首跑完才結算 → 失敗
         await p.wait_for_selector('#tResult', state='visible', timeout=8000); s = await st(p)
         ok('訓練失敗沒有經驗、錢不退', s['coins'] == 60 and s['xp'] == x1 and '失敗' in await p.inner_text('#tRTitle'), (s['coins'], s['xp'] - x1))
         await p.click('#tClose'); await p.wait_for_timeout(300)
