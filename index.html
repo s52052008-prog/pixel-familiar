@@ -258,7 +258,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.45.0';
+const VERSION='1.46.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -518,13 +518,11 @@ const EGG_ART_ELS=['flame','tide','forest','earth','bird','elec','metal'];
 const ART_EGG={};
 const ART={};                               // ART[屬性][階段1-4]={open,closed}
 let artPending=0;
-function loadArt(){for(const el of ART_ELS){ART[el]={};for(let st=0;st<=4;st++){ART[el][st]={};for(const eye of['open','closed']){
- const im=new Image();artPending++;
- im.onload=()=>{ART[el][st][eye]=im;if(--artPending===0)for(const k in SHEETS)if(SHEETS[k].tmp)delete SHEETS[k]};
- im.onerror=()=>{artPending--};im.src=`sprites/${el}_${st}_${eye}.png`}}}
- for(const el of EGG_ART_ELS){const im=new Image();artPending++;
-  im.onload=()=>{ART_EGG[el]=im;if(--artPending===0)for(const k in SHEETS)if(SHEETS[k].tmp)delete SHEETS[k]};
-  im.onerror=()=>{artPending--};im.src=`sprites/egg_${el}.png`}}
+/* V1.46 修正：圖還沒載好時先用程式畫的暫代（tmp），每張圖載好都把暫代的清掉重畫；載入失敗會再試，不會整場都卡在舊的圓滾滾造型 */
+const dropTmp=()=>{for(const k in SHEETS)if(SHEETS[k].tmp)delete SHEETS[k]};
+function loadImg(src,ok,tries=0){const im=new Image();im.onload=()=>{ok(im);dropTmp()};im.onerror=()=>{if(tries<4)setTimeout(()=>loadImg(src+(src.includes('?')?'':'?r='+Date.now()),ok,tries+1),800*(tries+1))};im.src=src}
+function loadArt(){for(const el of ART_ELS){ART[el]={};for(let st=0;st<=4;st++){ART[el][st]={};for(const eye of['open','closed'])loadImg(`sprites/${el}_${st}_${eye}.png`,im=>{ART[el][st][eye]=im})}}
+ for(const el of EGG_ART_ELS)loadImg(`sprites/egg_${el}.png`,im=>{ART_EGG[el]=im})}
 /* 手繪蛋：左右搖晃（以底部為軸斜切）＋逐步出現裂痕 */
 function drawEggArtFrame(ctx,im,name,ox){
  const c=+name[3],lean=name[4],k=lean==='L'?-.08:lean==='R'?.08:0;
@@ -650,7 +648,7 @@ function buildSheet(key){
  const isEgg=key.startsWith('egg'),EC=isEgg?eggColors(key):null,F=isEgg?null:formOf(key);
  const names=isEgg?EGG_FRAMES:FRAME_NAMES,cv=document.createElement('canvas');cv.width=CELL*names.length;cv.height=CELL;
  let lift=null;const ctx=cv.getContext('2d'),A=isEgg?null:artFor(F),EG=isEgg&&key.startsWith('egg|')?genomeFromId(key.slice(4)):null,EI=EG&&EG.el?ART_EGG[EG.el]:null;
- const tmp=artPending>0&&(isEgg?!!(EG&&EG.el&&!EI):!A&&F&&!F.wild&&F.route&&ART_ELS.includes(F.route));
+ const tmp=(isEgg?!!(EG&&EG.el&&!EI):!A&&F&&!F.wild&&F.route&&ART_ELS.includes(F.route));
  if(EI){ctx.imageSmoothingEnabled=false;const v=artVariant(EI,EG.rarity===3?{keep:1,rarity:3}:null,key);names.forEach((n,i)=>drawEggArtFrame(ctx,v,n,i*CELL))}
  else if(A){ctx.imageSmoothingEnabled=false;lift=names.map((n,i)=>drawArtFrame(ctx,A,F,FRAMES[n],i*CELL,key))}
  else{const img=ctx.createImageData(cv.width,CELL);
@@ -723,14 +721,14 @@ const ITEM_ICON={potion2:'potion2',soup:'soup',seeds2:'seed2',food:'apple',berry
 function buildIcons(){for(const k in ICONS){const I=ICONS[k],h=I.m.length,w=I.m[0].length,g=grid(w+2,h+2);
  I.m.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!=='.')px(g,x+1,y+1,I.p[ch])}));if(I.o)outline(g,I.o);ICV[k]=gridCanvas(g)}}
 /* 手繪道具圖（tools/import_items.py 產生）：載入後取代程式畫的家具與圖示 */
-const ITEM_NAMES=['pig1','pig2','pig3','pig4','pig5','pig6','pigshard','pigcore','potion2','soup','seed2','bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec'];
+const ITEM_NAMES=['den1','den2','den3','den4','den5','den6','den7','den_fusion','pig1','pig2','pig3','pig4','pig5','pig6','pigshard','pigcore','potion2','soup','seed2','bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec'];
 const ITEM_ICONS=new Set(['pigshard','pigcore','potion2','soup','seed2','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec']);
 function tintCanvas(src,rgba){const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const x=c.getContext('2d');x.drawImage(src,0,0);x.globalCompositeOperation='source-atop';x.fillStyle=rgba;x.fillRect(0,0,c.width,c.height);return c}
 function loadItems(){let left=ITEM_NAMES.length;for(const n of ITEM_NAMES){const im=new Image();
  im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);
   if(ITEM_ICONS.has(n))ICV[n]=c;else DSPR[n]=c;if(n==='core')ICV.coreRot=tintCanvas(c,'rgba(90,70,20,.55)');if(n==='bone')ICV.boneRot=tintCanvas(c,'rgba(90,80,30,.5)');if(n==='toy_ball')toyCv=null;done()};
  im.onerror=done;im.src=`sprites/items/${n}.png`}
- function done(){if(--left)return;document.querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));if(typeof renderFoodBar==='function')renderFoodBar()}}
+ function done(){if(--left)return;bgKey='';document.querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));if(typeof renderFoodBar==='function')renderFoodBar()}}
 /* 新版介面圖示（sprites/ui，高解析度）：愛心、閃電、月亮、星星 */
 const UI_OVR={heart:'heart',bolt:'bolt',moon:'moon',star:'star',gem:'gem'},UIIMG={};
 for(const k in UI_OVR){const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);UIIMG[k]=c;document.querySelectorAll(`canvas.picon[data-icon="${k}"]`).forEach(c=>paintIcon(c,k))};im.src=`sprites/ui/${UI_OVR[k]}.png`}
@@ -822,8 +820,11 @@ function makeBg(ph,lvl=1){
  drawDen(c,lvl,night||dusk);
  return cv}
 /* ---------------- 小窩（4 個等級） ---------------- */
-const DEN_BOX=[[2,42,44,68],[2,36,44,68],[2,30,44,70],[0,2,46,70]];   // x1,y1,x2,y2：點這裡打開小窩
-function drawDen(c,lvl,dark){const g=grid(W,H),R=(x,y,w,h,col)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)px(g,x+i,y+j,col)};
+const DEN_BOX=[[2,42,44,68],[2,36,44,68],[2,30,44,70],[0,2,46,70],[0,2,46,70],[0,2,46,70],[0,2,46,70]];const DEN_DARK={};
+const denXY=sp=>[Math.max(0,24-Math.round(sp.width/2)),70-sp.height];
+function denBox(lvl){const sp=DSPR['den'+lvl];if(!sp)return DEN_BOX[lvl-1];const[x,y]=denXY(sp);return[x,y+2,x+sp.width,70]}   // x1,y1,x2,y2：點這裡打開小窩
+function drawDen(c,lvl,dark){const sp=DSPR['den'+lvl];if(sp){const[x,y]=denXY(sp);c.drawImage(dark?(DEN_DARK[lvl]||(DEN_DARK[lvl]=tintCanvas(sp,'rgba(20,24,60,.32)'))):sp,x,y);return}   // V1.46 手繪小窩（sprites/items/den1～7.png）
+const g=grid(W,H),R=(x,y,w,h,col)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)px(g,x+i,y+j,col)};
  const lit=dark?'#ffe07a':'#bfe6f5',litHi=dark?'#fff6c0':'#e8f8ff';
  const hash=(x,y)=>((x*73856093)^(y*19349663))>>>0;
  // 洞口：外圈深、中間更深，下緣有一點地面反光
@@ -1325,7 +1326,7 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',`
 <p><b>目標：</b>照顧幻獸，陪牠慢慢長大。沒有死亡、離線不扣親密度、不需要每天簽到。</p>
 <ul>
 <li>🍎 <b>餵食</b>：按「餵食」後點畫面放蘋果，牠會走過去吃掉。吃完會留下果核，<b>要點一下清掉</b>，放超過 10 分鐘會發臭長果蠅，讓心情一直變差。用 1 個食物（沒有就花 ${C.feed.price} 金幣買），飽食 +${C.feed.hunger}、經驗 +${C.feed.xp}。吃飽時不能餵。</li>
-<li>⭐ <b>等級</b>：最高 Lv.30（練滿）。需要經驗＝7.5×(等級−1)²。已經有一隻「星耀覺醒」的夥伴後，其他幻獸會得到 <b>✨傳承之力</b>：經驗 ×3、訓練成果 ×2，第二隻會快很多。</li><li>🥚 <b>迎接新的蛋</b>：第 1 顆 300 金幣、第 2 顆 700、之後每顆 1000（配對、愛的小窩生的蛋不用錢）。</li><li>🐷 <b>小豬撲滿</b>：在小窩（室內）右邊牆上的木架，會幫你存錢，每小時 0.5＋等級×0.25 枚（最多算到 Lv.30；金系 ×1.5；第二隻一起出來再加牠的一半）。心情 30 以上才會存、睡覺時減半，點小豬就能領。小豬撲滿有 1～6 級：第 15、20、25、30 關的王各掉一個「核心碎片」（+1 級），商店道具有唯一的「小豬撲滿核心」1000 元（+1 級）。等級越高越大隻、存得越快越多（×1／1.25／1.5／1.8／2.2／3，最多存 12～24 小時），6 級最肥、會發光。</li><li>🎾 <b>玩耍（頂球）</b>：按「玩耍」後點畫面開始，球會一顆一顆掉下來。<b>每顆球只能按一次</b>，要在球快碰到頭的那一刻按，時機越準越會進；完美時機還會預判移動中的籃框。有 3 條命，漏接 3 次就結束，每連進 5 球補 1 條命。進越多球，籃框會開始上下、左右移動，球也掉得越快、越斜。每進 3 球得 1 金幣（最多 10）。體力 ${C.play.minEnergy} 以上，心情 +${C.play.mood}、體力 −10、經驗 +${C.play.xp}（每 30 分鐘最多 3 次有經驗）。</li>
+<li>⭐ <b>等級</b>：最高 Lv.30（練滿）。需要經驗＝7.5×(等級−1)²。已經有一隻「星耀覺醒」的夥伴後，其他幻獸會得到 <b>✨傳承之力</b>：經驗 ×3、訓練成果 ×2，第二隻會快很多。</li><li>🥚 <b>迎接新的蛋</b>：第 1 顆 300 金幣、第 2 顆 700、之後每顆 1000（配對、愛的小窩生的蛋不用錢）。</li><li>🐷 <b>小豬撲滿</b>：在小窩（室內）右邊牆上的木架，會幫你存錢，每小時 0.5＋等級×0.25 枚（最多算到 Lv.30；金系 ×1.5；第二隻一起出來再加牠的一半）。心情 30 以上才會存、睡覺時減半，點小豬就能領。小豬撲滿有 1～6 級：第 15、20、25、30 關的王各掉一個「核心碎片」（+1 級），商店道具有唯一的「小豬撲滿核心」1000 元（+1 級）。等級越高越大隻、存得越快越多（×1／1.25／1.5／1.8／2.2／3，最多存 12～24 小時），6 級最肥、會發光。</li><li>🎾 <b>玩耍（頂球）</b>：按「玩耍」後點畫面開始，球會一顆一顆掉下來。要在球快碰到頭的那一刻點畫面跳起來頂（可以一直點），時機越準越會進；完美時機還會預判移動中的籃框。有 3 條命，漏接 3 次就結束，每連進 5 球補 1 條命。進越多球，籃框會開始上下、左右移動，球也掉得越快、越斜。每進 3 球得 1 金幣（最多 10）。體力 ${C.play.minEnergy} 以上，心情 +${C.play.mood}、體力 −10、經驗 +${C.play.xp}（每 30 分鐘最多 3 次有經驗）。</li>
 <li>🫧 <b>洗澡</b>：按「洗澡」後用手指拿海綿 🧽 在牠身上來回刷 3 秒。清潔 +${C.wash.clean}、經驗 +${C.wash.xp}，每 30 分鐘一次。</li>
 <li>👆 <b>摸摸</b>：隨時都能摸；每 30 分鐘第一次：親密度 +2、心情 +3。</li>
 <li>💩 <b>大便</b>：每吃一次，大約 40 分鐘後會大便。要點一下清掉，超過 3 分鐘沒清會發臭，讓心情一直變差。商店買「寵物馬桶」後，牠會自己去上廁所。</li>
@@ -1400,12 +1401,15 @@ function menuDialog(){
 <div class="row" style="margin-top:0"><button class="btn" id="mHelp">❔ 遊戲說明</button><button class="btn" id="mJournal">📔 成長日記</button></div>
 <div class="row"><button class="btn" id="mOwner">👤 主人名字：${esc(ownerName())}</button>${!s.hatched&&s.eggTaps===0?'<button class="btn" id="mQuiz">🔮 性格測驗選蛋</button>':''}</div>
 <div class="row"><button class="btn" id="mSound">${snd()}</button><button class="btn" id="mMotion">${mo()}</button></div>
+<p style="margin-top:10px"><b>🪄 金手指</b></p><div class="row"><input id="mCheat" placeholder="輸入密碼" autocomplete="off" autocapitalize="off" style="flex:1;min-width:0;font-size:16px;padding:8px;border:3px solid var(--line)"><button class="btn" id="mCheatGo">確定</button></div>
 <div class="row"><button class="btn" id="mBasketM">🧺 蛋籃（${s.eggs.length}）</button><button class="btn" id="mSprite">🎞️ Sprite Sheet</button></div>
 <div class="row"><button class="btn" id="mUpdate">🔄 檢查更新</button></div>
 <div class="row"><button class="btn pri" id="mReset">🥚 迎接新的蛋（🪙 ${PC.eggPrice(s)}）</button></div>
 <p class="small" style="margin-top:12px">版本 V${VERSION}｜存檔位置：${standalone()?'主畫面 App':'瀏覽器'}（${location.host||'本機'}）${store.ok?'':'｜⚠️ 無法寫入'}</p>`);
  $('mOwner').onclick=()=>ownerDialog(false);if($('mQuiz'))$('mQuiz').onclick=()=>quizIntro(false);$('mHelp').onclick=helpDialog;$('mJournal').onclick=journalDialog;$('mBasketM').onclick=basketDialog;$('mSprite').onclick=spriteDialog;
  $('mSound').onclick=()=>{s.settings.sound=!s.settings.sound;save();unlockAudio();sfx('tap');$('mSound').textContent=snd()};
+ $('mCheatGo').onclick=()=>{const c=$('mCheat').value.trim().toLowerCase().replace(/\s+/g,' ');$('mCheat').value='';
+  if(c==='poor me'){s.coins+=500;PC.journal(s,Date.now(),'用了金手指 poor me');save();renderUI();sfx('level');buzz(20);toast('🪄 金手指生效！金幣 +500 💰',3000)}else{sfx('no');toast('❌ 密碼不對喔')}};
  $('mMotion').onclick=()=>{s.settings.reducedMotion=!s.settings.reducedMotion;save();renderUI();$('mMotion').textContent=mo()};
  $('mUpdate').onclick=async()=>{try{const r=await navigator.serviceWorker?.getRegistration();if(r){await r.update()}}catch(e){}toast('正在重新載入最新版本…');setTimeout(()=>location.reload(),600)};
  $('mReset').onclick=()=>{if(modeBusy()){toast('先完成現在的互動吧');return}const ep=PC.eggPrice(s);if(s.coins<ep){toast(`❌ 新的蛋要 ${ep} 金幣（你有 ${s.coins}）`,3000);sfx('no');return}confirmBox('🥚 迎接新的蛋？',`<b>新的蛋要 🪙 ${ep}</b>（第 1 顆 300、第 2 顆 700、之後每顆 1000）。<br>${!s.hatched?'目前的蛋會被換掉':PC.petCount(s)<PC.denCap(s)?'小窩還有空位：「'+esc(s.name)+'」會搬進小窩休息，隨時可以換回來':'小窩已經滿了：「'+esc(s.name)+'」會告別（永遠留在「📖 圖鑑」裡）。升級小窩就能讓更多夥伴住下來'}。金幣、食物、步數、冒險進度、日記都會保留。<br><br>建議先到「存檔」匯出存檔碼備份。`,`花 ${ep} 迎接新蛋`,()=>{const r=PC.buyEgg(s);if(!r.ok){toast('❌ '+r.msg);return}cancelMode();newPet(null);setTimeout(()=>quizIntro(false),900)})}}
@@ -1903,7 +1907,7 @@ const BED_X=0;   // 寵物睡在小圓床上時的位置
 function walkTo(x,cb){petTarget=clamp(Math.round(x),0,W-CELL);walkCb=cb||null}
 const overPet=(x,y)=>x>=petX+6&&x<=petX+42&&y>=PET_Y+8&&y<=PET_Y+46;
 const FEED={apple:null},WASH={t:0,down:false,px:0,py:0,lastMove:0,sfxAt:0},BALL={lives:3,score:0,combo:0,b:null,tapAt:0,started:false,nextAt:0,over:false,wind:0},RING={x:110,y:44,r:7,bx:110,by:44,net:0};
-const MODE_TIP={feed:'先在下方選食物，再點畫面放下去 🍽️',wash:'拿海綿 🧽 在牠身上來回刷 3 秒',play:'點畫面開始 🏀 按住蓄力、放開就頂：離籃框越遠要越大力，球快碰到頭時放開！漏接 3 次就結束'};
+const MODE_TIP={feed:'先在下方選食物，再點畫面放下去 🍽️',wash:'拿海綿 🧽 在牠身上來回刷 3 秒',play:'點畫面開始 🏀 球快碰到頭時點一下畫面，牠就跳起來頂！可以一直點，時機越準越會進。漏接 3 次就結束'};
 function setMode(m){mode=m;document.querySelectorAll('[data-act]').forEach(b=>{if(b.dataset.act!=='sleep')b.classList.toggle('on',b.dataset.act===m)});
  cv.style.touchAction=m==='wash'?'none':'';WASH.t=0;WASH.down=false;FEED.apple=null;if(m==='play'){Object.assign(BALL,{lives:CONFIG.ballGame.lives,score:0,combo:0,b:null,started:false,nextAt:0,over:false,wind:0});RING.x=RING.bx;RING.y=RING.by}else{BALL.b=null}
  if(!m)homeAt=performance.now()+4000;renderFoodBar()}
@@ -1971,8 +1975,8 @@ function updateWorld(now,dt){updatePair(now,dt);
  const b=BALL.b;
  if(b){const py=b.y,ax=b.hit&&!b.in?BALL.wind:0;b.vy+=b.g*dt;b.vx+=ax*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;
   if(!b.hit)petTarget=clamp(Math.round(b.x-24),0,W-CELL);
-  const headX=petX+24,lift=anim.once==='header'?7:0,headY=PET_Y+16-lift,since=now-BALL.tapAt;
-  // 只能按一次：球到頭上那一刻，頭必須正在往上頂（按下後 0.33 秒內）
+  const headX=petX+24,lift=anim.once==='header'?7:0,headY=petTopY(formKey(),0)+3-lift,since=now-BALL.tapAt;   // V1.46 頭頂位置跟著寵物的圖（每個造型高度不同）
+  // 點一下就跳：球到頭上那一刻，頭必須正在往上頂（最近一次點擊後 0.33 秒內），可以一直點
   if(!b.hit&&!b.passed&&b.vy>0&&Math.abs(b.x-headX)<13&&b.y>=headY-4&&b.y<=headY+8){
    if(b.tapped&&since<=330){b.hit=true;const perfect=since>=60&&since<=190,good=since>=25&&since<=270;b.q=perfect?2:good?1:0;
     const T=.95,fy=ringAt(now+T*1000).y,pe0=(b.power??b.ideal??.5)-(b.ideal??.5),pe=Math.abs(pe0)<=.12?0:pe0;   // 力道差太多：太小力會短、太大力會飛過頭
@@ -2039,12 +2043,11 @@ function drawWashUI(now){if(mode!=='wash')return;const PX=Math.round(petX),p=Mat
 /* ---- 頂球 ---- */
 function spawnBall(){const sc=BALL.score,drift=Math.min(30,4+sc*2.2);BALL.wind=sc>=5?(Math.random()<.5?-1:1)*Math.min(45,10+(sc-5)*5)*(.6+Math.random()*.4):0;
  BALL.b={x:clamp(petX+24+(Math.random()-.5)*(50+sc*4),14,96),y:-8,vx:(Math.random()-.5)*2*drift,vy:0,g:Math.min(175,95+sc*7),hit:false,scored:false,tapped:false};sfx('tap')}
-const CHARGE_MS=900,chargePower=()=>Math.min(1,(performance.now()-BALL.chargeAt)/CHARGE_MS);
 const idealPower=()=>clamp((RING.bx-(petX+24))/95,.15,1);   // 離籃框越遠要越大力
 function playTap(power=.5){const b=BALL.b,now=performance.now();
- if(!BALL.started){if(BALL.over)return;BALL.started=true;spawnBall();say('球來了！按住蓄力，球快碰到頭時放開 👆',{log:false});return}
- if(!b||b.hit||b.tapped)return;   // 每顆球只能按一次，亂按沒用
- b.tapped=true;b.power=power;b.ideal=idealPower();BALL.tapAt=now;if(!anim.once)playAnim('header',450);
+ if(!BALL.started){if(BALL.over)return;BALL.started=true;spawnBall();say('球來了！球快碰到頭時點畫面跳起來頂 👆',{log:false});return}
+ if(!b||b.hit)return;   // V1.46 不限次數：點了就跳
+ b.tapped=true;b.ideal=idealPower();b.power=b.ideal;BALL.tapAt=now;if(anim.once!=='header')playAnim('header',450);sfx('tap');
  if(b.passed)b.why='太晚了！'}
 function endBall(){const b=BALL.b;if(!b)return;BALL.b=null;
  if(!b.scored){BALL.combo=0;BALL.lives--;buzz(20);say((b.hit?(b.rim?'碰框彈出來了！':b.q?'差一點點，偏掉了！':'時機不太準，偏掉了…'):(b.why||'沒頂到…'))+(BALL.lives>0?`　❤️ 剩 ${BALL.lives}`:''),{log:false})}
@@ -2083,10 +2086,7 @@ const PIXF={'0':'111101101101111','1':'010110010010111','2':'111001111100111','3
 function pixNum(str,x,y,col){for(const ch of str){const m=PIXF[ch];if(!m)continue;for(let k=0;k<15;k++)if(m[k]==='1'){const px0=x+k%3,py0=y+Math.floor(k/3);ctx.fillStyle='#1a1208';ctx.fillRect(px0,py0+1,2,1);ctx.fillRect(px0+1,py0,1,2)}
   for(let k=0;k<15;k++)if(m[k]==='1'){ctx.fillStyle=col;ctx.fillRect(x+k%3,y+Math.floor(k/3),1,1)}x+=4}return x}
 function drawBallHUD(){if(mode!=='play')return;
- if(BALL.charging){const p=chargePower(),id=idealPower(),x=Math.round(petX+10),y=Math.max(2,petTopY(formKey(),0)-8),w=28;   // 蓄力條：綠色是剛好的力道
-  ctx.fillStyle='#1a1208';ctx.fillRect(x-1,y-1,w+2,6);ctx.fillStyle='#4a3a2a';ctx.fillRect(x,y,w,4);
-  ctx.fillStyle='rgba(90,220,110,.75)';const z0=Math.round((id-.12)*w),z1=Math.round((id+.12)*w);ctx.fillRect(x+Math.max(0,z0),y,Math.min(w,z1)-Math.max(0,z0),4);
-  ctx.fillStyle=Math.abs(p-id)<=.12?'#ffe066':p<id?'#ffffff':'#ff7a5a';ctx.fillRect(x,y+1,Math.round(p*w),2)}const L=CONFIG.ballGame.lives;
+ const L=CONFIG.ballGame.lives;
  for(let i=0;i<L;i++){const on=i<BALL.lives,x=W-10-i*9,y=4;ctx.fillStyle='#1a1208';ctx.fillRect(x,y,7,5);ctx.fillRect(x+1,y+5,5,1);ctx.fillRect(x+2,y+6,3,1);ctx.fillRect(x+1,y-1,2,1);ctx.fillRect(x+4,y-1,2,1);
   ctx.fillStyle=on?'#f0505a':'#5a4a4a';ctx.fillRect(x+1,y,2,1);ctx.fillRect(x+4,y,2,1);ctx.fillRect(x+1,y+1,5,3);ctx.fillRect(x+2,y+4,3,1);ctx.fillRect(x+3,y+5,1,1);if(on){ctx.fillStyle='#ffc0c8';ctx.fillRect(x+1,y,1,1)}}
  if(BALL.wind){const dir=Math.sign(BALL.wind),n=Math.min(3,1+Math.floor(Math.abs(BALL.wind)/15)),cx=58,y=5,ph=Math.floor(performance.now()/160)%3;   // 風向箭頭
@@ -2098,12 +2098,12 @@ function toLogical(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.l
 cv.addEventListener('pointerdown',e=>{const p=toLogical(e);unlockAudio();requestPersist();
  if(mode==='wash'){WASH.down=true;WASH.px=p.x;WASH.py=p.y;WASH.lastMove=performance.now();try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
  if(!mode&&nearToy(p.x,p.y)&&!coreAt(p.x,p.y)){toyGrab(p.x,p.y);try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
- if(mode==='play'&&BALL.b&&!BALL.b.tapped&&!BALL.b.hit){BALL.charging=true;BALL.chargeAt=performance.now();try{cv.setPointerCapture(e.pointerId)}catch(_){}return}   // 頂球：按住蓄力，放開才頂
+ if(mode==='play'&&BALL.b&&!BALL.b.hit){playTap();return}   // V1.46 頂球：點一下就跳（不用蓄力）
  pointerTap(p.x,p.y)});
 /* 手指按在球上時不要讓頁面捲動 */
 cv.addEventListener('touchstart',e=>{const t0=e.touches[0];if(!t0||mode)return;const p=toLogical(t0);if(nearToy(p.x,p.y)&&!coreAt(p.x,p.y))e.preventDefault()},{passive:false});
 cv.addEventListener('pointermove',e=>{if(DRAG.on){const p=toLogical(e);toyDrag(p.x,p.y);return}if(mode!=='wash'||!WASH.down)return;const p=toLogical(e);if(Math.hypot(p.x-WASH.px,p.y-WASH.py)>.6)WASH.lastMove=performance.now();WASH.px=p.x;WASH.py=p.y});
-for(const ev of['pointerup','pointercancel','pointerleave'])cv.addEventListener(ev,()=>{WASH.down=false;toyRelease();if(BALL.charging){BALL.charging=false;playTap(chargePower())}});
+for(const ev of['pointerup','pointercancel','pointerleave'])cv.addEventListener(ev,()=>{WASH.down=false;toyRelease()});
 let denTapAt=0;
 function pointerTap(x,y){if(evo)return;
  if(mode==='feed'){placeApple(x,y);return}
@@ -2113,7 +2113,7 @@ function pointerTap(x,y){if(evo)return;
  if(overPig(x,y)&&!overPet(x,y)){tapPig();return}
  if(s.hatched&&overPair(x,y)&&!overPet(x,y)){switchToPair();return}   // 點另一隻：換照顧牠
  if(overPet(x,y)||(!s.hatched&&x>=PET_X&&x<=PET_X+CELL&&y>=PET_Y&&y<=PET_Y+CELL)){tapPet();return}
- if(s.hatched&&curView()==='yard'){const d=DEN_BOX[s.den.level-1];if(x>=d[0]&&x<=d[2]&&y>=d[1]&&y<=d[3]){const nw=performance.now();   // 點兩下小窩：進去
+ if(s.hatched&&curView()==='yard'){const d=denBox(s.den.level);if(x>=d[0]&&x<=d[2]&&y>=d[1]&&y<=d[3]){const nw=performance.now();   // 點兩下小窩：進去
    if(nw-denTapAt<450){denTapAt=0;toggleView()}else{denTapAt=nw;spawn('spark',2,{x,y,vy:-8,life:.5,spread:3});say('點兩下就能進小窩 🏠',{log:false})}return}}
  spawn('spark',1,{x,y,vy:-6,jx:0,jy:0,life:.5,spread:0})}
 cv.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tapPet()}});
@@ -2203,6 +2203,18 @@ $('tClose').onclick=()=>closeTraining();
 tcv.addEventListener('pointerdown',e=>{e.preventDefault();if(!TG||TG.phase!=='play'||!TG.tap)return;const b=tcv.getBoundingClientRect();TG.tap((e.clientX-b.left)/b.width*128,(e.clientY-b.top)/b.height*112)});
 /* 組合拳：每次隨機 5～6 拳，至少換手 2 次，不會整串都同一邊 */
 function comboSeq(){for(;;){const n=Math.random()<.5?5:6,q=Array.from({length:n},()=>Math.random()<.5?'L':'R');let sw=0;for(let i=1;i<n;i++)if(q[i]!==q[i-1])sw++;if(sw>=2&&!/(L{4}|R{4})/.test(q.join('')))return q}}
+/* 躲避球投手：0 站好、1 舉手準備、2 丟出去、3 拍手 */
+function drawPitcher(c,x,y,pose,now){const R=(px_,py,w,h,col)=>{c.fillStyle='#1a1008';c.fillRect(x+px_-1,y+py-1,w+2,h+2);c.fillStyle=col;c.fillRect(x+px_,y+py,w,h)};
+ c.fillStyle='rgba(0,0,0,.2)';c.beginPath();c.ellipse(x,y+1,8,2,0,0,Math.PI*2);c.fill();
+ R(-4,-6,3,6,'#2a3a7a');R(1,-6,3,6,'#2a3a7a');   // 褲子
+ R(-5,-14,10,8,'#e8433f');c.fillStyle='#ffffff';c.fillRect(x-1,y-13,2,6);   // 球衣
+ R(-4,-20,8,6,'#f4c8a0');c.fillStyle='#1a1008';c.fillRect(x-2,y-18,1,1);c.fillRect(x+1,y-18,1,1);   // 臉
+ R(-5,-23,10,3,'#2a5ac8');R(2,-21,5,1,'#2a5ac8');   // 帽子
+ R(-8,-13,3,3,'#8a5a2a');   // 手套
+ if(pose===1){R(5,-22,2,8,'#f4c8a0');c.fillStyle='#ffffff';c.fillRect(x+5,y-25,3,3)}   // 舉手準備丟
+ else if(pose===2){R(4,-13,6,2,'#f4c8a0')}   // 丟出去
+ else if(pose===3){const u=Math.floor(now/200)%2;R(-7,-18+u,2,5,'#f4c8a0');R(5,-18+u,2,5,'#f4c8a0')}   // 拍手
+ else R(5,-13,2,6,'#f4c8a0')}
 /* ---------- 畫面 ---------- */
 function tPet(c,fr,x,y,flip){const S=TG.S,i=S.idx[fr]??S.idx.idle0??0,src=TG.flash>performance.now()&&Math.floor(performance.now()/70)%2?S.sil:S.cv;
  if(flip){c.save();c.translate(Math.round(x)+CELL,0);c.scale(-1,1);c.drawImage(src,i*CELL,0,CELL,CELL,0,Math.round(y),CELL,CELL);c.restore()}else c.drawImage(src,i*CELL,0,CELL,CELL,Math.round(x),Math.round(y),CELL,CELL)}
@@ -2219,23 +2231,26 @@ function drawTraining(now){if(!TG)return;const c=tctx;c.save();if(TG.shake>0){TG
 function tBar(c,x,y,w,p,col){c.fillStyle='#2a170a';c.fillRect(x-1,y-1,w+2,5);c.fillStyle=col;c.fillRect(x,y,Math.round(w*Math.max(0,Math.min(1,p))),3)}
 const TRAIN_INIT={
  /* 閃避：三條路線，球從前方丟過來越飛越大，到身體時要不在那條路上 */
- dodge(G){const LX=[26,64,102],N=12,SP=[[4,58,'普通'],[8,82,'快！'],[12,112,'更快！']];
-  Object.assign(G,{lane:1,px:64,balls:[],next:.4,thrown:0,done:0,hits:0,dodged:0,btns:[['L','◀ 左'],['R','右 ▶']],
+ dodge(G){const LX=[26,64,102],N=12,SP=[[4,1.25,'普通'],[8,.9,'快！'],[12,.66,'更快！']],HX=67,HY=44,HIT=.76;   // 球從投手手上（HX,HY）丟出，飛到前面三條路線；SP＝飛到面前要幾秒
+  Object.assign(G,{lane:1,px:64,balls:[],next:1,thrown:0,done:0,hits:0,dodged:0,btns:[['L','◀ 左'],['R','右 ▶']],
    btn(b){G.lane=Math.max(0,Math.min(2,G.lane+(b==='L'?-1:1)));sfx('tap')},
    tap(x){G.btn(x<G.px?'L':'R')},
    hud(){return`${'❤️'.repeat(3-G.hits)}${'🖤'.repeat(G.hits)}　躲過 ${G.dodged}/${N}　${G.cur||''}`},
    update(dt){G.px+=(LX[G.lane]-G.px)*Math.min(1,dt*16);
-    if(G.thrown<N&&G.t>=G.next){const tier=SP.find(q=>G.thrown<q[0]);const lane=Math.random()<.6?G.lane:Math.floor(Math.random()*3);G.balls.push({lane,y:14,sp:tier[1],col:tier[1]>100?'#c070ff':tier[1]>70?'#ff9a3a':'#f4f4f4'});G.cur=tier[2];G.thrown++;G.next=G.t+Math.max(.7,1.35-G.thrown*.05)+Math.random()*.25;sfx('tap')}
-    for(let i=G.balls.length-1;i>=0;i--){const b=G.balls[i],y0=b.y;b.y+=b.sp*dt;
-     if(y0<84&&b.y>=84){const bx=64+(LX[b.lane]-64)*((84-14)/82);if(Math.abs(G.px-bx)<17){G.hits++;b.hit=true;G.flash=performance.now()+500;G.shake=.3;sfx('crack');buzz(40);tMsg('被打中了！');if(G.hits>=3){endTraining(false,`被打中 ${G.hits} 次…`);return}}else{G.dodged++;tMsg('閃開了！');tPop('star',G.px,70,1)}}
-     if(b.y>112){G.balls.splice(i,1);G.done++}}
+    if(G.thrown<N&&G.t>=G.next){const tier=SP.find(q=>G.thrown<q[0]);const lane=Math.random()<.6?G.lane:Math.floor(Math.random()*3);G.balls.push({lane,p:0,T:tier[1],col:tier[1]<.7?'#c070ff':tier[1]<1?'#ff9a3a':'#f4f4f4'});G.cur=tier[2];G.thrown++;G.throwAt=G.t;G.next=G.t+Math.max(1.05,1.6-G.thrown*.04)+Math.random()*.3;sfx('crack')}
+    for(let i=G.balls.length-1;i>=0;i--){const b=G.balls[i],p0=b.p;b.p+=dt/b.T;
+     if(p0<HIT&&b.p>=HIT){const bx=HX+(LX[b.lane]-HX)*HIT;if(Math.abs(G.px-bx)<17){G.hits++;b.hit=true;G.flash=performance.now()+500;G.shake=.3;sfx('crack');buzz(40);tMsg('被打中了！');if(G.hits>=3){endTraining(false,`被打中 ${G.hits} 次…`);return}}else{G.dodged++;tMsg('閃開了！');tPop('star',G.px,70,1)}}
+     if(b.p>1.25){G.balls.splice(i,1);G.done++}}
     if(G.done>=N&&!G.balls.length)endTraining(true,`12 球只被打中 ${G.hits} 次！`)},
-   draw(c,now){tGym(c);c.fillStyle='#6a6a7a';c.fillRect(56,6,16,10);c.fillStyle='#3a3a4a';c.fillRect(60,14,8,3);c.fillStyle='#e8433f';c.fillRect(58,8,2,2);
+   draw(c,now){tGym(c);
+    const wind=G.thrown<N&&G.phase==='play'&&G.t>G.next-.45,thr=G.throwAt!=null&&G.t-G.throwAt<.25;drawPitcher(c,64,62,G.phase==='done'?(G.win?3:0):wind?1:thr?2:0,now);
     for(const x of LX){c.fillStyle='rgba(255,255,255,.18)';c.fillRect(x-12,74,24,36)}
-    const fr=G.phase==='done'?(G.win?'happy0':'sad0'):G.flash>now?'sad0':Math.abs(LX[G.lane]-G.px)>2?'jump0':['idle0','idle1'][Math.floor(now/400)%2];tPet(c,fr,G.px-24,56);
-    for(const b of G.balls){const k=(b.y-14)/82,x=64+(LX[b.lane]-64)*k,r=2+k*6;if(b.y>60&&!b.hit){c.fillStyle='rgba(0,0,0,.25)';c.beginPath();c.ellipse(64+(LX[b.lane]-64)*Math.min(1,(100-14)/82),102,r,2,0,0,Math.PI*2);c.fill()}
-     if(b.sp>100){c.fillStyle='rgba(192,112,255,.35)';c.beginPath();c.arc(x,b.y-r*1.6,r*.8,0,Math.PI*2);c.fill()}
-     c.fillStyle='#2a170a';c.beginPath();c.arc(x,b.y,r+1,0,Math.PI*2);c.fill();c.fillStyle=b.col;c.beginPath();c.arc(x,b.y,r,0,Math.PI*2);c.fill();c.fillStyle='#e8433f';c.fillRect(Math.round(x-r),Math.round(b.y),Math.round(r*2),1)}}})},
+    const fr=G.phase==='done'?(G.win?'happy0':'sad0'):G.flash>now?'sad0':Math.abs(LX[G.lane]-G.px)>2?'jump0':['idle0','idle1'][Math.floor(now/400)%2];
+    const pre=G.balls.filter(b=>b.p<HIT),post=G.balls.filter(b=>b.p>=HIT);
+    const ball=b=>{const k=b.p,x=HX+(LX[b.lane]-HX)*k,y=HY+k*52,r=1.2+k*6;if(k>.3&&!b.hit){c.fillStyle='rgba(0,0,0,.22)';c.beginPath();c.ellipse(x,104,r,1.5,0,0,Math.PI*2);c.fill()}
+     if(b.T<.7){c.fillStyle='rgba(192,112,255,.35)';c.beginPath();c.arc(HX+(LX[b.lane]-HX)*(k-.08),HY+(k-.08)*52,r*.8,0,Math.PI*2);c.fill()}
+     c.fillStyle='#2a170a';c.beginPath();c.arc(x,y,r+1,0,Math.PI*2);c.fill();c.fillStyle=b.col;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();c.fillStyle='#e8433f';c.fillRect(Math.round(x-r),Math.round(y),Math.max(1,Math.round(r*2)),1)};
+    pre.forEach(ball);tPet(c,fr,G.px-24,56);post.forEach(ball)}})},
  /* 沙包連打：2 秒內 18 下 */
  rush(G){Object.assign(G,{n:0,sw:0,hit:0,btns:[['P','👊 打！（點螢幕也可以）']],
    btn(){G.n++;G.sw=Math.min(1,G.sw+.35);G.hit=performance.now()+90;sfx('tap');buzz(6);if(G.n%3===0)tPop('spark',92,48,1)},tap(){G.btn()},
@@ -2271,7 +2286,7 @@ const TRAIN_INIT={
     for(const b of G.bubs){const x=Math.round(b.x),y=Math.round(b.y);c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.arc(x,y,9,0,Math.PI*2);c.fill();c.strokeStyle='#ffffff';c.lineWidth=1;c.beginPath();c.arc(x+.5,y+.5,9,0,Math.PI*2);c.stroke();c.fillStyle='#ffffff';c.fillRect(x-5,y-6,2,2);
      const ic=ICV[b.ic];if(ic)c.drawImage(ic,Math.round(x-ic.width/2),Math.round(y-ic.height/2))}}})}};
 
-window.PF={get state(){return s},denDialog:()=>denDialog(),makePig:lv=>makePig(lv),startTraining:k=>startTraining(k),trainDialog:()=>trainDialog(),get TG(){return TG},PET_Y,toy:TOY,arena:makeArena,bUI:()=>bUI(),get mode(){return mode},get ball(){return BALL},get apple(){return FEED.apple},get petX(){return petX},PC,goDrink:()=>goDrink(),makeDecor:id=>makeDecor(id),playAnim:(...a)=>playAnim(...a),formKey:()=>formKey(),creditSteps,mateCode,decodeMate,encodeGenome,decodeGenome,startBattle,onMove,get B(){return B},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
+window.PF={get state(){return s},headY:()=>petTopY(formKey(),0)+3,denDialog:()=>denDialog(),makePig:lv=>makePig(lv),startTraining:k=>startTraining(k),trainDialog:()=>trainDialog(),get TG(){return TG},PET_Y,toy:TOY,arena:makeArena,bUI:()=>bUI(),get mode(){return mode},get ball(){return BALL},get apple(){return FEED.apple},get petX(){return petX},PC,goDrink:()=>goDrink(),makeDecor:id=>makeDecor(id),playAnim:(...a)=>playAnim(...a),formKey:()=>formKey(),creditSteps,mateCode,decodeMate,encodeGenome,decodeGenome,startBattle,onMove,get B(){return B},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
  debug:{info(){return{busy:busyUntil-Date.now(),evo:!!evo,modal:!$('modal').classList.contains('hidden'),taps:s.eggTaps,h:s.hatched,battle:!!B}},skip(min){s.lastTick-=min*60000;tick();renderUI();save()},age(h){s.hatchedAt-=h*3600000;save();runStages();renderUI()},xp(n){const x0=s.xp;PC.addXP(s,n);save();renderUI();afterChange(x0)},set(o){Object.assign(s,o);renderUI();save()}}};
 try{init()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<div style="padding:12px;background:#a8394c;color:#fff">啟動錯誤：${esc(e.message)}</div>`);throw e}
 </script>
