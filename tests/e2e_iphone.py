@@ -90,7 +90,8 @@ async def main():
         # ---------- 3. 冷卻不能用重新整理繞過 ----------
         await p.evaluate("PF.debug.set({clean:30})"); await p.reload(); await p.wait_for_timeout(700)
         await p.click('[data-act=wash]'); await p.wait_for_timeout(300)
-        ok('洗澡冷卻：重新整理後仍有效', '分鐘後再洗' in await p.inner_text('#log'), await p.inner_text('#log'))
+        ok('V1.55 洗澡沒有冷卻：剛洗完、重新整理後髒了就能再洗', await p.evaluate("PF.mode") == 'wash', await p.evaluate("PF.mode"))
+        await p.click('[data-act=wash]'); await p.wait_for_timeout(300)
         await p.wait_for_timeout(800)
         b0 = (await st(p))['bond']; await tap(p); await p.wait_for_timeout(1200); b1 = (await st(p))['bond']
         await p.reload(); await p.wait_for_timeout(700); await tap(p); await p.wait_for_timeout(1200); b2 = (await st(p))['bond']
@@ -149,7 +150,7 @@ async def main():
         await closeall(p)
         # ---------- 商店與小屋 ----------
         await p.evaluate("PF.debug.set({coins:400,mood:50,hunger:50,sleeping:false})")
-        await p.click('#bShop'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/09e_shop.png')
+        await p.click('#coinBtn'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/09e_shop.png')
         for it in ['paper_mint', 'wall_clock', 'lamp_moon', 'plant_flower', 'bed_cloud', 'rug_star', 'toy_block']:
             await p.click(f'[data-si="{it}"]'); await p.click(f'[data-dz="{it}"]'); await p.wait_for_timeout(150)
         s = await st(p); ok('買 7 件家具、扣錢、自動擺上', len(s['decor']['owned']) == 9 and s['coins'] == 400 - 30 - 45 - 50 - 35 - 80 - 60 - 25 and s['decor']['placed']['bed'] == 'bed_cloud', s['coins'])
@@ -170,7 +171,7 @@ async def main():
         s = await st(p); poo = [c for c in s['cores'] if c['k'] == 'poop']; ok('吃完一段時間後大便', len(poo) == 1, s['cores'])
         await p.screenshot(path=f'{OUT}/09g_poop.png')
         await p.mouse.click(*await scene_xy(p, poo[0]['x'], 98)); await p.wait_for_timeout(300); ok('點大便清掉', not [c for c in (await st(p))['cores'] if c['k'] == 'poop'])
-        await p.evaluate("PF.debug.set({coins:300})"); await p.click('#bShop'); await p.wait_for_timeout(300); await p.click('[data-si="toilet_pot"]'); await p.click('[data-dz="toilet_pot"]'); await p.wait_for_timeout(200); await closeall(p)
+        await p.evaluate("PF.debug.set({coins:300})"); await p.click('#coinBtn'); await p.wait_for_timeout(300); await p.click('[data-si="toilet_pot"]'); await p.click('[data-dz="toilet_pot"]'); await p.wait_for_timeout(200); await closeall(p)
         await p.evaluate("(()=>{PF.state.digest=[Date.now()-1000];PF.debug.set({})})()"); await p.wait_for_timeout(1500); s = await st(p)
         ok('有寵物馬桶：自己上廁所、地上沒有大便', s['toiletUses'] == 1 and not [c for c in s['cores'] if c['k'] == 'poop'])
         await p.evaluate("PF.debug.set({view:'yard',energy:40})"); await p.wait_for_timeout(200)
@@ -348,6 +349,14 @@ async def main():
         ok('App 版：打開就從健康 App 同步最近幾天的步數', s['steps']['total'] == 11000, s['steps'])
         await q.click('#bSteps'); await q.wait_for_timeout(300); ok('App 版：步數畫面顯示已連接健康 App、沒有捷徑教學', await q.is_visible('#sSync') and not await q.is_visible('#sCopyUrl'))
         await ctx8.close()
+        # ---------- V1.55 一頁式、背包 ----------
+        ctxB, b = await newpage(br, I13); await hatch(b)
+        ok('V1.55 主畫面一頁放得下（不用往下捲）', await b.evaluate("document.documentElement.scrollHeight<=innerHeight+1"), await b.evaluate("[document.documentElement.scrollHeight,innerHeight]"))
+        await b.evaluate("(()=>{const s=PF.state;s.inv.relics={iceScale:1};s.inv.melon=1;PF.debug.set({})})()")
+        await b.click('#bShop'); await b.wait_for_timeout(300)
+        heads = await b.evaluate("[...document.querySelectorAll('#shopBody .shead')].map(e=>e.textContent)")
+        ok('V1.55 背包順序：寶物→道具→食物→水果→素材', heads[0].endswith('王的寶物') and heads.index([h for h in heads if h.endswith('道具')][0]) < heads.index([h for h in heads if h.endswith('食物')][0]) < heads.index([h for h in heads if h.endswith('水果')][0]), heads)
+        await ctxB.close()
         # ---------- V1.51 自由佈置房間 ----------
         ctxA, a = await newpage(br, I13); await hatch(a)
         await a.evaluate("PF.startArrange()"); await a.wait_for_timeout(300)

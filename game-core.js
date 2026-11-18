@@ -19,7 +19,7 @@ const CONFIG = {
   full: 95,                          // 視為「已滿」的門檻
   feed: { hunger: 25, xp: 5, tide: 1, price: 5 },
   play: { minEnergy: 10, mood: 15, energy: -10, hunger: -5, clean: -6, xp: 10, xpWindowMin: 30, xpPerWindow: 3 },
-  wash: { cooldownMin: 10, clean: 35, xp: 5, rubSeconds: 3 },
+  wash: { cooldownMin: 0, clean: 35, xp: 5, rubSeconds: 3 },
   pet:  { cooldownMin: 30, bond: 2, mood: 3, tide: 2, minMood: 40 },   // 心情 40 以下摸摸不會加親密度
   neglect: { below: 25, bondPerHour: 1 },                 // 飽食／心情／清潔任一低於 25：親密度每小時 −1
   adventure: { minEnergy: 20, energy: -20, hunger: -15, clean: -20, winMood: 8, lossMood: -12, xp: 15, coinsMin: 20, coinsMax: 30, seeds: 1, flame: 3, dailyFull: Infinity, overCapXpRate: 0.2, dropFood: 0.3, dropSeed: 0.4 },
@@ -69,13 +69,25 @@ const CONFIG = {
     35: { mon: '赤龍', route: 'flame', route2: 'dragon', relic: 'dragonFang' }, 40: { mon: '冰龍', route: 'tide', route2: 'dragon', relic: 'iceScale' } },   // V1.53 王有雙屬性；龍＝全抗性
   // V1.54 王的專屬絕招：血量第一次掉到一半以下時，先預告一回合、下一回合施放（火鳳的浴火重生是倒下時觸發）
   bossUlt: { 5: { key: 'moss', name: '苔蘚再生', turns: 3, heal: .1, tip: '接下來 3 回合牠每回合會回血，趁現在全力攻擊！' },
-    10: { key: 'charge', name: '熔岩衝鋒', mult: 2.5, tip: '下一回合會撞出 2.5 倍傷害——快按「🛡️ 防禦」！' },
+    10: { key: 'charge', name: '熔岩衝鋒', mult: 2.2, tip: '下一回合會撞出 2.2 倍傷害——快按「🛡️ 防禦」！' },
     15: { key: 'wall', name: '骸骨鐵壁', turns: 2, cut: .5, reflect: .3, tip: '2 回合內打牠只有一半傷害，還會反彈 30%——先防禦或喝藥水！' },
     20: { key: 'curse', name: '混亂詛咒', turns: 2, miss: .4, tip: '被詛咒的 2 回合內攻擊有 40% 會打空——可以先蓄力或防禦拖過去' },
     25: { key: 'doom', name: '死亡宣告', turns: 3, pct: .4, tip: '倒數 3 回合後受到最大血量 40% 的傷害——快打倒牠，或先補血！' },
     30: { key: 'rebirth', name: '浴火重生', hp: .3, tip: '火鳳倒下一次會用 30% 血量復活，要打倒兩次！' },
     35: { key: 'breath', name: '龍炎吐息', hits: 2, mult: 1.5, tip: '連續兩回合 1.5 倍噴火、猜拳也閃不掉——先喝藥水把血補高！' },
-    40: { key: 'zero', name: '絕對零度', mult: 2, tip: '會被冰凍 1 回合，接著吃 2 倍傷害——冰凍前先防禦或補血！' } },
+    40: { key: 'zero', name: '絕對零度', mult: 1.7, tip: '會被冰凍 1 回合，接著吃 1.7 倍冰爆——先把血補高！' } },
+  bossBuff: { hp: 1.05, atk: 1.05, skip: [10, 40] },
+  // V1.55 屬性反擊技：成年期以後解鎖，每隻每場一次，會比敵人先出手
+  counter: { stages: ['adult', 'ascended'],
+    fire:  { name: '烈焰護盾', icon: '🔥', text: '燒掉兩隻身上的詛咒、死亡宣告和冰凍，下一次受到的傷害減半' },
+    water: { name: '治癒之泉', icon: '💧', text: '兩隻都回復 30% HP', heal: .3 },
+    leaf:  { name: '森林守護', icon: '🌿', text: '兩隻接下來 3 回合，每回合回復 10% HP', turns: 3, heal: .1 },
+    earth: { name: '大地壁壘', icon: '🪨', text: '這一回合兩隻受到的傷害只剩 30%', cut: .7 },
+    bird:  { name: '疾風步',   icon: '🌪️', text: '兩隻接下來 2 回合閃避 +50%（猜拳輸了也可能閃開）', turns: 2, dodge: .5 },
+    elec:  { name: '雷電麻痺', icon: '⚡', text: '敵人麻痺 1 回合（王的絕招也會被打斷、延後）' },
+    metal: { name: '鋼鐵反擊', icon: '⚙️', text: '下一次被攻擊時，把 60% 的傷害反彈回去', reflect: .6 },
+    none:  { name: '星光守護', icon: '⭐', text: '回復 20% HP，下一次受到的傷害減半', heal: .2 } },
+  combo: { mult: 1.6 },   // 羈絆合擊：兩隻一起衝上去，各打一次 1.6 倍   // V1.55 其他六隻王再強一點
   relics: { repeatDrop: .1, sell: 999, slots: 2, items: {
     rhinoCharm:     { name: '犀角護符',   icon: '📿', boss: '熔岩犀',   def: .1,   text: '防禦 +10%' },
     reaperBlade:    { name: '死神鐮刃',   icon: '🌙', boss: '小死神',   crit: .1,  text: '會心一擊機率 +10%' },
@@ -627,7 +639,8 @@ function mkFighter(name, key, lvl, route, tierN, mood, bond) {
 /* V1.44 野生怪戰鬥數值（畫面和模擬共用） */
 function foeFighter(n, myLvl, name = '野生怪', key = 'k') {
   const f = foeFor(n, myLvl), H0 = CONFIG.foeHp, T = CONFIG.tower, ft = mkFighter(name, key, f.level, f.route, 0, 80, 0), tw = n >= T.from;
-  ft.max = ft.hp = Math.round(ft.max * (f.big ? H0.big : f.boss ? H0.mini : H0.normal) * (tw ? T.hp : 1)); if (tw) ft.atk *= T.atk; ft.tower = tw; if (f.route2) ft.el2 = f.route2 === 'dragon' ? 'dragon' : ELEM[f.route2]; return ft;
+  ft.max = ft.hp = Math.round(ft.max * (f.big ? H0.big : f.boss ? H0.mini : H0.normal) * (tw ? T.hp : 1)); if (tw) ft.atk *= T.atk; ft.tower = tw; if (f.route2) ft.el2 = f.route2 === 'dragon' ? 'dragon' : ELEM[f.route2];
+  { const BB = CONFIG.bossBuff; if (CONFIG.bosses[n] && !BB.skip.includes(n)) { ft.max = ft.hp = Math.round(ft.max * BB.hp); ft.atk *= BB.atk; } } return ft;
 }
 const hasHeritage = st => !!(st.awake || (st.pair && st.pair.awake) || (st.roster || []).some(p => p.awake));
 /* V1.42 我方加成：進化階段、訓練成果、星耀覺醒 */
@@ -679,7 +692,9 @@ function damage(a, d, special, r = Math.random, boost = 1) {
   let dmg = Math.max(1, Math.round(a.atk * pow * (a.atk / (a.atk + d.def)) * 1.6 * mult * (.85 + r() * .3)));
   if (d.guard) { dmg = Math.max(1, Math.round(dmg * .5)); d.guard = false; }
   if (d.dmgCut) dmg = Math.max(1, Math.round(dmg * (1 - d.dmgCut)));
-  let reflect = 0; if (d.wallT > 0) { dmg = Math.max(1, Math.round(dmg * (1 - (d.wallCut || .5)))); reflect = Math.max(1, Math.round(dmg * (d.wallReflect || .3))); }   // V1.54 骸骨鐵壁
+  if (d.roundCut) dmg = Math.max(1, Math.round(dmg * (1 - d.roundCut)));   // 大地壁壘（這一回合）
+  if (d.halfNext) { dmg = Math.max(1, Math.round(dmg * .5)); d.halfNext = false; }   // 烈焰護盾／星光守護
+  let reflect = 0; if (d.counterRefl) { reflect += Math.max(1, Math.round(dmg * d.counterRefl)); d.counterRefl = 0; } if (d.wallT > 0) { dmg = Math.max(1, Math.round(dmg * (1 - (d.wallCut || .5)))); reflect += Math.max(1, Math.round(dmg * (d.wallReflect || .3))); }   // V1.54 骸骨鐵壁
   const crit = r() < .08 + (a.critUp || 0); if (crit) dmg = Math.round(dmg * 1.5);
   let endured = false;
   if (dmg >= d.hp && d.endure) { dmg = d.hp - 1; d.endure = false; endured = true; }

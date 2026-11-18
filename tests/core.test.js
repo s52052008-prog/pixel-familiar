@@ -29,9 +29,8 @@ t('隨機操作 2000 次後所有數值都不為負', () => {
 });
 
 // 3. 30 分鐘冷卻不能用重新整理繞過（冷卻時間存在存檔裡）
-t('洗澡 30 分鐘冷卻：存檔重新載入後仍有效', () => {
-  const s = hatched(); s.clean = 20; C.act(s, 'wash', T0); const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 5 * MIN);
-  r.clean = 20; assert.ok(!C.act(r, 'wash', T0 + 5 * MIN).ok); assert.ok(C.act(r, 'wash', T0 + 31 * MIN).ok);
+t('V1.55 洗澡沒有冷卻：髒了就能再洗，很乾淨時不能洗', () => {
+  const s = hatched(); s.clean = 20; s.coins = 99; assert.ok(C.act(s, 'wash', T0).ok); s.clean = 20; assert.ok(C.act(s, 'wash', T0 + MIN).ok); s.clean = 100; assert.ok(!C.act(s, 'wash', T0 + 2 * MIN).ok);
 });
 t('撫摸 30 分鐘內只有第一次有收益（重新載入也一樣）', () => {
   const s = hatched(); const a = C.pet(s, T0); assert.ok(a.reward); assert.equal(s.bond, 2); assert.equal(s.path.tide, 2);
@@ -395,6 +394,14 @@ t('V1.53 王雙屬性、龍屬性全抗性', () => {
 t('V1.54 王的絕招設定齊全；骸骨鐵壁傷害減半並反彈 30%', () => { for (const n of [5, 10, 15, 20, 25, 30, 35, 40]) { const U = C.CONFIG.bossUlt[n]; assert.ok(U && U.key && U.name && U.tip); }
   const w = { hp: 1e4, max: 1e4, def: 10, wallT: 2, wallCut: .5, wallReflect: .3 }, n0 = { hp: 1e4, max: 1e4, def: 10 }, a = { atk: 200, el: 'fire' };
   const r1 = C.damage(a, w, false, () => .5), r0 = C.damage(a, n0, false, () => .5); assert.equal(r1.dmg, Math.round(r0.dmg * .5)); assert.equal(r1.reflect, Math.round(r1.dmg * .3)); assert.equal(r0.reflect, 0); });
+t('V1.55 反擊技設定、大地壁壘／烈焰護盾／鋼鐵反擊的傷害計算；熔岩犀與冰龍絕招調弱、其他王變強', () => {
+  for (const el of ['fire', 'water', 'leaf', 'earth', 'bird', 'elec', 'metal', 'none']) assert.ok(C.CONFIG.counter[el].name);
+  const a = { atk: 200, el: 'fire' }, base = () => ({ hp: 1e4, max: 1e4, def: 10 }), d0 = C.damage(a, base(), false, () => .5).dmg;
+  assert.equal(C.damage(a, Object.assign(base(), { roundCut: .7 }), false, () => .5).dmg, Math.round(d0 * .3));
+  const h = Object.assign(base(), { halfNext: true }); assert.equal(C.damage(a, h, false, () => .5).dmg, Math.round(d0 * .5)); assert.equal(h.halfNext, false);
+  const m = Object.assign(base(), { counterRefl: .6 }), rm = C.damage(a, m, false, () => .5); assert.equal(rm.reflect, Math.round(rm.dmg * .6)); assert.equal(m.counterRefl, 0);
+  assert.equal(C.CONFIG.bossUlt[10].mult, 2.2); assert.equal(C.CONFIG.bossUlt[40].mult, 1.7);
+  const f15 = C.foeFighter(15, 10), raw = C.mkFighter('x', 'k', f15.level, 'metal', 0, 80, 0); assert.equal(f15.max, Math.round(Math.round(raw.max * 1.5) * 1.05)); });
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);
