@@ -47,7 +47,7 @@ const CONFIG = {
   loveNest: { cost: 300, cooldownH: 12, mood: 10 },          // 愛的小窩：買一次，成年期以上的一公一母可以進去生蛋
   pair: { rate: .5, advMinEnergy: 20, foeHp: 1.5, xpShare: .6 },   // 第二隻一起出來：狀態變化速度減半；一起冒險時敵人血量 ×1.5、第二隻分到 6 成經驗
   farm: { plots: 3, maxPlots: 6, expand: [30, 60, 90], growHours: 2, fruitMin: 2, fruitMax: 3, freshHours: 6, rotHours: 24, xp: 5, forest: 3, seedPrice: 5 },   // 收成：蘋果、莓果各隨機 1～2 顆；田可以花錢擴建到 6 格     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
-  goals: { perDay: 3, coins: [10, 20, 40], maxLv: 10, needPerLv: .2, rewardPerLv: .2 },   // 每天 ★／★★／★★★ 三個；每天 3 個都完成，任務等級 +1（更難、獎勵更好）
+  goals: { perDay: 3, coins: [15, 30, 50], maxLv: 10, needPerLv: .2, rewardPerLv: .2 },   // 每天 ★／★★／★★★ 三個；每天 3 個都完成，任務等級 +1（更難、獎勵更好）
   candy: { price: 200, mood: 20, hunger: 10 },   // V1.39：星星糖 200 金幣，吃了直接升 1 級（不受屬性經驗加成影響）
   core: { rotMin: 10, moodPerHour: 4, max: 8 },          // 果核：10 分鐘沒清會發臭長果蠅，每顆每小時心情 −4
   poop: { delayMin: 40, rotMin: 3 },                      // 每吃一次，40 分鐘後大便；大便 3 分鐘沒清就發臭
@@ -58,7 +58,10 @@ const CONFIG = {
   seedOdds: { normal: [['cranberry', .55], ['blueberry', .3], ['strawberry', .15]], good: [['cranberry', .3], ['blueberry', .4], ['strawberry', .3]] },   // V1.41 種子都是綜合：蔓越莓／藍莓／草莓
   train: { cost: 20, energy: -15, hunger: -10, clean: -8, minEnergy: 15, base: 10, perLv: 4,   // V1.41 訓練場：每次 20 金幣（器材＋場地費），達成目標才拿到經驗＝10＋等級×4
     kinds: { dodge: { name: '閃避訓練：躲避球', skill: 'dodge' }, rush: { name: '攻擊訓練：沙包連打', skill: 'attack' }, combo: { name: '攻擊訓練：組合拳', skill: 'attack' }, flash: { name: '攻擊訓練：靈光一閃', skill: 'attack' }, zen: { name: '防禦訓練：瀑布打坐', skill: 'defense' } } },
-  ult: { power: 2.2 },                                    // V1.40 大絕招：屬性技 2.2 倍，每場一次
+  ult: { power: 2.2 },
+  stageX: { egg: 1, baby: 1, juvenile: 1, adolescent: 1.05, adult: 1.1, ascended: 1.2 },   // V1.42 進化階段加能力：少年 ×1.05、成年 ×1.1、高階 ×1.2
+  trainBonus: { per: .01, max: .2 },                       // V1.42 訓練成功一次 +1%，每種最多 +20%：閃避＝猜拳輸也可能閃開、攻擊＝攻擊力、防禦＝防禦力和血量
+  bossCoins: { mini: 15, big: 30 },                        // V1.42 打贏小王／大王額外金幣                                    // V1.40 大絕招：屬性技 2.2 倍，每場一次
   rps: { seconds: 2, win: 0, tie: .8, lose: 1.2 },          // 敵人出招前猜拳：贏＝躲開、平手 0.8 倍、輸或超時 1.2 倍
   bond: { seconds: 2, steps: [[0, 1], [20, 2.2], [22, 2.5], [25, 2.7], [28, 3]], cost: 10, restHours: 2 },   // 羈絆之力：2 秒內連打；20 下 2.2 倍、22 下 2.5、25 下 2.7、28 下以上 3 倍（中間按比例）。要花 10 金幣買加油棒，之後 2 小時要休息不能冒險
   ballGame: { lives: 3, max: 99, goalCap: 5, coinEvery: 3, coinMax: 10 },   // 頂球：3 條命一直玩到漏接 3 次；每 3 球 1 金幣（最多 10）；冒險路線最多算 5 球
@@ -213,7 +216,7 @@ function fresh(now = Date.now()) {
     xp: 0, coins: S.coins, hunger: S.hunger, mood: S.mood, clean: S.clean, energy: S.energy, bond: 0, sleeping: false,
     path: { flame: 0, tide: 0, forest: 0, earth: 0, bird: 0, elec: 0, metal: 0 }, bondUses: 0, cleanups: 0,
     care: { petLastRewardAt: 0, bathLastAt: 0, playXpAt: [], gatherAt: 0 },
-    inv: Object.assign({ food: S.food, seeds: S.seeds, seeds2: 0, candy: 0, potion: 1, potion2: 0, soup: 0, ember: 0, shards: 0, hearts: 0, fresh: { food: 0, berry: 0, cranberry: 0, blueberry: 0, strawberry: 0 }, mats: {} }, ...Object.keys(CONFIG.foods).filter(k => k !== 'food').map(k => ({ [k]: 0 }))), harvests: 0,
+    inv: Object.assign({ food: S.food, seeds: S.seeds, seeds2: 0, candy: 0, potion: 1, potion2: 0, soup: 0, ember: 0, shards: 0, hearts: 0, fresh: { food: 0, berry: 0, cranberry: 0, blueberry: 0, strawberry: 0 }, mats: {} }, ...Object.keys(CONFIG.foods).filter(k => k !== 'food').map(k => ({ [k]: 0 }))), harvests: 0, trainLog: { dodge: 0, attack: 0, defense: 0 }, trains: 0,
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] }, goalLv: 0,
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
@@ -584,16 +587,23 @@ function mkFighter(name, key, lvl, route, tierN, mood, bond) {
   return { name, key, level: lvl, el: ELEM[route] || 'none', max: Math.round((30 + lvl * 6) * k), hp: Math.round((30 + lvl * 6) * k), stunChance: T.stun || 0, stun: 0,
     atk: (8 + lvl * 2) * k * cond * (T.atk || 1), def: (6 + lvl * 1.5) * k * (T.def || 1), spd: 5 + lvl + tierN, cd: 0, guard: false, endure: bond >= 80 };
 }
+/* V1.42 我方加成：進化階段、訓練成果、星耀覺醒 */
+function trainBonus(p) { const T = CONFIG.trainBonus, L = (p && p.trainLog) || {}, f = k => Math.min(T.max, (L[k] || 0) * T.per); return { dodge: f('dodge'), attack: f('attack'), defense: f('defense') }; }
+function buffFighter(f, p) {
+  if (!f || !p) return f; const sx = CONFIG.stageX[p.stage] || 1, tb = trainBonus(p), aw = p.awake ? CONFIG.starHeart.statX : 1;
+  f.atk *= sx * (1 + tb.attack) * aw; f.def *= sx * (1 + tb.defense) * aw; f.max = f.hp = Math.round(f.max * sx * (1 + tb.defense) * aw); f.dodge = tb.dodge; f.stageX = sx; return f;
+}
 /* 冒險區域（每 5 關一區）主要出現的屬性 */
 const AREA_ROUTE = [null, 'tide', 'flame', 'forest', 'earth', 'bird', 'elec', 'metal', null];
 function foeFor(n, myLvl = 1) {
   const seed = (Math.imul(n, 2654435761) ^ 0x9e3779b9) >>> 0, G = makeGenome(seed), boss = n % 5 === 0, big = n % 10 === 0;   // 5 關一小王、10 關一大王
   if (boss) G.rarity = 3;
   const area = AREA_ROUTE[Math.min(AREA_ROUTE.length - 1, Math.floor((n - 1) / 5))], route = area && (seed >>> 8) % 10 < 7 ? area : ROUTES[seed % ROUTES.length], stage = n >= 4 ? 'adult' : (n >= 2 ? 'adolescent' : 'juvenile');
-  const lvl = n <= 5 ? Math.max(n + (boss ? 1 : 0), Math.round(myLvl) - (boss ? 1 : 2)) : Math.max(1, Math.round(4 + n * .6) + (big ? 4 : boss ? 2 : 0), Math.round(myLvl) - (boss ? 0 : 1) + (big ? 1 : 0));   // 新手區（1–5 關）比你低 2 級；之後野生怪跟著你的等級，最低等級 ≈ 4＋關卡×0.6（V1.33 前是關卡數，後期太難）
+  const lvl = boss ? (n <= 5 ? n + 1 : Math.round(4 + n * .6) + (big ? 4 : 2))   // V1.42：小王／大王固定等級，不會跟著你變強（練功就打得贏）
+    : n <= 5 ? Math.max(n, Math.round(myLvl) - 2) : Math.max(1, Math.round(4 + n * .6), Math.round(myLvl) - 1);   // 一般野生怪：新手區比你低 2 級；之後跟著你的等級（最低 ≈ 4＋關卡×0.6）   // 新手區（1–5 關）比你低 2 級；之後野生怪跟著你的等級，最低等級 ≈ 4＋關卡×0.6（V1.33 前是關卡數，後期太難）
   return { id: 'x:' + encodeGenome(G), route, stage, level: lvl, boss, big };
 }
-function elemMult(a, d, special) { if (!special || a.el === 'none' || d.el === 'none') return 1; return (BEATS[a.el] || []).includes(d.el) ? 1.5 : (BEATS[d.el] || []).includes(a.el) ? .67 : 1; }
+function elemMult(a, d, special) { if (!special || a.el === 'none' || d.el === 'none') return 1; return (BEATS[a.el] || []).includes(d.el) ? 1.4 : (BEATS[d.el] || []).includes(a.el) ? .75 : 1; }
 /* 預估傷害（不含隨機與會心一擊）：用來顯示「這一擊強不強」、判斷是不是快撐不住了 */
 function expectDamage(a, d, special, boost = 1) {
   const pow = special ? (a.el === 'none' ? 1.15 : 1.3) : 1, ch = a.charged ? 2 : 1;
@@ -633,6 +643,7 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
     const xp = A.xp + CONFIG.battleWin.xp;
     if (full) { const T = trait(st); out.xp = addXP(st, xp); out.coins = A.coinsMin + Math.floor(r() * (A.coinsMax - A.coinsMin + 1)); if (T.coinX && r() < T.coinChance) { out.coins = Math.round(out.coins * T.coinX); out.coinBonus = true; } st.coins += out.coins;
       if (T.seedChance && r() < T.seedChance) { st.inv.seeds++; out.bonusSeed = 1; } if (T.berryChance && r() < T.berryChance) { const b = 1 + Math.floor(r() * 2); st.inv.berry = (st.inv.berry || 0) + b; out.berry = b; } st.inv.seeds += A.seeds; out.seeds = A.seeds; st.path.flame += A.flame + CONFIG.battleWin.flame;
+      { const fb = foeFor(n); if (fb.boss) { const bc = fb.big ? CONFIG.bossCoins.big : CONFIG.bossCoins.mini; st.coins += bc; out.coins += bc; out.bossCoins = bc; } }
       if (foeFor(n).boss && r() < CONFIG.ember.bossDrop) { st.inv.ember = (st.inv.ember || 0) + 1; out.ember = 1; } }
     else out.xp = addXP(st, Math.round(xp * A.overCapXpRate));
     if (r() < A.dropFood) { st.inv.food++; out.food = 1; }
@@ -817,7 +828,7 @@ function finishBallGame(st, score, now = Date.now()) {
 }
 
 /* ---------------- 小窩：升級、讓多隻寵物住進來 ---------------- */
-const PET_FIELDS = ['seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
+const PET_FIELDS = ['trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
 function snapshotPet(st) { const p = {}; for (const k of PET_FIELDS) p[k] = JSON.parse(JSON.stringify(st[k])); p.sleeping = false; return p; }
 function sanitizePet(p, now = Date.now()) { const r = sanitize(Object.assign({ v: 6 }, p, { roster: [], dex: [], pair: null }), now); return snapshotPet(r); }
 const denCap = st => CONFIG.den[st.den.level - 1].cap;
@@ -978,6 +989,6 @@ const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
   piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
-  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
+  trainBonus, buffFighter, useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

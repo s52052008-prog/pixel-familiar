@@ -86,7 +86,7 @@ img.uic{width:21px;height:21px;vertical-align:-5px;margin-right:5px;display:inli
 .tctl{display:flex;gap:8px}.tctl .tbtn{flex:1;min-height:64px;font-size:18px;touch-action:none}
 #tResult{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#1a1008b0}#tResult.hidden{display:none}#tResult .row{display:flex;gap:8px}
 .cmb{display:inline-block;border:2px solid #fff3d0;padding:0 4px;margin-right:3px}.cmb.ok{background:#6fcf5a;color:#1a1008}
-.thead{margin:10px 0 0;font-size:15px}.tgoal{margin:2px 0 4px}
+.thead{margin:10px 0 0;font-size:15px}.ehint{padding:0 3px;color:#fff!important;font-size:11px}.ehint.up{background:#2f9a3a}.ehint.dn{background:#c8402a}.tgoal{margin:2px 0 4px}
 #tapZone{position:fixed;inset:0;z-index:25;background:#2a0a20cc;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;touch-action:none;-webkit-user-select:none;user-select:none;text-align:center}#tapZone b{font-size:72px;color:#ffd0e0}#tapMsg{font-size:22px;font-weight:900}
 #blog{white-space:pre-line;min-height:2.8em;background:#fff9e8;color:#273753;border:3px solid #273753;padding:7px 10px;font-weight:700;font-size:14px;line-height:1.4}
 .trainbox{display:flex;flex-direction:column;gap:6px;border:3px solid var(--line);background:#fff3d0;color:#3a2a2a;padding:8px;margin:8px 0}.trainbox .btn{width:100%}
@@ -258,7 +258,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.41.1';
+const VERSION='1.42.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1636,14 +1636,17 @@ const AREAS=['青草原','迷霧湖','火山口','古森林','大地峽谷','天
 function areaName(n){return AREAS[Math.min(8,Math.floor((n-1)/5))]+' '+(n>40?n-40:((n-1)%5)+1)}
 /* 野生怪獸用另一套（程式繪製）的外型，不會跟 7 系幻獸長得一樣 */
 function foeFighter(n){const f=PC.foeFor(n,lvl()),key=petKey(f.id,formCode(f.stage,f.route))+'|wild',F=formOf(key);
- const ft=PC.mkFighter((f.big?'👑大王 ':f.boss?'小王 ':'野生的 ')+F.name,key,f.level,f.route,0,80,0);ft.max=ft.hp=Math.round(ft.max*(f.big?1.6:f.boss?1.25:1.3));return ft}   // 野生怪比較耐打（V1.33：1.4→1.3）
+ const ft=PC.mkFighter((f.big?'👑大王 ':f.boss?'小王 ':'野生的 ')+F.name,key,f.level,f.route,0,80,0);ft.max=ft.hp=Math.round(ft.max*(f.big?2:f.boss?1.5:1.3));return ft}   // 野生怪比較耐打（V1.33：1.4→1.3）；V1.42 王固定等級，改用血量拉難度：小王 ×1.5、大王 ×2
 let B=null;const bparts=[];const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+/* V1.42 關卡清單的相剋提示：▲ 你剋牠、▼ 牠剋你 */
+function elemHint(f){const me={el:PC.ELEM[s.route]||'none'},a=PC.elemMult(me,f,true),b=PC.elemMult(f,me,true);return a>1?' <b class="ehint up">▲你剋牠</b>':b>1?' <b class="ehint dn">▼牠剋你</b>':''}
+function buffText(p){const tb=PC.trainBonus(p),sx=CONFIG.stageX[p.stage]||1,pc=x=>Math.round(x*100);return`進化階段 ×${sx}　🤸閃避 +${pc(tb.dodge)}%　👊攻擊 +${pc(tb.attack)}%　🧘防禦 +${pc(tb.defense)}%${p.awake?'　🌟星耀 ×'+CONFIG.starHeart.statX:''}`}
 function advDialog(){PC.claimDaily(s,Date.now());tick();
  const why=PC.canAdventure(s,s.adv.stage);let list='';const top=s.adv.stage,A=CONFIG.adventure;
  for(let n=top;n>=Math.max(1,top-5);n--){const f=foeFighter(n),ev=Object.keys(CONFIG.bossStages).find(k=>CONFIG.bossStages[k]===n);
-  list+=`<button class="btn stagebtn ${n===top?'pri':''}" data-st="${n}"><span>${n%10===0?'👑 大王 ':n%5===0?'⭐ 小王 ':''}第 ${n} 關 · ${areaName(n)}${ev&&!s.events[ev]?' ✨':''}</span><span class="small" style="color:inherit">Lv.${f.level} ${EL_NAME[f.el]}</span></button>`}
+  list+=`<button class="btn stagebtn ${n===top?'pri':''}" data-st="${n}"><span>${n%10===0?'👑 大王 ':n%5===0?'⭐ 小王 ':''}第 ${n} 關 · ${areaName(n)}${ev&&!s.events[ev]?' ✨':''}</span><span class="small" style="color:inherit">Lv.${f.level} ${EL_NAME[f.el]}${elemHint(f)}</span></button>`}
  openModal('⚔️ 冒險',`<p>體力：<b>${Math.round(s.energy)}</b>（出發需要 ${A.minEnergy}，會消耗 20）　戰績：${s.adv.wins} 勝 ${s.adv.losses} 敗</p>
-<p class="small">不限次數，有體力就能出發。<br>完成：經驗 +${A.xp}、金幣 +${A.coinsMin}～${A.coinsMax}、🔥 焰系 +${A.flame}；勝利再加經驗 +10、金幣 +4、🔥 +2。失敗不扣東西，經驗 +3。<br>第一次打通新關卡＝發現新地點（🌿 森系 +2）。✨ 標記的 Boss 關有特殊事件。<br>屬性相剋：🔥 剋 🌿、🌿 剋 💧、💧 剋 🔥（屬性技 1.5 倍）。</p>
+<p class="small">不限次數，有體力就能出發。<br>完成：經驗 +${A.xp}、金幣 +${A.coinsMin}～${A.coinsMax}、🔥 焰系 +${A.flame}；勝利再加經驗 +10、金幣 +4、🔥 +2。失敗不扣東西，經驗 +3。<br>第一次打通新關卡＝發現新地點（🌿 森系 +2）。✨ 標記的 Boss 關有特殊事件。<br>屬性相剋：屬性技剋制 1.4 倍、被剋 0.75 倍。清單上 <b class="ehint up">▲你剋牠</b>、<b class="ehint dn">▼牠剋你</b>。<br>小王、大王是固定等級，練功就打得贏；打贏小王金幣 +${CONFIG.bossCoins.mini}、大王 +${CONFIG.bossCoins.big}。<br>💪 目前加成：${buffText(s)}</p>
 ${why&&why!=='這一關還沒解鎖'?'<p class="err">'+why+'</p>':''}
 <div class="trainbox"><b>🏋️ 訓練場</b><span class="small">打不贏的時候先來練功！閃避、攻擊、防禦三種小遊戲，每次 ${CONFIG.train.cost} 金幣，<b>達成目標</b>經驗 +${PC.trainXp(s)}（打贏一場約 ${A.xp+CONFIG.battleWin.xp}）。羈絆之力休息中也能練。</span><button class="btn pri" id="goTrain">🏋️ 去訓練場</button></div>
 ${list}`);
@@ -1651,8 +1654,8 @@ ${list}`);
  document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{const n=+b.dataset.st,w=PC.canAdventure(s,n);if(w){toast(w);return}closeModal();startBattle(n)})}
 function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();petX=PET_X;const r=PC.startAdventure(s,n,Date.now());if(!r.ok){toast(r.msg);return}save();renderUI();
  const me=PC.mkFighter(s.name,formKey(),lvl(),s.route,tier(),s.mood,s.bond),foe=foeFighter(n);
- if(s.awake)for(const k of['max','hp','atk','def'])me[k]=k==='max'||k==='hp'?Math.round(me[k]*CONFIG.starHeart.statX):me[k]*CONFIG.starHeart.statX;   // 星耀覺醒：全能力 +20%
- const duo=PC.pairAdventureCost(s),P=s.pair,me2=duo?PC.mkFighter(P.name,pairKey(),PC.level(P.xp),P.route,tier(),P.mood,P.bond):null;   // 第二隻有體力就一起上場
+ PC.buffFighter(me,s);   // V1.42：進化階段、訓練成果、星耀覺醒
+ const duo=PC.pairAdventureCost(s),P=s.pair,me2=duo?PC.buffFighter(PC.mkFighter(P.name,pairKey(),PC.level(P.xp),P.route,tier(),P.mood,P.bond),P):null;   // 第二隻有體力就一起上場
  if(duo){foe.max=foe.hp=Math.round(foe.max*CONFIG.pair.foeHp);save()}
  const fx0=()=>({dx:0,dy:0,flash:0,faint:0,anim:null,t0:0});
  B={n,full:r.full,arena:arenaFor(n,foe),bondUsed:false,ultUsed:false,me,me2,duo,foe,busy:false,over:false,fx:{me:fx0(),me2:fx0(),foe:fx0()}};bparts.length=0;
@@ -1774,7 +1777,8 @@ async function onMove(mv){if(!B||B.busy||B.over)return;unlockAudio();
   const alive=[me,B.me2].filter(f=>f&&f.hp>0);if(!alive.length)break;const d=side==='foe'?alive[Math.floor(Math.random()*alive.length)]:foe;
   if(side==='foe'&&foe.stun>0){foe.stun=0;blog(`⚡ ${foe.name} 全身麻痺，這回合動不了！`);B.fx.foe.flash=performance.now()+600;bUI();await sleep(900);continue}
   if(side==='foe'&&(m==='tackle'||m==='special')&&!window.PF_NO_RPS){const r=await rpsRound();   // 敵人攻擊前猜拳
-   if(r.result==='win'){if(m==='special')foe.cd=3;foe.charged=false;blog(`${foe.name} 使出${m==='special'?'「'+SP_NAME[foe.el]+'」':'撞擊'}！但 ${d.name} 靈巧地躲開了！`);B.fx[sideOf(d)].anim='happy';B.fx[sideOf(d)].t0=performance.now();bUI();await sleep(900);continue}
+   const dz=r.result!=='win'&&d.dodge&&Math.random()<d.dodge;   // V1.42 閃避訓練：猜拳沒贏也有機會閃開
+   if(r.result==='win'||dz){if(m==='special')foe.cd=3;foe.charged=false;blog(dz?`🤸 閃避訓練的成果！${d.name} 一個側身閃開了 ${foe.name} 的攻擊！`:`${foe.name} 使出${m==='special'?'「'+SP_NAME[foe.el]+'」':'撞擊'}！但 ${d.name} 靈巧地躲開了！`);B.fx[sideOf(d)].anim='happy';B.fx[sideOf(d)].t0=performance.now();bUI();await sleep(900);continue}
    await doMove(a,d,m,side,r.mult);if(d.hp<=0)B.fx[sideOf(d)].faint=performance.now();continue}
   await doMove(a,d,m,side,side==='me'?boost:1);if(d.hp<=0&&d!==foe)B.fx[sideOf(d)].faint=performance.now();if(foe.hp<=0)break;
   if(side!=='foe'&&['tackle','special','bond','ult'].includes(m)&&a.stunChance&&Math.random()<a.stunChance){foe.stun=1;blog(`⚡ 電流竄過！${foe.name} 麻痺了，下一回合不能動！`);spawn('bolt',4,{x:94,y:44,vy:-10,jx:20,life:.8,spread:12},bparts);sfx('wake');bUI();await sleep(800)}}
@@ -1789,7 +1793,7 @@ function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond
  const res=win===null?'run':win?'win':'loss',r=PC.finishAdventure(s,n,res,B.full,Date.now()),px=B.duo&&s.pair?PC.pairGain(s,r.xp||0,res):0;
  // 結算：一行一個戰利品（圖示＋名稱＋數量）
  const rows=[],seeds=(r.seeds||0)+(r.bonusSeed||0);
- if(r.coins)rows.push(['coin','金幣',`+${r.coins}`,r.coinBonus?'⚙️金系加成 ×1.5':'']);
+ if(r.coins)rows.push(['coin','金幣',`+${r.coins}`,[r.coinBonus?'⚙️金系加成 ×1.5':'',r.bossCoins?`👑王的獎金 +${r.bossCoins}`:''].filter(Boolean).join('、')]);
  if(r.xp)rows.push(['star','經驗',`+${r.xp}`,'']);
  if(px)rows.push(['star',`🐾 ${s.pair.name} 經驗`,`+${px}`,'一起冒險']);
  if(seeds)rows.push(['seed','種子',`+${seeds}`,r.bonusSeed?'🐦鳥系多撿 1 顆':'']);
@@ -2130,6 +2134,7 @@ function trainDialog(){PC.claimDaily(s,Date.now());const T=CONFIG.train,L=s.trai
  const card=(k)=>`<button class="btn stagebtn" data-tk="${k}"><span>${TRAIN_INFO[k].icon} ${TRAIN_INFO[k].title.split('：')[1]}</span><span class="small" style="color:inherit">🪙${T.cost}</span></button><div class="small tgoal">${TRAIN_INFO[k].goal}</div>`;
  openModal('🏋️ 訓練場',`<p>🪙 金幣 <b>${s.coins}</b>　⚡ 體力 <b>${Math.round(s.energy)}</b></p>
 <p class="small">每次訓練 <b>${T.cost} 金幣</b>（器材＋場地費），消耗體力 ${-T.energy}、飽食 ${-T.hunger}。<b>達成目標</b>才拿到經驗：現在一次 <b>+${PC.trainXp(s)}</b>（打贏一場冒險約 ${CONFIG.adventure.xp+CONFIG.battleWin.xp}）。失敗的話錢和體力不會退喔。</p>
+<p class="small">💪 <b>訓練成果</b>：每成功一次該能力 +1%，每種最多 +20%（閃避＝猜拳沒贏也有機會閃開；攻擊＝攻擊力；防禦＝防禦力和血量）。<br>目前：${buffText(s)}</p>
 ${why?`<p class="err">${why}</p>`:''}
 <h3 class="thead">🤸 閃避（成功 ${L.dodge} 次）</h3>${card('dodge')}
 <h3 class="thead">👊 攻擊（成功 ${L.attack} 次）</h3>${card('rush')}${card('combo')}${card('flash')}
@@ -2152,7 +2157,7 @@ function tPop(ic,x,y,n=3){for(let i=0;i<n;i++)TG.fx.push({ic,x:x+(Math.random()-
 function endTraining(win,note){if(!TG||TG.phase==='done')return;const kind=TG.kind;TG.phase='done';
  const r=PC.finishTrain(s,kind,win,Date.now());save();renderUI();
  $('tResult').classList.remove('hidden');$('tRTitle').textContent=win?'🎉 訓練成功！':'😣 訓練失敗…';
- $('tRBody').innerHTML=`${note||''}<br>${win?`經驗 <b>+${r.xp}</b>　（${{dodge:'閃避',attack:'攻擊',defense:'防禦'}[CONFIG.train.kinds[kind].skill]}訓練成功 ${(s.trainLog||{})[CONFIG.train.kinds[kind].skill]||0} 次）`:'沒有達成目標，這次沒有經驗。再試一次吧！'}`;
+ $('tRBody').innerHTML=`${note||''}<br>${win?(()=>{const sk=CONFIG.train.kinds[kind].skill,n=(s.trainLog||{})[sk]||0,pc=Math.round(PC.trainBonus(s)[sk]*100),nm={dodge:'閃避',attack:'攻擊',defense:'防禦'}[sk];return`經驗 <b>+${r.xp}</b><br>${nm}能力 ${pc>=20&&n>20?'已經練到最高 +20%':`+1% → 目前 <b>+${pc}%</b>`}（成功 ${n} 次）`})():'沒有達成目標，這次沒有經驗。再試一次吧！'}`;
  $('tAgain').textContent=`再練一次（🪙 ${CONFIG.train.cost}）`;$('tAgain').disabled=!!PC.canTrain(s);
  sfx(win?'level':'no');buzz(win?30:60);if(win){TG.win=true;tPop('star',64,50,8)}drawTraining(performance.now());
  if(win){const x0=TG.x0;setTimeout(()=>afterChange(x0),50)}}

@@ -92,7 +92,7 @@ t('首次打通新關卡＝探索發現（森林 +2、XP +10）；第 15 關觸�
   const r = C.finishAdventure(s, 15, 'win', st.full, T0, () => .99); assert.ok(r.events.includes('volcano')); assert.ok(s.events.volcano); assert.equal(s.path.forest, 4); assert.equal(s.adv.stage, 16);
 });
 t('親密度 80：戰鬥中撐住一次', () => { const a = C.mkFighter('a', 'k', 10, 'flame', 0, 80, 0), d = C.mkFighter('b', 'k', 1, 'tide', 0, 80, 80); d.hp = 5; const r = C.damage(a, d, true, () => .5); assert.ok(r.endured); assert.equal(d.hp, 1); });
-t('屬性相剋：火剋森 1.5 倍', () => { const a = C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0), d = C.mkFighter('b', 'k', 5, 'forest', 0, 80, 0); assert.equal(C.damage(a, d, true, () => .5).mult, 1.5); });
+t('屬性相剋：火剋森 1.4 倍（V1.42）', () => { const a = C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0), d = C.mkFighter('b', 'k', 5, 'forest', 0, 80, 0); assert.equal(C.damage(a, d, true, () => .5).mult, 1.4); });
 
 // 步數
 t('步數：每 1000 步 XP +10、每 2000 步土系 +1，同日只算增加量', () => {
@@ -147,12 +147,12 @@ t('每日目標：★／★★／★★★ 由易到難；完成才能領、只�
   const s = hatched(); C.ensureGoals(s, T0); assert.deepEqual(s.goals.list.map(g => g.tier), [0, 1, 2]);
   s.goals.list = [{ id: 'feed', tier: 0, need: 1, n: 0, claimed: false }, { id: 'steps', tier: 1, need: 4000, n: 0, claimed: false }, { id: 'plant', tier: 2, need: 4, n: 0, claimed: false }];
   assert.ok(!C.claimGoal(s, 0, T0).ok); s.hunger = 10; C.act(s, 'feed', T0); assert.equal(s.goals.list[0].n, 1);
-  let c = s.coins; assert.ok(C.claimGoal(s, 0, T0).ok); assert.equal(s.coins, c + 10); assert.ok(!C.claimGoal(s, 0, T0).ok);
-  C.creditSteps(s, 6500, null, T0); assert.equal(s.goals.list[1].n, 4000); c = s.coins; const sd = s.inv.seeds; C.claimGoal(s, 1, T0); assert.equal(s.coins, c + 20); assert.equal(s.inv.seeds, sd + 1);
-  s.inv.seeds = 9; for (let i = 0; i < 4; i++) C.plant(s, i % 3, T0 + i * 3 * H, () => 0) || C.harvest(s, i % 3, T0 + i * 3 * H); s.goals.list[2].n = 4; c = s.coins; const r = C.claimGoal(s, 2, T0, () => .9); assert.ok(r.ok && r.up); assert.equal(s.coins, c + 40); assert.equal(s.goalLv, 1);
+  let c = s.coins; assert.ok(C.claimGoal(s, 0, T0).ok); assert.equal(s.coins, c + 15); assert.ok(!C.claimGoal(s, 0, T0).ok);
+  C.creditSteps(s, 6500, null, T0); assert.equal(s.goals.list[1].n, 4000); c = s.coins; const sd = s.inv.seeds; C.claimGoal(s, 1, T0); assert.equal(s.coins, c + 30); assert.equal(s.inv.seeds, sd + 1);
+  s.inv.seeds = 9; for (let i = 0; i < 4; i++) C.plant(s, i % 3, T0 + i * 3 * H, () => 0) || C.harvest(s, i % 3, T0 + i * 3 * H); s.goals.list[2].n = 4; c = s.coins; const r = C.claimGoal(s, 2, T0, () => .9); assert.ok(r.ok && r.up); assert.equal(s.coins, c + 50); assert.equal(s.goalLv, 1);
   C.ensureGoals(s, T0 - 3 * 86400000); assert.equal(s.goals.date, C.dayKey(T0));
 });
-t('任務等級越高：數量越多、獎勵越好', () => { assert.equal(C.goalNeed('steps', 0, 0), 2000); assert.equal(C.goalNeed('steps', 2, 0), 6000); assert.equal(C.goalNeed('steps', 2, 5), 8000); assert.equal(C.goalNeed('steps', 1, 5), 8000); assert.ok(C.goalNeed('feed', 2, 5) > C.goalNeed('feed', 2, 0)); assert.equal(C.goalReward(2, 0).coins, 40); assert.equal(C.goalReward(2, 5).coins, 80); assert.equal(C.goalReward(1, 5).seeds, 2);
+t('任務等級越高：數量越多、獎勵越好', () => { assert.equal(C.goalNeed('steps', 0, 0), 2000); assert.equal(C.goalNeed('steps', 2, 0), 6000); assert.equal(C.goalNeed('steps', 2, 5), 8000); assert.equal(C.goalNeed('steps', 1, 5), 8000); assert.ok(C.goalNeed('feed', 2, 5) > C.goalNeed('feed', 2, 0)); assert.equal(C.goalReward(2, 0).coins, 50); assert.equal(C.goalReward(2, 5).coins, 100); assert.equal(C.goalReward(1, 5).seeds, 2);
   const s = hatched(); s.goalLv = 4; s.goals.date = ''; C.ensureGoals(s, T0); assert.ok(s.goals.list[2].need >= C.goalNeed(s.goals.list[2].id, 2, 0)); });
 
 t('每日目標：存檔亂碼目標被過濾', () => { const r = C.sanitize({ v: 6, goals: { date: '2026-11-16', list: [{ id: 'hack', n: 9 }, { id: 'feed', n: -3 }] } }, T0); assert.equal(r.goals.list.length, 1); assert.equal(r.goals.list[0].n, 0); });
@@ -262,6 +262,13 @@ t('V1.41 綜合種子：蔓越莓／藍莓／草莓，賣 15／20／30；優良�
   assert.ok(C.sellFruit(s, 'strawberry').ok); assert.equal(s.coins, 30); assert.ok(!C.plant(s, 1, T0, Math.random, true).ok);
   const t2 = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(t2.inv.fresh.strawberry, 3); });
 t('V1.40 第一天不送金幣（開局 50）', () => { const s = C.fresh(T0); C.claimDaily(s, T0); assert.equal(s.coins, 50); C.claimDaily(s, T0 + 86400000); assert.equal(s.coins, 60); });
+t('V1.42 能力加成：進化階段、訓練成果（每次 +1%，最多 +20%）、大王固定等級、打贏王給金幣', () => { const s = hatched(); s.stage = 'adult'; s.trainLog = { dodge: 5, attack: 30, defense: 10 };
+  const base = C.mkFighter('a', 'k', 10, s.route, 0, 80, 0), f = C.buffFighter(C.mkFighter('a', 'k', 10, s.route, 0, 80, 0), s);
+  assert.ok(Math.abs(f.atk / base.atk - 1.1 * 1.2) < 1e-9); assert.ok(Math.abs(f.def / base.def - 1.1 * 1.1) < 1e-9); assert.equal(f.max, Math.round(base.max * 1.1 * 1.1)); assert.equal(f.dodge, .05);
+  s.stage = 'ascended'; s.awake = true; const g = C.buffFighter(C.mkFighter('a', 'k', 10, s.route, 0, 80, 0), s); assert.ok(Math.abs(g.atk / base.atk - 1.2 * 1.2 * 1.2) < 1e-9);
+  assert.equal(C.foeFor(30, 1).level, C.foeFor(30, 60).level); assert.equal(C.foeFor(30, 1).level, 26); assert.equal(C.foeFor(15, 40).level, 15); assert.ok(C.foeFor(12, 30).level === 29);
+  const t = hatched(); t.energy = 100; t.adv.stage = 99; const st = C.startAdventure(t, 10, T0); const c0 = t.coins; const o = C.finishAdventure(t, 10, 'win', st.full, T0, () => .99); assert.equal(o.bossCoins, 30); assert.ok(t.coins - c0 >= 30 + 20);
+  const p = C.snapshotPet(s); assert.equal(p.trainLog.attack, 30); });
 t('V1.41 訓練場：每次 20 金幣，達成目標才有經驗', () => { const s = hatched(); s.energy = 100; s.coins = 30; s.xp = 512; const L = C.level(512);
   assert.ok(C.startTrain(s, 'dodge', T0).ok); assert.equal(s.coins, 10); assert.equal(s.energy, 85); const f = C.finishTrain(s, 'dodge', false); assert.equal(f.xp, 0); assert.equal(s.xp, 512);
   assert.ok(!C.startTrain(s, 'zen', T0).ok); s.coins = 20; assert.ok(C.startTrain(s, 'zen', T0).ok); const w = C.finishTrain(s, 'zen', true, T0); assert.equal(w.xp, Math.round(10 + 4 * L)); assert.equal(s.trainLog.defense, 1);
@@ -275,7 +282,7 @@ t('相剋表：每個屬性都有剋與被剋，而且沒有互剋', () => {
   const els = ['fire', 'water', 'leaf', 'earth', 'bird', 'elec', 'metal'];
   for (const a of els) { assert.ok(C.BEATS[a].length >= 2); assert.ok(els.some(b => C.BEATS[b].includes(a)), a + ' 沒有被剋'); for (const b of C.BEATS[a]) assert.ok(!C.BEATS[b].includes(a), a + '/' + b + ' 互剋'); }
   const f = (r) => C.mkFighter('x', 'k', 5, r, 0, 80, 0);
-  assert.equal(C.elemMult(f('elec'), f('tide'), true), 1.5); assert.equal(C.elemMult(f('elec'), f('earth'), true), .67); assert.equal(C.elemMult(f('bird'), f('forest'), true), 1.5); assert.equal(C.elemMult(f('metal'), f('bird'), true), 1.5); assert.equal(C.elemMult(f('flame'), f('metal'), true), 1.5);
+  assert.equal(C.elemMult(f('elec'), f('tide'), true), 1.4); assert.equal(C.elemMult(f('elec'), f('earth'), true), .75); assert.equal(C.elemMult(f('bird'), f('forest'), true), 1.4); assert.equal(C.elemMult(f('metal'), f('bird'), true), 1.4); assert.equal(C.elemMult(f('flame'), f('metal'), true), 1.4);
 });
 t('新路線點數來源：步數→土、進球→鳥、蓄力與羈絆→電、洗澡與清理→金', () => {
   const s = hatched(); C.creditSteps(s, 4000, null, T0); assert.equal(s.path.earth, 2);
