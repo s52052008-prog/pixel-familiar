@@ -206,6 +206,13 @@ h1{font-size:17px}.ver{font-size:9px}
 #alertLine{font-size:12px;color:#ffd0dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #foodBar{position:absolute;left:0;right:0;top:0;z-index:6;margin:0;padding:4px;background:#2a170af0;border:3px solid #b8854e;box-shadow:0 4px 0 #000a}
 .infobox p{margin:6px 0;line-height:1.5}
+
+/* V1.59 訓練畫面：遊戲畫面放到最大（貼齊左右），按鈕放在下面大大的、拇指好按，不再下面一大片黑 */
+#trainZone{align-items:stretch;padding:calc(6px + env(safe-area-inset-top)) 0 calc(10px + env(safe-area-inset-bottom));background:repeating-linear-gradient(90deg,#2a1a0e 0 3px,#24160c 3px 41px)}
+#trainZone .tin{max-width:560px;margin:0 auto;min-height:100%;gap:8px}
+#trainZone .thd,#tGoal,#tHud,#tMsg{padding:0 10px}#trainZone .thd{font-size:20px}#tGoal{font-size:14px}#tHud{font-size:16px}#tMsg{font-size:17px}
+#tcv{border-left:0;border-right:0;width:100%;height:auto;background:#000}
+#trainZone .tctl{margin-top:auto;padding:0 10px}#trainZone .tctl .tbtn{min-height:96px;font-size:22px}
 </style>
 </head>
 <body>
@@ -299,7 +306,7 @@ h1{font-size:17px}.ver{font-size:9px}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.58.0';
+const VERSION='1.59.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -2423,12 +2430,15 @@ function startTraining(kind){if(modeBusy()){toast('先完成現在的互動吧')
  $('trainZone').classList.remove('hidden');$('tResult').classList.add('hidden');$('tTitle').textContent=TRAIN_INFO[kind].icon+' '+TRAIN_INFO[kind].title;$('tGoal').textContent=TRAIN_INFO[kind].goal;
  $('tCtl').innerHTML=(TG.btns||[]).map(([id,t])=>`<button class="btn tbtn" data-tb="${id}">${t}</button>`).join('');
  $('tCtl').querySelectorAll('[data-tb]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();if(TG&&TG.phase==='play'&&TG.btn)TG.btn(b.dataset.tb)}));
- tMsg('準備…3');sfx('tap');let last=performance.now();
+ fitTrain();tMsg('準備…3');sfx('tap');let last=performance.now();
  const loop=now=>{if(!TG)return;const dt=Math.min(.05,(now-last)/1000);last=now;
   if(TG.phase==='count'){TG.cd-=dt;const k=Math.ceil(TG.cd);if(TG.cd<=0){TG.phase='play';TG.t=0;tMsg('開始！');sfx('wake')}else if(k!==TG.lastK){TG.lastK=k;tMsg('準備…'+k);sfx('tap')}}
   else if(TG.phase==='play'){TG.t+=dt;TG.update(dt)}
   for(let i=TG.fx.length-1;i>=0;i--){const p=TG.fx[i];p.t+=dt;if(p.t>p.life){TG.fx.splice(i,1);continue}p.vy+=(p.g||0)*dt;p.x+=(p.vx||0)*dt;p.y+=(p.vy||0)*dt}
   drawTraining(now);$('tHud').innerHTML=TG.hud?TG.hud():'';if(TG.phase!=='done')requestAnimationFrame(loop)};requestAnimationFrame(loop)}
+/* V1.59 訓練畫面依手機高度拉長：遊戲本身還是 128×112，放在中間，上下用邊緣的顏色延伸，畫面填滿不留黑 */
+let TOFF=0;function fitTrain(){tcv.height=112;tcv.style.aspectRatio='128/112';const z=$('trainZone'),r=tcv.getBoundingClientRect(),below=$('tMsg').offsetHeight+$('tCtl').offsetHeight+30,avail=z.clientHeight-(r.top-z.getBoundingClientRect().top)-below;
+ const TH=Math.max(112,Math.min(240,Math.round(avail/Math.max(1,r.width)*128)));tcv.height=TH;tcv.style.aspectRatio=`128/${TH}`;TOFF=Math.round((TH-112)/2);tctx.imageSmoothingEnabled=false}
 function tMsg(t){$('tMsg').textContent=t}
 function tPop(ic,x,y,n=3){for(let i=0;i<n;i++)TG.fx.push({ic,x:x+(Math.random()-.5)*10,y:y+(Math.random()-.5)*6,vx:(Math.random()-.5)*30,vy:-20-Math.random()*20,g:40,t:0,life:.7})}
 function endTraining(win,note){if(!TG||TG.phase==='done')return;const kind=TG.kind;TG.phase='done';
@@ -2441,7 +2451,7 @@ function endTraining(win,note){if(!TG||TG.phase==='done')return;const kind=TG.ki
 function closeTraining(){TG=null;$('trainZone').classList.add('hidden');renderUI()}
 $('tAgain').onclick=()=>{const k=TG&&TG.kind;closeTraining();if(k){const w=PC.canTrain(s);if(w){toast(w);return}startTraining(k)}};
 $('tClose').onclick=()=>closeTraining();
-tcv.addEventListener('pointerdown',e=>{e.preventDefault();if(!TG||TG.phase!=='play'||!TG.tap)return;const b=tcv.getBoundingClientRect();TG.tap((e.clientX-b.left)/b.width*128,(e.clientY-b.top)/b.height*112)});
+tcv.addEventListener('pointerdown',e=>{e.preventDefault();if(!TG||TG.phase!=='play'||!TG.tap)return;const b=tcv.getBoundingClientRect();TG.tap((e.clientX-b.left)/b.width*128,(e.clientY-b.top)/b.height*tcv.height-TOFF)});
 /* 組合拳：每次隨機 5～6 拳，至少換手 2 次，不會整串都同一邊 */
 function comboSeq(){for(;;){const n=Math.random()<.5?5:6,q=Array.from({length:n},()=>Math.random()<.5?'L':'R');let sw=0;for(let i=1;i<n;i++)if(q[i]!==q[i-1])sw++;if(sw>=2&&!/(L{4}|R{4})/.test(q.join('')))return q}}
 /* 靈光一閃：各屬性的射擊特效（顏色、樣子、音效） */
@@ -2484,8 +2494,9 @@ function tFall(c,now){c.fillStyle='#7ab8e8';c.fillRect(0,0,128,112);c.fillStyle=
  c.fillStyle='#3a8ac8';c.fillRect(0,80,128,32);c.fillStyle='#ffffff';for(let i=0;i<8;i++){const x=(i*17+t*10)%128;c.fillRect(x,84+(i%3)*8,6,1)}
  c.fillStyle='#ffffff';for(let i=0;i<6;i++)c.fillRect(36+((i*9+Math.floor(t*20))%56),78+(i%2),3,2);
  c.fillStyle='#6a6a7a';c.beginPath();c.ellipse(64,98,26,7,0,0,Math.PI*2);c.fill();c.fillStyle='#8a8a9a';c.fillRect(42,92,44,3)}
-function drawTraining(now){if(!TG)return;const c=tctx;c.save();if(TG.shake>0){TG.shake-=.016;c.translate(Math.round((Math.random()-.5)*4),0)}
- TG.draw(c,now);for(const p of TG.fx){const ic=ICV[p.ic];if(!ic)continue;c.globalAlpha=Math.min(1,(p.life-p.t)/.3);c.drawImage(ic,Math.round(p.x-ic.width/2),Math.round(p.y-ic.height/2));c.globalAlpha=1}c.restore()}
+function drawTraining(now){if(!TG)return;const c=tctx;c.save();c.translate(0,TOFF);if(TG.shake>0){TG.shake-=.016;c.translate(Math.round((Math.random()-.5)*4),0)}
+ TG.draw(c,now);for(const p of TG.fx){const ic=ICV[p.ic];if(!ic)continue;c.globalAlpha=Math.min(1,(p.life-p.t)/.3);c.drawImage(ic,Math.round(p.x-ic.width/2),Math.round(p.y-ic.height/2));c.globalAlpha=1}c.restore();
+ if(TOFF>0){c.drawImage(tcv,0,TOFF,128,2,0,0,128,TOFF);const b=TOFF+112;if(tcv.height>b)c.drawImage(tcv,0,b-2,128,2,0,b,128,tcv.height-b)}}   // 上下延伸
 function tBar(c,x,y,w,p,col){c.fillStyle='#2a170a';c.fillRect(x-1,y-1,w+2,5);c.fillStyle=col;c.fillRect(x,y,Math.round(w*Math.max(0,Math.min(1,p))),3)}
 const TRAIN_INIT={
  /* 閃避：三條路線，球從前方丟過來越飛越大，到身體時要不在那條路上 */
