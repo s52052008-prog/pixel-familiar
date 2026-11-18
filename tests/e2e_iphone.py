@@ -107,7 +107,7 @@ async def main():
             await p.evaluate("PF.debug.set({hunger:80,mood:80,clean:80,energy:20})"); await p.evaluate(f"PF.debug.skip({hrs*60})")
             await p.wait_for_timeout(300); s = await st(p); eff = min(hrs, 12)
             ok(f'離線 {hrs} 小時 → 只計算 {eff} 小時（飽食用真實時間，20 小時會餓到 0）', abs(s['hunger'] - (0 if hrs >= 20 else 80 - 4 * eff)) < .2 and (s['runaway'] is not None) == (hrs >= 32) and abs(s['energy'] - min(100, 20 + 8 * eff)) < .2, (round(s['hunger'], 1), round(s['energy'], 1)))
-        await p.wait_for_timeout(500); ok('離家出走時畫面提示要走路找回來', '離家出走' in await p.inner_text('#alertLine'))
+        await p.wait_for_timeout(500); ok('離家出走時畫面提示要走路找回來', '離家出走' in await p.inner_text('#growText'))
         await p.evaluate("PF.creditSteps((PF.state.steps.days[PF.PC.dayKey(Date.now())]||0)+10000)"); await p.wait_for_timeout(300); s = await st(p); ok('走 1 萬步把牠找回來', s['runaway'] is None and s['hunger'] == 40, (s['runaway'], s['hunger']))
         await p.evaluate("PF.debug.set({hunger:80,mood:80,clean:80,energy:60})")
         # ---------- 5. 成長門檻（用 debug 把孵化時間往前移） ----------
@@ -362,8 +362,9 @@ async def main():
         h0 = await c2.evaluate("document.querySelector('#scene').getBoundingClientRect().height"); await c2.click('[data-act=feed]'); await c2.wait_for_timeout(300)
         h1 = await c2.evaluate("document.querySelector('#scene').getBoundingClientRect().height")
         ok('V1.58 打開餵食選單時遊戲畫面大小不變', abs(h0 - h1) < 1 and await c2.is_visible('#foodBar'), (h0, h1))
-        await c2.click('[data-act=feed]'); await c2.wait_for_timeout(200); await c2.click('#infoBtn'); await c2.wait_for_timeout(200)
-        sh = await c2.inner_text('#sheet'); ok('V1.58 點「資訊」才看到屬性、成長資訊', any(k in sh for k in ['焰系','潮系','森系','土系','鳥系','電系','金系']), sh[:80])
+        await c2.click('[data-act=feed]'); await c2.wait_for_timeout(200)
+        order = await c2.evaluate("['.nameplate','section.panel','#stats','.actions'].map(q=>document.querySelector(q).getBoundingClientRect().top)")
+        ok('V1.60 資訊直接顯示、成長經驗在狀態列上面', await c2.is_visible('#stageText') and order == sorted(order), order)
         await ctxC.close()
         # ---------- V1.51 自由佈置房間 ----------
         ctxA, a = await newpage(br, I13); await hatch(a)
