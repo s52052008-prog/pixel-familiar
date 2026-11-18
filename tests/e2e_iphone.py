@@ -53,6 +53,11 @@ async def do_play(p, timed=True, goals=2):
         await p.wait_for_timeout(12)
 async def closeall(p):
     if await p.is_visible('#modal'): await p.click('#mbtns .btn >> nth=0')
+async def move(p, mv):   # V1.40：技能、背包要先點開第二層
+    if mv in ('tackle', 'special', 'charge', 'ult'): await p.click('#mvSkill'); await p.wait_for_timeout(80)
+    elif mv in ('potion', 'potion2'): await p.click('#mvBag'); await p.wait_for_timeout(80)
+    await p.click(f'#moves [data-mv={mv}]')
+
 async def main():
     srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(PORT), '-d', ROOT], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); time.sleep(1)
     async with async_playwright() as pw:
@@ -60,12 +65,12 @@ async def main():
         # ---------- 1. 孵化、命名、刷新保留 ----------
         ctx, p = await newpage(br, I13)
         await p.screenshot(path=f'{OUT}/01_egg.png')
-        s = await st(p); ok('新存檔：蛋、金幣 50+每日 10、食物 3+1', s['stage'] == 'egg' and s['coins'] == 60 and s['inv']['food'] == 4, (s['coins'], s['inv']))
+        s = await st(p); ok('新存檔：蛋、金幣 50（第一天不送金幣）、食物 3+1', s['stage'] == 'egg' and s['coins'] == 50 and s['inv']['food'] == 4, (s['coins'], s['inv']))
         await hatch(p, '露米')
         s = await st(p); ok('孵化並命名、孵化時就有屬性（嬰兒期）', s['hatched'] and s['stage'] == 'baby' and s['name'] == '露米' and s['route'] in ['flame','tide','forest','earth','bird','elec','metal'], s['route'])
         stx = await p.inner_text('#stageText'); ok('畫面顯示屬性', any(k in stx for k in ['焰系','潮系','森系','土系','鳥系','電系','金系']), stx)
         await p.reload(); await p.wait_for_timeout(700); s = await st(p); ok('刷新後保留', s['hatched'] and s['name'] == '露米')
-        ok('每日禮物刷新後不重複', s['coins'] == 60, s['coins'])
+        ok('每日禮物刷新後不重複', s['coins'] == 50, s['coins'])
         # ---------- 2. 照顧行為 ----------
         await p.evaluate("PF.debug.set({hunger:50,mood:50,clean:40,energy:60})")
         await p.click('[data-act=feed]'); await p.wait_for_timeout(200); ok('按餵食進入放蘋果模式', await p.evaluate("PF.mode") == 'feed')
@@ -186,7 +191,7 @@ async def main():
         for i in range(40):
             if await p.is_visible('#bDone'): break
             mv = 'special' if not await p.is_disabled('#mvSp') else 'tackle'
-            await p.click(f'[data-mv={mv}]'); await p.wait_for_timeout(250)
+            await move(p, mv); await p.wait_for_timeout(250)
             for _ in range(30):
                 if not await p.evaluate("PF.B&&PF.B.busy"): break
                 await p.wait_for_timeout(200)
@@ -198,13 +203,13 @@ async def main():
         await p.evaluate("PF.debug.set({energy:100,inv:{food:3,seeds:2,candy:0,potion:2}})"); await p.evaluate("(()=>{PF.state.adv.stage=Math.max(PF.state.adv.stage,15)})()")
         await p.evaluate("PF.startBattle(13)"); await p.wait_for_timeout(500)
         bl = await p.inner_text('#blog'); ok('岩石／水邊等場地依怪獸屬性', any(k in bl for k in ['岩地', '水邊', '森林', '草原', '峽谷', '天空', '雷雲', '礦坑']), bl)
-        await p.click('#mvCh'); await p.wait_for_timeout(2500); ok('蓄力', await p.evaluate("PF.B.me.charged") or '蓄力' in await p.inner_text('#blog'))
+        await move(p, 'charge'); await p.wait_for_timeout(2500); ok('蓄力', await p.evaluate("PF.B.me.charged") or '蓄力' in await p.inner_text('#blog'))
         for _ in range(40):
             if not await p.evaluate("PF.B.busy"): break
             await p.wait_for_timeout(150)
         if not await p.evaluate("PF.B.over"):
             await p.evaluate("(()=>{PF.B.me.hp=Math.max(1,Math.floor(PF.B.me.max/3));PF.bUI()})()"); hp0 = await p.evaluate("PF.B.me.hp")
-            await p.click('#mvPo'); await p.wait_for_timeout(300); ok('喝藥水回血、藥水 −1', (await st(p))['inv']['potion'] == 1)
+            await move(p, 'potion'); await p.wait_for_timeout(300); ok('喝藥水回血、藥水 −1', (await st(p))['inv']['potion'] == 1)
             for _ in range(40):
                 if not await p.evaluate("PF.B.busy"): break
                 await p.wait_for_timeout(150)
@@ -220,9 +225,36 @@ async def main():
             ok('羈絆之力：連打造成大傷害、每場只能一次', await p.evaluate("PF.B.bondUsed") and f0 - await p.evaluate("PF.B.foe.hp") > 30)
         for _ in range(60):
             if await p.is_visible('#bDone'): break
-            if not await p.evaluate("PF.B.busy"): await p.click('[data-mv=tackle]')
+            if not await p.evaluate("PF.B.busy"): await move(p, 'tackle')
             await p.wait_for_timeout(200)
         await p.click('#bDone')
+        # V1.40：大絕招、超級藥水、場外特訓、雞湯
+        await p.evaluate("PF.debug.set({energy:100,bondRestUntil:0,inv:{food:3,seeds:2,candy:0,potion:0,potion2:1}})"); await p.evaluate("PF.startBattle(1)"); await p.wait_for_timeout(500)
+        ok('戰鬥主選單：技能／防禦／背包／逃跑', await p.is_visible('#mvSkill') and await p.is_visible('#mvBag') and not await p.is_visible('#mvTk'))
+        await p.click('#mvSkill'); await p.wait_for_timeout(100); ok('技能有四種', all([await p.is_visible(x) for x in ('#mvTk', '#mvCh', '#mvSp', '#mvUlt')]))
+        await p.click('#mpSkill .back'); await p.evaluate("(()=>{PF.B.me.hp=1;PF.B.foe.hp=PF.B.foe.max*9;PF.B.foe.max*=9;PF.bUI()})()")
+        await move(p, 'potion2'); await p.wait_for_timeout(1300)
+        for _ in range(40):
+            if not await p.evaluate("PF.B.busy"): break
+            await p.wait_for_timeout(150)
+        ok('超級藥水：回復、−1', (await st(p))['inv']['potion2'] == 0 and await p.evaluate("PF.B.over||PF.B.me.hp>1"))
+        if not await p.evaluate("PF.B.over"):
+            f0 = await p.evaluate("PF.B.foe.hp"); await move(p, 'ult'); await p.wait_for_timeout(1500)
+            for _ in range(40):
+                if not await p.evaluate("PF.B.busy"): break
+                await p.wait_for_timeout(150)
+            ok('大絕招：造成傷害、每場一次', await p.evaluate("PF.B.ultUsed") and f0 > await p.evaluate("PF.B.foe.hp") and (await p.evaluate("PF.B.over") or await p.is_disabled('#mvUlt')))
+        for _ in range(40):
+            if not await p.evaluate("PF.B.busy"): break
+            await p.wait_for_timeout(150)
+        if not await p.evaluate("PF.B.over"): await p.click('#mpMain [data-mv=run]'); await p.wait_for_timeout(1200)
+        await p.wait_for_selector('#bDone', state='visible', timeout=8000); await p.click('#bDone'); await p.wait_for_timeout(300)
+        await p.evaluate("PF.debug.set({energy:100,sleeping:false,xp:512})"); x0 = (await st(p))['xp']
+        await p.click('#bAdv'); await p.wait_for_timeout(300); await p.click('#goTrain'); await p.wait_for_timeout(2400)
+        for i in range(22): await p.mouse.click(200, 400); await p.wait_for_timeout(50)
+        await p.wait_for_timeout(1800); s = await st(p); ok('場外特訓：連打給經驗、扣體力', s['xp'] > x0 and round(s['energy']) == 85, (s['xp'] - x0, s['energy']))
+        await p.evaluate(f"PF.debug.set({{coins:200,bondRestUntil:Date.now()+3600000}})");         r = await p.evaluate("(()=>{const s=PF.state;const a=PF.PC.buyItem(s,'soup');const b=PF.PC.useSoup(s,Date.now());return [a.ok,b.ok,s.coins,s.bondRestUntil]})()")
+        ok('雞湯 69 金幣、喝了不用休息', r[0] and r[1] and r[2] == 131 and r[3] == 0, r)
         # ---------- 步數 ----------
         await p.goto(URL + '?steps=12345'); await p.wait_for_timeout(900); s = await st(p)
         ok('捷徑網址登記步數', s['steps']['total'] == 12345 and 'steps' not in p.url, (s['steps']['total'], p.url))
@@ -289,7 +321,7 @@ async def main():
         await q.evaluate("window.PF_NO_RPS=0;PF.debug.set({energy:100,hp:100})"); await q.evaluate("PF.startBattle(1)"); await q.wait_for_timeout(600)
         seen = False
         for _ in range(6):
-            await q.click('#mvTk'); 
+            await move(q, 'tackle'); 
             for _ in range(20):
                 await q.wait_for_timeout(150)
                 if await q.is_visible('#rpsZone'): seen = True; break

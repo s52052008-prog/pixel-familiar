@@ -76,11 +76,13 @@ img.uic{width:21px;height:21px;vertical-align:-5px;margin-right:5px;display:inli
 #bcv{display:block;width:100%;aspect-ratio:128/112;image-rendering:pixelated;image-rendering:crisp-edges;border:3px solid var(--line);box-shadow:0 0 0 2px var(--hi)}
 .hp{background:var(--panel);border:2px solid var(--line);box-shadow:inset 0 0 0 2px var(--hi);padding:6px 9px;font-size:13px}
 .hp .t{display:flex;justify-content:space-between;font-weight:700}.hp .bar i{background:#6ad06a}.hp.foe .bar i{background:#e86a6a}
-.moves{display:grid;grid-template-columns:1fr 1fr;gap:8px}.moves .act{min-height:54px;font-size:14px;gap:2px}.moves .act small{font-size:11px;font-weight:700;opacity:.85}
+.moves{display:block}.mpanel{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mpanel.hidden{display:none}.mpanel .back{grid-column:1/-1;min-height:40px!important}.moves .act{min-height:54px;font-size:14px;gap:2px}.moves .act small{font-size:11px;font-weight:700;opacity:.85}
 .btn.bond{background:#ff6a9a;color:#fff;box-shadow:inset 0 -3px 0 #c03a6a,0 0 0 3px #ffd0e0;font-size:16px;animation:pulse .8s steps(2) infinite}@keyframes pulse{50%{box-shadow:inset 0 -3px 0 #c03a6a,0 0 0 6px #ff9ac0}}
 #rpsZone{position:fixed;left:0;right:0;bottom:0;z-index:24;background:#101a30f0;border-top:3px solid var(--line);padding:12px 12px calc(12px + env(safe-area-inset-bottom));text-align:center;display:flex;flex-direction:column;gap:8px}#rpsMsg{font-size:18px;font-weight:900}.rpsbtns{display:flex;gap:8px}.rpsbtns button{flex:1;font-size:40px;min-height:84px;background:#2b4264;border:3px solid var(--line);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}.rpsbtns button span{font-size:14px;font-weight:800}.rpsbtns button.pick{background:#ffd86a;color:#273753}#rpsBar{height:6px;background:#0008}#rpsBar i{display:block;height:100%;background:#ff8a5a;width:100%}
 #tapZone{position:fixed;inset:0;z-index:25;background:#2a0a20cc;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;touch-action:none;-webkit-user-select:none;user-select:none;text-align:center}#tapZone b{font-size:72px;color:#ffd0e0}#tapMsg{font-size:22px;font-weight:900}
 #blog{white-space:pre-line;min-height:2.8em;background:#fff9e8;color:#273753;border:3px solid #273753;padding:7px 10px;font-weight:700;font-size:14px;line-height:1.4}
+.trainbox{display:flex;flex-direction:column;gap:6px;border:3px solid var(--line);background:#fff3d0;color:#3a2a2a;padding:8px;margin:8px 0}.trainbox .btn{width:100%}
+.trainbox .small{color:#5a3a2a;opacity:1}
 .stagebtn{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;margin-top:6px}
 .eggrow{display:flex;gap:10px;align-items:center;background:#14203a;border:2px solid var(--line);padding:6px;margin-top:6px}.eggrow canvas{width:72px;height:72px;image-rendering:pixelated}
 .prog{height:9px;background:#0a1020;margin:4px 0 8px}.prog i{display:block;height:100%;background:#7ccc5a}
@@ -213,12 +215,24 @@ body.rm *{transition:none!important;animation:none!important}
  <div id="blog"></div>
  <button class="btn bond hidden" id="mvBond" data-mv="bond">💗 羈絆之力！買加油棒為牠打氣（10 金幣・連打螢幕）</button>
  <div class="moves" id="moves">
-  <button class="act" data-mv="tackle" id="mvTk">💥 撞擊</button>
-  <button class="act" data-mv="special" id="mvSp">✨ 屬性技</button>
-  <button class="act" data-mv="charge" id="mvCh">⚡ 蓄力</button>
-  <button class="act" data-mv="guard">🛡️ 防禦<small>傷害減半、回復 8%</small></button>
-  <button class="act" data-mv="potion" id="mvPo">🧪 藥水</button>
-  <button class="act" data-mv="run">🏃 逃跑<small>沒有獎勵</small></button>
+  <div class="mpanel" id="mpMain">
+   <button class="act" data-mp="mpSkill" id="mvSkill">⚔️ 技能<small>衝撞・輔助・屬性・大絕招</small></button>
+   <button class="act" data-mv="guard">🛡️ 防禦<small>傷害減半、回復 8%</small></button>
+   <button class="act" data-mp="mpBag" id="mvBag">🎒 背包<small>喝藥水</small></button>
+   <button class="act" data-mv="run">🏃 逃跑<small>沒有獎勵</small></button>
+  </div>
+  <div class="mpanel hidden" id="mpSkill">
+   <button class="act" data-mv="tackle" id="mvTk">💥 衝撞</button>
+   <button class="act" data-mv="charge" id="mvCh">⚡ 蓄力</button>
+   <button class="act" data-mv="special" id="mvSp">✨ 屬性技</button>
+   <button class="act ult" data-mv="ult" id="mvUlt">🌟 大絕招</button>
+   <button class="act back" data-mp="mpMain">↩ 返回</button>
+  </div>
+  <div class="mpanel hidden" id="mpBag">
+   <button class="act" data-mv="potion" id="mvPo">🧪 回復藥水</button>
+   <button class="act" data-mv="potion2" id="mvPo2">💖 超級藥水</button>
+   <button class="act back" data-mp="mpMain">↩ 返回</button>
+  </div>
  </div>
  <div id="bResult" class="hidden"><div class="rcard"><h2 id="rTitle"></h2><div id="rRows"></div><div id="rNote" class="small"></div><button class="btn pri" id="bDone">確定</button></div></div>
 </div></div>
@@ -233,7 +247,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.39.1';
+const VERSION='1.40.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -690,12 +704,12 @@ const ICONS={
  note:{o:'#2a1a3a',p:{n:'#ffffff'},m:['..nnn','..n.n','..n.n','nnn..','nnn..']}
 };
 const ICV={};
-const ITEM_ICON={food:'apple',berry:'berry',fish:'fish',meat:'meat',cake:'cake',seeds:'seed',candy:'candy',potion:'potion',ember:'ember',dragon:'dragon',melonw:'melonw',melon:'melon',potato:'potato',nut:'nut',coconut:'coconut',banana:'banana'};
+const ITEM_ICON={potion2:'potion2',soup:'soup',seeds2:'seed2',food:'apple',berry:'berry',fish:'fish',meat:'meat',cake:'cake',seeds:'seed',candy:'candy',potion:'potion',ember:'ember',dragon:'dragon',melonw:'melonw',melon:'melon',potato:'potato',nut:'nut',coconut:'coconut',banana:'banana'};
 function buildIcons(){for(const k in ICONS){const I=ICONS[k],h=I.m.length,w=I.m[0].length,g=grid(w+2,h+2);
  I.m.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!=='.')px(g,x+1,y+1,I.p[ch])}));if(I.o)outline(g,I.o);ICV[k]=gridCanvas(g)}}
 /* 手繪道具圖（tools/import_items.py 產生）：載入後取代程式畫的家具與圖示 */
-const ITEM_NAMES=['bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec'];
-const ITEM_ICONS=new Set(['potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec']);
+const ITEM_NAMES=['potion2','soup','seed2','bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec'];
+const ITEM_ICONS=new Set(['potion2','soup','seed2','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec']);
 function tintCanvas(src,rgba){const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const x=c.getContext('2d');x.drawImage(src,0,0);x.globalCompositeOperation='source-atop';x.fillStyle=rgba;x.fillRect(0,0,c.width,c.height);return c}
 function loadItems(){let left=ITEM_NAMES.length;for(const n of ITEM_NAMES){const im=new Image();
  im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);
@@ -1187,7 +1201,7 @@ function renderUI(){
  $('stageText').textContent=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome&&F.genome.el?' · 會孵出'+ROUTE_LABEL[F.genome.el]+'的新物種':''}`:`${s.route?ROUTE_ICON[s.route]+ROUTE_LABEL[s.route]+' · ':''}${STAGE_NAME[s.stage]} · ${F.name}${rar} · 第 ${dayCount()} 天`;
  $('growText').textContent=s.runaway?`😢 ${s.name}離家出走了！到「👟 步數」登記走路，找牠回來：${(s.runaway.got||0).toLocaleString()} / ${CONFIG.runaway.steps.toLocaleString()} 步`
   :s.starveSince?`⚠️ 餓壞了！再 ${Math.max(0,Math.ceil((s.starveSince+CONFIG.runaway.starveHours*3600000-Date.now())/3600000))} 小時不餵，牠就會離家出走！`:growLine();
- $('stepInfo').textContent=`🍎 食物 ${s.inv.food} · 🌱 種子 ${s.inv.seeds}${s.inv.candy?' · 🍬 '+s.inv.candy:''}${s.inv.potion?' · 🧪 '+s.inv.potion:''} · 👟 今日 ${fmtN(s.steps.days[PC.dayKey(Date.now())]||0)} 步 · ⚔️ 今日冒險 ${s.daily.adv}${s.eggs.length?' · 🧺 蛋 '+s.eggs.length:''}${s.hatched?` · 🐷 存錢筒 ${Math.floor(s.piggy||0)}/${PC.piggyCap(s)}`:''}`;
+ $('stepInfo').textContent=`🍎 食物 ${s.inv.food} · 🌱 種子 ${s.inv.seeds}${s.inv.candy?' · 🍬 '+s.inv.candy:''}${s.inv.potion?' · 🧪 '+s.inv.potion:''}${s.inv.potion2?' · 💖 '+s.inv.potion2:''}${s.inv.seeds2?' · 🌟種子 '+s.inv.seeds2:''}${s.inv.soup?' · 🍲 '+s.inv.soup:''} · 👟 今日 ${fmtN(s.steps.days[PC.dayKey(Date.now())]||0)} 步 · ⚔️ 今日冒險 ${s.daily.adv}${s.eggs.length?' · 🧺 蛋 '+s.eggs.length:''}${s.hatched?` · 🐷 存錢筒 ${Math.floor(s.piggy||0)}/${PC.piggyCap(s)}`:''}`;
  for(const[k]of STATS){const v=s.hatched?s[k]:0;$('sv-'+k).textContent=s.hatched?Math.round(v)+'%':'--';$('sb-'+k).style.width=v+'%';$('st-'+k).classList.toggle('low',s.hatched&&v<20)}
  document.querySelectorAll('[data-act]').forEach(b=>b.disabled=!s.hatched);
  $('sleepLabel').textContent=s.sleeping?'叫醒':'睡覺';$('sleepBtn').classList.toggle('on',s.sleeping);
@@ -1291,7 +1305,7 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',`
 <p><b>高階條件（七個屬性都一樣）：</b>① 長到成年期時會跳出 🔔 專屬任務，從那時開始算 ② 集滿 3 個該屬性的終極素材：第 ${C.ascend.bigBoss.join('、')} 關的大王各掉一次（依你目前這隻的屬性；換別的屬性的幻獸可以再拿）。每 5 關有小王、每 10 關有大王。</p>
 <p><b>專屬任務：</b>${PC.ROUTES.map(r=>ROUTE_ICON[r]+' '+C.ascend.tasks[r].map(([k,n])=>({wins:'打贏 '+n+' 場',washes:'洗澡 '+n+' 次',harvests:'收成 '+n+' 次',steps:'走 '+n.toLocaleString('en-US')+' 步',earthWins:'打贏 '+n+' 隻土屬性怪',goals:'頂球進 '+n+' 球',bondUses:'羈絆之力 '+n+' 次',cleanups:'清理 '+n+' 次'})[k]).join('或')).join('；')}。</p>
 <p><b>親密度：</b>20 解鎖撒嬌與早安問候、50 每天收到小禮物、80 戰鬥時撐住一次。</p>
-<p><b>⚔️ 戰鬥技巧：</b>戰鬥地點依怪獸屬性變成草原、岩石地、水邊、森林或星之塔。招式有撞擊、屬性技、蓄力（下一擊 ×2）、防禦、回復藥水和逃跑，按鈕上會顯示預估傷害（▲效果好、▼效果差）。快被打倒時會出現「💗 羈絆之力」：花 10 金幣買加油棒，倒數後 2 秒內連打螢幕，20 下 2.2 倍、22 下 2.5 倍、25 下 2.7 倍、28 下以上 3 倍（每場一次）；發揮超常能力後要休息 2 小時才能再冒險。敵人出招前會猜拳：猜贏完全躲開，平手受 0.8 倍傷害，猜輸或沒選受 1.2 倍。</p>
+<p><b>⚔️ 戰鬥技巧：</b>戰鬥地點依怪獸屬性變成草原、岩石地、水邊、森林或星之塔。戰鬥選單有「⚔️ 技能、🛡️ 防禦、🎒 背包、🏃 逃跑」：技能點開有衝撞、輔助（蓄力，下一擊 ×2）、屬性技、大絕招（屬性技 2.2 倍，每場一次）；背包點開可以喝回復藥水（回復 50%）或超級藥水（回復全部）。按鈕上會顯示預估傷害（▲效果好、▼效果差）。打不贏的時候，可以在冒險畫面做「🏋️ 場外特訓」練經驗。快被打倒時會出現「💗 羈絆之力」：花 10 金幣買加油棒，倒數後 2 秒內連打螢幕，20 下 2.2 倍、22 下 2.5 倍、25 下 2.7 倍、28 下以上 3 倍（每場一次）；發揮超常能力後要休息 2 小時才能再冒險。敵人出招前會猜拳：猜贏完全躲開，平手受 0.8 倍傷害，猜輸或沒選受 1.2 倍。</p>
 <p><b>每天：</b>第一次打開送金幣 +${C.daily.coins}、食物 +${C.daily.food}。沒食物又沒錢時可以免費「採集」。冒險不限次數，有體力就能出發。</p>
 <p><b>👟 步數：</b>每 1,000 步經驗 +10、每 2,000 步森系點數 +1；每 10 萬步突破一次（戰鬥 +10%）。</p>
 <p><b>💞 配對：</b>成年期以後可以和朋友交換「配對碼」，生出混合雙方基因的蛋。</p>
@@ -1497,23 +1511,25 @@ function fmtLeft(ms){const m=Math.ceil(ms/60000);return m>=60?`${Math.floor(m/60
 function farmDialog(){PC.claimDaily(s,Date.now());
  const F=CONFIG.farm;
  openModal('🌱 家園',`<p class="small">種下種子，${F.growHours} 小時後成熟：長出<b style="color:#ff8a7a">紅色</b>是蘋果、<b style="color:#d0a0ff">紫色</b>是莓果，每次 ${F.fruitMin}～${F.fruitMax} 顆。成熟後 ${F.freshHours} 小時內收最新鮮（會發光、能賣），太久會過熟，放 ${F.rotHours} 小時就爛掉${s.hatched?`、經驗 +${F.xp}、🌿 森系 +${F.forest}`:''}。每塊田一次種一株。已收成 <b>${s.harvests}</b> 次${s.harvests<CONFIG.harvestsForOldTree?`（森系高階需要 ${CONFIG.harvestsForOldTree} 次）`:''}。</p>
-<p>🌱 種子 <b id="fSeeds">${s.inv.seeds}</b>　🍎 <b id="fFood">${s.inv.food}</b>　🫐 <b id="fBerry">${s.inv.berry||0}</b>　🪙 <b id="fCoins">${s.coins}</b></p>
+<p>🌱 種子 <b id="fSeeds">${s.inv.seeds}</b>　🌟 優良 <b id="fSeeds2">${s.inv.seeds2||0}</b>　🍎 <b id="fFood">${s.inv.food}</b>　🫐 <b id="fBerry">${s.inv.berry||0}</b>　🪙 <b id="fCoins">${s.coins}</b></p>
 <div class="plots" id="plots"></div><div class="err" id="fErr"></div>
-<div class="row"><button class="btn" id="fBuy">買 1 顆種子（${F.seedPrice} 金幣）</button><button class="btn" id="fExp"></button></div>
+<div class="row"><button class="btn" id="fBuy">買 1 顆種子（${F.seedPrice} 金幣）</button><button class="btn" id="fBuy2">買 1 顆🌟優良種子（${CONFIG.goodSeed.price} 金幣）</button></div><div class="row"><button class="btn" id="fExp"></button></div>
 <div class="row"><button class="btn" id="fSellA"></button><button class="btn" id="fSellB"></button></div>
 <p class="small">自己種的水果可以吃，也可以賣（一顆 ${CONFIG.sellFruit.food} 金幣），拿錢去買肉排、烤魚、蛋糕或更多種子。種子也會在冒險打贏時得到。</p>`);
  const draw=()=>{const box=$('plots');if(!box){clearInterval(farmTimer);return}const now=Date.now();
   box.innerHTML=s.plots.map((p,i)=>{const q=PC.plotState(s,i,now),nm=q.kind==='berry'?'🫐 莓果':'🍎 蘋果';return`<div class="plot"><canvas data-p="${i}" width="20" height="16"></canvas>${q.empty?'空地':q.rotten?'<b>爛掉了…</b>':q.over?`<b>${nm}過熟了！</b><br><span class="small">快收，品質變差</span>`:q.ripe?`<b>✨${nm}成熟了！</b><br><span class="small">${fmtLeft(q.freshLeft)}內收最新鮮</span>`:'還要 '+fmtLeft(q.left)}
-   <button class="btn ${q.empty||q.ripe?'pri':''}" data-pa="${i}" ${!q.empty&&!q.ripe?'disabled':''}>${q.empty?'種植':q.rotten?'清掉':q.ripe?'收成':'成長中'}</button></div>`}).join('');
+${!q.empty&&p.g?'<span class="small">🌟優良</span>':''}
+   <button class="btn ${q.empty||q.ripe?'pri':''}" data-pa="${i}" ${!q.empty&&!q.ripe?'disabled':''}>${q.empty?'種植':q.rotten?'清掉':q.ripe?'收成':'成長中'}</button>${q.empty&&s.inv.seeds2?`<button class="btn pri" data-pg="${i}">🌟 種優良</button>`:''}</div>`}).join('');
   box.querySelectorAll('canvas').forEach(c=>{const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(PLOT_SPR[plotStage(PC.plotState(s,+c.dataset.p,now))],0,0)});
-  box.querySelectorAll('[data-pa]').forEach(b=>b.onclick=()=>{const i=+b.dataset.pa,q=PC.plotState(s,i,Date.now()),x0=s.xp;
-   const r=q.empty?PC.plant(s,i,Date.now()):PC.harvest(s,i,Date.now());$('fErr').textContent=r.ok?'':'❌ '+r.msg;
+  box.querySelectorAll('[data-pa],[data-pg]').forEach(b=>b.onclick=()=>{const i=+(b.dataset.pa??b.dataset.pg),q=PC.plotState(s,i,Date.now()),x0=s.xp;
+   const r=q.empty?PC.plant(s,i,Date.now(),Math.random,b.dataset.pg!==undefined||(s.inv.seeds<1&&(s.inv.seeds2||0)>0)):PC.harvest(s,i,Date.now());$('fErr').textContent=r.ok?'':'❌ '+r.msg;
    if(r.ok){toast(r.msg,2500);sfx(q.empty?'tap':'eat');save();renderUI();afterChange(x0);if(!q.empty)spawn('apple',2,{y:90,x:20,vy:-30,life:1.2})}draw()});
-  $('fSeeds').textContent=s.inv.seeds;$('fFood').textContent=s.inv.food;$('fBerry').textContent=s.inv.berry||0;$('fCoins').textContent=s.coins;
+  $('fSeeds').textContent=s.inv.seeds;$('fSeeds2').textContent=s.inv.seeds2||0;$('fFood').textContent=s.inv.food;$('fBerry').textContent=s.inv.berry||0;$('fCoins').textContent=s.coins;
   const ep=PC.expandPrice(s);$('fExp').textContent=ep?`擴建田地（第 ${s.plots.length+1} 格，${ep} 金幣）`:'田地已經最大（6 格）';$('fExp').disabled=!ep;
   PC.fixFresh(s);for(const[id,k,n]of[['fSellA','food','🍎 蘋果'],['fSellB','berry','🫐 莓果']]){const c=s.inv.fresh[k]||0;$(id).textContent=`賣 ✨${n}（自己種的 ${c} 顆）+${CONFIG.sellFruit[k]}`;$(id).disabled=!c}};
  $('fExp').onclick=()=>{const r=PC.expandFarm(s);$('fErr').textContent=r.ok?'':'❌ '+r.msg;if(r.ok){toast(r.msg);sfx('level');save();renderUI()}draw()};
  for(const[id,k]of[['fSellA','food'],['fSellB','berry']])$(id).onclick=()=>{const r=PC.sellFruit(s,k);$('fErr').textContent=r.ok?'':'❌ '+r.msg;if(r.ok){toast(r.msg);sfx('tap');save();renderUI()}draw()};
+ $('fBuy2').onclick=()=>{const r=PC.buyItem(s,'seeds2');$('fErr').textContent=r.ok?'':'❌ '+r.msg;if(r.ok){toast(r.msg);save();renderUI()}draw()};
  $('fBuy').onclick=()=>{const r=PC.buySeed(s);$('fErr').textContent=r.ok?'':'❌ '+r.msg;if(r.ok){toast(r.msg);save();renderUI()}draw()};
  draw();clearInterval(farmTimer);farmTimer=setInterval(draw,5000)}
 
@@ -1552,13 +1568,16 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
    btn:bag?`<button class="btn pri" data-feedk="${k}">🍽️ 拿去餵牠</button>`:`<button class="btn pri" data-bi="${k}">買 1 個（🪙 ${F.price}）</button>`}};
   const tools={seeds:()=>({id:'seeds',name:'種子',sub:`🪙${C.farm.seedPrice}｜×${s.inv.seeds}`,icon:'seed',desc:`種在家園的田裡，${C.farm.growHours} 小時後長出蘋果或莓果<br>擁有 ${s.inv.seeds}`,btn:`<button class="btn pri" data-bi="seeds">買 1 個（🪙 ${C.farm.seedPrice}）</button>`}),
    candy:()=>({id:'candy',name:'星星糖',sub:`🪙${C.candy.price}｜×${s.inv.candy||0}`,icon:'candy',desc:`吃了<b>直接升 1 級</b>！（進化還是要等時間）<br>心情 +${C.candy.mood}、飽食 +${C.candy.hunger}<br>擁有 ${s.inv.candy||0}`,btn:`<button class="btn pri" data-bi="candy">買 1 個（🪙 ${C.candy.price}）</button><button class="btn" id="eatCandy" ${s.inv.candy?'':'disabled'}>給牠吃</button>`}),
-   potion:()=>({id:'potion',name:'回復藥水',sub:`🪙${C.potion.price}｜×${s.inv.potion||0}`,icon:'potion',desc:`戰鬥中回復 50% HP（在戰鬥畫面使用）<br>擁有 ${s.inv.potion||0}`,btn:`<button class="btn pri" data-bi="potion">買 1 個（🪙 ${C.potion.price}）</button>`})};
+   seeds2:()=>({id:'seeds2',name:'優良種子',sub:`🪙${C.goodSeed.price}｜×${s.inv.seeds2||0}`,icon:'seed2',desc:`比較會長的種子：每次收成 ${C.goodSeed.fruitMin}～${C.goodSeed.fruitMax} 顆（普通種子 ${C.farm.fruitMin}～${C.farm.fruitMax} 顆），新鮮收成還有 ${Math.round(C.goodSeed.powerChance*100)}% 多長一顆自己屬性的能力水果<br>擁有 ${s.inv.seeds2||0}`,btn:`<button class="btn pri" data-bi="seeds2">買 1 個（🪙 ${C.goodSeed.price}）</button>`}),
+   potion:()=>({id:'potion',name:'回復藥水',sub:`🪙${C.potion.price}｜×${s.inv.potion||0}`,icon:'potion',desc:`戰鬥中回復 50% HP（戰鬥時點「🎒 背包」使用）<br>擁有 ${s.inv.potion||0}`,btn:`<button class="btn pri" data-bi="potion">買 1 個（🪙 ${C.potion.price}）</button>`}),
+   potion2:()=>({id:'potion2',name:'超級藥水',sub:`🪙${C.superPotion.price}｜×${s.inv.potion2||0}`,icon:'potion2',desc:`戰鬥中<b>回復全部 HP</b>（戰鬥時點「🎒 背包」使用）<br>擁有 ${s.inv.potion2||0}`,btn:`<button class="btn pri" data-bi="potion2">買 1 個（🪙 ${C.superPotion.price}）</button>`}),
+   soup:()=>{const rest=(s.bondRestUntil||0)>Date.now();return{id:'soup',name:'神秘婆婆熬製雞湯',sub:`🪙${C.soup.price}｜×${s.inv.soup||0}`,icon:'soup',desc:`神秘婆婆用祕方熬了一整晚的雞湯。發動羈絆之力後要休息 ${C.bond.restHours} 小時才能冒險，喝了<b>馬上恢復</b>，可以立刻再出發！<br>${rest?`⏳ 現在還要休息 ${Math.ceil((s.bondRestUntil-Date.now())/60000)} 分鐘`:'現在不用休息'}<br>擁有 ${s.inv.soup||0}`,btn:`<button class="btn pri" data-bi="soup">買 1 碗（🪙 ${C.soup.price}）</button><button class="btn" id="drinkSoup" ${s.inv.soup&&rest?'':'disabled'}>給牠喝</button>`}}};
   if(tab==='food')for(const k of Object.keys(C.foods).filter(k=>!C.foods[k].power))out.push(foodEntry(k));
   else if(tab==='power')for(const k of Object.keys(C.foods).filter(k=>C.foods[k].power))out.push(Object.assign(foodEntry(k),{sub:`${ROUTE_ICON[C.foods[k].fav[0]]}🪙${C.foods[k].price}｜×${s.inv[k]||0}`}));
   else if(tab==='tools'){for(const k in tools)out.push(tools[k]())}
   else{   // 🎒 背包：自己有的東西
    const own=Object.keys(C.foods).filter(k=>(s.inv[k]||0)>0);if(own.length){out.push({head:'🍽️ 食物'});for(const k of own)out.push(foodEntry(k,true))}
-   const tl=[];if(s.inv.seeds)tl.push(Object.assign(tools.seeds(),{sub:`×${s.inv.seeds}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`}));if(s.inv.candy)tl.push(Object.assign(tools.candy(),{sub:`×${s.inv.candy}`,btn:`<button class="btn pri" id="eatCandy">給牠吃</button>`}));if(s.inv.potion)tl.push(Object.assign(tools.potion(),{sub:`×${s.inv.potion}`,btn:''}));
+   const tl=[];if(s.inv.seeds)tl.push(Object.assign(tools.seeds(),{sub:`×${s.inv.seeds}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`}));if(s.inv.candy)tl.push(Object.assign(tools.candy(),{sub:`×${s.inv.candy}`,btn:`<button class="btn pri" id="eatCandy">給牠吃</button>`}));if(s.inv.seeds2)tl.push(Object.assign(tools.seeds2(),{sub:`×${s.inv.seeds2}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`}));if(s.inv.potion)tl.push(Object.assign(tools.potion(),{sub:`×${s.inv.potion}`,btn:''}));if(s.inv.potion2)tl.push(Object.assign(tools.potion2(),{sub:`×${s.inv.potion2}`,btn:''}));if(s.inv.soup)tl.push(Object.assign(tools.soup(),{sub:`×${s.inv.soup}`}));
    if(s.inv.ember)tl.push({id:'ember',name:'經驗火種',sub:`×${s.inv.ember}`,icon:'ember',desc:`打贏 Boss 得到的寶物<br>心情 +${C.ember.mood}、體力 +${C.ember.energy}、經驗 +${C.ember.xp}<br>擁有 ${s.inv.ember}`,btn:`<button class="btn pri" id="eatEmber">給牠吃</button>`});
    if(tl.length){out.push({head:'🧰 道具'});out.push(...tl)}
    out.push({head:'💎 進化素材'});
@@ -1583,6 +1602,7 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
   document.querySelectorAll('#shopBody canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));
   document.querySelectorAll('[data-feedk]').forEach(b=>b.onclick=()=>{closeModal();FEED.kind=b.dataset.feedk;act('feed')});
   if($('goFarm'))$('goFarm').onclick=()=>{closeModal();farmDialog()};
+  if($('drinkSoup'))$('drinkSoup').onclick=()=>{const r=PC.useSoup(s,Date.now());if(!r.ok){toast('❌ '+r.msg);return}closeModal();playAnim('eat');sfx('eat');spawn('heart',4,{y:70,life:1.1});say(r.msg);save();renderUI()};
   if($('useHeart'))$('useHeart').onclick=()=>{const r=PC.awaken(s,Date.now());if(!r.ok){toast('❌ '+r.msg);return}closeModal();save();renderUI();flashUntil=performance.now()+700;sfx('evolve');buzz(40);playAnim('happy',1400);spawn('star',14,{y:66,vy:-30,jx:60,life:1.6,stagger:.05});say(r.msg)};
   if($('eatEmber'))$('eatEmber').onclick=()=>{const x0=s.xp,r=PC.useEmber(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}toast(r.msg+`　經驗 +${r.xp}`);sfx('level');spawn('star',6,{x:petX+24,y:60,vy:-20,life:1.2});save();renderUI();afterChange(x0);render()};
   if($('eatCandy'))$('eatCandy').onclick=()=>{const x0=s.xp,r=PC.useCandy(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}
@@ -1595,6 +1615,7 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
    ⚔️ 冒險：關卡制回合戰鬥
    ========================================================= */
 const EL_NAME={fire:'🔥火',water:'💧水',leaf:'🌿森',earth:'🪨土',bird:'🐦鳥',elec:'⚡電',metal:'⚙️金',none:'⭐無'};
+const ULT_NAME={fire:'烈焰風暴',water:'怒濤海嘯',leaf:'森羅萬象',earth:'地裂山崩',bird:'九天颶風',elec:'萬雷天降',metal:'千刃斬',none:'流星雨'};
 const SP_NAME={fire:'火球術',water:'泡泡砲',leaf:'飛葉刃',earth:'碎岩擊',bird:'旋風羽',elec:'雷光閃',metal:'鋼刃斬',none:'星星衝撞'},SP_ICON={fire:'fire',water:'bubble',leaf:'leaf',earth:'rock',bird:'feather',elec:'bolt',metal:'shard',none:'star'};
 const AREAS=['青草原','迷霧湖','火山口','古森林','大地峽谷','天空之巔','雷雲山','鋼鐵礦坑','星之塔'];
 function areaName(n){return AREAS[Math.min(8,Math.floor((n-1)/5))]+' '+(n>40?n-40:((n-1)%5)+1)}
@@ -1602,13 +1623,19 @@ function areaName(n){return AREAS[Math.min(8,Math.floor((n-1)/5))]+' '+(n>40?n-4
 function foeFighter(n){const f=PC.foeFor(n,lvl()),key=petKey(f.id,formCode(f.stage,f.route))+'|wild',F=formOf(key);
  const ft=PC.mkFighter((f.big?'👑大王 ':f.boss?'小王 ':'野生的 ')+F.name,key,f.level,f.route,0,80,0);ft.max=ft.hp=Math.round(ft.max*(f.big?1.6:f.boss?1.25:1.3));return ft}   // 野生怪比較耐打（V1.33：1.4→1.3）
 let B=null;const bparts=[];const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function trainXp(m){return Math.round((CONFIG.train.base+CONFIG.train.perLv*PC.level(s.xp))*m*((PC.trait(s)||{}).xp||1))}
 function advDialog(){PC.claimDaily(s,Date.now());tick();
  const why=PC.canAdventure(s,s.adv.stage);let list='';const top=s.adv.stage,A=CONFIG.adventure;
  for(let n=top;n>=Math.max(1,top-5);n--){const f=foeFighter(n),ev=Object.keys(CONFIG.bossStages).find(k=>CONFIG.bossStages[k]===n);
   list+=`<button class="btn stagebtn ${n===top?'pri':''}" data-st="${n}"><span>${n%10===0?'👑 大王 ':n%5===0?'⭐ 小王 ':''}第 ${n} 關 · ${areaName(n)}${ev&&!s.events[ev]?' ✨':''}</span><span class="small" style="color:inherit">Lv.${f.level} ${EL_NAME[f.el]}</span></button>`}
  openModal('⚔️ 冒險',`<p>體力：<b>${Math.round(s.energy)}</b>（出發需要 ${A.minEnergy}，會消耗 20）　戰績：${s.adv.wins} 勝 ${s.adv.losses} 敗</p>
 <p class="small">不限次數，有體力就能出發。<br>完成：經驗 +${A.xp}、金幣 +${A.coinsMin}～${A.coinsMax}、🔥 焰系 +${A.flame}；勝利再加經驗 +10、金幣 +4、🔥 +2。失敗不扣東西，經驗 +3。<br>第一次打通新關卡＝發現新地點（🌿 森系 +2）。✨ 標記的 Boss 關有特殊事件。<br>屬性相剋：🔥 剋 🌿、🌿 剋 💧、💧 剋 🔥（屬性技 1.5 倍）。</p>
-${why&&why!=='這一關還沒解鎖'?'<p class="err">'+why+'</p>':''}${list}`);
+${why&&why!=='這一關還沒解鎖'?'<p class="err">'+why+'</p>':''}
+<div class="trainbox"><b>🏋️ 場外特訓</b><span class="small">打不贏的時候先來練功！不用打怪，連打螢幕 2 秒，點越多下經驗越多（10 下 ×1、20 下 ×1.3、28 下 ×1.5）。消耗體力 ${-CONFIG.train.energy}、飽食 ${-CONFIG.train.hunger}。現在一次約 <b>${trainXp(1)}～${trainXp(1.5)}</b> 經驗（打贏一場約 ${A.xp+CONFIG.battleWin.xp}）。羈絆之力休息中也能練。</span><button class="btn pri" id="goTrain">🏋️ 開始特訓</button></div>
+${list}`);
+ $('goTrain').onclick=async()=>{const w=PC.canTrain(s);if(w){toast(w);return}if(modeBusy()){toast('先完成現在的互動吧');return}closeModal();unlockAudio();
+  const taps=await tapRush({ready:'特訓開始！準備…',go:'快點螢幕！用力練！'}),x0=s.xp,r=PC.train(s,taps,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}
+  playAnim('happy',1200);sfx('level');spawn('star',6,{x:petX+24,y:60,vy:-24,life:1.2});say(`🏋️ 特訓結束！連打 ${taps} 下（×${r.mult}），經驗 +${r.xp}`);save();renderUI();afterChange(x0)};
  document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{const n=+b.dataset.st,w=PC.canAdventure(s,n);if(w){toast(w);return}closeModal();startBattle(n)})}
 function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();petX=PET_X;const r=PC.startAdventure(s,n,Date.now());if(!r.ok){toast(r.msg);return}save();renderUI();
  const me=PC.mkFighter(s.name,formKey(),lvl(),s.route,tier(),s.mood,s.bond),foe=foeFighter(n);
@@ -1616,8 +1643,8 @@ function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');retu
  const duo=PC.pairAdventureCost(s),P=s.pair,me2=duo?PC.mkFighter(P.name,pairKey(),PC.level(P.xp),P.route,tier(),P.mood,P.bond):null;   // 第二隻有體力就一起上場
  if(duo){foe.max=foe.hp=Math.round(foe.max*CONFIG.pair.foeHp);save()}
  const fx0=()=>({dx:0,dy:0,flash:0,faint:0,anim:null,t0:0});
- B={n,full:r.full,arena:arenaFor(n,foe),bondUsed:false,me,me2,duo,foe,busy:false,over:false,fx:{me:fx0(),me2:fx0(),foe:fx0()}};bparts.length=0;
- $('battle').classList.remove('hidden');$('bResult').classList.add('hidden');$('moves').classList.remove('hidden');
+ B={n,full:r.full,arena:arenaFor(n,foe),bondUsed:false,ultUsed:false,me,me2,duo,foe,busy:false,over:false,fx:{me:fx0(),me2:fx0(),foe:fx0()}};bparts.length=0;
+ $('battle').classList.remove('hidden');$('bResult').classList.add('hidden');$('moves').classList.remove('hidden');showPanel('mpMain');
  $('mvSp').textContent='✨ '+SP_NAME[me.el];blog(`📍 ${ARENA_NAME[arenaFor(n,foe)]}\n${foe.name} 出現了！（${EL_NAME[foe.el]} Lv.${foe.level}）${duo?`\n🐾 ${me.name} 和 ${me2.name} 一起上場！`:s.pair?`\n（${s.pair.name} 體力不夠，留在家休息）`:''}`);bUI();sfx('play')}
 function blog(t){$('blog').textContent=t}
 /* ---------------- 戰鬥場地：依怪獸屬性決定 ---------------- */
@@ -1679,11 +1706,11 @@ function bUI(){const{me,foe}=B,danger=dangerNow();
  $('mName').textContent=`${me.name}  Lv.${me.level} ${EL_NAME[me.el]}${tier()?' '+'✦'.repeat(tier()):''}${me.charged?' ⚡蓄力中':''}${danger?'　⚠️ 危險！':''}`;$('mHp').textContent=`${me.hp}/${me.max}${B.me2?`　🐾${B.me2.name} ${Math.max(0,B.me2.hp)}/${B.me2.max}`:''}`;$('mBar').style.width=me.hp/me.max*100+'%';
  $('mBar').style.background=me.hp/me.max<.3?'#e86a6a':'';
  const tag=(sp)=>{const e=PC.expectDamage(me,foe,sp),m=PC.elemMult(me,foe,sp),pct=Math.round(e/Math.max(1,foe.hp)*100);return`約 ${e}${m>1?' ▲':m<1?' ▼':''}${pct>=100?'（可擊倒）':''}`};
- $('mvTk').innerHTML=`💥 撞擊<small>${tag(false)}</small>`;
- $('mvSp').innerHTML=`✨ ${SP_NAME[me.el]}<small>${me.cd>0?`冷卻 ${me.cd} 回合`:tag(true)}</small>`;
- $('mvCh').innerHTML=`⚡ 蓄力<small>${me.charged?'已蓄力':'下一擊 ×2'}</small>`;
- $('mvPo').innerHTML=`🧪 藥水 ×${s.inv.potion}<small>回復 ${Math.round(me.max*CONFIG.potion.heal)}</small>`;
- document.querySelectorAll('#moves .act').forEach(b=>b.disabled=B.busy);$('mvSp').disabled=B.busy||me.cd>0;$('mvPo').disabled=B.busy||s.inv.potion<1||me.hp>=me.max;$('mvCh').disabled=B.busy||me.charged;
+ $('mvPo').innerHTML=`🧪 回復藥水 ×${s.inv.potion}<small>回復 ${Math.round(me.max*CONFIG.potion.heal)}</small>`;$('mvPo2').innerHTML=`💖 超級藥水 ×${s.inv.potion2||0}<small>回復全部 HP</small>`;
+ $('mvTk').innerHTML=`💥 衝撞<small>${tag(false)}</small>`;$('mvCh').innerHTML=`⚡ 輔助：蓄力<small>${me.charged?'已蓄力':'下一擊 ×2'}</small>`;$('mvSp').innerHTML=`✨ ${SP_NAME[me.el]}<small>${me.cd>0?`冷卻 ${me.cd} 回合`:tag(true)}</small>`;
+ $('mvUlt').innerHTML=`🌟 ${ULT_NAME[me.el]||'大絕招'}<small>${B.ultUsed?'這場用過了':`約 ${Math.round(PC.expectDamage(me,foe,true)*CONFIG.ult.power)}・每場一次`}</small>`;
+ $('mvBag').innerHTML=`🎒 背包<small>🧪×${s.inv.potion} 💖×${s.inv.potion2||0}</small>`;
+ document.querySelectorAll('#moves .act').forEach(b=>b.disabled=B.busy);$('mvSp').disabled=B.busy||me.cd>0;$('mvPo').disabled=B.busy||s.inv.potion<1||me.hp>=me.max;$('mvPo2').disabled=B.busy||(s.inv.potion2||0)<1||me.hp>=me.max;$('mvCh').disabled=B.busy||me.charged;$('mvUlt').disabled=B.busy||B.ultUsed;document.querySelectorAll('#moves [data-mp]').forEach(b=>b.disabled=B.busy);
  $('mvBond').classList.toggle('hidden',!(danger&&!B.bondUsed&&!B.busy&&!B.over))}
 /* 危險判斷：敵人下一擊（用牠最強的招式估算）可能把我打倒 */
 function dangerNow(){const{me,foe}=B;if(me.hp<=0||foe.hp<=0)return false;const g=me.guard;me.guard=false;const e=Math.max(PC.expectDamage(foe,me,false),foe.cd===0?PC.expectDamage(foe,me,true):0);me.guard=g;return e>=me.hp}
@@ -1696,20 +1723,20 @@ async function doMove(a,d,mv,side,boost=1){
  const dside=sideOf(d),A=B.fx[side],D=B.fx[dside];
  if(mv==='guard'){a.guard=true;const h=Math.round(a.max*.08);a.hp=Math.min(a.max,a.hp+h);blog(`${a.name} 擺出防禦姿勢！（回復 ${h}）`);A.anim='happy';A.t0=performance.now();sfx('pet');bUI();await sleep(900);return}
  if(mv==='charge'){if(side==='me')PC.battleCharge(s);a.charged=true;blog(`${a.name} 集中力量…下一擊威力 ×2！`);A.anim='happy';A.t0=performance.now();sfx('wake');spawn('bolt',3,{x:BPOS[side][0],y:BPOS[side][1]-2,vy:-16,jx:20,life:.8,spread:12},bparts);bUI();await sleep(900);return}
- if(mv==='potion'){const h=Math.min(a.max-a.hp,Math.round(a.max*CONFIG.potion.heal));a.hp+=h;s.inv.potion--;save();blog(`${a.name} 喝下回復藥水！HP +${h}`);A.anim='happy';A.t0=performance.now();sfx('level');spawn('heart',4,{x:BPOS[side][0],y:BPOS[side][1]-2,vy:-18,jx:20,life:1,spread:14},bparts);bUI();await sleep(1000);return}
- const sp=mv==='special'||mv==='bond';if(mv==='special')a.cd=3;
- blog(mv==='bond'?`💗 ${a.name} 的羈絆之力爆發！`:`${a.name} 使出${sp?'「'+SP_NAME[a.el]+'」':'撞擊'}！${a.charged?'（蓄力 ×2）':''}`);A.anim='jump';A.t0=performance.now();const dir=side==='foe'?-1:1;A.dx=10*dir;A.dy=-6*dir;sfx(sp?'evolve':'tap');await sleep(220);A.dx=0;A.dy=0;
- const{dmg,mult,crit,endured}=PC.damage(a,d,sp,Math.random,boost);D.flash=performance.now()+500;buzz(mv==='bond'?60:20);
- const tx=BPOS[dside][0],ty=BPOS[dside][1];spawn(mv==='bond'?'heart':sp?SP_ICON[a.el]:'spark',mv==='bond'?10:sp?6:3,{x:tx,y:ty,vy:-20,jx:30,life:.8,spread:16},bparts);sfx('crack');bUI();
+ if(mv==='potion'||mv==='potion2'){const sup=mv==='potion2',h=Math.min(a.max-a.hp,Math.round(a.max*(sup?CONFIG.superPotion.heal:CONFIG.potion.heal)));a.hp+=h;s.inv[mv]--;save();blog(`${a.name} 喝下${sup?'超級藥水，HP 全滿':'回復藥水'}！HP +${h}`);A.anim='happy';A.t0=performance.now();sfx('level');spawn('heart',4,{x:BPOS[side][0],y:BPOS[side][1]-2,vy:-18,jx:20,life:1,spread:14},bparts);bUI();await sleep(1000);return}
+ const sp=mv==='special'||mv==='bond'||mv==='ult';if(mv==='special')a.cd=3;if(mv==='ult')boost*=CONFIG.ult.power;
+ blog(mv==='bond'?`💗 ${a.name} 的羈絆之力爆發！`:mv==='ult'?`🌟 ${a.name} 的大絕招「${ULT_NAME[a.el]||'大絕招'}」！${a.charged?'（蓄力 ×2）':''}`:`${a.name} 使出${sp?'「'+SP_NAME[a.el]+'」':'衝撞'}！${a.charged?'（蓄力 ×2）':''}`);A.anim='jump';A.t0=performance.now();const dir=side==='foe'?-1:1;A.dx=10*dir;A.dy=-6*dir;sfx(sp?'evolve':'tap');await sleep(220);A.dx=0;A.dy=0;
+ const{dmg,mult,crit,endured}=PC.damage(a,d,sp,Math.random,boost);D.flash=performance.now()+500;buzz(mv==='bond'||mv==='ult'?60:20);if(mv==='ult'){flashUntil=performance.now()+400}
+ const tx=BPOS[dside][0],ty=BPOS[dside][1];spawn(mv==='bond'?'heart':sp?SP_ICON[a.el]:'spark',mv==='bond'||mv==='ult'?12:sp?6:3,{x:tx,y:ty,vy:-20,jx:30,life:.8,spread:16},bparts);sfx('crack');bUI();
  await sleep(450);blog(`${crit?'會心一擊！':''}造成 ${dmg} 點傷害${mult>1?'，效果絕佳！':mult<1?'，效果不太好…':''}`);await sleep(750);
  if(endured){blog(`💗 ${d.name} 想起和你的羈絆，撐住了！`);await sleep(1000)}}
 /* 羈絆之力：倒數後 2 秒內連打螢幕，點越多下越強（20 下 2.2 倍…28 下 3 倍） */
-function tapRush(){return new Promise(res=>{const z=$('tapZone'),n=$('tapN'),msg=$('tapMsg');let taps=0,live=false;z.classList.remove('hidden');n.textContent='';
+function tapRush(o={}){return new Promise(res=>{const z=$('tapZone'),n=$('tapN'),msg=$('tapMsg');let taps=0,live=false;z.classList.remove('hidden');n.textContent='';
  const on=e=>{e.preventDefault();if(!live)return;taps++;n.textContent=taps;buzz(8);sfx('tap');spawn('heart',1,{x:20+Math.random()*90,y:30+Math.random()*60,vy:-20,life:.6,spread:4},bparts)};
- z.addEventListener('pointerdown',on);let k=3;msg.textContent='為牠打氣！準備…';n.textContent=k;
- const iv=setInterval(()=>{k--;if(k>0){n.textContent=k;sfx('tap');return}clearInterval(iv);live=true;n.textContent='0';msg.textContent='快點螢幕！連打！';sfx('wake');
-  const T=CONFIG.bond.seconds,t0=performance.now(),cd=setInterval(()=>{const left=Math.max(0,T-(performance.now()-t0)/1000);msg.textContent=`快點螢幕！連打！（${left.toFixed(1)} 秒）`},100);
-  setTimeout(()=>{clearInterval(cd);live=false;z.removeEventListener('pointerdown',on);msg.textContent=`連打 ${taps} 下！威力 ×${PC.bondBoost(taps).toFixed(1)}`;setTimeout(()=>{z.classList.add('hidden');res(taps)},900)},T*1000)},700)})}
+ z.addEventListener('pointerdown',on);let k=3;msg.textContent=o.ready||'為牠打氣！準備…';n.textContent=k;
+ const iv=setInterval(()=>{k--;if(k>0){n.textContent=k;sfx('tap');return}clearInterval(iv);live=true;n.textContent='0';const GO=o.go||'快點螢幕！連打！';msg.textContent=GO;sfx('wake');
+  const T=CONFIG.bond.seconds,t0=performance.now(),cd=setInterval(()=>{const left=Math.max(0,T-(performance.now()-t0)/1000);msg.textContent=`${GO}（${left.toFixed(1)} 秒）`},100);
+  setTimeout(()=>{clearInterval(cd);live=false;z.removeEventListener('pointerdown',on);msg.textContent=o.go?`連打 ${taps} 下！`:`連打 ${taps} 下！威力 ×${PC.bondBoost(taps).toFixed(1)}`;setTimeout(()=>{z.classList.add('hidden');res(taps)},900)},T*1000)},700)})}
 /* 猜拳：敵人攻擊前 2 秒內選一個，回傳 { result, mult, me, foe } */
 const RPS_ICON={rock:'✊',scissors:'✌️',paper:'✋'};
 function rpsRound(){return new Promise(res=>{const z=$('rpsZone'),T=CONFIG.rps.seconds,bar=$('rpsBar').firstElementChild,btns=[...z.querySelectorAll('[data-rps]')];let done=false;
@@ -1722,14 +1749,14 @@ function rpsRound(){return new Promise(res=>{const z=$('rpsZone'),T=CONFIG.rps.s
  btns.forEach(b=>b.onclick=()=>finish(b.dataset.rps));setTimeout(()=>finish(null),T*1000)})}
 async function onMove(mv){if(!B||B.busy||B.over)return;unlockAudio();
  if(mv==='run'){B.busy=true;bUI();blog(`${B.me.name} 逃跑了…`);await sleep(800);endBattle(null);return}
- if(mv==='special'&&B.me.cd>0)return;if(mv==='potion'&&s.inv.potion<1)return;
+ if(mv==='special'&&B.me.cd>0)return;if((mv==='potion'||mv==='potion2')&&(s.inv[mv]||0)<1)return;if(mv==='ult'){if(B.ultUsed)return;B.ultUsed=true}showPanel('mpMain');
  const{me,foe}=B;let boost=1;
  if(mv==='bond'){if(B.bondUsed||!dangerNow())return;const nb=PC.canBond(s);if(nb){blog('💸 '+nb+'…');sfx('no');return}B.bondUsed=true;PC.battleBond(s,Date.now());save();blog(`👏 花 ${CONFIG.bond.cost} 金幣買了加油棒！（之後要休息 ${CONFIG.bond.restHours} 小時才能再冒險）`);B.busy=true;bUI();const taps=await tapRush();boost=PC.bondBoost(taps);blog(`💗 連打 ${taps} 下，威力 ×${boost.toFixed(1)}！`);await sleep(900)}
  B.busy=true;bUI();
- const fm=aiMove(foe),first=mv==='bond'||mv==='guard'||mv==='potion'||me.spd>foe.spd||(me.spd===foe.spd&&Math.random()<.5);
+ const fm=aiMove(foe),first=mv==='bond'||mv==='guard'||mv==='potion'||mv==='potion2'||me.spd>foe.spd||(me.spd===foe.spd&&Math.random()<.5);
  const me2=B.me2&&B.me2.hp>0?B.me2:null,m2=me2?(me2.cd===0&&Math.random()<.5?'special':'tackle'):null;   // 夥伴自己出招
  const mine=[['me',mv]].concat(me2?[['me2',m2]]:[]);
- const order=fm==='guard'&&!['guard','bond'].includes(mv)?[['foe',fm],...mine]:first?[...mine,['foe',fm]]:[['foe',fm],...mine];
+ const order=fm==='guard'&&!['guard','bond','potion','potion2'].includes(mv)?[['foe',fm],...mine]:first?[...mine,['foe',fm]]:[['foe',fm],...mine];
  for(const[side,m]of order){const a=side==='foe'?foe:side==='me'?me:B.me2;if(a.hp<=0)continue;if(foe.hp<=0)break;
   // 敵人打誰：兩隻都在場就隨機選一隻
   const alive=[me,B.me2].filter(f=>f&&f.hp>0);if(!alive.length)break;const d=side==='foe'?alive[Math.floor(Math.random()*alive.length)]:foe;
@@ -1738,7 +1765,7 @@ async function onMove(mv){if(!B||B.busy||B.over)return;unlockAudio();
    if(r.result==='win'){if(m==='special')foe.cd=3;foe.charged=false;blog(`${foe.name} 使出${m==='special'?'「'+SP_NAME[foe.el]+'」':'撞擊'}！但 ${d.name} 靈巧地躲開了！`);B.fx[sideOf(d)].anim='happy';B.fx[sideOf(d)].t0=performance.now();bUI();await sleep(900);continue}
    await doMove(a,d,m,side,r.mult);if(d.hp<=0)B.fx[sideOf(d)].faint=performance.now();continue}
   await doMove(a,d,m,side,side==='me'?boost:1);if(d.hp<=0&&d!==foe)B.fx[sideOf(d)].faint=performance.now();if(foe.hp<=0)break;
-  if(side!=='foe'&&['tackle','special','bond'].includes(m)&&a.stunChance&&Math.random()<a.stunChance){foe.stun=1;blog(`⚡ 電流竄過！${foe.name} 麻痺了，下一回合不能動！`);spawn('bolt',4,{x:94,y:44,vy:-10,jx:20,life:.8,spread:12},bparts);sfx('wake');bUI();await sleep(800)}}
+  if(side!=='foe'&&['tackle','special','bond','ult'].includes(m)&&a.stunChance&&Math.random()<a.stunChance){foe.stun=1;blog(`⚡ 電流竄過！${foe.name} 麻痺了，下一回合不能動！`);spawn('bolt',4,{x:94,y:44,vy:-10,jx:20,life:.8,spread:12},bparts);sfx('wake');bUI();await sleep(800)}}
  me.cd=Math.max(0,me.cd-1);foe.cd=Math.max(0,foe.cd-1);if(B.me2)B.me2.cd=Math.max(0,B.me2.cd-1);
  if(foe.hp<=0){B.fx.foe.faint=performance.now();blog(`${foe.name} 倒下了！`);await sleep(900);endBattle(true);return}
  if(me.hp<=0&&B.me2&&B.me2.hp>0){blog(`${me.name} 沒力氣了…換 ${B.me2.name} 上場！`);B.fx.me.faint=performance.now();await sleep(1100);   // 前面那隻倒下：換夥伴繼續
@@ -1784,6 +1811,9 @@ function drawBattle(now){if(!B)return;const c=bctx;c.drawImage(makeArena(B.arena
   const ic=ICV[p.ic];c.globalAlpha=p.t>p.life-.3?Math.max(0,(p.life-p.t)/.3):1;c.drawImage(ic,Math.round(p.x-ic.width/2),Math.round(p.y-ic.height/2));c.globalAlpha=1}
 }
 document.querySelectorAll('[data-mv]').forEach(b=>b.addEventListener('click',()=>onMove(b.dataset.mv)));
+/* V1.40 戰鬥選單：技能／防禦／背包／逃跑，技能和背包點開是第二層 */
+function showPanel(id){document.querySelectorAll('#moves .mpanel').forEach(p=>p.classList.toggle('hidden',p.id!==id))}
+document.querySelectorAll('#moves [data-mp]').forEach(b=>b.addEventListener('click',()=>{if(B&&B.busy)return;unlockAudio();sfx('tap');showPanel(b.dataset.mp)}));
 
 $('bDone').onclick=closeBattle;
 
