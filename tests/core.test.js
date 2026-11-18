@@ -51,15 +51,15 @@ t('時間倒退：不回溯、記錄警告', () => { const s = hatched(); s.hung
 t('大幅快轉：照上限處理並提示', () => { const s = hatched(); const r = C.applyTime(s, T0 + 40 * 24 * H); assert.equal(r.warn, 'jump'); assert.equal(r.eff, 12); });
 
 // 5. 進化門檻邊界
-t('幼年期：4h 與 100 XP 都要達到', () => {
-  const s = hatched(); s.xp = 100; assert.equal(C.checkStages(s, T0 + 4 * H - 1).length, 0);
-  s.xp = 99; assert.equal(C.checkStages(s, T0 + 4 * H).length, 0); s.xp = 100; assert.equal(C.checkStages(s, T0 + 4 * H)[0].to, 'juvenile');
+t('幼年期：4h 與 150 XP 都要達到', () => {
+  const s = hatched(); s.xp = 150; assert.equal(C.checkStages(s, T0 + 4 * H - 1).length, 0);
+  s.xp = 149; assert.equal(C.checkStages(s, T0 + 4 * H).length, 0); s.xp = 150; assert.equal(C.checkStages(s, T0 + 4 * H)[0].to, 'juvenile');
 });
-t('少年期：12h 與 300 XP 都要達到', () => {
-  const s = hatched(); s.xp = 300; assert.equal(C.checkStages(s, T0 + 12 * H - 1).map(x => x.to).join(), 'juvenile');
-  s.xp = 299; assert.equal(C.checkStages(s, T0 + 12 * H).length, 0); s.xp = 300; assert.equal(C.checkStages(s, T0 + 12 * H)[0].to, 'adolescent');
+t('少年期：12h 與 450 XP 都要達到', () => {
+  const s = hatched(); s.xp = 450; assert.equal(C.checkStages(s, T0 + 12 * H - 1).map(x => x.to).join(), 'juvenile');
+  s.xp = 449; assert.equal(C.checkStages(s, T0 + 12 * H).length, 0); s.xp = 450; assert.equal(C.checkStages(s, T0 + 12 * H)[0].to, 'adolescent');
 });
-t('成年期：48h 與 800 XP 邊界', () => { const s = hatched(); s.xp = 799; assert.equal(C.checkStages(s, T0 + 48 * H).map(x => x.to).join(), 'juvenile,adolescent'); s.xp = 800; assert.equal(C.checkStages(s, T0 + 48 * H)[0].to, 'adult'); });
+t('成年期：48h 與 1200 XP 邊界', () => { const s = hatched(); s.xp = 1199; assert.equal(C.checkStages(s, T0 + 48 * H).map(x => x.to).join(), 'juvenile,adolescent'); s.xp = 1200; assert.equal(C.checkStages(s, T0 + 48 * H)[0].to, 'adult'); });
 t('一次跨越多個門檻時依序記錄', () => { const s = hatched(); s.xp = 5000; const tr = C.checkStages(s, T0 + 500 * H); assert.deepEqual(tr.map(x => x.to), ['juvenile', 'adolescent', 'adult']); assert.ok(s.journal.length >= 3); });
 
 // 6. 三種路線與平手處理可重現
@@ -308,7 +308,7 @@ t('新路線點數來源：步數→土、進球→鳥、蓄力與羈絆→電�
 });
 t('屬性在蛋裡就決定：孵化就有屬性，長到成年、高階都不會變', () => {
   for (let i = 0; i < 30; i++) { const s = C.fresh(T0); const el = C.genomeFromId(C.gidOf(s)).el; assert.ok(C.EL_LIST.includes(el)); C.hatch(s, T0); assert.equal(s.route, el);
-    s.xp = 900; s.path.flame = 999; C.checkStages(s, T0 + 50 * H); assert.equal(s.stage, 'adult'); assert.equal(s.route, el); }
+    s.xp = 1300; s.path.flame = 999; C.checkStages(s, T0 + 50 * H); assert.equal(s.stage, 'adult'); assert.equal(s.route, el); }
 });
 t('7 種屬性的蛋都會出現（分布大致平均）', () => { const c = {}; for (let i = 0; i < 7000; i++) { const el = C.makeGenome(i * 2654435761 >>> 0).el; c[el] = (c[el] || 0) + 1; } for (const el of C.EL_LIST) assert.ok(c[el] > 800 && c[el] < 1200, el + ':' + c[el]); });
 t('加上屬性不會改變舊蛋的外觀', () => { const G = C.makeGenome(12345); assert.equal(G.hue, C.makeGenome(12345).hue); const { el, ...rest } = G; assert.ok(el); assert.ok(!('el' in rest)); });
@@ -333,8 +333,8 @@ t('存錢筒：等級越高存越快、最多 12 小時、心情低不存、可�
   const c0 = s.coins, got = C.collectPiggy(s, T0 + 40 * 3600e3); assert.ok(got.ok); assert.equal(s.coins, c0 + got.n); assert.ok(s.piggy < 1);
   s.route = 'metal'; assert.ok(Math.abs(C.piggyRate(s) - r * 1.5) < 1e-9); s.xp = 1e6; assert.ok(Math.abs(C.piggyRate(s) - (2 + 0.5 * 30) * 1.5) < 1e-9);
   const q = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(typeof q.piggy, 'number'); s.mood = 10; s.piggy = 0; s.lastTick = T0; C.applyTime(s, T0 + 3600e3); assert.equal(s.piggy, 0); });
-t('高階（V1.37）：168h、2000 XP、專屬任務（成年期才開始算）、3 個終極素材', () => {
-  const s = hatched(); s.xp = 2000; s.route = 'flame'; s.adv.wins = 99; const tr = C.checkStages(s, T0 + 168 * H);
+t('高階（V1.37）：168h、3000 XP、專屬任務（成年期才開始算）、3 個終極素材', () => {
+  const s = hatched(); s.xp = 3000; s.route = 'flame'; s.adv.wins = 99; const tr = C.checkStages(s, T0 + 168 * H);
   assert.deepEqual(tr.map(x => x.to), ['juvenile', 'adolescent', 'adult']); assert.equal(s.ascBase.wins, 99);   // 成年前的勝場不算
   s.inv.mats.flame = 3; assert.equal(C.checkStages(s, T0 + 168 * H).length, 0); assert.equal(C.ascendInfo(s).task.have, 0);
   s.adv.wins = 128; assert.equal(C.checkStages(s, T0 + 168 * H).length, 0); s.adv.wins = 129; s.inv.mats.flame = 2; assert.equal(C.checkStages(s, T0 + 168 * H).length, 0);
@@ -342,8 +342,8 @@ t('高階（V1.37）：168h、2000 XP、專屬任務（成年期才開始算）�
 });
 t('專屬任務七屬性：水洗澡 30、草收成 30、土 6 萬步或打贏 20 隻土屬性怪…', () => {
   const need = { flame: s => { s.adv.wins += 30; }, tide: s => { s.washes += 30; }, forest: s => { s.harvests += 30; }, earth: s => { s.earthWins += 20; }, bird: s => { s.ball.goals += 30; }, elec: s => { s.bondUses += 5; }, metal: s => { s.cleanups += 40; } };
-  for (const r in need) { const s = hatched(); s.xp = 2000; s.route = r; s.inv.mats[r] = 3; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult', r); need[r](s); C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended', r); }
-  const e = hatched(); e.xp = 2000; e.route = 'earth'; e.inv.mats.earth = 3; C.checkStages(e, T0 + 200 * H); e.steps.total += 60000; C.checkStages(e, T0 + 200 * H); assert.equal(e.stage, 'ascended');
+  for (const r in need) { const s = hatched(); s.xp = 3000; s.route = r; s.inv.mats[r] = 3; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult', r); need[r](s); C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended', r); }
+  const e = hatched(); e.xp = 3000; e.route = 'earth'; e.inv.mats.earth = 3; C.checkStages(e, T0 + 200 * H); e.steps.total += 60000; C.checkStages(e, T0 + 200 * H); assert.equal(e.stage, 'ascended');
   const w = hatched(); w.route = 'tide'; w.stage = 'adult'; C.checkStages(w, T0); w.clean = 10; w.coins = 99; assert.ok(C.act(w, 'wash', T0).ok); assert.equal(C.ascendInfo(w).task.have, 1);
 });
 t('5 關小王、10 關大王；第 10／20／30 關大王各掉一次自己屬性的終極素材', () => {
@@ -357,7 +357,7 @@ t('第 40 關大王：星辰之心＋碎片；碎片可以抵終極素材；星�
   const b = hatched(); b.route = 'bird'; b.adv.stage = 41; const win = (n, rr = () => .99) => { b.energy = 100; const st = C.startAdventure(b, n, T0); return C.finishAdventure(b, n, 'win', st.full, T0, rr); };
   const o = win(40); assert.equal(o.heart, 1); assert.equal(o.shard, 1); assert.equal(b.inv.hearts, 1); assert.equal(b.inv.shards, 1);
   assert.equal(win(40).shard, undefined); assert.equal(win(40, () => .1).shard, 1); assert.equal(b.inv.shards, 2); assert.equal(b.inv.hearts, 1);
-  const s = hatched(); s.xp = 2000; s.route = 'bird'; C.checkStages(s, T0 + 200 * H); s.ball.goals += 30; s.inv.mats.bird = 2; s.inv.shards = 1; C.checkStages(s, T0 + 200 * H);
+  const s = hatched(); s.xp = 3000; s.route = 'bird'; C.checkStages(s, T0 + 200 * H); s.ball.goals += 30; s.inv.mats.bird = 2; s.inv.shards = 1; C.checkStages(s, T0 + 200 * H);
   assert.equal(s.stage, 'ascended'); assert.equal(s.inv.mats.bird, 0); assert.equal(s.inv.shards, 0);
   assert.match(C.canAwaken(s), /星辰之心/); s.inv.hearts = 1; const r0 = C.piggyRate(s); assert.ok(C.awaken(s, T0).ok); assert.ok(s.awake); assert.equal(s.inv.hearts, 0); assert.ok(Math.abs(C.piggyRate(s) - r0 * 1.5) < 1e-9);
   assert.ok(C.sanitize(JSON.parse(JSON.stringify(s)), T0).awake);

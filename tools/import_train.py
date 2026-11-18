@@ -27,7 +27,7 @@ for nm, b in [('bag_r0', (75, 362, 220, 700)), ('bag_b0', (645, 362, 795, 700))]
 for i, b in enumerate([(1265, 355, 1480, 495), (1495, 355, 1705, 495), (1730, 355, 1950, 495)]): cut(a, m, b, 16, f'frisbee{i}')
 cut(a, m, (1120, 505, 1375, 715), 20, 'bubble')
 h = np.asarray(Image.open('art/src/train/hoop.png').convert('RGB')); hm = mask_of(h)
-cut(h, hm, (140, 165, 600, 1065), 67, 'hoop0'); cut(h, hm, (720, 165, 1185, 1065), 67, 'hoop1')
+pass
 
 # 背景：縮成遊戲像素、32 色、不抖色
 for nm, W in [('gym_main', 128), ('gym_hook', 166), ('waterfall', 128)]:
@@ -69,4 +69,4 @@ for nm, b in [('bag_r0', (75, 362, 220, 700)), ('bag_b0', (645, 362, 795, 700))]
     Image.fromarray(q).save(f'sprites/train/{nm}.png'); print(nm)
 # 籃框也用保留描邊的切法；左右鏡像（柱子在右邊）
 H4 = np.asarray(Image.open('art/src/train/hoop.png').convert('RGBA')); hm2 = H4[..., 3] > 128 if (H4[..., 3] < 20).mean() > .2 else bgmask(H4[..., :3])
-q = cut2(H4[..., :3], hm2, (140, 165, 600, 1065), 67, 'hoop0'); Image.fromarray(q[:, ::-1].copy()).save('sprites/train/hoop0.png'); print('hoop0 mirrored', q.shape)
+q = cut2(H4[..., :3], hm2, (140, 165, 600, 1065), 67, 'hoop0'); Image.fromarray(q[:, ::-1].copy()).save('sprites/train/hoop_r.png'); print('hoop0 mirrored', q.shape)

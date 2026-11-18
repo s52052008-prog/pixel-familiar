@@ -29,7 +29,7 @@ const CONFIG = {
   steps: { per: 1000, xpPer: 10, forestEvery: 2000, dayCap: 50000, tier: 100000, tierCoins: 100, backDays: 7 },
   daily: { coins: 10, food: 1 },
   gather: { cooldownMin: 2, food: 1 },
-  stages: { juvenile: { hours: 4, xp: 100 }, adolescent: { hours: 12, xp: 300 }, adult: { hours: 48, xp: 800 }, ascended: { hours: 168, xp: 2000 } },   // V1.20：嬰兒期＋門檻提高
+  stages: { juvenile: { hours: 4, xp: 150 }, adolescent: { hours: 12, xp: 450 }, adult: { hours: 48, xp: 1200 }, ascended: { hours: 168, xp: 3000 } },   // V1.65 成長經驗門檻 ×1.5   // V1.20：嬰兒期＋門檻提高
   routeTie: ['tide', 'forest', 'flame', 'earth', 'bird', 'elec', 'metal'],   // 平手時的固定順序（GDD 前三個 + V1.11 新增四個）
   bondTiers: [20, 50, 80],
   moonspringBond: 60,
@@ -187,7 +187,8 @@ function hourIn(ts, tz = CONFIG.tz) {
 }
 
 const MAX_LV = 30, XPK = 7.5;   // V1.44 等級上限 Lv.30（練滿）；升級曲線：需要經驗＝7.5×(等級−1)²（原本 8）
-const level = xp => Math.min(MAX_LV, 1 + Math.floor(Math.sqrt(Math.max(0, xp) / XPK)));   // 顯示與戰鬥用等級，由總 XP 推算
+const level = xp => Math.min(MAX_LV, 1 + Math.floor(Math.sqrt(Math.max(0, xp) / XPK)));
+const toNextLv = xp => { const L = level(xp); return L >= MAX_LV ? 0 : Math.max(1, Math.ceil(XPK * L * L) - xp); };   // V1.65 升下一級還差多少經驗   // 顯示與戰鬥用等級，由總 XP 推算
 
 /* ---------------- 物種基因（V1.4 起；順序不可更改） ---------------- */
 function rng(seed) { let a = seed >>> 0; return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -1085,7 +1086,7 @@ const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, S
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
-  fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  toNextLv, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
