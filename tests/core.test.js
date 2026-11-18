@@ -392,6 +392,9 @@ t('V1.53 王雙屬性、龍屬性全抗性', () => {
   for (const n in B) { const f = C.foeFighter(+n, 10); assert.deepEqual([f.el2, f.el].sort(), B[n].slice().sort()); }
   const w = { el: 'water' }; assert.equal(C.elemMult(w, { el: 'earth', el2: 'fire' }, true), 1.96); assert.equal(C.elemMult(w, { el: 'fire', el2: 'dragon' }, true), 1.05);
   assert.equal(C.elemMult({ el: 'leaf' }, { el: 'water', el2: 'dragon' }, true), 1.05); assert.equal(C.elemMult({ el: 'fire' }, { el: 'water', el2: 'dragon' }, true), .563); assert.equal(C.elemMult({ el: 'fire' }, { el: 'leaf' }, false), 1); });
+t('V1.54 王的絕招設定齊全；骸骨鐵壁傷害減半並反彈 30%', () => { for (const n of [5, 10, 15, 20, 25, 30, 35, 40]) { const U = C.CONFIG.bossUlt[n]; assert.ok(U && U.key && U.name && U.tip); }
+  const w = { hp: 1e4, max: 1e4, def: 10, wallT: 2, wallCut: .5, wallReflect: .3 }, n0 = { hp: 1e4, max: 1e4, def: 10 }, a = { atk: 200, el: 'fire' };
+  const r1 = C.damage(a, w, false, () => .5), r0 = C.damage(a, n0, false, () => .5); assert.equal(r1.dmg, Math.round(r0.dmg * .5)); assert.equal(r1.reflect, Math.round(r1.dmg * .3)); assert.equal(r0.reflect, 0); });
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

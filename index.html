@@ -73,6 +73,7 @@ img.uic{width:21px;height:21px;vertical-align:-5px;margin-right:5px;display:inli
 .goal .btn{flex:0 0 auto;min-width:72px}.goal.done{opacity:.6}.tool.big{background:#5a3f78;box-shadow:inset 0 0 0 2px #8a6ab0;font-size:14px;padding:11px 2px}
 #battle{position:fixed;inset:0;z-index:15;background:#0e1528;overflow:auto;-webkit-overflow-scrolling:touch}
 #battle .in{max-width:480px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 14px);display:flex;flex-direction:column;gap:8px}
+#bBanner{position:absolute;left:4%;right:4%;top:3%;text-align:center;font-weight:900;font-size:22px;line-height:1.25;color:#fff;padding:8px 6px;border:3px solid currentColor;background:#1a1008d8;text-shadow:0 2px 0 #000;pointer-events:none;animation:bpop .35s ease-out}#bBanner small{display:block;font-size:13px;color:#fff3d0;font-weight:700}@keyframes bpop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
 #bcv{display:block;width:100%;aspect-ratio:128/112;image-rendering:pixelated;image-rendering:crisp-edges;border:3px solid var(--line);box-shadow:0 0 0 2px var(--hi)}
 .hp{background:var(--panel);border:2px solid var(--line);box-shadow:inset 0 0 0 2px var(--hi);padding:6px 9px;font-size:13px}
 .hp .t{display:flex;justify-content:space-between;font-weight:700}.hp .bar i{background:#6ad06a}.hp.foe .bar i{background:#e86a6a}
@@ -220,7 +221,7 @@ body.rm *{transition:none!important;animation:none!important}
 </div>
 <div id="battle" class="hidden"><div class="in">
  <div class="hp foe"><div class="t"><span id="fName"></span><span id="fHp"></span></div><div class="bar"><i id="fBar"></i></div></div>
- <canvas id="bcv" width="128" height="112"></canvas>
+ <div style="position:relative"><canvas id="bcv" width="128" height="112"></canvas><div id="bBanner" class="hidden"></div></div>
  <div class="hp"><div class="t"><span id="mName"></span><span id="mHp"></span></div><div class="bar"><i id="mBar"></i></div></div>
  <div id="blog"></div>
  <button class="btn bond hidden" id="mvBond" data-mv="bond">💗 羈絆之力！買加油棒為牠打氣（10 金幣・連打螢幕）</button>
@@ -259,7 +260,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.53.0';
+const VERSION='1.54.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1751,6 +1752,7 @@ function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');retu
  if(duo){foe.max=foe.hp=Math.round(foe.max*CONFIG.pair.foeHp);save()}
  const fx0=()=>({dx:0,dy:0,flash:0,faint:0,anim:null,t0:0});
  B={n,full:r.full,arena:arenaFor(n,foe),bondUsed:false,ultUsed:false,me,me2,duo,foe,busy:false,over:false,fx:{me:fx0(),me2:fx0(),foe:fx0()}};bparts.length=0;
+ {const U=CONFIG.bossUlt[n];if(U){foe.ult=Object.assign({},U,BULT_FX[U.key]);foe.ultState='ready';if(U.key==='rebirth')foe.revive=U.hp}}$('bBanner').classList.add('hidden');
  $('battle').classList.remove('hidden');$('bResult').classList.add('hidden');$('moves').classList.remove('hidden');showPanel('mpMain');
  $('mvSp').textContent='✨ '+SP_NAME[me.el];blog(`📍 ${ARENA_NAME[arenaFor(n,foe)]}\n${foe.name} 出現了！（${foe.elTxt||EL_NAME[foe.el]} Lv.${foe.level}）${duo?`\n🐾 ${me.name} 和 ${me2.name} 一起上場！`:s.pair?`\n（${s.pair.name} 體力不夠，留在家休息）`:''}`);bUI();sfx('play')}
 function blog(t){$('blog').textContent=t}
@@ -1809,8 +1811,8 @@ function makeArena(k){if(ARENA_CACHE[k])return ARENA_CACHE[k];const cv=document.
  return ARENA_CACHE[k]=cv}
 /* ---------------- 戰鬥介面 ---------------- */
 function bUI(){const{me,foe}=B,danger=dangerNow();
- $('fName').textContent=`${foe.name}  Lv.${foe.level} ${foe.elTxt||EL_NAME[foe.el]}`;$('fHp').textContent=`${foe.hp}/${foe.max}`;$('fBar').style.width=foe.hp/foe.max*100+'%';
- $('mName').textContent=`${me.name}  Lv.${me.level} ${EL_NAME[me.el]}${tier()?' '+'✦'.repeat(tier()):''}${me.charged?' ⚡蓄力中':''}${danger?'　⚠️ 危險！':''}`;$('mHp').textContent=`${me.hp}/${me.max}${B.me2?`　🐾${B.me2.name} ${Math.max(0,B.me2.hp)}/${B.me2.max}`:''}`;$('mBar').style.width=me.hp/me.max*100+'%';
+ $('fName').textContent=`${foe.name}  Lv.${foe.level} ${foe.elTxt||EL_NAME[foe.el]}${bossStat(foe)}`;$('fHp').textContent=`${foe.hp}/${foe.max}`;$('fBar').style.width=foe.hp/foe.max*100+'%';
+ $('mName').textContent=`${me.name}  Lv.${me.level} ${EL_NAME[me.el]}${tier()?' '+'✦'.repeat(tier()):''}${me.charged?' ⚡蓄力中':''}${petStat(me)}${danger?'　⚠️ 危險！':''}`;$('mHp').textContent=`${me.hp}/${me.max}${B.me2?`　🐾${B.me2.name} ${Math.max(0,B.me2.hp)}/${B.me2.max}${petStat(B.me2)}`:''}`;$('mBar').style.width=me.hp/me.max*100+'%';
  $('mBar').style.background=me.hp/me.max<.3?'#e86a6a':'';
  const tag=(sp)=>{const e=PC.expectDamage(me,foe,sp),m=PC.elemMult(me,foe,sp),pct=Math.round(e/Math.max(1,foe.hp)*100);return`約 ${e}${m>1?' ▲':m<1?' ▼':''}${pct>=100?'（可擊倒）':''}`};
  $('mvPo').innerHTML=`🧪 回復藥水 ×${s.inv.potion}<small>回復 ${Math.round(me.max*CONFIG.potion.heal)}</small>`;$('mvPo2').innerHTML=`💖 超級藥水 ×${s.inv.potion2||0}<small>回復全部 HP</small>`;
@@ -1825,6 +1827,37 @@ function aiMove(f){const me=B&&B.me;   // 野生怪會看情況出招：能打�
  if(me&&f.cd===0&&PC.expectDamage(f,me,true)>=me.hp)return'special';if(me&&PC.expectDamage(f,me,false)>=me.hp)return'tackle';
  if(f.hp<f.max*.3&&Math.random()<.4)return'guard';if(!f.charged&&f.hp>f.max*.4&&Math.random()<.22)return'charge';if(f.cd===0&&Math.random()<.65)return'special';return'tackle'}
 const BPOS={foe:[94,50],me:[34,82],me2:[60,74]};
+/* 👑 V1.54 王的專屬絕招：圖示、顏色、特效 */
+const BULT_FX={moss:{icon:'🌿',col:'#5fe08a',ic:'leaf'},charge:{icon:'🌋',col:'#ff6a2a',ic:'rock'},wall:{icon:'🛡️',col:'#f0e6c8',ic:'shard'},curse:{icon:'🔮',col:'#b070ff',ic:'star'},doom:{icon:'💀',col:'#ff4060',ic:'spark'},rebirth:{icon:'🔥',col:'#ffb030',ic:'fire'},breath:{icon:'🐲',col:'#ff5a2a',ic:'fire'},zero:{icon:'❄️',col:'#7fe0ff',ic:'bubble'}};
+let bannerT=0;function bossBanner(txt,col,sub=''){const b=$('bBanner');b.innerHTML=txt+(sub?`<small>${sub}</small>`:'');b.style.color=col;b.classList.remove('hidden');b.style.animation='none';void b.offsetWidth;b.style.animation='';clearTimeout(bannerT);bannerT=setTimeout(()=>b.classList.add('hidden'),sub?2600:1700)}
+function bossFlash(col,ms=600){B.tint={col,until:performance.now()+ms};B.shake=performance.now()+Math.min(ms,500)}
+async function bossHit(f,d,mult,ic,msg){const ds=sideOf(d),[tx,ty]=BPOS[ds];blog(msg);B.fx.foe.anim='jump';B.fx.foe.t0=performance.now();await sleep(250);
+ const r=PC.damage(f,d,false,Math.random,mult);B.fx[ds].flash=performance.now()+600;bossFlash(f.ult.col);buzz(80);sfx('crack');spawn(ic,12,{x:tx,y:ty,vy:-24,jx:36,life:1,spread:20},bparts);bUI();
+ await sleep(500);blog(`${msg}\n造成 ${r.dmg} 點傷害！`);if(r.endured){await sleep(700);blog(`💗 ${d.name} 想起和你的羈絆，撐住了！`)}if(r.revived){await sleep(700);blog(`🪶 不死鳥羽毛發光！${d.name} 浴火重生，HP 回到 ${d.hp}！`);B.fx[ds].faint=0}await sleep(700)}
+async function bossAct(f,d,m){const U=f.ult,[fx,fy]=BPOS.foe,ds=sideOf(d),[tx,ty]=BPOS[ds];f.aura=null;
+ if(m==='bossult'){f.ultState='done';bossBanner(`${U.icon} ${U.name}！`,U.col,f.name.replace(/^👑大王 |^小王 /,''));blog(`👑 ${f.name} 使出專屬絕招「${U.name}」！`);B.fx.foe.anim='jump';B.fx.foe.t0=performance.now();sfx('evolve');buzz(60);bossFlash(U.col,800);
+  spawn(U.ic,10,{x:fx,y:fy,vy:-20,jx:40,life:1.1,spread:26},bparts);await sleep(1100);
+  if(U.key==='moss'){f.mossT=U.turns;spawn('leaf',16,{x:fx,y:fy+6,vy:-16,jx:50,life:1.4,spread:30},bparts);blog(`🌿 ${f.name} 全身長出苔蘚！接下來 ${U.turns} 回合每回合回復 ${Math.round(U.heal*100)}% HP`)}
+  else if(U.key==='charge')await bossHit(f,d,U.mult,'rock',`🌋 ${f.name} 帶著熔岩全力衝撞 ${d.name}！`);
+  else if(U.key==='wall'){f.wallT=U.turns;f.wallCut=U.cut;f.wallReflect=U.reflect;spawn('shard',14,{x:fx,y:fy,vy:-10,jx:50,life:1.2,spread:30},bparts);blog(`🛡️ ${f.name} 舉起骸骨鐵壁！${U.turns} 回合內受到的傷害減半，還會反彈 ${Math.round(U.reflect*100)}%`)}
+  else if(U.key==='curse'){for(const t of[B.me,B.me2])if(t&&t.hp>0){t.curseT=U.turns;const[cx,cy]=BPOS[sideOf(t)];spawn('star',8,{x:cx,y:cy-12,vy:-8,jx:30,life:1.2,spread:16},bparts)}blog(`🔮 紫色的詛咒纏上了你的幻獸！${U.turns} 回合內攻擊有 ${Math.round(U.miss*100)}% 會打空`)}
+  else if(U.key==='doom'){d.doomT=U.turns;d.doomPct=U.pct;spawn('spark',10,{x:tx,y:ty-20,vy:-6,jx:20,life:1.2,spread:10},bparts);blog(`💀 ${d.name} 頭上出現死亡倒數「${U.turns}」！倒數完會受到最大 HP ${Math.round(U.pct*100)}% 的傷害`)}
+  else if(U.key==='breath'){f.breathN=U.hits-1;await bossHit(f,d,U.mult,'fire',`🐲 ${f.name} 噴出灼熱的龍炎！（閃不掉）`)}
+  else if(U.key==='zero'){d.frozen=1;f.zeroNext=true;f.zeroTarget=d;spawn('bubble',14,{x:tx,y:ty,vy:-10,jx:40,life:1.3,spread:24},bparts);sfx('crack');blog(`❄️ ${d.name} 被凍成冰塊了！下一回合動不了，還會受到 ${U.mult} 倍冰爆…`)}}
+ else if(m==='breath2'){f.breathN--;bossBanner('🐲 龍炎吐息・第二波！',U.col);await bossHit(f,d,U.mult,'fire',`🐲 ${f.name} 再次噴出龍炎！（閃不掉）`)}
+ else if(m==='zerohit'){f.zeroNext=false;f.zeroTarget=null;bossBanner('❄️ 冰爆！',U.col);await bossHit(f,d,U.mult,'shard',`❄️ ${f.name} 對冰凍的 ${d.name} 發動冰爆！`)}
+ bUI();await sleep(400)}
+/* 每回合結束：苔蘚回血、鐵壁／詛咒倒數、死亡宣告、血量過半時預告絕招 */
+async function bossTick(){const f=B.foe,U=f.ult;if(!U||f.hp<=0)return;const[fx,fy]=BPOS.foe;
+ if(f.mossT>0){f.mossT--;const h=Math.min(f.max-f.hp,Math.round(f.max*U.heal));if(h>0){f.hp+=h;spawn('leaf',6,{x:fx,y:fy,vy:-14,jx:30,life:1,spread:20},bparts);blog(`🌿 苔蘚再生：${f.name} 回復 ${h} HP（還剩 ${f.mossT} 回合）`);bUI();await sleep(800)}}
+ if(f.wallT>0){f.wallT--;if(!f.wallT){blog(`🛡️ ${f.name} 的骸骨鐵壁消失了！`);await sleep(700)}}
+ for(const t of[B.me,B.me2]){if(!t||t.hp<=0)continue;if(t.curseT>0){t.curseT--;if(!t.curseT){blog(`✨ ${t.name} 的詛咒解除了！`);await sleep(600)}}
+  if(t.doomT>0){t.doomT--;if(!t.doomT){const dm=Math.round(t.max*t.doomPct);t.hp=Math.max(0,t.hp-dm);bossBanner('💀 死亡宣告！',U.col);bossFlash(U.col,700);B.fx[sideOf(t)].flash=performance.now()+700;sfx('crack');buzz(80);blog(`💀 死亡宣告發動！${t.name} 受到 ${dm} 點傷害！`);bUI();await sleep(1200)}else{blog(`💀 ${t.name} 的死亡倒數：${t.doomT}`);bUI();await sleep(600)}}}
+ if(f.ultState==='ready'&&f.hp<=f.max/2){
+  if(U.key==='rebirth'){f.ultState='done';f.aura=U.col;bossBanner('🔥 火焰越燒越旺…',U.col,U.tip);blog(`🔥 ${f.name} 身上的火焰越燒越旺……\n💡 ${U.tip}`);sfx('wake');await sleep(1500)}
+  else{f.ultState='warned';f.aura=U.col;bossBanner(`⚠️ ${f.name.replace(/^👑大王 |^小王 /,'')} 準備使出「${U.name}」！`,U.col,U.tip);blog(`⚠️ ${f.name} 正在凝聚力量，準備使出「${U.name}」！\n💡 ${U.tip}`);sfx('wake');buzz(40);spawn(U.ic,8,{x:fx,y:fy,vy:-14,jx:30,life:1,spread:24},bparts);await sleep(1800)}}}
+function bossStat(f){const L=[];if(f.ultState==='warned')L.push('⚠️絕招準備中');if(f.mossT)L.push('🌿再生'+f.mossT);if(f.wallT)L.push('🛡️鐵壁'+f.wallT);if(f.breathN>0)L.push('🐲吐息');if(f.zeroNext)L.push('❄️冰爆準備');if(f.ult&&f.ult.key==='rebirth'&&f.revive)L.push('🔥可重生');return L.length?' '+L.join(' '):''}
+function petStat(t){if(!t)return'';const L=[];if(t.curseT)L.push('😵詛咒'+t.curseT);if(t.doomT)L.push('💀倒數'+t.doomT);if(t.frozen)L.push('❄️冰凍');return L.length?' '+L.join(' '):''}
 const sideOf=f=>f===B.foe?'foe':f===B.me?'me':'me2';
 async function doMove(a,d,mv,side,boost=1){
  const dside=sideOf(d),A=B.fx[side],D=B.fx[dside];
@@ -1833,11 +1866,13 @@ async function doMove(a,d,mv,side,boost=1){
  if(mv==='potion'||mv==='potion2'){const sup=mv==='potion2',h=Math.min(a.max-a.hp,Math.round(a.max*(sup?CONFIG.superPotion.heal:CONFIG.potion.heal)));a.hp+=h;s.inv[mv]--;save();blog(`${a.name} 喝下${sup?'超級藥水，HP 全滿':'回復藥水'}！HP +${h}`);A.anim='happy';A.t0=performance.now();sfx('level');spawn('heart',4,{x:BPOS[side][0],y:BPOS[side][1]-2,vy:-18,jx:20,life:1,spread:14},bparts);bUI();await sleep(1000);return}
  const sp=mv==='special'||mv==='bond'||mv==='ult';if(mv==='special')a.cd=3;if(sp&&a.el2&&a.el2!=='dragon'&&Math.random()<.5){const e=a.el;a.el=a.el2;a.el2=e}   // V1.53 雙屬性的王：屬性技隨機用其中一個屬性if(mv==='ult')boost*=CONFIG.ult.power;
  blog(mv==='bond'?`💗 ${a.name} 的羈絆之力爆發！`:mv==='ult'?`🌟 ${a.name} 的大絕招「${ULT_NAME[a.el]||'大絕招'}」！${a.charged?'（蓄力 ×2）':''}`:`${a.name} 使出${sp?'「'+SP_NAME[a.el]+'」':'衝撞'}！${a.charged?'（蓄力 ×2）':''}`);A.anim='jump';A.t0=performance.now();const dir=side==='foe'?-1:1;A.dx=10*dir;A.dy=-6*dir;sfx(sp?'evolve':'tap');await sleep(220);A.dx=0;A.dy=0;
- const{dmg,mult,crit,endured,revived}=PC.damage(a,d,sp,Math.random,boost);D.flash=performance.now()+500;buzz(mv==='bond'||mv==='ult'?60:20);if(mv==='ult'){flashUntil=performance.now()+400}
+ const{dmg,mult,crit,endured,revived,reflect}=PC.damage(a,d,sp,Math.random,boost);D.flash=performance.now()+500;buzz(mv==='bond'||mv==='ult'?60:20);if(mv==='ult'){flashUntil=performance.now()+400}
  const tx=BPOS[dside][0],ty=BPOS[dside][1];spawn(mv==='bond'?'heart':sp?SP_ICON[a.el]:'spark',mv==='bond'||mv==='ult'?12:sp?6:3,{x:tx,y:ty,vy:-20,jx:30,life:.8,spread:16},bparts);sfx('crack');bUI();
  await sleep(450);blog(`${crit?'會心一擊！':''}造成 ${dmg} 點傷害${mult>1?'，效果絕佳！':mult<1?'，效果不太好…':''}`);await sleep(750);
  if(endured){blog(`💗 ${d.name} 想起和你的羈絆，撐住了！`);await sleep(1000)}
- if(revived){blog(`🪶 不死鳥羽毛發光！${d.name} 浴火重生，HP 回到 ${d.hp}！`);spawn('heart',8,{x:tx,y:ty,vy:-22,jx:24,life:1,spread:14},bparts);sfx('level');D.faint=0;bUI();await sleep(1100)}}
+ if(reflect&&a.hp>0){a.hp=Math.max(0,a.hp-reflect);A.flash=performance.now()+500;spawn('shard',5,{x:BPOS[side][0],y:BPOS[side][1],vy:-14,jx:20,life:.8,spread:12},bparts);blog(`🛡️ 骸骨鐵壁把 ${reflect} 點傷害反彈給 ${a.name}！`);bUI();await sleep(900)}
+ if(revived&&d===B.foe){bossBanner('🔥 浴火重生！',d.ult?d.ult.col:'#ffb030','火鳳從火焰中復活了！');bossFlash('#ffb030',900);spawn('fire',18,{x:tx,y:ty,vy:-26,jx:46,life:1.3,spread:26},bparts);sfx('evolve');buzz(80);blog(`🔥 ${d.name} 從火焰中重生了！HP 回到 ${d.hp}！`);D.faint=0;d.aura=null;bUI();await sleep(1600)}
+ else if(revived){blog(`🪶 不死鳥羽毛發光！${d.name} 浴火重生，HP 回到 ${d.hp}！`);spawn('heart',8,{x:tx,y:ty,vy:-22,jx:24,life:1,spread:14},bparts);sfx('level');D.faint=0;bUI();await sleep(1100)}}
 /* 羈絆之力：倒數後 2 秒內連打螢幕，點越多下越強（20 下 2.2 倍…28 下 3 倍） */
 function tapRush(o={}){return new Promise(res=>{const z=$('tapZone'),n=$('tapN'),msg=$('tapMsg');let taps=0,live=false;z.classList.remove('hidden');n.textContent='';
  const on=e=>{e.preventDefault();if(!live)return;taps++;n.textContent=taps;buzz(8);sfx('tap');spawn('heart',1,{x:20+Math.random()*90,y:30+Math.random()*60,vy:-20,life:.6,spread:4},bparts)};
@@ -1855,19 +1890,23 @@ function rpsRound(){return new Promise(res=>{const z=$('rpsZone'),T=CONFIG.rps.s
   $('rpsMsg').textContent=`你 ${me?RPS_ICON[me]:'⌛'}　vs　${RPS_ICON[foe]} 敵人　→　${{win:'猜贏了！躲開攻擊！',tie:'平手！傷害 ×0.8',lose:me?'猜輸了…傷害 ×1.2':'來不及選…傷害 ×1.2'}[r.result]}`;
   sfx(r.result==='win'?'level':r.result==='tie'?'tap':'no');setTimeout(()=>{z.classList.add('hidden');res({...r,me,foe})},900)};
  btns.forEach(b=>b.onclick=()=>finish(b.dataset.rps));setTimeout(()=>finish(null),T*1000)})}
-async function onMove(mv){if(!B||B.busy||B.over)return;unlockAudio();
+async function onMove(mv){if(!B||B.over||(mv!=='frozen'&&B.busy))return;unlockAudio();
  if(mv==='run'){B.busy=true;bUI();blog(`${B.me.name} 逃跑了…`);await sleep(800);endBattle(null);return}
  if(mv==='special'&&B.me.cd>0)return;if((mv==='potion'||mv==='potion2')&&(s.inv[mv]||0)<1)return;if(mv==='ult'){if(B.ultUsed)return;B.ultUsed=true}showPanel('mpMain');
  const{me,foe}=B;let boost=1;
  if(mv==='bond'){if(B.bondUsed||!dangerNow())return;const nb=PC.canBond(s);if(nb){blog('💸 '+nb+'…');sfx('no');return}B.bondUsed=true;PC.battleBond(s,Date.now());save();blog(`👏 花 ${CONFIG.bond.cost} 金幣買了加油棒！（之後要休息 ${CONFIG.bond.restHours} 小時才能再冒險）`);B.busy=true;bUI();const taps=await tapRush();boost=PC.bondBoost(taps);blog(`💗 連打 ${taps} 下，威力 ×${boost.toFixed(1)}！`);await sleep(900)}
  B.busy=true;bUI();
- const fm=aiMove(foe),first=mv==='bond'||mv==='guard'||mv==='potion'||mv==='potion2'||me.spd>foe.spd||(me.spd===foe.spd&&Math.random()<.5);
+ const fm=foe.zeroNext?'zerohit':foe.breathN>0?'breath2':foe.ultState==='warned'?'bossult':aiMove(foe),first=mv==='bond'||mv==='guard'||mv==='potion'||mv==='potion2'||me.spd>foe.spd||(me.spd===foe.spd&&Math.random()<.5);
  const me2=B.me2&&B.me2.hp>0?B.me2:null,m2=me2?(me2.cd===0&&Math.random()<.5?'special':'tackle'):null;   // 夥伴自己出招
  const mine=[['me',mv]].concat(me2?[['me2',m2]]:[]);
  const order=fm==='guard'&&!['guard','bond','potion','potion2'].includes(mv)?[['foe',fm],...mine]:first?[...mine,['foe',fm]]:[['foe',fm],...mine];
  for(const[side,m]of order){const a=side==='foe'?foe:side==='me'?me:B.me2;if(a.hp<=0)continue;if(foe.hp<=0)break;
+  if(side!=='foe'&&a.frozen>0){a.frozen=0;blog(`❄️ ${a.name} 被冰凍了，這回合動不了！`);B.fx[side].flash=performance.now()+500;bUI();await sleep(1000);continue}
+  if(side!=='foe'&&m==='frozen')continue;
+  if(side!=='foe'&&a.curseT>0&&['tackle','special','ult'].includes(m)&&Math.random()<foe.ult.miss){if(m==='special')a.cd=3;blog(`😵 ${a.name} 被詛咒得頭昏眼花，攻擊打空了！`);B.fx[side].anim='happy';B.fx[side].t0=performance.now();spawn('star',4,{x:BPOS[side][0],y:BPOS[side][1]-16,vy:-6,jx:16,life:.9,spread:10},bparts);bUI();await sleep(1000);continue}
   // 敵人打誰：兩隻都在場就隨機選一隻
-  const alive=[me,B.me2].filter(f=>f&&f.hp>0);if(!alive.length)break;const d=side==='foe'?alive[Math.floor(Math.random()*alive.length)]:foe;
+  const alive=[me,B.me2].filter(f=>f&&f.hp>0);if(!alive.length)break;const d=side==='foe'?(m==='zerohit'&&foe.zeroTarget&&foe.zeroTarget.hp>0?foe.zeroTarget:alive[Math.floor(Math.random()*alive.length)]):foe;
+  if(side==='foe'&&['bossult','breath2','zerohit'].includes(m)&&!(foe.stun>0)){await bossAct(foe,d,m);if(d.hp<=0)B.fx[sideOf(d)].faint=performance.now();continue}
   if(side==='foe'&&foe.stun>0){foe.stun=0;blog(`⚡ ${foe.name} 全身麻痺，這回合動不了！`);B.fx.foe.flash=performance.now()+600;bUI();await sleep(900);continue}
   if(side==='foe'&&(m==='tackle'||m==='special')&&!window.PF_NO_RPS){const r=await rpsRound();   // 敵人攻擊前猜拳
    const dz=r.result!=='win'&&d.dodge&&Math.random()<d.dodge;   // V1.42 閃避訓練：猜拳沒贏也有機會閃開
@@ -1876,12 +1915,14 @@ async function onMove(mv){if(!B||B.busy||B.over)return;unlockAudio();
   await doMove(a,d,m,side,side==='me'?boost:1);if(d.hp<=0&&d!==foe)B.fx[sideOf(d)].faint=performance.now();if(foe.hp<=0)break;
   if(side!=='foe'&&['tackle','special','bond','ult'].includes(m)&&a.stunChance&&Math.random()<a.stunChance){foe.stun=1;blog(`⚡ 電流竄過！${foe.name} 麻痺了，下一回合不能動！`);spawn('bolt',4,{x:94,y:44,vy:-10,jx:20,life:.8,spread:12},bparts);sfx('wake');bUI();await sleep(800)}}
  me.cd=Math.max(0,me.cd-1);foe.cd=Math.max(0,foe.cd-1);if(B.me2)B.me2.cd=Math.max(0,B.me2.cd-1);
+ await bossTick();
  if(foe.hp>0)for(const f of[me,B.me2])if(f&&f.hp>0&&f.regen&&f.hp<f.max){const h=Math.min(f.max-f.hp,Math.round(f.max*f.regen));f.hp+=h;blog(`💚 苔石之心：${f.name} 回復 ${h} HP`);bUI();await sleep(700)}   // V1.52 寶物回血
  if(foe.hp<=0){B.fx.foe.faint=performance.now();blog(`${foe.name} 倒下了！`);await sleep(900);endBattle(true);return}
  if(me.hp<=0&&B.me2&&B.me2.hp>0){blog(`${me.name} 沒力氣了…換 ${B.me2.name} 上場！`);B.fx.me.faint=performance.now();await sleep(1100);   // 前面那隻倒下：換夥伴繼續
   const o=B.me;o.out=true;o.hp=0;B.me=B.me2;B.me2=o;const f=B.fx.me;B.fx.me=B.fx.me2;B.fx.me2=f;B.fx.me.faint=0;$('mvSp').textContent='✨ '+SP_NAME[B.me.el];bUI()}
  else if(B.me2&&B.me2.hp<=0&&!B.me2.out){B.me2.out=true;B.me2.hp=0;blog(`${B.me2.name} 沒力氣了…`);await sleep(800)}
  if(B.me.hp<=0){B.fx.me.faint=performance.now();blog(`${B.me.name} 沒力氣了…`);await sleep(900);endBattle(false);return}
+ if(B.me.frozen>0&&!B.over){bUI();setTimeout(()=>onMove('frozen'),500);return}   // 被冰凍：這回合自動跳過
  B.busy=false;bUI();if(dangerNow()&&!B.bondUsed)blog('⚠️ 下一擊可能撐不住了！可以喝藥水，或用「💗 羈絆之力」為牠打氣！')}
 function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond').classList.add('hidden');const n=B.n,x0=s.xp;
  const res=win===null?'run':win?'win':'loss',r=PC.finishAdventure(s,n,res,B.full,Date.now()),px=B.duo&&s.pair?PC.pairGain(s,r.xp||0,res):0;
@@ -1911,7 +1952,7 @@ function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond
  save();renderUI();setTimeout(()=>afterChange(x0),0)}
 function closeBattle(){$('battle').classList.add('hidden');B=null;renderUI();if(s.hatched)say(s.mood>60?'冒險好好玩！':'有點累了…')}
 const bcv=$('bcv'),bctx=bcv.getContext('2d');bctx.imageSmoothingEnabled=false;
-function drawBattle(now){if(!B)return;const c=bctx;c.drawImage(makeArena(B.arena),0,0);
+function drawBattle(now){if(!B)return;const c=bctx;c.save();if(B.shake>now&&!rm())c.translate(Math.round((Math.random()-.5)*4),Math.round((Math.random()-.5)*3));c.drawImage(makeArena(B.arena),0,0);
  const one=(f,FX,x,y,side)=>{const S=sheet(f.key);let fr;if(f.hp<=0)fr='sad0';else if(FX.anim==='jump'&&now-FX.t0<500)fr=['jump0','jump1','jump0'][Math.floor((now-FX.t0)/170)%3];
   else if(FX.anim==='happy'&&now-FX.t0<800)fr='happy0';else fr=f.hp<f.max*.3?['tired0','tired1'][Math.floor(now/600)%2]:['idle0','idle0','idle1','idle1'][Math.floor(now/400)%4];
   const fade=FX.faint?Math.max(0,1-(now-FX.faint)/700):1;c.globalAlpha=fade;
@@ -1921,9 +1962,17 @@ function drawBattle(now){if(!B)return;const c=bctx;c.drawImage(makeArena(B.arena
   else c.drawImage(src,S.idx[fr]*CELL,0,CELL,CELL,x+FX.dx,yy,CELL,CELL);c.globalAlpha=1;
   if(f.charged&&Math.floor(now/150)%2){c.fillStyle='#ffe066';c.fillRect(x+10,y+6,2,2);c.fillRect(x+36,y+10,2,2)}};
  one(B.foe,B.fx.foe,70,20,'foe');if(B.me2)one(B.me2,B.fx.me2,36,50,'me');one(B.me,B.fx.me,10,58,'me');
+ {const f=B.foe,t=now/1000;   // 王的絕招狀態特效
+  if(f.wallT>0&&f.hp>0){c.globalAlpha=.55+.2*Math.sin(t*6);c.strokeStyle='#f0e6c8';c.lineWidth=2;c.beginPath();c.ellipse(94,44,24,24,0,0,Math.PI*2);c.stroke();c.strokeStyle='#a89870';c.lineWidth=1;c.beginPath();c.ellipse(94,44,21,21,0,0,Math.PI*2);c.stroke();c.globalAlpha=1}
+  if(f.mossT>0&&f.hp>0&&Math.random()<.08)spawn('leaf',1,{x:94,y:58,vy:-10,jx:30,life:1,spread:24},bparts);
+  for(const[tg,ox,oy]of[[B.me,10,58],[B.me2,36,50]]){if(!tg||tg.hp<=0)continue;const cx=ox+24;
+   if(tg.frozen){c.globalAlpha=.45+.1*Math.sin(t*4);c.fillStyle='#bff0ff';c.fillRect(ox+8,oy+10,32,36);c.globalAlpha=.9;c.strokeStyle='#ffffff';c.lineWidth=1;c.strokeRect(ox+8.5,oy+10.5,31,35);c.fillStyle='#ffffff';c.fillRect(ox+12,oy+14,6,2);c.fillRect(ox+12,oy+14,2,6);c.globalAlpha=1}
+   if(tg.curseT){for(let i=0;i<4;i++){const a=t*3+i*Math.PI/2;c.fillStyle=i%2?'#d090ff':'#8040d0';c.fillRect(Math.round(cx+Math.cos(a)*10)-1,Math.round(oy+8+Math.sin(a)*3)-1,3,3)}}
+   if(tg.doomT){const yy=oy-2+Math.round(Math.sin(t*4));c.fillStyle='#f4f0e8';c.fillRect(cx-9,yy,8,6);c.fillRect(cx-8,yy+6,6,2);c.fillStyle='#200810';c.fillRect(cx-8,yy+2,2,2);c.fillRect(cx-4,yy+2,2,2);c.fillRect(cx-6,yy+6,1,2);c.fillRect(cx-4,yy+6,1,2);pixNum(String(tg.doomT),cx+1,yy,Math.floor(now/250)%2?'#ff4060':'#ffd0d8',c)}}
+  if(B.tint&&B.tint.until>now){c.globalAlpha=Math.min(.45,(B.tint.until-now)/1200);c.fillStyle=B.tint.col;c.fillRect(0,0,128,112);c.globalAlpha=1}}
  const dt=.045;for(let i=bparts.length-1;i>=0;i--){const p=bparts[i];p.t+=dt;if(p.t<0)continue;if(p.t>p.life){bparts.splice(i,1);continue}p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
   const ic=ICV[p.ic];c.globalAlpha=p.t>p.life-.3?Math.max(0,(p.life-p.t)/.3):1;c.drawImage(ic,Math.round(p.x-ic.width/2),Math.round(p.y-ic.height/2));c.globalAlpha=1}
-}
+ c.restore()}
 document.querySelectorAll('[data-mv]').forEach(b=>b.addEventListener('click',()=>onMove(b.dataset.mv)));
 /* V1.40 戰鬥選單：技能／防禦／背包／逃跑，技能和背包點開是第二層 */
 function showPanel(id){document.querySelectorAll('#moves .mpanel').forEach(p=>p.classList.toggle('hidden',p.id!==id))}
@@ -2140,8 +2189,8 @@ function drawRingFront(){if(mode!=='play')return;const x=Math.round(RING.x),y=Ma
 function drawBall(){const b=BALL.b;if(!b)return;const ic=ICV.ball;ctx.drawImage(ic,Math.round(b.x-ic.width/2),Math.round(b.y-ic.height/2))}
 // 3×5 像素數字（畫布上的文字會糊掉）
 const PIXF={'0':'111101101101111','1':'010110010010111','2':'111001111100111','3':'111001111001111','4':'101101111001001','5':'111100111001111','6':'111100111101111','7':'111001010010010','8':'111101111101111','9':'111101111001111','x':'000101010101000'};
-function pixNum(str,x,y,col){for(const ch of str){const m=PIXF[ch];if(!m)continue;for(let k=0;k<15;k++)if(m[k]==='1'){const px0=x+k%3,py0=y+Math.floor(k/3);ctx.fillStyle='#1a1208';ctx.fillRect(px0,py0+1,2,1);ctx.fillRect(px0+1,py0,1,2)}
-  for(let k=0;k<15;k++)if(m[k]==='1'){ctx.fillStyle=col;ctx.fillRect(x+k%3,y+Math.floor(k/3),1,1)}x+=4}return x}
+function pixNum(str,x,y,col,cc=ctx){for(const ch of str){const m=PIXF[ch];if(!m)continue;for(let k=0;k<15;k++)if(m[k]==='1'){const px0=x+k%3,py0=y+Math.floor(k/3);cc.fillStyle='#1a1208';cc.fillRect(px0,py0+1,2,1);cc.fillRect(px0+1,py0,1,2)}
+  for(let k=0;k<15;k++)if(m[k]==='1'){cc.fillStyle=col;cc.fillRect(x+k%3,y+Math.floor(k/3),1,1)}x+=4}return x}
 function drawBallHUD(){if(mode!=='play')return;
  const L=CONFIG.ballGame.lives;
  for(let i=0;i<L;i++){const on=i<BALL.lives,x=W-10-i*9,y=4;ctx.fillStyle='#1a1208';ctx.fillRect(x,y,7,5);ctx.fillRect(x+1,y+5,5,1);ctx.fillRect(x+2,y+6,3,1);ctx.fillRect(x+1,y-1,2,1);ctx.fillRect(x+4,y-1,2,1);

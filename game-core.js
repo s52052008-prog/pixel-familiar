@@ -67,6 +67,15 @@ const CONFIG = {
   bosses: { 5: { mon: '苔石巨人', route: 'earth', route2: 'forest', relic: 'mossHeart' }, 10: { mon: '熔岩犀', route: 'earth', route2: 'flame', relic: 'rhinoCharm' }, 15: { mon: '骷髏騎士', route: 'metal', route2: 'forest', relic: 'boneShield' },
     20: { mon: '巫師幽靈', route: 'elec', route2: 'earth', relic: 'ghostHat' }, 25: { mon: '小死神', route: 'elec', route2: 'metal', relic: 'reaperBlade' }, 30: { mon: '火鳳', route: 'bird', route2: 'flame', relic: 'phoenixFeather' },
     35: { mon: '赤龍', route: 'flame', route2: 'dragon', relic: 'dragonFang' }, 40: { mon: '冰龍', route: 'tide', route2: 'dragon', relic: 'iceScale' } },   // V1.53 王有雙屬性；龍＝全抗性
+  // V1.54 王的專屬絕招：血量第一次掉到一半以下時，先預告一回合、下一回合施放（火鳳的浴火重生是倒下時觸發）
+  bossUlt: { 5: { key: 'moss', name: '苔蘚再生', turns: 3, heal: .1, tip: '接下來 3 回合牠每回合會回血，趁現在全力攻擊！' },
+    10: { key: 'charge', name: '熔岩衝鋒', mult: 2.5, tip: '下一回合會撞出 2.5 倍傷害——快按「🛡️ 防禦」！' },
+    15: { key: 'wall', name: '骸骨鐵壁', turns: 2, cut: .5, reflect: .3, tip: '2 回合內打牠只有一半傷害，還會反彈 30%——先防禦或喝藥水！' },
+    20: { key: 'curse', name: '混亂詛咒', turns: 2, miss: .4, tip: '被詛咒的 2 回合內攻擊有 40% 會打空——可以先蓄力或防禦拖過去' },
+    25: { key: 'doom', name: '死亡宣告', turns: 3, pct: .4, tip: '倒數 3 回合後受到最大血量 40% 的傷害——快打倒牠，或先補血！' },
+    30: { key: 'rebirth', name: '浴火重生', hp: .3, tip: '火鳳倒下一次會用 30% 血量復活，要打倒兩次！' },
+    35: { key: 'breath', name: '龍炎吐息', hits: 2, mult: 1.5, tip: '連續兩回合 1.5 倍噴火、猜拳也閃不掉——先喝藥水把血補高！' },
+    40: { key: 'zero', name: '絕對零度', mult: 2, tip: '會被冰凍 1 回合，接著吃 2 倍傷害——冰凍前先防禦或補血！' } },
   relics: { repeatDrop: .1, sell: 999, slots: 2, items: {
     rhinoCharm:     { name: '犀角護符',   icon: '📿', boss: '熔岩犀',   def: .1,   text: '防禦 +10%' },
     reaperBlade:    { name: '死神鐮刃',   icon: '🌙', boss: '小死神',   crit: .1,  text: '會心一擊機率 +10%' },
@@ -670,11 +679,12 @@ function damage(a, d, special, r = Math.random, boost = 1) {
   let dmg = Math.max(1, Math.round(a.atk * pow * (a.atk / (a.atk + d.def)) * 1.6 * mult * (.85 + r() * .3)));
   if (d.guard) { dmg = Math.max(1, Math.round(dmg * .5)); d.guard = false; }
   if (d.dmgCut) dmg = Math.max(1, Math.round(dmg * (1 - d.dmgCut)));
+  let reflect = 0; if (d.wallT > 0) { dmg = Math.max(1, Math.round(dmg * (1 - (d.wallCut || .5)))); reflect = Math.max(1, Math.round(dmg * (d.wallReflect || .3))); }   // V1.54 骸骨鐵壁
   const crit = r() < .08 + (a.critUp || 0); if (crit) dmg = Math.round(dmg * 1.5);
   let endured = false;
   if (dmg >= d.hp && d.endure) { dmg = d.hp - 1; d.endure = false; endured = true; }
   let revived = false; if (dmg >= d.hp && d.revive) { d.hp = Math.max(1, Math.round(d.max * d.revive)); d.revive = 0; revived = true; } else d.hp = Math.max(0, d.hp - dmg);   // V1.52 不死鳥羽毛
-  return { dmg, mult, crit, endured, revived };
+  return { dmg, mult, crit, endured, revived, reflect };
 }
 function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random) {
   const A = CONFIG.adventure, out = { xp: 0, coins: 0, food: 0, seeds: 0, unlocked: 0, events: [] };
