@@ -251,10 +251,11 @@ async def main():
         await p.wait_for_selector('#bDone', state='visible', timeout=8000); await p.click('#bDone'); await p.wait_for_timeout(300)
         await p.evaluate("PF.debug.set({energy:100,sleeping:false,xp:512,coins:100})"); x0 = (await st(p))['xp']
         await p.click('#bAdv'); await p.wait_for_timeout(300); await p.click('#goTrain'); await p.wait_for_timeout(300); await p.click('[data-tk=combo]'); await p.wait_for_timeout(3200)
-        for b in 'LRLRL': await p.click(f'[data-tb={b}]'); await p.wait_for_timeout(40)
+        seq = await p.evaluate('PF.TG.seq'); ok('組合拳每次隨機 5～6 拳', len(seq) in (5, 6), seq)
+        for b in seq: await p.click(f'[data-tb={b}]'); await p.wait_for_timeout(40)
         await p.wait_for_selector('#tResult', state='visible', timeout=5000); s = await st(p)
         ok('訓練場：組合拳成功、扣 20 金幣、有經驗', s['coins'] == 80 and s['xp'] > x0 and '成功' in await p.inner_text('#tRTitle'), (s['coins'], s['xp'] - x0))
-        await p.click('#tAgain'); await p.wait_for_timeout(3200); x1 = (await st(p))['xp']; await p.click('[data-tb=R]'); await p.wait_for_timeout(3500)
+        await p.click('#tAgain'); await p.wait_for_timeout(3200); x1 = (await st(p))['xp']; wrong = 'R' if (await p.evaluate('PF.TG.seq'))[0] == 'L' else 'L'; await p.click(f'[data-tb={wrong}]'); await p.wait_for_timeout(3500)
         await p.wait_for_selector('#tResult', state='visible', timeout=5000); s = await st(p)
         ok('訓練失敗沒有經驗、錢不退', s['coins'] == 60 and s['xp'] == x1 and '失敗' in await p.inner_text('#tRTitle'), (s['coins'], s['xp'] - x1))
         await p.click('#tClose'); await p.wait_for_timeout(300)
