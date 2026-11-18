@@ -258,7 +258,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.42.0';
+const VERSION='1.43.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -984,7 +984,7 @@ function draw(now){
   ctx.drawImage(bgCache,0,0);
   const ca=ph==='night'?.35:ph==='dusk'?.75:1;ctx.globalAlpha=ca;
   ctx.drawImage(cloudCv,Math.round(((t*2)%(W+60))-30),10);ctx.drawImage(cloudCv,Math.round(((t*1.3+80)%(W+60))-30),26);ctx.globalAlpha=1;
-  drawAmbient(now,ph);drawPig(now);
+  drawAmbient(now,ph);
   const nowMs=Date.now();for(let i=0;i<s.plots.length;i++){const q=PC.plotState(s,i,nowMs),st=plotStage(q);ctx.drawImage(PLOT_SPR[st],1+i*13,91+(i%2)*6);if(['food','berry','cranberry','blueberry','strawberry'].includes(st)&&Math.floor(now/400)%3===0){ctx.fillStyle='#ffffff';ctx.fillRect(6+i*13,89+(i%2)*6,1,1)}
    if(st==='rot'&&!rm()){const a=now/300+i;ctx.drawImage(ICV.fly,Math.round(11+i*13+5*Math.cos(a)),Math.round(93+(i%2)*6+3*Math.sin(a*1.7)))}}}
  if(mode==='play')drawRing();
@@ -1004,7 +1004,7 @@ function draw(now){
  if(!gone&&!evo&&s.hatched)drawStatusFx(now,S,fi,PX,LIFT,key);
  if(!gone&&!evo&&s.hatched)drawPick(now,key,LIFT);
  drawToy();drawCores(now);drawApple();drawBall();drawRingFront();drawPop(now);drawDrink(now);
- if(inRoom&&!evo)drawRoomFront(now,rph);
+ if(inRoom){drawPig(now);if(!evo)drawRoomFront(now,rph)}
  if(s.sleeping&&!evo){ctx.fillStyle=inRoom&&lightOn(phase())?'rgba(8,12,40,.22)':'rgba(8,12,40,.42)';ctx.fillRect(0,0,W,H);if(Math.random()<.02)spawn('z',1,{x:PX+36,y:62,vx:6,vy:-8,jx:2,jy:2,life:2.2,spread:4})}
  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=dt;if(p.t<0)continue;if(p.t>p.life){parts.splice(i,1);continue}
   p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;if(p.bounce&&p.y>96){p.y=96;p.vy*=-.55}
@@ -1056,21 +1056,29 @@ function drawAmbient(now,ph){if(rm())return;const t=now/1000;
  if(ph==='day'){const bx=((t*9)%(W+80))-40;ctx.fillStyle='#2a3a5a';for(const[ox,oy]of[[0,0],[9,4]]){const x=Math.round(bx+ox),y=Math.round(18+oy+Math.sin(t*2+ox)),w=Math.floor(t*4+ox)%2;ctx.fillRect(x-2,y-w,2,1);ctx.fillRect(x,y,1,1);ctx.fillRect(x+1,y-w,2,1)}}}
 /* ---------------- 小窩裡的其他寵物（縮小、睡覺） ---------------- */
 /* ---------------- 存錢筒（院子右下角的小豬）：點一下領金幣 ---------------- */
-const PIG={x:110,y:92,w:15,h:11};let pigCv=null;
-function makePig(){const g=grid(PIG.w+2,PIG.h+2),B='#ff9ab8',D='#e0708f',L='#ffd0de';
- ellipse(g,8,7,6.5,4.5,(x,y,nx,ny)=>ny<-.35&&nx<.2?L:ny>.45?D:B);   // 身體
- for(const[x,y]of[[4,11],[5,11],[10,11],[11,11]])px(g,x,y,D);   // 腳
- px(g,5,2,D);px(g,6,2,D);px(g,6,3,B);   // 耳朵
- for(let y=6;y<=8;y++){px(g,14,y,'#ff7aa0');px(g,15,y,'#ff7aa0')}px(g,15,6,'#c84a72');px(g,15,8,'#c84a72');   // 鼻子
- px(g,12,5,'#3a2020');px(g,1,6,D);px(g,0,5,D);   // 眼睛、尾巴
- for(let x=7;x<=10;x++)px(g,x,3,'#5a2a3a');   // 投幣孔
- outline(g,'#5a2a3a');return gridCanvas(g)}
-function drawPig(now){if(!s.hatched||curView()!=='yard')return;if(!pigCv)pigCv=makePig();ctx.drawImage(pigCv,PIG.x-1,PIG.y-1);
+/* V1.43 小豬撲滿放在室內右邊牆上的木架；1～6 級越來越大，6 級最肥、會發光 */
+const PIG={x:104,y:45,w:15,h:11,lv:0};let pigCv=null;
+function pigDims(lv){const k=1+.12*(lv-1);return{k,w:Math.round(15*k),h:Math.round(11*k)}}
+function makePig(lv){const{k,w,h}=pigDims(lv),g=grid(w+2,h+2),gold=lv>=6,B=gold?'#ffb0c8':'#ff9ab8',D=gold?'#e8809a':'#e0708f',L=gold?'#fff0f4':'#ffd0de',S=v=>Math.round(v*k);
+ ellipse(g,8*k,7*k,6.5*k,4.5*k+(lv-1)*.25,(x,y,nx,ny)=>ny<-.35&&nx<.2?L:ny>.45?D:B);   // 身體（越高級越圓）
+ for(const[x,y]of[[4,11],[5,11],[10,11],[11,11]])px(g,S(x),Math.min(h,S(y)),D);
+ px(g,S(5),S(2),D);px(g,S(6),S(2),D);px(g,S(6),S(3),B);
+ for(let y=S(6);y<=S(8);y++){px(g,S(14),y,'#ff7aa0');px(g,Math.min(w,S(15)),y,'#ff7aa0')}px(g,Math.min(w,S(15)),S(6),'#c84a72');px(g,Math.min(w,S(15)),S(8),'#c84a72');
+ px(g,S(12),S(5),'#3a2020');px(g,1,S(6),D);px(g,0,S(5),D);
+ for(let x=S(7);x<=S(10);x++)px(g,x,S(3),gold?'#c8901a':'#5a2a3a');
+ if(lv>=3)px(g,S(9),S(6),'#ffe066');if(lv>=5){px(g,S(4),S(7),'#ffe066');px(g,S(7),S(9),'#ffe066')}   // 身上的金色花紋
+ outline(g,gold?'#8a5a10':'#5a2a3a');return gridCanvas(g)}
+function syncPig(){const lv=PC.pigLevel(s);if(PIG.lv!==lv||!pigCv){PIG.lv=lv;const d=pigDims(lv);PIG.w=d.w;PIG.h=d.h;PIG.x=126-d.w-2;PIG.y=56-d.h;pigCv=makePig(lv)}}
+function drawPig(now){if(!s.hatched||curView()!=='room')return;syncPig();
+ ctx.fillStyle='#6a4428';ctx.fillRect(94,56,33,3);ctx.fillStyle='#8a5a34';ctx.fillRect(94,56,33,1);ctx.fillStyle='#4a2e18';ctx.fillRect(98,59,2,4);ctx.fillRect(120,59,2,4);   // 木架
+ if(PIG.lv>=6){const a=rm()?.8:.75+.2*Math.sin(now/260),cx=PIG.x+PIG.w/2,cy=PIG.y+PIG.h/2;for(const[r,al]of[[1.15,.4],[.9,.75]]){ctx.fillStyle=`rgba(255,214,70,${a*al})`;ctx.beginPath();ctx.ellipse(cx,cy,PIG.w*.75*r+3,PIG.h*.8*r+3,0,0,Math.PI*2);ctx.fill()}
+  if(Math.floor(now/300)%3===0)spawn('spark',1,{x:PIG.x+PIG.w/2,y:PIG.y,vy:-6,life:.6,spread:PIG.w})}
+ ctx.drawImage(pigCv,PIG.x-1,PIG.y-1);
  const n=Math.floor(s.piggy||0),full=n>=PC.piggyCap(s);if(n<1)return;
  const bob=rm()?0:Math.round(Math.sin(now/300)),ic=ICV.coin;const ns=String(n),cx=PIG.x+PIG.w-ic.width,nx=cx-ns.length*4-1;ctx.drawImage(ic,cx,PIG.y-ic.height-2+bob);pixNum(ns,nx,PIG.y-ic.height+1+bob,full?'#ffe066':'#ffffff');
  if(full&&!rm()&&Math.floor(now/250)%2)spawn('spark',1,{x:PIG.x+8,y:PIG.y-8,vy:-8,life:.5,spread:10})}
-const overPig=(x,y)=>s.hatched&&curView()==='yard'&&x>=PIG.x-3&&x<=PIG.x+PIG.w+3&&y>=PIG.y-14&&y<=PIG.y+PIG.h+3;
-function tapPig(){const r=PC.collectPiggy(s,Date.now());if(!r.ok){say(`存錢筒還在存…（每小時約 ${PC.piggyRate(s).toFixed(1)} 枚）`,{log:false});sfx('tap');return}
+const overPig=(x,y)=>s.hatched&&curView()==='room'&&x>=PIG.x-3&&x<=PIG.x+PIG.w+3&&y>=PIG.y-14&&y<=PIG.y+PIG.h+3;
+function tapPig(){const r=PC.collectPiggy(s,Date.now());if(!r.ok){say(`${PC.pigLevel(s)} 級小豬撲滿還在存…（每小時約 ${PC.piggyRate(s).toFixed(1)} 枚，最多 ${PC.piggyCap(s)}）`,{log:false});sfx('tap');return}
  sfx('level');buzz(15);spawn('coin',Math.min(8,2+Math.floor(r.n/5)),{x:PIG.x+8,y:PIG.y,vy:-26,jx:24,life:1,spread:8,stagger:.05});
  say(`${s.name} 存了 ${r.n} 枚金幣給${ownerName()}！🐷`);save();renderUI()}
 /* ---------------- 第二隻一起出來：自己走來走去、跟主角玩、一起睡 ---------------- */
@@ -1303,7 +1311,7 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',`
 <p><b>目標：</b>照顧幻獸，陪牠慢慢長大。沒有死亡、離線不扣親密度、不需要每天簽到。</p>
 <ul>
 <li>🍎 <b>餵食</b>：按「餵食」後點畫面放蘋果，牠會走過去吃掉。吃完會留下果核，<b>要點一下清掉</b>，放超過 10 分鐘會發臭長果蠅，讓心情一直變差。用 1 個食物（沒有就花 ${C.feed.price} 金幣買），飽食 +${C.feed.hunger}、經驗 +${C.feed.xp}。吃飽時不能餵。</li>
-<li>🐷 <b>存錢筒</b>：院子右下角的小豬會幫你存錢，每小時 0.5＋等級×0.25 枚（最多算到 Lv.30；金系 ×1.5；第二隻一起出來再加牠的一半）。心情 30 以上才會存、睡覺時減半，最多存 12 小時，點小豬就能領。</li><li>🎾 <b>玩耍（頂球）</b>：按「玩耍」後點畫面開始，球會一顆一顆掉下來。<b>每顆球只能按一次</b>，要在球快碰到頭的那一刻按，時機越準越會進；完美時機還會預判移動中的籃框。有 3 條命，漏接 3 次就結束，每連進 5 球補 1 條命。進越多球，籃框會開始上下、左右移動，球也掉得越快、越斜。每進 3 球得 1 金幣（最多 10）。體力 ${C.play.minEnergy} 以上，心情 +${C.play.mood}、體力 −10、經驗 +${C.play.xp}（每 30 分鐘最多 3 次有經驗）。</li>
+<li>🐷 <b>小豬撲滿</b>：在小窩（室內）右邊牆上的木架，會幫你存錢，每小時 0.5＋等級×0.25 枚（最多算到 Lv.30；金系 ×1.5；第二隻一起出來再加牠的一半）。心情 30 以上才會存、睡覺時減半，點小豬就能領。小豬撲滿有 1～6 級：第 15、20、25、30 關的王各掉一個「核心碎片」（+1 級），商店道具有唯一的「小豬撲滿核心」1000 元（+1 級）。等級越高越大隻、存得越快越多（×1／1.25／1.5／1.8／2.2／3，最多存 12～24 小時），6 級最肥、會發光。</li><li>🎾 <b>玩耍（頂球）</b>：按「玩耍」後點畫面開始，球會一顆一顆掉下來。<b>每顆球只能按一次</b>，要在球快碰到頭的那一刻按，時機越準越會進；完美時機還會預判移動中的籃框。有 3 條命，漏接 3 次就結束，每連進 5 球補 1 條命。進越多球，籃框會開始上下、左右移動，球也掉得越快、越斜。每進 3 球得 1 金幣（最多 10）。體力 ${C.play.minEnergy} 以上，心情 +${C.play.mood}、體力 −10、經驗 +${C.play.xp}（每 30 分鐘最多 3 次有經驗）。</li>
 <li>🫧 <b>洗澡</b>：按「洗澡」後用手指拿海綿 🧽 在牠身上來回刷 3 秒。清潔 +${C.wash.clean}、經驗 +${C.wash.xp}，每 30 分鐘一次。</li>
 <li>👆 <b>摸摸</b>：隨時都能摸；每 30 分鐘第一次：親密度 +2、心情 +3。</li>
 <li>💩 <b>大便</b>：每吃一次，大約 40 分鐘後會大便。要點一下清掉，超過 3 分鐘沒清會發臭，讓心情一直變差。商店買「寵物馬桶」後，牠會自己去上廁所。</li>
@@ -1584,6 +1592,7 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
   const tools={seeds:()=>({id:'seeds',name:'種子',sub:`🪙${C.farm.seedPrice}｜×${s.inv.seeds}`,icon:'seed',desc:`種在家園的田裡，${C.farm.growHours} 小時後長出蘋果或莓果<br>擁有 ${s.inv.seeds}`,btn:`<button class="btn pri" data-bi="seeds">買 1 個（🪙 ${C.farm.seedPrice}）</button>`}),
    candy:()=>({id:'candy',name:'星星糖',sub:`🪙${C.candy.price}｜×${s.inv.candy||0}`,icon:'candy',desc:`吃了<b>直接升 1 級</b>！（進化還是要等時間）<br>心情 +${C.candy.mood}、飽食 +${C.candy.hunger}<br>擁有 ${s.inv.candy||0}`,btn:`<button class="btn pri" data-bi="candy">買 1 個（🪙 ${C.candy.price}）</button><button class="btn" id="eatCandy" ${s.inv.candy?'':'disabled'}>給牠吃</button>`}),
    seeds2:()=>({id:'seeds2',name:'優良種子',sub:`🪙${C.goodSeed.price}｜×${s.inv.seeds2||0}`,icon:'seed2',desc:`比較會長的種子：每次收成 ${C.goodSeed.fruitMin}～${C.goodSeed.fruitMax} 顆（普通種子 ${C.farm.fruitMin}～${C.farm.fruitMax} 顆），新鮮收成還有 ${Math.round(C.goodSeed.powerChance*100)}% 多長一顆自己屬性的能力水果<br>擁有 ${s.inv.seeds2||0}`,btn:`<button class="btn pri" data-bi="seeds2">買 1 個（🪙 ${C.goodSeed.price}）</button>`}),
+   pigcore:()=>{const P=C.piggy,lv=PC.pigLevel(s);return{id:'pigcore',name:'小豬撲滿核心',sub:s.pigBought?'已擁有（唯一）':`🪙${P.corePrice}｜唯一`,icon:'coin',desc:`小豬撲滿的心臟！買了小豬撲滿 <b>+1 級</b>（全遊戲只有一個）。<br>小豬撲滿現在 <b>${lv} 級</b>：每小時 ${PC.piggyRate(s).toFixed(1)} 枚、最多存 ${PC.piggyCap(s)} 枚（${P.capH[lv-1]} 小時）。<br>核心碎片：第 ${P.coreStages.join('、')} 關的王各掉一個（已拿到 ${(s.pigCores||[]).length}/4）。碎片 4 個＋核心＝6 級，最肥、會發光！`,btn:s.pigBought?'<button class="btn" disabled>已經買過了</button>':`<button class="btn pri" id="buyPigCore">買下（🪙 ${P.corePrice}）</button>`}},
    potion:()=>({id:'potion',name:'回復藥水',sub:`🪙${C.potion.price}｜×${s.inv.potion||0}`,icon:'potion',desc:`戰鬥中回復 50% HP（戰鬥時點「🎒 背包」使用）<br>擁有 ${s.inv.potion||0}`,btn:`<button class="btn pri" data-bi="potion">買 1 個（🪙 ${C.potion.price}）</button>`}),
    potion2:()=>({id:'potion2',name:'超級藥水',sub:`🪙${C.superPotion.price}｜×${s.inv.potion2||0}`,icon:'potion2',desc:`戰鬥中<b>回復全部 HP</b>（戰鬥時點「🎒 背包」使用）<br>擁有 ${s.inv.potion2||0}`,btn:`<button class="btn pri" data-bi="potion2">買 1 個（🪙 ${C.superPotion.price}）</button>`}),
    soup:()=>{const rest=(s.bondRestUntil||0)>Date.now(),S=C.soup;return{id:'soup',name:'神秘婆婆熬製雞湯',sub:`🪙${S.price}｜×${s.inv.soup||0}`,icon:'soup',desc:`神秘婆婆用祕方熬了一整晚的雞湯。<br>⭐ <b>重點：發動羈絆之力後要休息 ${C.bond.restHours} 小時，喝了馬上解除，可以立刻再去冒險！</b><br>另外飽食 +${S.hunger}、心情 +${S.mood}、體力 +${S.energy}<br>${rest?`⏳ 現在還要休息 ${Math.ceil((s.bondRestUntil-Date.now())/60000)} 分鐘`:''}<br>擁有 ${s.inv.soup||0}`,btn:`<button class="btn pri" data-bi="soup">買 1 碗（🪙 ${S.price}）</button><button class="btn" id="drinkSoup" ${s.inv.soup?'':'disabled'}>給牠喝</button>`}}};
@@ -1617,6 +1626,7 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
   document.querySelectorAll('#shopBody canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));
   document.querySelectorAll('[data-feedk]').forEach(b=>b.onclick=()=>{closeModal();FEED.kind=b.dataset.feedk;act('feed')});
   if($('goFarm'))$('goFarm').onclick=()=>{closeModal();farmDialog()};
+  if($('buyPigCore'))$('buyPigCore').onclick=()=>{const r=PC.buyPigCore(s);toast(r.ok?'🐷 '+r.msg:'❌ '+r.msg,3500);if(r.ok){sfx('level');buzz(30);save();renderUI()}render()};
   if($('drinkSoup'))$('drinkSoup').onclick=()=>{const r=PC.useSoup(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}closeModal();playAnim('eat');sfx('eat');spawn('heart',4,{y:70,life:1.1});say(r.msg);save();renderUI()};
   if($('useHeart'))$('useHeart').onclick=()=>{const r=PC.awaken(s,Date.now());if(!r.ok){toast('❌ '+r.msg);return}closeModal();save();renderUI();flashUntil=performance.now()+700;sfx('evolve');buzz(40);playAnim('happy',1400);spawn('star',14,{y:66,vy:-30,jx:60,life:1.6,stagger:.05});say(r.msg)};
   if($('eatEmber'))$('eatEmber').onclick=()=>{const x0=s.xp,r=PC.useEmber(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}toast(r.msg+`　經驗 +${r.xp}`);sfx('level');spawn('star',6,{x:petX+24,y:60,vy:-20,life:1.2});save();renderUI();afterChange(x0);render()};
@@ -1801,6 +1811,7 @@ function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond
  if(r.food)rows.push(['apple','蘋果','+1','']);
  if(r.potion)rows.push(['potion','回復藥水','+1','']);
  if(r.ember)rows.push(['ember','經驗火種','+1','Boss 寶物！']);
+ if(r.pigCore)rows.push(['coin','小豬撲滿核心碎片','+1',`小豬撲滿升到 ${r.pigCore} 級！`]);
  if(r.heart)rows.push(['star','星辰之心','+1','🌟 最終大王的寶物！']);if(r.shard)rows.push(['gem','星辰碎片','+1','可抵 1 個終極素材']);if(r.mat)rows.push(['mat_'+r.mat,CONFIG.materials[r.mat],'+1',`💎 終極素材 ${Math.min(r.matN,CONFIG.ascend.mats)}/${CONFIG.ascend.mats}`]);
  const notes=[];if(r.trial)notes.push(`🏅 通過${ROUTE_LABEL[r.trial]}的高階試煉！`);if(r.unlocked)notes.push(`🗺️ 發現新地點！解鎖第 ${r.unlocked} 關`);for(const e of r.events)if(e!=='place')notes.push(`✨ 發生了「${PC.EVENT_TEXT[e]}」事件！`);
  if(win&&!B.full)notes.push('今天的冒險獎勵次數用完了，只拿到少量經驗');

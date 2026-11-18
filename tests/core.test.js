@@ -264,11 +264,15 @@ t('V1.41 綜合種子：蔓越莓／藍莓／草莓，賣 15／20／30；優良�
 t('V1.40 第一天不送金幣（開局 50）', () => { const s = C.fresh(T0); C.claimDaily(s, T0); assert.equal(s.coins, 50); C.claimDaily(s, T0 + 86400000); assert.equal(s.coins, 60); });
 t('V1.42 能力加成：進化階段、訓練成果（每次 +1%，最多 +20%）、大王固定等級、打贏王給金幣', () => { const s = hatched(); s.stage = 'adult'; s.trainLog = { dodge: 5, attack: 30, defense: 10 };
   const base = C.mkFighter('a', 'k', 10, s.route, 0, 80, 0), f = C.buffFighter(C.mkFighter('a', 'k', 10, s.route, 0, 80, 0), s);
-  assert.ok(Math.abs(f.atk / base.atk - 1.1 * 1.2) < 1e-9); assert.ok(Math.abs(f.def / base.def - 1.1 * 1.1) < 1e-9); assert.equal(f.max, Math.round(base.max * 1.1 * 1.1)); assert.equal(f.dodge, .05);
-  s.stage = 'ascended'; s.awake = true; const g = C.buffFighter(C.mkFighter('a', 'k', 10, s.route, 0, 80, 0), s); assert.ok(Math.abs(g.atk / base.atk - 1.2 * 1.2 * 1.2) < 1e-9);
+  assert.ok(Math.abs(f.atk / base.atk - 1.3 * 1.2) < 1e-9); assert.ok(Math.abs(f.def / base.def - 1.3 * 1.1) < 1e-9); assert.equal(f.max, Math.round(base.max * 1.3 * 1.1)); assert.equal(f.dodge, .05);
+  s.stage = 'ascended'; s.awake = true; const g = C.buffFighter(C.mkFighter('a', 'k', 10, s.route, 0, 80, 0), s); assert.ok(Math.abs(g.atk / base.atk - 1.5 * 1.2 * 2) < 1e-9);
   assert.equal(C.foeFor(30, 1).level, C.foeFor(30, 60).level); assert.equal(C.foeFor(30, 1).level, 26); assert.equal(C.foeFor(15, 40).level, 15); assert.ok(C.foeFor(12, 30).level === 29);
   const t = hatched(); t.energy = 100; t.adv.stage = 99; const st = C.startAdventure(t, 10, T0); const c0 = t.coins; const o = C.finishAdventure(t, 10, 'win', st.full, T0, () => .99); assert.equal(o.bossCoins, 30); assert.ok(t.coins - c0 >= 30 + 20);
   const p = C.snapshotPet(s); assert.equal(p.trainLog.attack, 30); });
+t('V1.43 小豬撲滿 1～6 級：第 15／20／25／30 關王各掉一個核心碎片、商店核心 1000 元唯一', () => { const s = hatched(); s.xp = 8 * 81; const r1 = C.piggyRate(s), c1 = C.piggyCap(s); assert.equal(C.pigLevel(s), 1); assert.equal(c1, Math.round(r1 * 12));
+  s.energy = 100; s.adv.stage = 99; for (const n of [15, 20, 25, 30, 15]) { s.energy = 100; const st = C.startAdventure(s, n, T0); C.finishAdventure(s, n, 'win', st.full, T0, () => .99); } assert.deepEqual(s.pigCores, [15, 20, 25, 30]); assert.equal(C.pigLevel(s), 5);
+  assert.ok(Math.abs(C.piggyRate(s) - r1 * 2.2) < 1e-9); s.coins = 999; assert.ok(!C.buyPigCore(s).ok); s.coins = 1000; assert.ok(C.buyPigCore(s).ok); assert.equal(C.pigLevel(s), 6); assert.equal(s.coins, 0); s.coins = 2000; assert.ok(!C.buyPigCore(s).ok);
+  assert.equal(C.piggyCap(s), Math.round(r1 * 3 * 24)); const z = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(C.pigLevel(z), 6); });
 t('V1.41 訓練場：每次 20 金幣，達成目標才有經驗', () => { const s = hatched(); s.energy = 100; s.coins = 30; s.xp = 512; const L = C.level(512);
   assert.ok(C.startTrain(s, 'dodge', T0).ok); assert.equal(s.coins, 10); assert.equal(s.energy, 85); const f = C.finishTrain(s, 'dodge', false); assert.equal(f.xp, 0); assert.equal(s.xp, 512);
   assert.ok(!C.startTrain(s, 'zen', T0).ok); s.coins = 20; assert.ok(C.startTrain(s, 'zen', T0).ok); const w = C.finishTrain(s, 'zen', true, T0); assert.equal(w.xp, Math.round(10 + 4 * L)); assert.equal(s.trainLog.defense, 1);

@@ -37,13 +37,14 @@ const CONFIG = {
   bossStages: { volcano: 15, oldtree: 20, canyon: 25, skypeak: 30, thunder: 35, mine: 40 },
   /* V1.37 高階條件（七屬性一樣）：① 終極素材 3 個（第 10、20、30 關大王各掉一次，依你這隻的屬性）② 專屬任務（長到成年期才出現、從那時開始算）
      tasks：[[計數器, 需要數量], …]，有兩組的是「二選一」 */
-  starHeart: { stage: 40, shardRepeat: .3, statX: 1.2, piggyX: 1.5 },   // 第 40 關大王：每個屬性第一次打贏得到星辰之心＋星辰碎片；之後再打贏 30% 掉碎片
+  starHeart: { stage: 40, shardRepeat: .3, statX: 2, piggyX: 1.5 },   // 第 40 關大王：每個屬性第一次打贏得到星辰之心＋星辰碎片；之後再打贏 30% 掉碎片
   ascend: { mats: 3, bigBoss: [10, 20, 30], tasks: {
     flame: [['wins', 30]], tide: [['washes', 30]], forest: [['harvests', 30]], earth: [['steps', 60000], ['earthWins', 20]],
     bird: [['goals', 30]], elec: [['bondUses', 5]], metal: [['cleanups', 40]] } },
   newRoutes: { stepsForEarth: 100000, goalsForBird: 30, bondForElec: 5, cleanForMetal: 50, earthEvery: 2000 },
   breed: { cost: 20, cooldownH: 6, minMood: 50, basket: 6 },
-  piggy: { base: .5, per: .25, maxLv: 30, capHours: 12, minMood: 30, sleepRate: .5, pairShare: .5 },   // 存錢筒（被動收入）：每小時 0.5＋等級×0.25（最多算到 Lv.30），最多存 12 小時
+  piggy: { base: .5, per: .25, maxLv: 30, capHours: 12, minMood: 30, sleepRate: .5, pairShare: .5,
+    rateX: [1, 1.25, 1.5, 1.8, 2.2, 3], capH: [12, 14, 16, 18, 20, 24], coreStages: [15, 20, 25, 30], corePrice: 1000 },   // V1.43 小豬撲滿等級 1～6：第 15／20／25／30 關王各掉一個核心碎片（+1 級），商店核心 1000 元（唯一，+1 級）   // 存錢筒（被動收入）：每小時 0.5＋等級×0.25（最多算到 Lv.30），最多存 12 小時
   loveNest: { cost: 300, cooldownH: 12, mood: 10 },          // 愛的小窩：買一次，成年期以上的一公一母可以進去生蛋
   pair: { rate: .5, advMinEnergy: 20, foeHp: 1.5, xpShare: .6 },   // 第二隻一起出來：狀態變化速度減半；一起冒險時敵人血量 ×1.5、第二隻分到 6 成經驗
   farm: { plots: 3, maxPlots: 6, expand: [30, 60, 90], growHours: 2, fruitMin: 2, fruitMax: 3, freshHours: 6, rotHours: 24, xp: 5, forest: 3, seedPrice: 5 },   // 收成：蘋果、莓果各隨機 1～2 顆；田可以花錢擴建到 6 格     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
@@ -59,7 +60,7 @@ const CONFIG = {
   train: { cost: 20, energy: -15, hunger: -10, clean: -8, minEnergy: 15, base: 10, perLv: 4,   // V1.41 訓練場：每次 20 金幣（器材＋場地費），達成目標才拿到經驗＝10＋等級×4
     kinds: { dodge: { name: '閃避訓練：躲避球', skill: 'dodge' }, rush: { name: '攻擊訓練：沙包連打', skill: 'attack' }, combo: { name: '攻擊訓練：組合拳', skill: 'attack' }, flash: { name: '攻擊訓練：靈光一閃', skill: 'attack' }, zen: { name: '防禦訓練：瀑布打坐', skill: 'defense' } } },
   ult: { power: 2.2 },
-  stageX: { egg: 1, baby: 1, juvenile: 1, adolescent: 1.05, adult: 1.1, ascended: 1.2 },   // V1.42 進化階段加能力：少年 ×1.05、成年 ×1.1、高階 ×1.2
+  stageX: { egg: 1, baby: 1, juvenile: 1, adolescent: 1.1, adult: 1.3, ascended: 1.5 },   // V1.43 進化階段加能力：幼年 ×1.0、成長 ×1.1、成年 ×1.3、高階 ×1.5（星耀覺醒再 ×2）
   trainBonus: { per: .01, max: .2 },                       // V1.42 訓練成功一次 +1%，每種最多 +20%：閃避＝猜拳輸也可能閃開、攻擊＝攻擊力、防禦＝防禦力和血量
   bossCoins: { mini: 15, big: 30 },                        // V1.42 打贏小王／大王額外金幣                                    // V1.40 大絕招：屬性技 2.2 倍，每場一次
   rps: { seconds: 2, win: 0, tie: .8, lose: 1.2 },          // 敵人出招前猜拳：贏＝躲開、平手 0.8 倍、輸或超時 1.2 倍
@@ -220,7 +221,7 @@ function fresh(now = Date.now()) {
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] }, goalLv: 0,
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
-    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
+    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
     events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
@@ -284,7 +285,7 @@ function sanitize(o, now = Date.now()) {
   r.pair = o.pair && typeof o.pair === 'object' && o.pair.hatched && r.hatched ? sanitizePet(o.pair, now) : null;
   if (r.pair && r.roster.length > CONFIG.den.length - 2) r.roster.length = CONFIG.den.length - 2;
   r.owner = typeof o.owner === 'string' ? o.owner.replace(/[<>&"]/g, '').trim().slice(0, 12) : '';
-  r.piggy = num(o.piggy, 0, 0, 1e5);
+  r.piggy = num(o.piggy, 0, 0, 1e5); r.pigCores = Array.isArray(o.pigCores) ? [...new Set(o.pigCores.filter(n => CONFIG.piggy.coreStages.includes(n)))] : []; r.pigBought = o.pigBought === true;
   r.awake = o.awake === true && r.stage === 'ascended';
   r.washes = int(o.washes, 0, 0, 1e7); r.earthWins = int(o.earthWins, 0, 0, 1e7);
   r.matGot = {}; if (o.matGot && typeof o.matGot === 'object') for (const k of ROUTES) if (Array.isArray(o.matGot[k])) r.matGot[k] = o.matGot[k].filter(n => [10, 20, 30, 40].includes(n)).slice(0, 4);
@@ -352,8 +353,11 @@ function applyTime(st, now = Date.now()) {
 }
 /* 存錢筒：幻獸等級越高，每小時存越多；金系 ×1.5；一起出來的第二隻再加牠的一半 */
 function piggyRateOf(p) { const P = CONFIG.piggy, T = traitOf(p.route); return (P.base + P.per * Math.min(level(p.xp), P.maxLv)) * (T.coinX || 1) * (p.awake ? CONFIG.starHeart.piggyX : 1); }
-function piggyRate(st) { if (!st.hatched) return 0; return piggyRateOf(st) + (st.pair ? piggyRateOf(st.pair) * CONFIG.piggy.pairShare : 0); }
-function piggyCap(st) { return Math.max(1, Math.round(piggyRate(st) * CONFIG.piggy.capHours)); }
+const pigLevel = st => Math.min(6, 1 + ((st.pigCores && st.pigCores.length) || 0) + (st.pigBought ? 1 : 0));
+function piggyRate(st) { if (!st.hatched) return 0; return (piggyRateOf(st) + (st.pair ? piggyRateOf(st.pair) * CONFIG.piggy.pairShare : 0)) * CONFIG.piggy.rateX[pigLevel(st) - 1]; }
+function piggyCap(st) { return Math.max(1, Math.round(piggyRate(st) * CONFIG.piggy.capH[pigLevel(st) - 1])); }
+function buyPigCore(st) { const P = CONFIG.piggy; if (st.pigBought) return { ok: false, msg: '小豬撲滿核心只有一個，已經買過了' }; if (st.coins < P.corePrice) return { ok: false, msg: `金幣不足（需要 ${P.corePrice}）` };
+  st.coins -= P.corePrice; st.pigBought = true; return { ok: true, lv: pigLevel(st), msg: `買了「小豬撲滿核心」！小豬撲滿升到 ${pigLevel(st)} 級${pigLevel(st) >= 6 ? '，變成最肥、會發光的金小豬！' : ''}` }; }
 function collectPiggy(st, now = Date.now()) { applyTime(st, now); const n = Math.floor(st.piggy || 0); if (n < 1) return { ok: false, n: 0, msg: '存錢筒裡還沒有金幣' }; st.coins += n; st.piggy -= n; return { ok: true, n }; }
 /* 星辰之心：高階的幻獸使用 → 星耀覺醒（全能力 +20%、存錢筒 ×1.5、名字前加「星耀」） */
 function canAwaken(st) { if (!st.hatched || st.stage !== 'ascended') return '要先進化到高階'; if (st.awake) return '已經星耀覺醒了'; if ((st.inv.hearts || 0) < 1) return '沒有星辰之心（打倒第 40 關大王）'; return null; }
@@ -648,6 +652,7 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
     else out.xp = addXP(st, Math.round(xp * A.overCapXpRate));
     if (r() < A.dropFood) { st.inv.food++; out.food = 1; }
     if (r() < CONFIG.potion.drop) { st.inv.potion++; out.potion = 1; }
+    if (CONFIG.piggy.coreStages.includes(n) && !(st.pigCores || (st.pigCores = [])).includes(n)) { st.pigCores.push(n); out.pigCore = pigLevel(st); journal(st, now, `第 ${n} 關王掉了「小豬撲滿核心碎片」！小豬撲滿升到 ${pigLevel(st)} 級`); }   // V1.43
     if (CONFIG.ascend.bigBoss.includes(n) && st.route) {   // 第 10／20／30 關大王：這個屬性各掉一次終極素材
       const got = st.matGot[st.route] || (st.matGot[st.route] = []);
       if (!got.includes(n)) { got.push(n); st.inv.mats[st.route] = (st.inv.mats[st.route] || 0) + 1; out.mat = st.route; out.matN = st.inv.mats[st.route]; journal(st, now, `第 ${n} 關大王掉了「${CONFIG.materials[st.route]}」（${Math.min(st.inv.mats[st.route], CONFIG.ascend.mats)}/${CONFIG.ascend.mats}）`); } }
@@ -988,7 +993,7 @@ const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
-  piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
