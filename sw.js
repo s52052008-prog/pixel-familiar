@@ -1,12 +1,16 @@
 // 幻獸日記 Service Worker — 離線快取
 // 更新遊戲時，請把 VERSION 改成新版本號，iPhone 才會換成新檔案。
-const VERSION = 'pf-1.55.0';
+const VERSION = 'pf-1.56.0';
 const CORE = ['./', './index.html', './game-core.js'];
 const EXTRA = ['./manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png',
   ...['flame','tide','forest','earth','bird','elec','metal'].flatMap(el => [0,1,2,3,4].flatMap(n => ['open','closed'].map(e => `./sprites/${el}_${n}_${e}.png`))),
   ...['flame','tide','forest','earth','bird','elec','metal'].map(el => `./sprites/egg_${el}.png`),
   ...['relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','den1','den2','den3','den4','den5','den6','den7','den_fusion','pig1','pig2','pig3','pig4','pig5','pig6','pigshard','pigcore','potion','potion2','soup','seed2','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec'].map(n => `./sprites/items/${n}.png`),
   ...['apple', 'backpack', 'bolt', 'book', 'calendar', 'check', 'cheese', 'chest', 'coin', 'dumbbell', 'floppy', 'gear', 'gem', 'heart', 'house', 'info', 'leaf', 'leafbook', 'levelup', 'map', 'meat', 'moon', 'paw', 'pawbook', 'pawlight', 'picture', 'question', 'refresh', 'scroll', 'shop', 'star', 'stew', 'swords', 'trophy', 'waterbowl', 'zzz'].map(n => `./sprites/ui/${n}.png`),
+  ...['ball','sun','sponge','tub','shoe','bite','poop','ember','note','cranberry','blueberry','strawberry','drop','fly','worry','el_fire','el_water','el_leaf','el_earth','el_bird','el_elec','el_metal','sex_m','sex_f','bondheart'].map(n => `./sprites/items/ic_${n}.png`),
+  ...['fire','bubble','leaf','rock','feather','bolt','shard','star','spark','heart','z'].map(n => `./sprites/fx/p_${n}.png`),
+  ...['burn','splash','zap'].flatMap(g => [0,1,2].map(i => `./sprites/fx/${g}${i}.png`)),
+  ...['meadow_1','meadow_2','rock_1','rock_2','water_1','forest_1','forest_2','canyon_1','canyon_2','sky_1','tower_1'].map(n => `./sprites/arena/${n}.webp`),
   './sprites/wild_n.png', './sprites/wild_b.png'];
 
 self.addEventListener('install', e => {

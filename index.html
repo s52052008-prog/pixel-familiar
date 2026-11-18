@@ -76,7 +76,7 @@ img.uic{width:21px;height:21px;vertical-align:-5px;margin-right:5px;display:inli
 #mpSkill{grid-template-columns:repeat(3,1fr)!important}#mpSkill .back{grid-column:auto!important}#mpSkill .act{font-size:13px}
 #pickTag{text-align:center;font-weight:900;font-size:14px;color:#3a2210;background:#ffd86a;border:3px solid #2a170a;padding:4px;margin-bottom:6px}
 #bBanner{position:absolute;left:4%;right:4%;top:3%;text-align:center;font-weight:900;font-size:22px;line-height:1.25;color:#fff;padding:8px 6px;border:3px solid currentColor;background:#1a1008d8;text-shadow:0 2px 0 #000;pointer-events:none;animation:bpop .35s ease-out}#bBanner small{display:block;font-size:13px;color:#fff3d0;font-weight:700}@keyframes bpop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
-#bcv{display:block;width:100%;aspect-ratio:128/112;image-rendering:pixelated;image-rendering:crisp-edges;border:3px solid var(--line);box-shadow:0 0 0 2px var(--hi)}
+#bcv{background-size:100% 100%;background-position:center;display:block;width:100%;aspect-ratio:128/112;image-rendering:pixelated;image-rendering:crisp-edges;border:3px solid var(--line);box-shadow:0 0 0 2px var(--hi)}
 .hp{background:var(--panel);border:2px solid var(--line);box-shadow:inset 0 0 0 2px var(--hi);padding:6px 9px;font-size:13px}
 .hp .t{display:flex;justify-content:space-between;font-weight:700}.hp .bar i{background:#6ad06a}.hp.foe .bar i{background:#e86a6a}
 .moves{display:block}.mpanel{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mpanel.hidden{display:none}.mpanel .back{grid-column:1/-1;min-height:40px!important}.moves .act{min-height:54px;font-size:14px;gap:2px}.moves .act small{font-size:11px;font-weight:700;opacity:.85}
@@ -290,7 +290,7 @@ h1{font-size:17px}.ver{font-size:9px}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.55.0';
+const VERSION='1.56.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -753,15 +753,21 @@ const ITEM_ICON={potion2:'potion2',soup:'soup',seeds2:'seed2',food:'apple',berry
 function buildIcons(){for(const k in ICONS){const I=ICONS[k],h=I.m.length,w=I.m[0].length,g=grid(w+2,h+2);
  I.m.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!=='.')px(g,x+1,y+1,I.p[ch])}));if(I.o)outline(g,I.o);ICV[k]=gridCanvas(g)}}
 /* 手繪道具圖（tools/import_items.py 產生）：載入後取代程式畫的家具與圖示 */
-const ITEM_NAMES=['relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','den1','den2','den3','den4','den5','den6','den7','den_fusion','pig1','pig2','pig3','pig4','pig5','pig6','pigshard','pigcore','potion2','soup','seed2','bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec'];
-const ITEM_ICONS=new Set(['relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','pigshard','pigcore','potion2','soup','seed2','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec']);
+const ITEM_NAMES=['ic_ball','ic_sun','ic_sponge','ic_tub','ic_shoe','ic_bite','ic_poop','ic_ember','ic_note','ic_cranberry','ic_blueberry','ic_strawberry','ic_drop','ic_fly','ic_worry','ic_el_fire','ic_el_water','ic_el_leaf','ic_el_earth','ic_el_bird','ic_el_elec','ic_el_metal','ic_sex_m','ic_sex_f','ic_bondheart','relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','den1','den2','den3','den4','den5','den6','den7','den_fusion','pig1','pig2','pig3','pig4','pig5','pig6','pigshard','pigcore','potion2','soup','seed2','bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec'];
+const ITEM_ICONS=new Set(['ic_ball','ic_sun','ic_sponge','ic_tub','ic_shoe','ic_bite','ic_poop','ic_ember','ic_note','ic_cranberry','ic_blueberry','ic_strawberry','ic_drop','ic_fly','ic_worry','ic_el_fire','ic_el_water','ic_el_leaf','ic_el_earth','ic_el_bird','ic_el_elec','ic_el_metal','ic_sex_m','ic_sex_f','ic_bondheart','relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','pigshard','pigcore','potion2','soup','seed2','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec']);
 function tintCanvas(src,rgba){const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const x=c.getContext('2d');x.drawImage(src,0,0);x.globalCompositeOperation='source-atop';x.fillStyle=rgba;x.fillRect(0,0,c.width,c.height);return c}
 /* V1.49 家具、小豬的黑邊換成深咖啡色，看起來比較乾淨柔和 */
 function softEdge(c){try{const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height),a=d.data;for(let i=0;i<a.length;i+=4)if(a[i+3]&&a[i]+a[i+1]+a[i+2]<150){a[i]=92;a[i+1]=58;a[i+2]=34}x.putImageData(d,0,0)}catch(e){}}
+/* V1.56 新圖示：這些名字直接換成 GPT 畫的（院子裡的汗滴、蒼蠅、煩惱雲太大，只用在文字裡） */
+const IC_OVR=new Set(['ball','sun','sponge','tub','shoe','bite','poop','ember','note','cranberry','blueberry','strawberry']);
+const FX_P=['fire','bubble','leaf','rock','feather','bolt','shard','star','spark','heart','z'],FXA={};
 function loadItems(){let left=ITEM_NAMES.length;for(const n of ITEM_NAMES){const im=new Image();
  im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);
-  if(ITEM_ICONS.has(n))ICV[n]=c;else{softEdge(c);DSPR[n]=c}if(n==='core')ICV.coreRot=tintCanvas(c,'rgba(90,70,20,.55)');if(n==='bone')ICV.boneRot=tintCanvas(c,'rgba(90,80,30,.5)');if(n==='toy_ball')toyCv=null;done()};
+  if(ITEM_ICONS.has(n))ICV[n]=c;else{softEdge(c);DSPR[n]=c}if(n==='core')ICV.coreRot=tintCanvas(c,'rgba(90,70,20,.55)');if(n==='bone')ICV.boneRot=tintCanvas(c,'rgba(90,80,30,.5)');if(n==='toy_ball')toyCv=null;
+  {const b=n.slice(3);if(n.startsWith('ic_')&&IC_OVR.has(b)){ICV[b]=c;if(b==='poop')ICV.poopRot=tintCanvas(c,'rgba(90,80,30,.5)');MI_URL[b]=null}}done()};
  im.onerror=done;im.src=`sprites/items/${n}.png`}
+ for(const n of FX_P){const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);ICV[n]=c};im.src=`sprites/fx/p_${n}.png`}   // V1.56 GPT 畫的戰鬥粒子
+ for(const g of['burn','splash','zap'])for(let i=0;i<3;i++){const im=new Image();im.onload=()=>{FXA[g+i]=im};im.src=`sprites/fx/${g}${i}.png`}
  function done(){if(--left)return;bgKey='';document.querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));if(typeof renderFoodBar==='function')renderFoodBar()}}
 /* 新版介面圖示（sprites/ui，高解析度）：愛心、閃電、月亮、星星 */
 const UI_OVR={heart:'heart',bolt:'bolt',moon:'moon',star:'star',gem:'gem'},UIIMG={};
@@ -996,7 +1002,7 @@ const lightOn=ph=>(ph==='night'||ph==='dusk')&&s.settings.light!==false;
 function drawCeilingLamp(on){const x=58;ctx.fillStyle='#4a3a2a';ctx.fillRect(x+5,0,1,7);
  ctx.fillStyle='#6a4a2a';ctx.fillRect(x+2,7,7,1);ctx.fillStyle=on?'#ffcf6a':'#c8b48a';ctx.fillRect(x+1,8,9,3);ctx.fillStyle=on?'#ffe9a8':'#d8c8a0';ctx.fillRect(x+2,8,3,1);
  ctx.fillStyle='#6a4a2a';ctx.fillRect(x,11,11,1);ctx.fillStyle=on?'#fff6d0':'#a8a090';ctx.fillRect(x+4,12,3,2)}
-function drawRoomFront(now,ph){
+function drawRoomFront(now,ph){const P=s.decor.placed;
  if(lightOn(ph)){ctx.fillStyle='rgba(20,15,40,.18)';ctx.fillRect(0,0,W,H);   // 燈罩以外稍暗，扇形光才看得出來
   // 暖燈：從吊燈往下散開的扇形光
   const g=ctx.createLinearGradient(0,13,0,108);g.addColorStop(0,'rgba(255,214,130,.62)');g.addColorStop(.45,'rgba(255,196,110,.30)');g.addColorStop(1,'rgba(255,180,100,.10)');
@@ -1286,7 +1292,9 @@ function growLine(){
  if(q){const left=[];if(!q.ageOk)left.push(`${Math.ceil(q.hours-q.age)} 小時`);if(!q.xpOk)left.push(`${q.xp-s.xp} XP`);if(!q.eventOk){const A=PC.ascendInfo(s);if(A.task&&!A.task.done)left.push(`🔔 ${A.task.text}（${A.task.alts.map(a=>fmtN(a.have)+'/'+fmtN(a.need)).join('、')}）`)}if(!q.matOk&&q.mat)left.push(`素材「${q.mat}」${q.matHave}/${CONFIG.ascend.mats}${q.shards?`＋星辰碎片 ${q.shards}`:''}（第 ${CONFIG.ascend.bigBoss.join('、')} 關大王）`);
   g+=left.length?` · 距離${STAGE_NAME[q.next]}：${left.join('、')}`:` · 即將長成${STAGE_NAME[q.next]}！`}
  return g+(hint?` · ${hint}`:'')}
-const sexMark=p=>p&&p.sex==='m'?' ♂':p&&p.sex==='f'?' ♀':'';
+const sexMark=p=>p&&p.sex==='m'?' '+MI('ic_sex_m','♂'):p&&p.sex==='f'?' '+MI('ic_sex_f','♀'):'';
+const RTE_IC={flame:'ic_el_fire',tide:'ic_el_water',forest:'ic_el_leaf',earth:'ic_el_earth',bird:'ic_el_bird',elec:'ic_el_elec',metal:'ic_el_metal'},EL_IC={fire:'ic_el_fire',water:'ic_el_water',leaf:'ic_el_leaf',earth:'ic_el_earth',bird:'ic_el_bird',elec:'ic_el_elec',metal:'ic_el_metal'};
+const rIcon=r=>MI(RTE_IC[r],ROUTE_ICON[r]||''),elHTML=e=>e&&EL_IC[e]?MI(EL_IC[e],'')+EL_NAME[e].replace(/^\S+?(?=[火水森土鳥電金])/,''):(EL_NAME[e]||'');
 const ownerName=()=>s.owner||'主人';
 /* V1.55 文字裡的小圖示：用遊戲裡的像素圖取代 emoji（圖還沒載入時先用 emoji） */
 const MI_URL={};function MI(name,fb=''){let u=MI_URL[name];if(!u){const c=UIIMG[name]||ICV[name]||DSPR[name];if(!c)return fb;try{u=MI_URL[name]=c.toDataURL()}catch(e){return fb}}return`<img class="mi" src="${u}" alt="">`}
@@ -1299,9 +1307,9 @@ function renderPairBar(){const el=$('pairBar'),p=s.pair;if(!p||!s.hatched){el.cl
 function renderUI(){
  $('coins').textContent=s.coins;renderPairBar();
  const F=formOf(formKey()),rar=F.genome&&F.genome.rarity>1&&!F.classic?` · ${STARS[F.genome.rarity]}${RARITY[F.genome.rarity]}`:'',tierN=PC.stepTier(s);
- $('petname').textContent=s.hatched?`${s.awake?'🌟星耀 ':''}${s.name}${sexMark(s)}　Lv.${lvl()}${tierN?' '+'✦'.repeat(Math.min(5,tierN)):''}`:F.name;
+ $('petname').innerHTML=s.hatched?`${s.awake?'🌟星耀 ':''}${esc(s.name)}${sexMark(s)}　Lv.${lvl()}${tierN?' '+'✦'.repeat(Math.min(5,tierN)):''}`:F.name;
  {const T=s.hatched&&PC.traitOf(s.route);$('traitText').textContent=T&&T.good?`✨ ${T.good}　⚠️ ${T.bad}`:''}
- $('stageText').textContent=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome&&F.genome.el?' · 會孵出'+ROUTE_LABEL[F.genome.el]+'的新物種':''}`:`${s.sex==='m'?'♂ 公 · ':s.sex==='f'?'♀ 母 · ':''}${s.route?ROUTE_ICON[s.route]+ROUTE_LABEL[s.route]+' · ':''}${STAGE_NAME[s.stage]} · ${F.name}${rar} · 第 ${dayCount()} 天`;
+ $('stageText').innerHTML=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome&&F.genome.el?' · 會孵出'+ROUTE_LABEL[F.genome.el]+'的新物種':''}`:`${s.sex==='m'?MI('ic_sex_m','♂')+'公 · ':s.sex==='f'?MI('ic_sex_f','♀')+'母 · ':''}${s.route?rIcon(s.route)+ROUTE_LABEL[s.route]+' · ':''}${STAGE_NAME[s.stage]} · ${F.name}${rar} · 第 ${dayCount()} 天`;
  $('growText').textContent=s.runaway?`😢 ${s.name}離家出走了！到「👟 步數」登記走路，找牠回來：${(s.runaway.got||0).toLocaleString()} / ${CONFIG.runaway.steps.toLocaleString()} 步`
   :s.starveSince?`⚠️ 餓壞了！再 ${Math.max(0,Math.ceil((s.starveSince+CONFIG.runaway.starveHours*3600000-Date.now())/3600000))} 小時不餵，牠就會離家出走！`:growLine();
  $('stepInfo').innerHTML=`${MI('apple','🍎')}${s.inv.food} · ${MI('seed','🌱')}${s.inv.seeds}${s.inv.seeds2?' · '+MI('seed2','🌟')+s.inv.seeds2:''}${s.inv.candy?' · '+MI('candy','🍬')+s.inv.candy:''}${s.inv.potion?' · '+MI('potion','🧪')+s.inv.potion:''}${s.inv.potion2?' · '+MI('potion2','💖')+s.inv.potion2:''}${s.inv.soup?' · '+MI('soup','🍲')+s.inv.soup:''} · ${MI('shoe','👟')}${fmtN(s.steps.days[PC.dayKey(Date.now())]||0)} 步 · ${MI_UI('swords')}冒險 ${s.daily.adv}${s.eggs.length?' · 🧺 蛋 '+s.eggs.length:''}${s.hatched?` · ${MI('pig1','🐷')}${Math.floor(s.piggy||0)}/${PC.piggyCap(s)}`:''}`;
@@ -1752,7 +1760,7 @@ const AREAS=['青草原','迷霧湖','火山口','古森林','大地峽谷','天
 function areaName(n){return AREAS[Math.min(8,Math.floor((n-1)/5))]+' '+(n>40?n-40:((n-1)%5)+1)}
 /* 野生怪獸用另一套（程式繪製）的外型，不會跟 7 系幻獸長得一樣 */
 function foeFighter(n){const f=PC.foeFor(n,lvl()),key=petKey(f.id,formCode(f.stage,f.route))+'|wild'+(f.mon?'|'+WILD_MON.findIndex(m=>m[0]===f.mon):''),F=formOf(key);
- const ft=PC.foeFighter(n,lvl(),(f.big?'👑大王 ':f.boss?'小王 ':'野生的 ')+F.name,key);ft.elTxt=EL_NAME[ft.el]+(ft.el2?'＋'+EL_NAME[ft.el2]:'');return ft}   // 血量：一般 ×1.3、小王 ×1.5、大王 ×2；第 31 關起星之塔再 ×1.8、攻擊 ×1.3
+ const ft=PC.foeFighter(n,lvl(),(f.big?'👑大王 ':f.boss?'小王 ':'野生的 ')+F.name,key);ft.elTxt=EL_NAME[ft.el]+(ft.el2?'＋'+EL_NAME[ft.el2]:'');ft.elA=ft.el;ft.el2s=ft.el2;return ft}   // 血量：一般 ×1.3、小王 ×1.5、大王 ×2；第 31 關起星之塔再 ×1.8、攻擊 ×1.3
 let B=null;const bparts=[];const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 /* V1.42 關卡清單的相剋提示：▲ 你剋牠、▼ 牠剋你 */
 function elemHint(f){const me={el:PC.ELEM[s.route]||'none'},a=PC.elemMult(me,f,true),b=Math.max(PC.elemMult(f,me,true),f.el2?PC.elemMult({el:f.el2},me,true):0);return a>1?' <b class="ehint up">▲你剋牠</b>':b>1?' <b class="ehint dn">▼牠剋你</b>':''}
@@ -1787,7 +1795,7 @@ function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');retu
  const duo=PC.pairAdventureCost(s),P=s.pair,me2=duo?PC.buffFighter(PC.mkFighter(P.name,pairKey(),PC.level(P.xp),P.route,tier(),P.mood,P.bond),P):null;if(me2){me2.aura=auraOf(P);me2.stage=P.stage}   // 第二隻有體力就一起上場
  if(duo){foe.max=foe.hp=Math.round(foe.max*CONFIG.pair.foeHp);save()}
  const fx0=()=>({dx:0,dy:0,flash:0,faint:0,anim:null,t0:0});
- B={n,full:r.full,arena:arenaFor(n,foe),bondUsed:false,ultUsed:false,me,me2,duo,foe,busy:false,over:false,fx:{me:fx0(),me2:fx0(),foe:fx0()}};bparts.length=0;
+ B={n,full:r.full,arena:arenaFor(n,foe),bondUsed:false,ultUsed:false,me,me2,duo,foe,busy:false,over:false,fx:{me:fx0(),me2:fx0(),foe:fx0()}};bparts.length=0;setArenaBg(n);
  {const U=CONFIG.bossUlt[n];if(U){foe.ult=Object.assign({},U,BULT_FX[U.key]);foe.ultState='ready';if(U.key==='rebirth')foe.revive=U.hp}}$('bBanner').classList.add('hidden');
  $('battle').classList.remove('hidden');$('bResult').classList.add('hidden');$('moves').classList.remove('hidden');showPanel('mpMain');
  $('mvSp').textContent='✨ '+SP_NAME[me.el];blog(`📍 ${ARENA_NAME[arenaFor(n,foe)]}\n${foe.name} 出現了！（${foe.elTxt||EL_NAME[foe.el]} Lv.${foe.level}）${duo?`\n🐾 ${me.name} 和 ${me2.name} 一起上場！`:s.pair?`\n（${s.pair.name} 體力不夠，留在家休息）`:''}`);bUI();sfx('play')}
@@ -1848,8 +1856,8 @@ function makeArena(k){if(ARENA_CACHE[k])return ARENA_CACHE[k];const cv=document.
  return ARENA_CACHE[k]=cv}
 /* ---------------- 戰鬥介面 ---------------- */
 function bUI(){const{me,foe}=B,danger=dangerNow();
- $('fName').textContent=`${foe.name}  Lv.${foe.level} ${foe.elTxt||EL_NAME[foe.el]}${bossStat(foe)}`;$('fHp').textContent=`${foe.hp}/${foe.max}`;$('fBar').style.width=foe.hp/foe.max*100+'%';
- $('mName').textContent=`${me.name}  Lv.${me.level} ${EL_NAME[me.el]}${tier()?' '+'✦'.repeat(tier()):''}${me.charged?' ⚡蓄力中':''}${petStat(me)}${danger?'　⚠️ 危險！':''}`;$('mHp').textContent=`${me.hp}/${me.max}${B.me2?`　🐾${B.me2.name} ${Math.max(0,B.me2.hp)}/${B.me2.max}${petStat(B.me2)}`:''}`;$('mBar').style.width=me.hp/me.max*100+'%';
+ $('fName').innerHTML=`${esc(foe.name)}  Lv.${foe.level} ${elHTML(foe.elA||foe.el)}${foe.el2s?'＋'+elHTML(foe.el2s):''}${bossStat(foe)}`;$('fHp').textContent=`${foe.hp}/${foe.max}`;$('fBar').style.width=foe.hp/foe.max*100+'%';
+ $('mName').innerHTML=`${esc(me.name)}  Lv.${me.level} ${elHTML(me.el)}${tier()?' '+'✦'.repeat(tier()):''}${me.charged?' ⚡蓄力中':''}${petStat(me)}${danger?'　⚠️ 危險！':''}`;$('mHp').textContent=`${me.hp}/${me.max}${B.me2?`　🐾${B.me2.name} ${Math.max(0,B.me2.hp)}/${B.me2.max}${petStat(B.me2)}`:''}`;$('mBar').style.width=me.hp/me.max*100+'%';
  $('mBar').style.background=me.hp/me.max<.3?'#e86a6a':'';
  const A=actor(),duoPick=!!(B.me2&&B.me2.hp>0&&!B.me2.out&&!B.over);   // V1.55 現在輪到哪一隻選招
  const tag=(sp)=>{const e=PC.expectDamage(A,foe,sp),m=PC.elemMult(A,foe,sp),pct=Math.round(e/Math.max(1,foe.hp)*100);return`約 ${e}${m>1?' ▲':m<1?' ▼':''}${pct>=100?'（可擊倒）':''}`};
@@ -1868,12 +1876,17 @@ function aiMove(f){const me=B&&B.me;   // 野生怪會看情況出招：能打�
  if(me&&f.cd===0&&PC.expectDamage(f,me,true)>=me.hp)return'special';if(me&&PC.expectDamage(f,me,false)>=me.hp)return'tackle';
  if(f.hp<f.max*.3&&Math.random()<.4)return'guard';if(!f.charged&&f.hp>f.max*.4&&Math.random()<.22)return'charge';if(f.cd===0&&Math.random()<.65)return'special';return'tackle'}
 const BPOS={foe:[94,50],me:[34,82],me2:[60,74]};
+/* V1.56 GPT 畫的戰鬥背景：放在戰鬥畫面後面（高解析度），站位跟著背景上的圓形平台往上移 14 */
+const ARENA_IMG={meadow:['meadow_1','meadow_2'],rock:['rock_1','rock_2'],water:['water_1'],forest:['forest_1','forest_2'],canyon:['canyon_1','canyon_2'],sky:['sky_1'],tower:['tower_1']},ARENA_OK={};
+setTimeout(()=>{for(const k in ARENA_IMG)for(const v of ARENA_IMG[k]){const im=new Image();im.onload=()=>{ARENA_OK[v]=true};im.src=`sprites/arena/${v}.webp`}},1500);
+function setArenaBg(n){const L=ARENA_IMG[B.arena]||[],v=L.length?L[n%L.length]:null,ok=v&&ARENA_OK[v],OY=ok?-14:0;B.bg=ok?v:null;B.oy=OY;
+ $('bcv').style.backgroundImage=ok?`url(sprites/arena/${v}.webp)`:'';Object.assign(BPOS,{foe:[94,50+OY],me:[34,82+OY],me2:[60,74+OY]})}
 /* 👑 V1.54 王的專屬絕招：圖示、顏色、特效 */
 const BULT_FX={moss:{icon:'🌿',col:'#5fe08a',ic:'leaf'},charge:{icon:'🌋',col:'#ff6a2a',ic:'rock'},wall:{icon:'🛡️',col:'#f0e6c8',ic:'shard'},curse:{icon:'🔮',col:'#b070ff',ic:'star'},doom:{icon:'💀',col:'#ff4060',ic:'spark'},rebirth:{icon:'🔥',col:'#ffb030',ic:'fire'},breath:{icon:'🐲',col:'#ff5a2a',ic:'fire'},zero:{icon:'❄️',col:'#7fe0ff',ic:'bubble'}};
 let bannerT=0;function bossBanner(txt,col,sub=''){const b=$('bBanner');b.innerHTML=txt+(sub?`<small>${sub}</small>`:'');b.style.color=col;b.classList.remove('hidden');b.style.animation='none';void b.offsetWidth;b.style.animation='';clearTimeout(bannerT);bannerT=setTimeout(()=>b.classList.add('hidden'),sub?2600:1700)}
 function bossFlash(col,ms=600){B.tint={col,until:performance.now()+ms};B.shake=performance.now()+Math.min(ms,500)}
 async function bossHit(f,d,mult,ic,msg){const ds=sideOf(d),[tx,ty]=BPOS[ds];blog(msg);B.fx.foe.anim='jump';B.fx.foe.t0=performance.now();await sleep(250);
- const r=PC.damage(f,d,false,Math.random,mult);if(r.reflect){f.hp=Math.max(0,f.hp-r.reflect);setTimeout(()=>blog(`⚙️ 反彈 ${r.reflect} 點傷害給 ${f.name}！`),900)}B.fx[ds].flash=performance.now()+600;bossFlash(f.ult.col);buzz(80);sfx('crack');spawn(ic,12,{x:tx,y:ty,vy:-24,jx:36,life:1,spread:20},bparts);bUI();
+ const r=PC.damage(f,d,false,Math.random,mult);{const g={fire:'burn',bubble:'splash',shard:'splash',rock:'burn'}[ic];if(g)B.anim={g,x:tx,y:ty+12,t0:performance.now()}}if(r.reflect){f.hp=Math.max(0,f.hp-r.reflect);setTimeout(()=>blog(`⚙️ 反彈 ${r.reflect} 點傷害給 ${f.name}！`),900)}B.fx[ds].flash=performance.now()+600;bossFlash(f.ult.col);buzz(80);sfx('crack');spawn(ic,12,{x:tx,y:ty,vy:-24,jx:36,life:1,spread:20},bparts);bUI();
  await sleep(500);blog(`${msg}\n造成 ${r.dmg} 點傷害！`);if(r.endured){await sleep(700);blog(`💗 ${d.name} 想起和你的羈絆，撐住了！`)}if(r.revived){await sleep(700);blog(`🪶 不死鳥羽毛發光！${d.name} 浴火重生，HP 回到 ${d.hp}！`);B.fx[ds].faint=0}await sleep(700)}
 async function bossAct(f,d,m){const U=f.ult,[fx,fy]=BPOS.foe,ds=sideOf(d),[tx,ty]=BPOS[ds];f.aura=null;
  if(m==='bossult'){f.ultState='done';bossBanner(`${U.icon} ${U.name}！`,U.col,f.name.replace(/^👑大王 |^小王 /,''));blog(`👑 ${f.name} 使出專屬絕招「${U.name}」！`);B.fx.foe.anim='jump';B.fx.foe.t0=performance.now();sfx('evolve');buzz(60);bossFlash(U.col,800);
@@ -1908,7 +1921,7 @@ async function doMove(a,d,mv,side,boost=1){
  const sp=mv==='special'||mv==='bond'||mv==='ult';if(mv==='special')a.cd=3;if(sp&&a.el2&&a.el2!=='dragon'&&Math.random()<.5){const e=a.el;a.el=a.el2;a.el2=e}   // V1.53 雙屬性的王：屬性技隨機用其中一個屬性if(mv==='ult')boost*=CONFIG.ult.power;
  blog(mv==='bond'?`💗 ${a.name} 的羈絆之力爆發！`:mv==='ult'?`🌟 ${a.name} 的大絕招「${ULT_NAME[a.el]||'大絕招'}」！${a.charged?'（蓄力 ×2）':''}`:`${a.name} 使出${sp?'「'+SP_NAME[a.el]+'」':'衝撞'}！${a.charged?'（蓄力 ×2）':''}`);A.anim='jump';A.t0=performance.now();const dir=side==='foe'?-1:1;A.dx=10*dir;A.dy=-6*dir;sfx(sp?'evolve':'tap');await sleep(220);A.dx=0;A.dy=0;
  const{dmg,mult,crit,endured,revived,reflect}=PC.damage(a,d,sp,Math.random,boost);D.flash=performance.now()+500;buzz(mv==='bond'||mv==='ult'?60:20);if(mv==='ult'){flashUntil=performance.now()+400}
- const tx=BPOS[dside][0],ty=BPOS[dside][1];spawn(mv==='bond'?'heart':sp?SP_ICON[a.el]:'spark',mv==='bond'||mv==='ult'?12:sp?6:3,{x:tx,y:ty,vy:-20,jx:30,life:.8,spread:16},bparts);sfx('crack');bUI();
+ const tx=BPOS[dside][0],ty=BPOS[dside][1];{const g=sp&&{fire:'burn',water:'splash',elec:'zap'}[a.el];if(g)B.anim={g,x:tx,y:ty+12,t0:performance.now()}}spawn(mv==='bond'?'heart':sp?SP_ICON[a.el]:'spark',mv==='bond'||mv==='ult'?12:sp?6:3,{x:tx,y:ty,vy:-20,jx:30,life:.8,spread:16},bparts);sfx('crack');bUI();
  await sleep(450);blog(`${crit?'會心一擊！':''}造成 ${dmg} 點傷害${mult>1?'，效果絕佳！':mult<1?'，效果不太好…':''}`);await sleep(750);
  if(endured){blog(`💗 ${d.name} 想起和你的羈絆，撐住了！`);await sleep(1000)}
  if(reflect&&a.hp>0){a.hp=Math.max(0,a.hp-reflect);A.flash=performance.now()+500;spawn('shard',5,{x:BPOS[side][0],y:BPOS[side][1],vy:-14,jx:20,life:.8,spread:12},bparts);blog(`🛡️ 骸骨鐵壁把 ${reflect} 點傷害反彈給 ${a.name}！`);bUI();await sleep(900)}
@@ -2034,7 +2047,7 @@ function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond
  save();renderUI();setTimeout(()=>afterChange(x0),0)}
 function closeBattle(){$('battle').classList.add('hidden');B=null;renderUI();if(s.hatched)say(s.mood>60?'冒險好好玩！':'有點累了…')}
 const bcv=$('bcv'),bctx=bcv.getContext('2d');bctx.imageSmoothingEnabled=false;
-function drawBattle(now){if(!B)return;const c=bctx;c.save();if(B.shake>now&&!rm())c.translate(Math.round((Math.random()-.5)*4),Math.round((Math.random()-.5)*3));c.drawImage(makeArena(B.arena),0,0);
+function drawBattle(now){if(!B)return;const c=bctx;c.save();if(B.shake>now&&!rm())c.translate(Math.round((Math.random()-.5)*4),Math.round((Math.random()-.5)*3));if(B.bg)c.clearRect(-4,-4,W+8,H+8);else c.drawImage(makeArena(B.arena),0,0);const OY=B.oy||0;
  const one=(f,FX,x,y,side)=>{const S=sheet(f.key);let fr;if(f.hp<=0)fr='sad0';else if(FX.anim==='jump'&&now-FX.t0<500)fr=['jump0','jump1','jump0'][Math.floor((now-FX.t0)/170)%3];
   else if(FX.anim==='happy'&&now-FX.t0<800)fr='happy0';else fr=f.hp<f.max*.3?['tired0','tired1'][Math.floor(now/600)%2]:['idle0','idle0','idle1','idle1'][Math.floor(now/400)%4];
   const fade=FX.faint?Math.max(0,1-(now-FX.faint)/700):1;c.globalAlpha=fade;
@@ -2043,11 +2056,12 @@ function drawBattle(now){if(!B)return;const c=bctx;c.save();if(B.shake>now&&!rm(
   if(side==='me'){c.save();c.translate(x+FX.dx+CELL,0);c.scale(-1,1);c.drawImage(src,S.idx[fr]*CELL,0,CELL,CELL,0,yy,CELL,CELL);c.restore()}   // 我方轉身面向敵人
   else c.drawImage(src,S.idx[fr]*CELL,0,CELL,CELL,x+FX.dx,yy,CELL,CELL);c.globalAlpha=1;
   if(f.charged&&Math.floor(now/150)%2){c.fillStyle='#ffe066';c.fillRect(x+10,y+6,2,2);c.fillRect(x+36,y+10,2,2)}};
- one(B.foe,B.fx.foe,70,20,'foe');if(B.me2)one(B.me2,B.fx.me2,36,50,'me');one(B.me,B.fx.me,10,58,'me');
+ one(B.foe,B.fx.foe,70,20+OY,'foe');if(B.me2)one(B.me2,B.fx.me2,36,50+OY,'me');one(B.me,B.fx.me,10,58+OY,'me');
+ if(B.anim){const e=now-B.anim.t0,fi=Math.floor(e/140);if(fi>3)B.anim=null;else{const im=FXA[B.anim.g+Math.min(2,fi)];if(im){const k=1.6;c.globalAlpha=fi>2?.5:1;c.drawImage(im,Math.round(B.anim.x-im.width*k/2),Math.round(B.anim.y-im.height*k+6),Math.round(im.width*k),Math.round(im.height*k));c.globalAlpha=1}}}
  {const f=B.foe,t=now/1000;   // 王的絕招狀態特效
-  if(f.wallT>0&&f.hp>0){c.globalAlpha=.55+.2*Math.sin(t*6);c.strokeStyle='#f0e6c8';c.lineWidth=2;c.beginPath();c.ellipse(94,44,24,24,0,0,Math.PI*2);c.stroke();c.strokeStyle='#a89870';c.lineWidth=1;c.beginPath();c.ellipse(94,44,21,21,0,0,Math.PI*2);c.stroke();c.globalAlpha=1}
-  if(f.mossT>0&&f.hp>0&&Math.random()<.08)spawn('leaf',1,{x:94,y:58,vy:-10,jx:30,life:1,spread:24},bparts);
-  for(const[tg,ox,oy]of[[B.me,10,58],[B.me2,36,50]]){if(!tg||tg.hp<=0)continue;const cx=ox+24;
+  if(f.wallT>0&&f.hp>0){c.globalAlpha=.55+.2*Math.sin(t*6);c.strokeStyle='#f0e6c8';c.lineWidth=2;c.beginPath();c.ellipse(94,44+OY,24,24,0,0,Math.PI*2);c.stroke();c.strokeStyle='#a89870';c.lineWidth=1;c.beginPath();c.ellipse(94,44+OY,21,21,0,0,Math.PI*2);c.stroke();c.globalAlpha=1}
+  if(f.mossT>0&&f.hp>0&&Math.random()<.08)spawn('leaf',1,{x:94,y:58+OY,vy:-10,jx:30,life:1,spread:24},bparts);
+  for(const[tg,ox,oy]of[[B.me,10,58+OY],[B.me2,36,50+OY]]){if(!tg||tg.hp<=0)continue;const cx=ox+24;
    if(tg.frozen){c.globalAlpha=.45+.1*Math.sin(t*4);c.fillStyle='#bff0ff';c.fillRect(ox+8,oy+10,32,36);c.globalAlpha=.9;c.strokeStyle='#ffffff';c.lineWidth=1;c.strokeRect(ox+8.5,oy+10.5,31,35);c.fillStyle='#ffffff';c.fillRect(ox+12,oy+14,6,2);c.fillRect(ox+12,oy+14,2,6);c.globalAlpha=1}
    if(tg.curseT){for(let i=0;i<4;i++){const a=t*3+i*Math.PI/2;c.fillStyle=i%2?'#d090ff':'#8040d0';c.fillRect(Math.round(cx+Math.cos(a)*10)-1,Math.round(oy+8+Math.sin(a)*3)-1,3,3)}}
    if(tg.doomT){const yy=oy-2+Math.round(Math.sin(t*4));c.fillStyle='#f4f0e8';c.fillRect(cx-9,yy,8,6);c.fillRect(cx-8,yy+6,6,2);c.fillStyle='#200810';c.fillRect(cx-8,yy+2,2,2);c.fillRect(cx-4,yy+2,2,2);c.fillRect(cx-6,yy+6,1,2);c.fillRect(cx-4,yy+6,1,2);pixNum(String(tg.doomT),cx+1,yy,Math.floor(now/250)%2?'#ff4060':'#ffd0d8',c)}}
