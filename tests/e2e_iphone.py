@@ -67,7 +67,7 @@ async def main():
         s = await st(p); ok('新存檔：蛋、金幣 50（第一天不送金幣）、食物 3+1', s['stage'] == 'egg' and s['coins'] == 50 and s['inv']['food'] == 4, (s['coins'], s['inv']))
         await hatch(p, '露米')
         s = await st(p); ok('孵化並命名、孵化時就有屬性（嬰兒期）', s['hatched'] and s['stage'] == 'baby' and s['name'] == '露米' and s['route'] in ['flame','tide','forest','earth','bird','elec','metal'], s['route'])
-        stx = await p.inner_text('#stageText'); ok('畫面顯示屬性', any(k in stx for k in ['焰系','潮系','森系','土系','鳥系','電系','金系']), stx)
+        stx = await p.evaluate("document.getElementById('stageText').textContent"); ok('畫面顯示屬性', any(k in stx for k in ['焰系','潮系','森系','土系','鳥系','電系','金系']), stx)
         await p.reload(); await p.wait_for_timeout(700); s = await st(p); ok('刷新後保留', s['hatched'] and s['name'] == '露米')
         ok('每日禮物刷新後不重複', s['coins'] == 50, s['coins'])
         # ---------- 2. 照顧行為 ----------
@@ -107,7 +107,7 @@ async def main():
             await p.evaluate("PF.debug.set({hunger:80,mood:80,clean:80,energy:20})"); await p.evaluate(f"PF.debug.skip({hrs*60})")
             await p.wait_for_timeout(300); s = await st(p); eff = min(hrs, 12)
             ok(f'離線 {hrs} 小時 → 只計算 {eff} 小時（飽食用真實時間，20 小時會餓到 0）', abs(s['hunger'] - (0 if hrs >= 20 else 80 - 4 * eff)) < .2 and (s['runaway'] is not None) == (hrs >= 32) and abs(s['energy'] - min(100, 20 + 8 * eff)) < .2, (round(s['hunger'], 1), round(s['energy'], 1)))
-        await p.wait_for_timeout(500); ok('離家出走時畫面提示要走路找回來', '離家出走' in await p.inner_text('#growText'))
+        await p.wait_for_timeout(500); ok('離家出走時畫面提示要走路找回來', '離家出走' in await p.inner_text('#alertLine'))
         await p.evaluate("PF.creditSteps((PF.state.steps.days[PF.PC.dayKey(Date.now())]||0)+10000)"); await p.wait_for_timeout(300); s = await st(p); ok('走 1 萬步把牠找回來', s['runaway'] is None and s['hunger'] == 40, (s['runaway'], s['hunger']))
         await p.evaluate("PF.debug.set({hunger:80,mood:80,clean:80,energy:60})")
         # ---------- 5. 成長門檻（用 debug 把孵化時間往前移） ----------
@@ -122,7 +122,7 @@ async def main():
         await p.screenshot(path=f'{OUT}/07_adult.png', full_page=True)
         await p.evaluate("PF.debug.set({xp:1200})"); await p.evaluate("PF.debug.age(200)"); await p.wait_for_timeout(1500)
         ok('沒有特殊事件不能高階', (await st(p))['stage'] == 'adult')
-        evname = await p.evaluate("PF.PC.ascendInfo(PF.state).task.text"); g = await p.inner_text('#growText'); ok('成年期顯示 🔔 專屬任務和終極素材進度', evname in g and '🔔' in g and '0/3' in g, g)
+        evname = await p.evaluate("PF.PC.ascendInfo(PF.state).task.text"); g = await p.evaluate("document.getElementById('growText').textContent"); ok('成年期顯示 🔔 專屬任務和終極素材進度', evname in g and '🔔' in g and '0/3' in g, g)
         # 日記
         await p.click('#bMenu'); await p.click('#mJournal'); await p.wait_for_timeout(300); txt = await p.inner_text('#sheet')
         ok('日記自動記錄孵化與進化', '孵化' in txt and '少年期' in txt and '成年期' in txt); await p.screenshot(path=f'{OUT}/08_journal.png'); await closeall(p)
@@ -357,6 +357,14 @@ async def main():
         heads = await b.evaluate("[...document.querySelectorAll('#shopBody .shead')].map(e=>e.textContent)")
         ok('V1.55 背包順序：寶物→道具→食物→水果→素材', heads[0].endswith('王的寶物') and heads.index([h for h in heads if h.endswith('道具')][0]) < heads.index([h for h in heads if h.endswith('食物')][0]) < heads.index([h for h in heads if h.endswith('水果')][0]), heads)
         await ctxB.close()
+        # ---------- V1.58 餵食選單不壓縮畫面、資訊按鈕 ----------
+        ctxC, c2 = await newpage(br, I13); await hatch(c2)
+        h0 = await c2.evaluate("document.querySelector('#scene').getBoundingClientRect().height"); await c2.click('[data-act=feed]'); await c2.wait_for_timeout(300)
+        h1 = await c2.evaluate("document.querySelector('#scene').getBoundingClientRect().height")
+        ok('V1.58 打開餵食選單時遊戲畫面大小不變', abs(h0 - h1) < 1 and await c2.is_visible('#foodBar'), (h0, h1))
+        await c2.click('[data-act=feed]'); await c2.wait_for_timeout(200); await c2.click('#infoBtn'); await c2.wait_for_timeout(200)
+        sh = await c2.inner_text('#sheet'); ok('V1.58 點「資訊」才看到屬性、成長資訊', any(k in sh for k in ['焰系','潮系','森系','土系','鳥系','電系','金系']), sh[:80])
+        await ctxC.close()
         # ---------- V1.51 自由佈置房間 ----------
         ctxA, a = await newpage(br, I13); await hatch(a)
         await a.evaluate("PF.startArrange()"); await a.wait_for_timeout(300)

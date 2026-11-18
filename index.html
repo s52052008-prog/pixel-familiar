@@ -199,6 +199,13 @@ h1{font-size:17px}.ver{font-size:9px}
 .toolbar.five .tool img.uic{width:24px;height:24px;margin:0;vertical-align:0}
 @media (max-height:700px){.ver{display:none}#traitText{display:none}.act{font-size:12px}.toolbar.five .tool img.uic{width:20px;height:20px}}
 @media (max-height:620px){#app{gap:4px}#homeTip{display:none!important}#stepInfo{display:none}#growText{display:none}.act canvas.picon{height:20px!important}.act{font-size:11px;padding:3px 2px 5px}.toolbar.five .tool{font-size:11px!important;padding:3px 1px 4px!important}.toolbar.five .tool img.uic{width:18px;height:18px}.stagearea{min-height:100px}h1{font-size:15px}.stat{padding:2px 4px 4px}}
+
+/* V1.58 寵物資訊收進「資訊」按鈕；餵食選單蓋在資訊欄上面，遊戲畫面不會被壓小 */
+#infoSlot{position:relative}
+.nprow{display:flex;align-items:center;justify-content:center;gap:10px}.nprow #petname{flex:0 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.infobtn{flex:0 0 auto;min-width:0;min-height:44px;padding:4px 12px;font-size:12.5px}
+#alertLine{font-size:12px;color:#ffd0dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#foodBar{position:absolute;left:0;right:0;top:0;z-index:6;margin:0;padding:4px;background:#2a170af0;border:3px solid #b8854e;box-shadow:0 4px 0 #000a}
+.infobox p{margin:6px 0;line-height:1.5}
 </style>
 </head>
 <body>
@@ -217,9 +224,11 @@ h1{font-size:17px}.ver{font-size:9px}
   <button id="denBtn" class="viewbtn hidden" style="left:auto;right:6px">🛠 小窩</button>
   <div id="arrBar" class="hidden" style="position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:6;display:flex;justify-content:center;gap:6px;pointer-events:none"><button class="btn" id="arrReset" style="pointer-events:auto">↺ 恢復預設</button><button class="btn pri" id="arrDone" style="pointer-events:auto">✅ 佈置完成</button></div>
  </div></div>
- <div id="foodBar" class="foodbar hidden"></div>
- <div class="nameplate"><div id="petname"></div><div id="stageText"></div><div id="traitText"></div><div id="growText"></div></div>
- <div id="pairBar" class="pairbar hidden"></div>
+ <div id="infoSlot">
+  <div class="nameplate"><div class="nprow"><div id="petname"></div><button class="btn infobtn" id="infoBtn">ℹ️ 資訊</button></div><div id="infoHid" class="hidden"><div id="stageText"></div><div id="traitText"></div><div id="growText"></div></div><div id="alertLine" class="hidden"></div></div>
+  <div id="pairBar" class="pairbar hidden"></div>
+  <div id="foodBar" class="foodbar hidden"></div>
+ </div>
  <div class="stats" id="stats"></div>
  <div class="actions">
   <button class="act" data-act="feed"><canvas class="picon" data-icon="apple"></canvas>餵食</button>
@@ -290,7 +299,7 @@ h1{font-size:17px}.ver{font-size:9px}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.57.0';
+const VERSION='1.58.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1299,11 +1308,21 @@ const ownerName=()=>s.owner||'主人';
 /* V1.55 文字裡的小圖示：用遊戲裡的像素圖取代 emoji（圖還沒載入時先用 emoji） */
 const MI_URL={};function MI(name,fb=''){let u=MI_URL[name];if(!u){const c=UIIMG[name]||ICV[name]||DSPR[name];if(!c)return fb;try{u=MI_URL[name]=c.toDataURL()}catch(e){return fb}}return`<img class="mi" src="${u}" alt="">`}
 const MI_UI=n=>`<img class="mi" src="sprites/ui/${n}.png" alt="">`;
+/* V1.58 寵物資訊（主角或第二隻） */
+function petInfoHTML(p,main){const lv=PC.level(p.xp),T=p.route&&PC.traitOf(p.route),F=main?formOf(formKey()):null;
+ const L=[`<p><b style="font-size:17px">${p.awake?'🌟星耀 ':''}${esc(p.name)}${sexMark(p)}</b>　Lv.${lv}</p>`];
+ if(main){L.push(`<p>${$('stageText').innerHTML}</p>`);if($('traitText').textContent)L.push(`<p style="color:#ffe2a8">${esc($('traitText').textContent)}</p>`);if($('growText').textContent)L.push(`<p style="color:#ffd0dc">${esc($('growText').textContent)}</p>`)}
+ else{L.push(`<p>${p.sex==='m'?MI('ic_sex_m','♂')+'公 · ':p.sex==='f'?MI('ic_sex_f','♀')+'母 · ':''}${p.route?rIcon(p.route)+ROUTE_LABEL[p.route]+' · ':''}${STAGE_NAME[p.stage]}　XP ${p.xp}</p>`);if(T&&T.good)L.push(`<p style="color:#ffe2a8">✨ ${T.good}　⚠️ ${T.bad}</p>`);
+  L.push(`<p>${MI('apple','🍎')}飽食 ${Math.round(p.hunger)}　${MI('heart','😊')}心情 ${Math.round(p.mood)}　${MI('tub','🛁')}清潔 ${Math.round(p.clean)}　${MI('bolt','⚡')}體力 ${Math.round(p.energy)}</p>`);
+  L.push(`<p class="small">${p.energy>=CONFIG.pair.advMinEnergy?'🐾 體力夠，冒險時會一起上場':`🐾 體力 ${Math.round(p.energy)}，要 ${CONFIG.pair.advMinEnergy} 以上才能一起去冒險（先換照顧牠，餵牠或讓牠睡覺）`}</p>`)}
+ if((p.relics||[]).length)L.push(`<p>🪎 寶物：${p.relics.map(k=>CONFIG.relics.items[k].name).join('、')}</p>`);
+ return`<div class="infobox">${L.join('')}</div>`}
+function infoDialog(which){if(!s.hatched){toast('先把蛋孵出來吧！');return}const p=which==='pair'?s.pair:s;if(!p)return;openModal(which==='pair'?'🐾 第二隻的資訊':'ℹ️ 寵物資訊',petInfoHTML(p,which!=='pair'))}
 function renderPairBar(){const el=$('pairBar'),p=s.pair;if(!p||!s.hatched){el.classList.add('hidden');return}el.classList.remove('hidden');
  const k=`${Object.keys(ICV).length}|${p.name}|${p.stage}|${p.route}|${Math.round(p.hunger)}|${Math.round(p.mood)}|${Math.round(p.clean)}|${Math.round(p.energy)}`;if(el.dataset.k===k)return;el.dataset.k=k;
  const low=v=>v<20?' style="color:#ff8a8a"':'';
- el.innerHTML=`<canvas id="pbT" width="48" height="48"></canvas><div><b>${MI_UI('paw')}${esc(p.name)}${sexMark(p)}</b> Lv.${PC.level(p.xp)}<br><span${low(p.hunger)}>${MI('apple','🍎')}${Math.round(p.hunger)}</span> <span${low(p.mood)}>${MI('heart','😊')}${Math.round(p.mood)}</span> <span${low(p.clean)}>${MI('tub','🛁')}${Math.round(p.clean)}</span> <span${low(p.energy)}>${MI('bolt','⚡')}${Math.round(p.energy)}</span></div><button class="btn" id="pbSw">換照顧牠</button>`;
- thumb($('pbT'),pairKey(),'idle0');$('pbSw').onclick=()=>switchToPair()}
+ el.innerHTML=`<canvas id="pbT" width="48" height="48"></canvas><div><b>${MI_UI('paw')}${esc(p.name)}${sexMark(p)}</b> Lv.${PC.level(p.xp)}<br><span${low(p.hunger)}>${MI('apple','🍎')}${Math.round(p.hunger)}</span> <span${low(p.mood)}>${MI('heart','😊')}${Math.round(p.mood)}</span> <span${low(p.clean)}>${MI('tub','🛁')}${Math.round(p.clean)}</span> <span${low(p.energy)}>${MI('bolt','⚡')}${Math.round(p.energy)}</span></div><button class="btn" id="pbInfo" style="min-width:0;padding:6px 8px">ℹ️ 資訊</button><button class="btn" id="pbSw">換照顧牠</button>`;
+ thumb($('pbT'),pairKey(),'idle0');$('pbSw').onclick=()=>switchToPair();$('pbInfo').onclick=()=>infoDialog('pair')}
 function renderUI(){
  $('coins').textContent=s.coins;renderPairBar();
  const F=formOf(formKey()),rar=F.genome&&F.genome.rarity>1&&!F.classic?` · ${STARS[F.genome.rarity]}${RARITY[F.genome.rarity]}`:'',tierN=PC.stepTier(s);
@@ -1312,6 +1331,7 @@ function renderUI(){
  $('stageText').innerHTML=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome&&F.genome.el?' · 會孵出'+ROUTE_LABEL[F.genome.el]+'的新物種':''}`:`${s.sex==='m'?MI('ic_sex_m','♂')+'公 · ':s.sex==='f'?MI('ic_sex_f','♀')+'母 · ':''}${s.route?rIcon(s.route)+ROUTE_LABEL[s.route]+' · ':''}${STAGE_NAME[s.stage]} · ${F.name}${rar} · 第 ${dayCount()} 天`;
  $('growText').textContent=s.runaway?`😢 ${s.name}離家出走了！到「👟 步數」登記走路，找牠回來：${(s.runaway.got||0).toLocaleString()} / ${CONFIG.runaway.steps.toLocaleString()} 步`
   :s.starveSince?`⚠️ 餓壞了！再 ${Math.max(0,Math.ceil((s.starveSince+CONFIG.runaway.starveHours*3600000-Date.now())/3600000))} 小時不餵，牠就會離家出走！`:growLine();
+ {const al=$('alertLine'),t=!s.hatched?$('stageText').textContent:(s.runaway||s.starveSince)?$('growText').textContent:'';al.textContent=t;al.classList.toggle('hidden',!t)}   // V1.58 重要提示（孵蛋、離家出走）還是直接顯示
  $('stepInfo').innerHTML=`${MI('apple','🍎')}${s.inv.food} · ${MI('seed','🌱')}${s.inv.seeds}${s.inv.seeds2?' · '+MI('seed2','🌟')+s.inv.seeds2:''}${s.inv.candy?' · '+MI('candy','🍬')+s.inv.candy:''}${s.inv.potion?' · '+MI('potion','🧪')+s.inv.potion:''}${s.inv.potion2?' · '+MI('potion2','💖')+s.inv.potion2:''}${s.inv.soup?' · '+MI('soup','🍲')+s.inv.soup:''} · ${MI('shoe','👟')}${fmtN(s.steps.days[PC.dayKey(Date.now())]||0)} 步 · ${MI_UI('swords')}冒險 ${s.daily.adv}${s.eggs.length?' · 🧺 蛋 '+s.eggs.length:''}${s.hatched?` · ${MI('pig1','🐷')}${Math.floor(s.piggy||0)}/${PC.piggyCap(s)}`:''}`;
  for(const[k]of STATS){const v=s.hatched?s[k]:0;$('sv-'+k).textContent=s.hatched?Math.round(v)+'%':'--';$('sb-'+k).style.width=v+'%';$('st-'+k).classList.toggle('low',s.hatched&&v<20)}
  document.querySelectorAll('[data-act]').forEach(b=>b.disabled=!s.hatched);
@@ -2339,6 +2359,7 @@ document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()
 /* V1.55 遊戲畫面依剩下的高度縮放（整頁不用捲） */
 function fitStage(){const a=$('stagearea'),w=$('stagewrap');if(!a||!w)return;const r=a.getBoundingClientRect();if(!r.height)return;w.style.width=Math.floor(Math.min(r.width,(r.height-6)*128/112+6))+'px'}
 try{new ResizeObserver(fitStage).observe($('stagearea'))}catch(e){addEventListener('resize',fitStage)}fitStage();
+$('infoBtn').onclick=()=>infoDialog('main');
 $('bAdv').onclick=advDialog;$('bFarm').onclick=farmDialog;$('bGoals').onclick=goalsDialog;$('bShop').onclick=()=>shopDialog('bag');$('coinBtn').onclick=()=>shopDialog('decor');
 $('viewBtn').onclick=()=>toggleView();$('denBtn').onclick=()=>denDialog();
 $('lightBtn').onclick=()=>{s.settings.light=s.settings.light===false;save();syncLightBtn(true);sfx('tap');say(s.settings.light?'💡 開燈了，暖暖的～':'關燈了，好暗喔…',{log:false})};
