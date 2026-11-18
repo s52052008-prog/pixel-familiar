@@ -1,6 +1,6 @@
 // 幻獸日記 Service Worker — 離線快取
 // 更新遊戲時，請把 VERSION 改成新版本號，iPhone 才會換成新檔案。
-const VERSION = 'pf-1.69.0';
+const VERSION = 'pf-1.70.0';
 const CORE = ['./', './index.html', './game-core.js'];
 const EXTRA = ['./manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png',
   ...['flame','tide','forest','earth','bird','elec','metal'].flatMap(el => [0,1,2,3,4].flatMap(n => ['open','closed'].map(e => `./sprites/${el}_${n}_${e}.png`))),
@@ -9,6 +9,7 @@ const EXTRA = ['./manifest.webmanifest', './icon-180.png', './icon-192.png', './
   ...['apple', 'backpack', 'bolt', 'book', 'calendar', 'check', 'cheese', 'chest', 'coin', 'dumbbell', 'floppy', 'gear', 'gem', 'heart', 'house', 'info', 'leaf', 'leafbook', 'levelup', 'map', 'meat', 'moon', 'paw', 'pawbook', 'pawlight', 'picture', 'question', 'refresh', 'scroll', 'shop', 'star', 'stew', 'swords', 'trophy', 'waterbowl', 'zzz'].map(n => `./sprites/ui/${n}.png`),
   ...['ball','sun','sponge','tub','shoe','bite','poop','ember','note','cranberry','blueberry','strawberry','drop','fly','worry','el_fire','el_water','el_leaf','el_earth','el_bird','el_elec','el_metal','sex_m','sex_f','bondheart'].map(n => `./sprites/items/ic_${n}.png`),
   ...['fire','bubble','leaf','rock','feather','bolt','shard','star','spark','heart','z'].map(n => `./sprites/fx/p_${n}.png`),
+  ...['crown','tower','sparkle','shield','run','crit','skull','shake','dragonhead','snow','volcano','muscle','dodge','fist','zen','glove','bulb','rock','scissors','paper','cross','warn','bell','lock','hourglass','party','gift','egg','hatch','orb','basket','tools','chair','user','medal','wand','sound','mute','turtle','back','dice','pin'].map(n => `./sprites/ui2/${n}.png`),
   ...['burn','splash','zap'].flatMap(g => [0,1,2].map(i => `./sprites/fx/${g}${i}.png`)),
   ...['meadow_1','meadow_2','rock_1','rock_2','water_1','forest_1','forest_2','canyon_1','canyon_2','sky_1','storm_1','mine_1','tower_1','tower_2'].map(n => `./sprites/arena/${n}.png`),
   ...['bg_gym_main','bg_gym_hook','bg_waterfall','pitch0','pitch1','pitch2','pitch3','ball','ball_super','bag_r0','bag_b0','frisbee0','frisbee1','frisbee2','bubble','hoop_r'].map(n => `./sprites/train/${n}.png`),

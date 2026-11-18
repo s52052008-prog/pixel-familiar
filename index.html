@@ -182,7 +182,7 @@ body.rm *{transition:none!important;animation:none!important}
 .gstar{display:inline-block;font-size:11px;font-weight:900;padding:1px 6px;border:2px solid #2a170a;margin-bottom:3px}.gstar.t0{background:#9cd47a;color:#1a3a10}.gstar.t1{background:#ffd86a;color:#3a2210}.gstar.t2{background:#ff8a6a;color:#3a1008}
 
 img.mi{height:13px;width:auto;vertical-align:-2px;margin:0 2px 0 1px;image-rendering:pixelated;image-rendering:crisp-edges}
-img.ci{width:15px;height:15px;vertical-align:-3px;image-rendering:pixelated;image-rendering:crisp-edges;margin:0 1px}
+img.ci{width:15px;height:15px;object-fit:contain;vertical-align:-3px;image-rendering:pixelated;image-rendering:crisp-edges;margin:0 1px}
 #evoCap{position:absolute;left:6%;right:6%;top:8%;z-index:4;text-align:center;font-weight:900;font-size:20px;line-height:1.35;color:#fff7c8;background:#1a1008e0;border:3px solid #ffd86a;padding:8px 6px;text-shadow:0 2px 0 #000;animation:bpop .35s ease-out;pointer-events:none}#evoCap small{display:block;font-size:13px;color:#ffe2a8}
 #evoBlock{position:fixed;inset:0;z-index:70;background:transparent}
 /* V1.55 一頁放得下：整個畫面固定在螢幕高度，遊戲畫面自動縮放，下面不用捲 */
@@ -240,6 +240,8 @@ h1{font-size:17px}.ver{font-size:9px}
 .tctl.pad .pkB{background:radial-gradient(circle at 35% 30%,#ffe08a,#f2b21a 55%,#b07a08);color:#4a2a08;text-shadow:0 1px 0 rgba(255,255,255,.4);box-shadow:0 6px 0 #6e4a04,0 8px 12px rgba(0,0,0,.45),inset 0 -4px 6px rgba(0,0,0,.2)}
 .tctl.pad .padR .pk:active{transform:rotate(18deg) translateY(5px)}
 .tctl.pad .pkA:active{box-shadow:0 1px 0 #6e1210,inset 0 -2px 4px rgba(0,0,0,.2)}.tctl.pad .pkB:active{box-shadow:0 1px 0 #6e4a04,inset 0 -2px 4px rgba(0,0,0,.2)}
+.rpsbtns img.ci{width:40px;height:40px;display:block;margin:0 auto 2px}
+#moves img.ci,#mvBond img.ci{width:18px;height:18px;vertical-align:-4px}
 </style>
 </head>
 <body>
@@ -335,7 +337,7 @@ h1{font-size:17px}.ver{font-size:9px}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.69.0';
+const VERSION='1.70.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1290,7 +1292,7 @@ function nextMsg(){const t=msgQ.shift();if(t===undefined){msgTimer=0;$('bubble')
 function chatter(){if(s.hatched&&s.cores.some(c=>PC.isRotten(c))&&Math.random()<.6)return s.cores.some(c=>c.k==='poop')?'好臭喔…💩 幫我清一下嘛':'好臭喔…有果蠅🪰 幫我清掉果核嘛';if(!s.hatched){return['裡面好像有東西在動…','輕輕點蛋看看？'][Math.floor(Math.random()*2)]}
  if(s.sleeping)return'Zzz…';if(s.hunger<25)return'肚子咕嚕咕嚕…';if(s.clean<25)return'身上黏黏的…';if(s.energy<20)return'好睏喔…';if(s.mood<30)return'陪我玩嘛…';
  const ph=phase();return ph==='night'?['星星好漂亮✨','晚上好安靜～','月亮出來了'][Math.floor(Math.random()*3)]:['今天天氣真好！','嗯哼～♪',`${ownerName()}，摸摸我嘛！`,'我會長得很大喔！',`${s.name}在這裡！`,...(s.pair?[`${s.pair.name}，來玩嘛～`]:[])][Math.floor(Math.random()*(s.pair?6:5))]}
-let toastT=0;function toast(t,ms=2600){const el=$('toast');el.textContent=t;el.classList.remove('off');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.add('off'),ms)}
+let toastT=0;function toast(t,ms=2600){const el=$('toast');el.textContent=t;pixifyDom(el);el.classList.remove('off');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.add('off'),ms)}
 
 /* ---------------- 音效（8-bit 方波；可在選單關閉） ---------------- */
 let actx=null;
@@ -1455,7 +1457,7 @@ function renderUI(){
 let modalOnClose=null;
 const COIN_I='<img class="ci" src="sprites/items/coin.png" alt="金幣">',coinify=h=>String(h).replace(/🪙 ?/g,COIN_I);
 /* V1.67 遊戲說明：emoji 換成遊戲裡的像素圖示 */
-const EMO_IMG={'🍎':'ui/apple','⭐':'ui/star','🌟':'ui/star','✨':'ui/star','🐷':'items/pig1','🫧':'items/ic_tub','🛁':'items/ic_tub','🧽':'items/ic_sponge','💩':'items/ic_poop','🌙':'ui/moon','☀️':'items/ic_sun','🔥':'items/ic_el_fire','💧':'items/ic_el_water','🌿':'items/ic_el_leaf','🪨':'items/ic_el_earth','🐦':'items/ic_el_bird','⚡':'items/ic_el_elec','⚙️':'items/ic_el_metal','🌱':'ui/leaf','🍃':'ui/leaf','🪺':'items/den1','🛒':'ui/shop','🎯':'ui/calendar','⚔️':'ui/swords','👟':'items/ic_shoe','💞':'ui/heart','❤️':'ui/heart','💕':'ui/heart','💖':'ui/heart','💗':'items/ic_bondheart','💾':'ui/floppy','🎒':'ui/backpack','🏋️':'ui/dumbbell','💪':'ui/dumbbell','📖':'ui/pawbook','📔':'ui/book','🏆':'ui/trophy','💎':'ui/gem','👆':'ui/paw','🐾':'ui/paw','🍓':'items/ic_strawberry','🪎':'ui/chest','🧰':'ui/chest','❔':'ui/question','❓':'ui/question','🔄':'ui/refresh','🗺️':'ui/map','🏠':'ui/house','🏡':'ui/house','✅':'ui/check','✓':'ui/check','🪙':'items/coin','💰':'items/coin','🧪':'items/potion','🍬':'items/candy','🍲':'items/soup','🏀':'items/ic_ball','🎾':'items/ic_ball','♪':'items/ic_note','🎵':'items/ic_note','♂':'items/ic_sex_m','♀':'items/ic_sex_f','🚽':'items/toilet_pot','🪶':'items/mat_bird','🪽':'items/mat_bird','🌧️':'items/ic_drop','⛈️':'ui/bolt','🍽️':'ui/stew','🌌':'ui/moon','👑':'ui/trophy'};
+const EMO_IMG={'🍎':'ui/apple','⭐':'ui/star','🌟':'ui/star','🐷':'items/pig1','🫧':'items/ic_tub','🛁':'items/ic_tub','🧽':'items/ic_sponge','💩':'items/ic_poop','🌙':'ui/moon','☀️':'items/ic_sun','🔥':'items/ic_el_fire','💧':'items/ic_el_water','🌿':'items/ic_el_leaf','🪨':'items/ic_el_earth','🐦':'items/ic_el_bird','⚡':'items/ic_el_elec','⚙️':'items/ic_el_metal','🌱':'ui/leaf','🍃':'ui/leaf','🪺':'items/den1','🛒':'ui/shop','🎯':'ui/calendar','⚔️':'ui/swords','👟':'items/ic_shoe','💞':'ui/heart','❤️':'ui/heart','💕':'ui/heart','💖':'ui/heart','💗':'items/ic_bondheart','💾':'ui/floppy','🎒':'ui/backpack','🏋️':'ui/dumbbell','📖':'ui/pawbook','📔':'ui/book','🏆':'ui/trophy','💎':'ui/gem','👆':'ui/paw','🐾':'ui/paw','🍓':'items/ic_strawberry','🪎':'ui/chest','🧰':'ui/chest','❔':'ui/question','❓':'ui/question','🔄':'ui/refresh','🗺️':'ui/map','🏠':'ui/house','🏡':'ui/house','✅':'ui/check','✓':'ui/check','🪙':'items/coin','💰':'items/coin','🧪':'items/potion','🍬':'items/candy','🍲':'items/soup','🏀':'items/ic_ball','🎾':'items/ic_ball','♪':'items/ic_note','🎵':'items/ic_note','♂':'items/ic_sex_m','♀':'items/ic_sex_f','🚽':'items/toilet_pot','🪶':'items/mat_bird','🪽':'items/mat_bird','🌧️':'items/ic_drop','⛈️':'ui/bolt','🍽️':'ui/stew','👑':'ui2/crown','🌌':'ui2/tower','✨':'ui2/sparkle','🛡️':'ui2/shield','🏃':'ui2/run','💥':'ui2/crit','💀':'ui2/skull','🤝':'ui2/shake','🐲':'ui2/dragonhead','❄️':'ui2/snow','🌋':'ui2/volcano','💪':'ui2/muscle','🤸':'ui2/dodge','👊':'ui2/fist','🧘':'ui2/zen','🥊':'ui2/glove','💡':'ui2/bulb','✊':'ui2/rock','✌️':'ui2/scissors','✋':'ui2/paper','❌':'ui2/cross','⚠️':'ui2/warn','🔔':'ui2/bell','🔒':'ui2/lock','⏳':'ui2/hourglass','⌛':'ui2/hourglass','⏱':'ui2/hourglass','🎉':'ui2/party','🎁':'ui2/gift','🥚':'ui2/egg','🐣':'ui2/hatch','🔮':'ui2/orb','🧺':'ui2/basket','🛠':'ui2/tools','🪑':'ui2/chair','👤':'ui2/user','🏅':'ui2/medal','🪄':'ui2/wand','🔊':'ui2/sound','🔇':'ui2/mute','🐢':'ui2/turtle','↩':'ui2/back','🎲':'ui2/dice','📍':'ui2/pin'};
 const EMO_RE=new RegExp('('+Object.keys(EMO_IMG).map(k=>k.replace(/\uFE0F/g,'')+'\uFE0F?').join('|')+')','gu');
 /* 視窗打開後，把文字裡的 emoji 換成像素圖示（只換文字，不動屬性） */
 function pixifyDom(root){if(!root)return;const tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentNode&&/^(SCRIPT|STYLE|TEXTAREA|OPTION)$/.test(n.parentNode.nodeName)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT}),L=[];while(tw.nextNode())L.push(tw.currentNode);
@@ -1998,7 +2000,7 @@ function makeArena(k){if(ARENA_CACHE[k])return ARENA_CACHE[k];const cv=document.
   pad(94,62,22,'#8a7ac8','#5a4a8a');pad(34,100,24,'#8a7ac8','#5a4a8a')}
  return ARENA_CACHE[k]=cv}
 /* ---------------- 戰鬥介面 ---------------- */
-function bUI(){const{me,foe}=B,danger=dangerNow();
+function bUI(){setTimeout(()=>pixifyDom($('moves')),0);const{me,foe}=B,danger=dangerNow();
  $('fName').innerHTML=`${esc(foe.name)}  Lv.${foe.level} ${elHTML(foe.elA||foe.el)}${foe.el2s?'＋'+elHTML(foe.el2s):''}${bossStat(foe)}`;$('fHp').textContent=`${foe.hp}/${foe.max}`;$('fBar').style.width=foe.hp/foe.max*100+'%';
  $('mName').innerHTML=`${esc(me.name)}  Lv.${me.level} ${elHTML(me.el)}${tier()?' '+'✦'.repeat(tier()):''}${me.charged?' ⚡蓄力中':''}${petStat(me)}${danger?'　⚠️ 危險！':''}`;$('mHp').textContent=`${me.hp}/${me.max}${B.me2?`　🐾${B.me2.name} ${Math.max(0,B.me2.hp)}/${B.me2.max}${petStat(B.me2)}`:''}`;$('mBar').style.width=me.hp/me.max*100+'%';
  $('mBar').style.background=me.hp/me.max<.3?'#e86a6a':'';
@@ -2527,6 +2529,7 @@ function pointerTap(x,y){if(evo)return;
 cv.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tapPet()}});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>act(b.dataset.act)));
+['rpsZone','moves','mvBond'].forEach(id=>pixifyDom($(id)));   // V1.70 戰鬥按鈕、猜拳也換成像素圖示
 /* V1.55 遊戲畫面依剩下的高度縮放（整頁不用捲） */
 function fitStage(){const a=$('stagearea'),w=$('stagewrap');if(!a||!w)return;const r=a.getBoundingClientRect();if(!r.height)return;w.style.width=Math.floor(Math.min(r.width,(r.height-6)*128/112+6))+'px'}
 try{new ResizeObserver(fitStage).observe($('stagearea'))}catch(e){addEventListener('resize',fitStage)}fitStage();
