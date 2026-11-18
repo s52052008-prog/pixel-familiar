@@ -348,6 +348,20 @@ async def main():
         ok('App 版：打開就從健康 App 同步最近幾天的步數', s['steps']['total'] == 11000, s['steps'])
         await q.click('#bSteps'); await q.wait_for_timeout(300); ok('App 版：步數畫面顯示已連接健康 App、沒有捷徑教學', await q.is_visible('#sSync') and not await q.is_visible('#sCopyUrl'))
         await ctx8.close()
+        # ---------- V1.51 自由佈置房間 ----------
+        ctxA, a = await newpage(br, I13); await hatch(a)
+        await a.evaluate("PF.startArrange()"); await a.wait_for_timeout(300)
+        vis = await a.is_visible('#arrBar')
+        r0 = await a.evaluate("PF.arrItems().find(o=>o.sl==='bed').r")
+        box = await a.locator('#scene').bounding_box(); sx = box['width'] / 128; sy = box['height'] / 112
+        cx, cy = box['x'] + (r0[0] + r0[2] / 2) * sx, box['y'] + (r0[1] + r0[3] / 2) * sy
+        await a.mouse.move(cx, cy); await a.mouse.down(); await a.mouse.move(cx - 30 * sx, cy - 6 * sy, steps=6); await a.mouse.up(); await a.wait_for_timeout(200)
+        r1 = await a.evaluate("PF.arrItems().find(o=>o.sl==='bed').r")
+        await a.screenshot(path=f'{OUT}/15_arrange.png')
+        await a.click('#arrDone'); await a.reload(); await a.wait_for_timeout(800)
+        kept = await a.evaluate("PF.state.decor.pos.bed")
+        ok('佈置房間：可以拖動床、按完成後重開還在', vis and abs((r0[0] - r1[0]) - 30) <= 2 and kept is not None and not await a.is_visible('#arrBar'), (r0, r1, kept))
+        await ctxA.close()
         # ---------- 小螢幕 ----------
         ctx6, q = await newpage(br, pw.devices['iPhone SE']); await q.screenshot(path=f'{OUT}/14_iphoneSE.png', full_page=True)
         ok('iPhone SE 無橫向捲動', await q.evaluate("document.documentElement.scrollWidth<=innerWidth"))

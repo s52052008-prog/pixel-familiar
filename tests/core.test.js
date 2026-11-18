@@ -372,6 +372,7 @@ t('第二張床：已擁有的床可以擺在右邊，存檔保留；買彈力�
   assert.ok(!C.placeBed2(s, 'bed_cloud').ok); assert.equal(C.sanitize(JSON.parse(JSON.stringify(s)), T0).decor.placed.bed2, 'bed_round'); assert.ok(C.placeBed2(s, 'bed_round').ok); assert.equal(s.decor.placed.bed2, undefined);
   s.ballBroken = true; s.coins = 99; assert.ok(C.buyDecor(s, 'toy_ball').ok); assert.equal(s.ballBroken, false); });
 t('舊存檔沒有新路線欄位也能正常讀取', () => { const r = C.sanitize({ v: 7, hatched: true, path: { flame: 3, tide: 2, forest: 1 } }, T0); assert.equal(r.path.earth, 0); assert.equal(r.path.metal, 0); assert.equal(r.events.mine, false); });
+t('V1.51 自由佈置：家具位置存檔保留、亂填的值會被丟掉', () => { const s = hatched(); s.decor.pos = { bed: [20, -100], pig: [10, 40], wall: ['x', 3], hack: [1, 2], toy: [999, 1] }; const z = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.deepEqual(z.decor.pos, { bed: [20, -100], pig: [10, 40] }); assert.deepEqual(C.sanitize({ v: 7, hatched: true }, T0).decor.pos, {}); });
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);
