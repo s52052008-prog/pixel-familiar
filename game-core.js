@@ -47,7 +47,7 @@ const CONFIG = {
     rateX: [1, 1.25, 1.5, 1.8, 2.2, 3], capH: [12, 14, 16, 18, 20, 24], coreStages: [15, 20, 25, 30], corePrice: 1000 },   // V1.43 小豬撲滿等級 1～6：第 15／20／25／30 關王各掉一個核心碎片（+1 級），商店核心 1000 元（唯一，+1 級）   // 存錢筒（被動收入）：每小時 0.5＋等級×0.25（最多算到 Lv.30），最多存 12 小時
   loveNest: { cost: 300, cooldownH: 12, mood: 10 },          // 愛的小窩：買一次，成年期以上的一公一母可以進去生蛋
   pair: { rate: .5, advMinEnergy: 20, foeHp: 1.5, xpShare: .6 },   // 第二隻一起出來：狀態變化速度減半；一起冒險時敵人血量 ×1.5、第二隻分到 6 成經驗
-  farm: { plots: 3, maxPlots: 6, expand: [30, 60, 90], growHours: 2, fruitMin: 2, fruitMax: 3, freshHours: 6, rotHours: 24, xp: 5, forest: 3, seedPrice: 5 },   // 收成：蘋果、莓果各隨機 1～2 顆；田可以花錢擴建到 6 格     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
+  farm: { plots: 3, maxPlots: 9, expand: [90, 150, 300, 500, 700, 999],   /* V1.64 開始 3 格，最多 9 格 */ growHours: 2, fruitMin: 2, fruitMax: 3, freshHours: 6, rotHours: 24, xp: 5, forest: 3, seedPrice: 5 },   // 收成：蘋果、莓果各隨機 1～2 顆；田可以花錢擴建到 6 格     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
   goals: { perDay: 3, coins: [15, 30, 50], maxLv: 10, needPerLv: .2, rewardPerLv: .2 },   // 每天 ★／★★／★★★ 三個；每天 3 個都完成，任務等級 +1（更難、獎勵更好）
   candy: { price: 200, mood: 20, hunger: 10 },   // V1.39：星星糖 200 金幣，吃了直接升 1 級（不受屬性經驗加成影響）
   core: { rotMin: 10, moodPerHour: 4, max: 8 },          // 果核：10 分鐘沒清會發臭長果蠅，每顆每小時心情 −4
@@ -104,7 +104,7 @@ const CONFIG = {
   fusionHouse: { price: 1000 },                             // V1.45 血繼限界的特殊幻獸要先花 1000 佈置新的小屋                               // V1.44 迎接新的蛋：第 1 顆 300、第 2 顆 700、之後 1000                        // V1.42 打贏小王／大王額外金幣                                    // V1.40 大絕招：屬性技 2.2 倍，每場一次
   rps: { seconds: 2, win: 0, tie: .8, lose: 1.2 },          // 敵人出招前猜拳：贏＝躲開、平手 0.8 倍、輸或超時 1.2 倍
   bond: { seconds: 2, steps: [[0, 1], [20, 2.2], [22, 2.5], [25, 2.7], [28, 3]], cost: 10, restHours: 2 },   // 羈絆之力：2 秒內連打；20 下 2.2 倍、22 下 2.5、25 下 2.7、28 下以上 3 倍（中間按比例）。要花 10 金幣買加油棒，之後 2 小時要休息不能冒險
-  ballGame: { lives: 3, max: 99, goalCap: 5, coinEvery: 3, coinMax: 10 },   // 頂球：3 條命一直玩到漏接 3 次；每 3 球 1 金幣（最多 10）；冒險路線最多算 5 球
+  ballGame: { lives: 3, max: 99, goalCap: 5, coinEvery: 3, coinMax: 10, xpPer: 3, xpMax: 30 },   // V1.64 每進一球 +3 經驗（一場最多 30）   // 頂球：3 條命一直玩到漏接 3 次；每 3 球 1 金幣（最多 10）；冒險路線最多算 5 球
   den: [ { name: '草叢小窩', cap: 1, cost: 0 }, { name: '稻草窩', cap: 2, cost: 120 }, { name: '樹根洞窟', cap: 3, cost: 300 }, { name: '大樹屋', cap: 4, cost: 600 }, { name: '燈籠樹屋', cap: 5, cost: 1000 }, { name: '旗幟樹屋', cap: 6, cost: 1500 }, { name: '星光樹屋', cap: 7, cost: 2200 } ],   // V1.45 最多 7 隻（每個屬性一隻）                            // 商店零食「星星糖」
   decorSlots: ['paper', 'wall', 'lamp', 'plant', 'bed', 'rug', 'toy', 'toilet'],
   decor: {                                                                      // 房間家具：純裝飾，不影響數值
@@ -897,6 +897,7 @@ function finishBallGame(st, score, now = Date.now()) {
   const r = act(st, 'play', now); if (!r.ok) return r;
   const counted = Math.min(score, G.goalCap), coins = Math.min(G.coinMax, Math.floor(score / G.coinEvery));
   st.ball.goals += counted; st.path.bird += 2 * counted; st.coins += coins;
+  const gx = score > 0 ? addXP(st, Math.min(G.xpMax, score * G.xpPer)) : 0; r.xp = (r.xp || 0) + gx; r.goalXp = gx;
   const best = score > st.ball.best; if (best) { st.ball.best = score; if (score > 0) journal(st, now, `頂球創新紀錄：連續進 ${score} 球！`); }
   return Object.assign(r, { score, best, coins });
 }
