@@ -1,6 +1,6 @@
 // 幻獸日記 Service Worker — 離線快取
 // 更新遊戲時，請把 VERSION 改成新版本號，iPhone 才會換成新檔案。
-const VERSION = 'pf-1.56.0';
+const VERSION = 'pf-1.57.0';
 const CORE = ['./', './index.html', './game-core.js'];
 const EXTRA = ['./manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png',
   ...['flame','tide','forest','earth','bird','elec','metal'].flatMap(el => [0,1,2,3,4].flatMap(n => ['open','closed'].map(e => `./sprites/${el}_${n}_${e}.png`))),
@@ -10,7 +10,7 @@ const EXTRA = ['./manifest.webmanifest', './icon-180.png', './icon-192.png', './
   ...['ball','sun','sponge','tub','shoe','bite','poop','ember','note','cranberry','blueberry','strawberry','drop','fly','worry','el_fire','el_water','el_leaf','el_earth','el_bird','el_elec','el_metal','sex_m','sex_f','bondheart'].map(n => `./sprites/items/ic_${n}.png`),
   ...['fire','bubble','leaf','rock','feather','bolt','shard','star','spark','heart','z'].map(n => `./sprites/fx/p_${n}.png`),
   ...['burn','splash','zap'].flatMap(g => [0,1,2].map(i => `./sprites/fx/${g}${i}.png`)),
-  ...['meadow_1','meadow_2','rock_1','rock_2','water_1','forest_1','forest_2','canyon_1','canyon_2','sky_1','tower_1'].map(n => `./sprites/arena/${n}.webp`),
+  ...['meadow_1','meadow_2','rock_1','rock_2','water_1','forest_1','forest_2','canyon_1','canyon_2','sky_1','storm_1','mine_1','tower_1','tower_2'].map(n => `./sprites/arena/${n}.png`),
   './sprites/wild_n.png', './sprites/wild_b.png'];
 
 self.addEventListener('install', e => {
