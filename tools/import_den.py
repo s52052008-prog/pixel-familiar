@@ -24,6 +24,8 @@ def cut(a, m, x0, x1, tw, name, glow=False):
     (im,), _ = quantize([im], 48)
     c = im[..., :3].astype(int); teal = (im[..., 3] > 0) & (c[..., 2] > 140) & (c[..., 1] > 100) & (c[..., 0] < 90)   # 藍旗子邊緣混到綠底變青綠：拉回藍色
     lt = c[..., :3].sum(-1) > 420; im[teal & lt, :3] = (130, 200, 255); im[teal & ~lt, :3] = (40, 130, 235)
+    c = im[..., :3].astype(int); dk = (im[..., 3] > 0) & (c.sum(-1) < 150)   # 黑邊太黑：換成深咖啡色，柔和一點
+    im[dk, :3] = (92, 58, 34)
     Image.fromarray(im).save(f'sprites/items/{name}.png'); print(name, tw, th)
 
 a = np.asarray(Image.open(sys.argv[1]).convert('RGB')); m = mask_of(a)
