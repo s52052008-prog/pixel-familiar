@@ -258,7 +258,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.48.0';
+const VERSION='1.49.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -724,9 +724,11 @@ function buildIcons(){for(const k in ICONS){const I=ICONS[k],h=I.m.length,w=I.m[
 const ITEM_NAMES=['den1','den2','den3','den4','den5','den6','den7','den_fusion','pig1','pig2','pig3','pig4','pig5','pig6','pigshard','pigcore','potion2','soup','seed2','bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec'];
 const ITEM_ICONS=new Set(['pigshard','pigcore','potion2','soup','seed2','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec']);
 function tintCanvas(src,rgba){const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const x=c.getContext('2d');x.drawImage(src,0,0);x.globalCompositeOperation='source-atop';x.fillStyle=rgba;x.fillRect(0,0,c.width,c.height);return c}
+/* V1.49 家具、小豬的黑邊換成深咖啡色，看起來比較乾淨柔和 */
+function softEdge(c){try{const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height),a=d.data;for(let i=0;i<a.length;i+=4)if(a[i+3]&&a[i]+a[i+1]+a[i+2]<150){a[i]=92;a[i+1]=58;a[i+2]=34}x.putImageData(d,0,0)}catch(e){}}
 function loadItems(){let left=ITEM_NAMES.length;for(const n of ITEM_NAMES){const im=new Image();
  im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);
-  if(ITEM_ICONS.has(n))ICV[n]=c;else DSPR[n]=c;if(n==='core')ICV.coreRot=tintCanvas(c,'rgba(90,70,20,.55)');if(n==='bone')ICV.boneRot=tintCanvas(c,'rgba(90,80,30,.5)');if(n==='toy_ball')toyCv=null;done()};
+  if(ITEM_ICONS.has(n))ICV[n]=c;else{softEdge(c);DSPR[n]=c}if(n==='core')ICV.coreRot=tintCanvas(c,'rgba(90,70,20,.55)');if(n==='bone')ICV.boneRot=tintCanvas(c,'rgba(90,80,30,.5)');if(n==='toy_ball')toyCv=null;done()};
  im.onerror=done;im.src=`sprites/items/${n}.png`}
  function done(){if(--left)return;bgKey='';document.querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));if(typeof renderFoodBar==='function')renderFoodBar()}}
 /* 新版介面圖示（sprites/ui，高解析度）：愛心、閃電、月亮、星星 */
@@ -906,7 +908,7 @@ function plotStage(q){return!q||q.empty?'empty':q.rotten?'rot':q.ripe?(q.over?q.
    🏠 房間（室內場景）與家具像素圖
    ========================================================= */
 const PAPER={paper_cream:['#f2e2c4','#e6d0a8'],paper_mint:['#c4ead8','#a8dcc4'],paper_night:['#26305e','#1e2750']};
-const DECOR_POS={wall:[74,10],lamp:[92,0],plant:[110,0],bed:[4,0],bed2:[40,0],rug:[36,95],toy:[94,0],toilet:[72,0]};   // y=0 → 對齊地板（底部在 y=104）
+const DECOR_POS={wall:[74,10],toilet:[4,-80],toy:[30,-80],lamp:[52,-80],plant:[107,-80],rug:[30,92],bed:[72,-105],bed2:[12,-105]};   // V1.49 房間重新擺：負數＝底部的 y。馬桶、玩具、立燈、盆栽靠後排（底 80），床在前面（右邊偏中間、第二張在左邊）
 const DSPR={};
 function makeDecor(id){if(DSPR[id])return DSPR[id];let g;const R=(x,y,w,h,c)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)px(g,x+i,y+j,c)};
  if(id==='wall_frame'){g=grid(28,22);R(0,0,28,22,'#7a4a2a');R(2,2,24,18,'#8fd0f0');R(2,12,24,8,'#6fbf5a');ellipse(g,9,15,8,4,()=> '#4f9a4a');ellipse(g,20,5,3,3,()=> '#fff3a6');R(1,1,26,1,'#a8703e')}
@@ -937,15 +939,14 @@ function makeRoom(ph,paper){const cv=document.createElement('canvas');cv.width=W
  c.fillStyle='#6a4428';c.fillRect(25,12,2,24);c.fillRect(12,23,28,2);c.fillStyle='#8a5a34';c.fillRect(8,37,36,3);return cv}
 function drawRoom(now){const ph=phase(),paper=s.decor.placed.paper||'paper_cream',k=ph+paper;if(k!==roomKey){roomKey=k;roomCache=makeRoom(ph,paper)}
  ctx.drawImage(roomCache,0,0);const P=s.decor.placed,FLOOR=104;
- for(const sl of['wall','toilet','plant','rug','bed','bed2','lamp']){const id=P[sl];if(!id)continue;const sp=makeDecor(id);if(!sp)continue;const[x,y]=DECOR_POS[sl];ctx.drawImage(sp,x,y||FLOOR-sp.height+(sl==='bed'||sl==='bed2'?2:0))}
+ for(const sl of['wall','toilet','toy','lamp','plant','rug','bed','bed2']){const id=P[sl];if(!id||id==='toy_ball')continue;const sp=makeDecor(id);if(!sp)continue;const[x,y]=DECOR_POS[sl];ctx.drawImage(sp,x,y<0?-y-sp.height:y)}
  drawCeilingLamp(lightOn(ph));return ph}
 /* 天花板吊燈（免費、一直都在）：傍晚和晚上可以開關，開了是暖黃色的燈光 */
 const lightOn=ph=>(ph==='night'||ph==='dusk')&&s.settings.light!==false;
 function drawCeilingLamp(on){const x=58;ctx.fillStyle='#4a3a2a';ctx.fillRect(x+5,0,1,7);
  ctx.fillStyle='#6a4a2a';ctx.fillRect(x+2,7,7,1);ctx.fillStyle=on?'#ffcf6a':'#c8b48a';ctx.fillRect(x+1,8,9,3);ctx.fillStyle=on?'#ffe9a8':'#d8c8a0';ctx.fillRect(x+2,8,3,1);
  ctx.fillStyle='#6a4a2a';ctx.fillRect(x,11,11,1);ctx.fillStyle=on?'#fff6d0':'#a8a090';ctx.fillRect(x+4,12,3,2)}
-function drawRoomFront(now,ph){const P=s.decor.placed;if(P.toy&&P.toy!=='toy_ball'){   // 彈力球是會滾的那顆球，不畫成固定的家具
- const sp=makeDecor(P.toy);ctx.drawImage(sp,DECOR_POS.toy[0],104-sp.height)}
+function drawRoomFront(now,ph){
  if(lightOn(ph)){ctx.fillStyle='rgba(20,15,40,.18)';ctx.fillRect(0,0,W,H);   // 燈罩以外稍暗，扇形光才看得出來
   // 暖燈：從吊燈往下散開的扇形光
   const g=ctx.createLinearGradient(0,13,0,108);g.addColorStop(0,'rgba(255,214,130,.62)');g.addColorStop(.45,'rgba(255,196,110,.30)');g.addColorStop(1,'rgba(255,180,100,.10)');
@@ -1109,7 +1110,7 @@ function updatePair(now,dt){const p=s.pair;if(!p||!s.hatched)return;
   // 走過皮球旁邊會順便踢一下
   if(!s.sleeping&&!mode&&!s.ballBroken&&!TOY.held&&Math.abs(TOY.x-(PAIR.x+24))<12&&TOY.y>TOY_GROUND-TOY.r-16&&Math.abs(TOY.vx)<40)kickToy(PAIR.face)}
  if(evo)return;
- if(s.sleeping){const tx=s.decor.placed.bed2&&curView()==='room'?BED_X+36:clamp(petX+(petX>W/2-24?-26:26),0,W-CELL);if(PAIR.target===null&&Math.abs(PAIR.x-tx)>2)pairWalk(tx);return}   // 有右邊的床就睡那張
+ if(s.sleeping){const tx=s.decor.placed.bed2&&curView()==='room'?BED2_X:clamp(petX+(petX>W/2-24?-26:26),0,W-CELL);if(PAIR.target===null&&Math.abs(PAIR.x-tx)>2)pairWalk(tx);return}   // 有左邊的床就睡那張
  if(mode){if(PAIR.target===null&&Math.abs(PAIR.x-petX)<36)pairWalk(petX>W/2-24?4:W-CELL-4);return}
  if(PAIR.target===null&&!window.PF_NO_WANDER&&!s.ballBroken&&!TOY.held&&(Math.abs(TOY.vx)>25||TOY.y<TOY_GROUND-TOY.r-4)&&now>(PAIR.chaseAt||0)&&Math.random()<.5){PAIR.chaseAt=now+700;const lead=TOY.x+TOY.vx*.4;pairWalk(lead-24+(lead>PAIR.x+24?8:-8));return}   // 球在滾：第二隻也會追
  if(PAIR.target!==null||now<PAIR.next||window.PF_NO_WANDER)return;
@@ -1132,7 +1133,7 @@ const overPair=(x,y)=>!!s.pair&&x>=PAIR.x+8&&x<=PAIR.x+40&&y>=PET_Y+10&&y<=PET_Y
 function switchToPair(){if(!s.pair||evo||modeBusy()||(B&&!B.over))return;cancelMode();const r=PC.switchPair(s,Date.now());if(!r.ok){say(r.msg);return}
  const ox=petX,of=petFace;petX=Math.round(PAIR.x);petFace=PAIR.face;PAIR.x=ox;PAIR.face=of;PAIR.target=null;PAIR.cb=null;petTarget=null;walkCb=null;anim.once=null;
  save();renderUI();sfx('pet');if(!s.sleeping)playAnim('happy');say(s.sleeping?`（現在照顧 ${s.name}）`:`${s.name}：輪到我了！`,{log:false})}
-function drawResidents(now){s.roster.forEach((p,i)=>{const id=gidOf(p),S=sheet(petKey(id,formCode(p.stage,p.route))),[x,y]=[[54,56],[30,56],[78,56],[6,58],[100,58],[42,60]][i]||[54,56];
+function drawResidents(now){s.roster.forEach((p,i)=>{const id=gidOf(p),S=sheet(petKey(id,formCode(p.stage,p.route))),[x,y]=[[66,50],[82,50],[44,52],[22,52],[4,52],[56,54]][i]||[66,50];
  ctx.drawImage(S.cv,S.idx[Math.floor(now/900+i)%2?'sleep0':'sleep1']*CELL,0,CELL,CELL,x,y,24,24);if(!rm()&&Math.random()<.004)spawn('z',1,{x:x+18,y:y+4,vx:4,vy:-6,jx:1,jy:1,life:1.6,spread:2})})}
 let rafOn=false,lastDraw=0;
 function loop(now){if(document.hidden){rafOn=false;return}if(now-lastDraw>=45){lastDraw=now;if(B)drawBattle(now);else draw(now)}requestAnimationFrame(loop)}
@@ -1330,7 +1331,7 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',`
 <p><b>目標：</b>照顧幻獸，陪牠慢慢長大。沒有死亡、離線不扣親密度、不需要每天簽到。</p>
 <ul>
 <li>🍎 <b>餵食</b>：按「餵食」後點畫面放蘋果，牠會走過去吃掉。吃完會留下果核，<b>要點一下清掉</b>，放超過 10 分鐘會發臭長果蠅，讓心情一直變差。用 1 個食物（沒有就花 ${C.feed.price} 金幣買），飽食 +${C.feed.hunger}、經驗 +${C.feed.xp}。吃飽時不能餵。</li>
-<li>⭐ <b>等級</b>：最高 Lv.30（練滿）。需要經驗＝7.5×(等級−1)²。已經有一隻「星耀覺醒」的夥伴後，其他幻獸會得到 <b>✨傳承之力</b>：經驗 ×3、訓練成果 ×2，第二隻會快很多。</li><li>🥚 <b>迎接新的蛋</b>：第 1 顆 300 金幣、第 2 顆 700、之後每顆 1000（配對、愛的小窩生的蛋不用錢）。</li><li>🐷 <b>小豬撲滿</b>：在小窩（室內）右邊牆上的木架，會幫你存錢，每小時 0.5＋等級×0.25 枚（最多算到 Lv.30；金系 ×1.5；第二隻一起出來再加牠的一半）。心情 30 以上才會存、睡覺時減半，點小豬就能領。小豬撲滿有 1～6 級：第 15、20、25、30 關的王各掉一個「核心碎片」（+1 級），商店道具有唯一的「小豬撲滿核心」1000 元（+1 級）。等級越高越大隻、存得越快越多（×1／1.25／1.5／1.8／2.2／3，最多存 12～24 小時），6 級最肥、會發光。</li><li>🎾 <b>玩耍（頂球）</b>：按「玩耍」後點畫面開始，球會一顆一顆掉下來。要在球快碰到頭的那一刻點畫面跳起來頂（可以一直點），時機越準越會進；完美時機還會預判移動中的籃框。有 3 條命，漏接 3 次就結束，每連進 5 球補 1 條命。進越多球，籃框會開始上下、左右移動，球也掉得越快、越斜。每進 3 球得 1 金幣（最多 10）。體力 ${C.play.minEnergy} 以上，心情 +${C.play.mood}、體力 −10、經驗 +${C.play.xp}（每 30 分鐘最多 3 次有經驗）。</li>
+<li>⭐ <b>等級</b>：最高 Lv.30（練滿）。需要經驗＝7.5×(等級−1)²。已經有一隻「星耀覺醒」的夥伴後，其他幻獸會得到 <b>✨傳承之力</b>：經驗 ×3、訓練成果 ×2，第二隻會快很多。</li><li>🥚 <b>迎接新的蛋</b>：第 1 顆 300 金幣、第 2 顆 700、之後每顆 1000（配對、愛的小窩生的蛋不用錢）。</li><li>🐷 <b>小豬撲滿</b>：在小窩（室內）右邊牆上的木架，會幫你存錢，每小時 1＋等級×0.35 枚（最多算到 Lv.30；金系 ×1.5；第二隻一起出來再加牠的一半）。心情 30 以上才會存、睡覺時減半，點小豬就能領。小豬撲滿有 1～6 級：第 15、20、25、30 關的王各掉一個「核心碎片」（+1 級），商店道具有唯一的「小豬撲滿核心」1000 元（+1 級）。等級越高越大隻、存得越快越多（×1／1.25／1.5／1.8／2.2／3，最多存 12～24 小時），6 級最肥、會發光。</li><li>🎾 <b>玩耍（頂球）</b>：按「玩耍」後點畫面開始，球會一顆一顆掉下來。要在球快碰到頭的那一刻點畫面跳起來頂（可以一直點），時機越準越會進；完美時機還會預判移動中的籃框。有 3 條命，漏接 3 次就結束，每連進 5 球補 1 條命。進越多球，籃框會開始上下、左右移動，球也掉得越快、越斜。每進 3 球得 1 金幣（最多 10）。體力 ${C.play.minEnergy} 以上，心情 +${C.play.mood}、體力 −10、經驗 +${C.play.xp}（每 30 分鐘最多 3 次有經驗）。</li>
 <li>🫧 <b>洗澡</b>：按「洗澡」後用手指拿海綿 🧽 在牠身上來回刷 3 秒。清潔 +${C.wash.clean}、經驗 +${C.wash.xp}，每 ${C.wash.cooldownMin} 分鐘一次。</li>
 <li>👆 <b>摸摸</b>：隨時都能摸；每 30 分鐘第一次：親密度 +2、心情 +3。</li>
 <li>💩 <b>大便</b>：每吃一次，大約 40 分鐘後會大便。要點一下清掉，超過 3 分鐘沒清會發臭，讓心情一直變差。商店買「寵物馬桶」後，牠會自己去上廁所。</li>
@@ -1616,7 +1617,7 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
  // 每一項：id、名稱、清單小字、圖（家具 dp／圖示 icon）、說明、按鈕
  const entries=()=>{if(tab==='decor'){const out=[];for(const sl of C.decorSlots){out.push({head:SLOT_NAME[sl]});for(const id of Object.keys(D).filter(id=>D[id].slot===sl)){const it=D[id],own=s.decor.owned.includes(id),on=s.decor.placed[sl]===id;
    out.push({id,name:it.name,sub:own?(on?'使用中':'已擁有'):'🪙 '+it.price,dp:id,desc:`${SLOT_NAME[sl]}${DECOR_NOTE[id]?'<br>'+DECOR_NOTE[id]:''}<br>${own?'已擁有':'價格 🪙 '+it.price}`,
-    btn:`<button class="btn ${!own||!on?'pri':''}" data-dz="${id}" ${(sl==='paper'&&on)?'disabled':''}>${!own?'購買':on?(sl==='paper'?'使用中':(sl==='bed'?'收起（左邊）':'收起')):(sl==='bed'?'擺在左邊':'擺上')}</button>${sl==='bed'&&own?`<button class="btn ${s.decor.placed.bed2===id?'':'pri'}" data-bed2="${id}">${s.decor.placed.bed2===id?'收起（右邊）':'擺在右邊'}</button>`:''}`})}}return out}
+    btn:`<button class="btn ${!own||!on?'pri':''}" data-dz="${id}" ${(sl==='paper'&&on)?'disabled':''}>${!own?'購買':on?(sl==='paper'?'使用中':(sl==='bed'?'收起（右邊）':'收起')):(sl==='bed'?'擺在右邊':'擺上')}</button>${sl==='bed'&&own?`<button class="btn ${s.decor.placed.bed2===id?'':'pri'}" data-bed2="${id}">${s.decor.placed.bed2===id?'收起（左邊）':'擺在左邊'}</button>`:''}`})}}return out}
   const fr=k=>(s.inv.fresh&&s.inv.fresh[k])||0,out=[];
   const foodEntry=(k,bag)=>{const F=C.foods[k];return{id:k,name:F.name,sub:bag?`×${s.inv[k]||0}${fr(k)?` ✨${fr(k)}`:''}`:`🪙${F.price}｜×${s.inv[k]||0}`,icon:ITEM_ICON[k],fresh:fr(k),desc:`${foodDesc(F)}<br>擁有 ${s.inv[k]||0}${fr(k)?`（✨自己種的 ${fr(k)}）`:''}`,
    btn:bag?`<button class="btn pri" data-feedk="${k}">🍽️ 拿去餵牠</button>`:`<button class="btn pri" data-bi="${k}">買 1 個（🪙 ${F.price}）</button>`}};
@@ -1907,7 +1908,7 @@ window.addEventListener('storage',e=>{if(e.key===SAVE_KEY&&e.newValue){const o=p
    ========================================================= */
 let mode=null,petX=PET_X,petTarget=null,walkCb=null,homeAt=0,petFace=-1,idleAt=0;   // petFace：-1 原本方向（朝左／正面），1 左右翻轉（朝右）
 const curView=()=>s.hatched&&s.view==='room'?'room':'yard';
-const BED_X=0;   // 寵物睡在小圓床上時的位置
+const BED_X=DECOR_POS.bed[0]+18-24,BED2_X=DECOR_POS.bed2[0]+18-24;   // 寵物睡在床上時的位置（床的中間）
 function walkTo(x,cb){petTarget=clamp(Math.round(x),0,W-CELL);walkCb=cb||null}
 const overPet=(x,y)=>x>=petX+6&&x<=petX+42&&y>=PET_Y+8&&y<=PET_Y+46;
 const FEED={apple:null},WASH={t:0,down:false,px:0,py:0,lastMove:0,sfxAt:0},BALL={lives:3,score:0,combo:0,b:null,tapAt:0,started:false,nextAt:0,over:false,wind:0},RING={x:110,y:44,r:7,bx:110,by:44,net:0};
@@ -2143,7 +2144,7 @@ function init(){
  if(L.src==='new'&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)s.settings.reducedMotion=true;
  tick();
  let urlMsg='';try{const q=new URLSearchParams(location.search);if(q.has('steps')){urlMsg=stepResultMsg(creditSteps(q.get('steps'),q.get('d')));history.replaceState(null,'',location.pathname+location.hash)}}catch(e){}
- if(s.sleeping){s.view='room';petX=s.decor.placed.bed?BED_X:PET_X;if(s.decor.placed.bed2)PAIR.x=BED_X+36}
+ if(s.sleeping){s.view='room';petX=s.decor.placed.bed?BED_X:PET_X;if(s.decor.placed.bed2)PAIR.x=BED2_X}
  save();renderUI();startLoop();setTimeout(runStages,1500);dailyCheck();
  if(upgraded)setTimeout(()=>toast('✅ 存檔已升級到 V1.6 新規則（等級改為累積經驗、加入成長階段）',4500),2600);
  if(urlMsg)setTimeout(()=>{toast(urlMsg,5000);spawn('shoe',3,{y:70,life:1.2,stagger:.2})},300);
