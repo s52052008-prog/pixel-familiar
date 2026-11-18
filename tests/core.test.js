@@ -238,7 +238,7 @@ t('小窩：交換夥伴，休息期間數值不變，存檔往返保留', () =>
   const r = C.swapPet(s, 0, T0 + 24 * H); assert.ok(r.ok); assert.equal(s.name, 'A'); assert.equal(s.hunger, 30); assert.equal(s.roster[0].name, 'B');
   const back = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 24 * H); assert.equal(back.roster.length, 1); assert.equal(back.roster[0].name, 'B'); assert.ok(nonNeg(back));
 });
-t('小窩：亂碼住客被過濾', () => { const r = C.sanitize({ v: 6, den: { level: 99 }, roster: [{ hatched: true, name: 'X', hunger: 'bad' }, { hatched: false }, 'junk'] }, T0); assert.equal(r.den.level, 4); assert.equal(r.roster.length, 1); assert.equal(r.roster[0].hunger, C.CONFIG.start.hunger); });
+t('小窩：亂碼住客被過濾', () => { const r = C.sanitize({ v: 6, den: { level: 99 }, roster: [{ hatched: true, name: 'X', hunger: 'bad' }, { hatched: false }, 'junk'] }, T0); assert.equal(r.den.level, 7); assert.equal(r.roster.length, 1); assert.equal(r.roster[0].hunger, C.CONFIG.start.hunger); });
 
 // 大便與馬桶
 t('大便：吃完 40 分鐘後大便、3 分鐘沒清就發臭扣心情', () => {
@@ -279,6 +279,13 @@ t('V1.44 等級上限 30、蛋 300／700／1000、傳承之力、星之塔', () 
   const a = hatched(); a.xp = 0; const x1 = C.addXP(a, 10); a.roster = [Object.assign(C.snapshotPet(hatched()), { awake: true })]; const x2 = C.addXP(a, 10); assert.equal(x2, x1 * 3);
   a.energy = 100; a.coins = 99; C.startTrain(a, 'zen', T0); C.finishTrain(a, 'zen', true, T0); assert.equal(a.trainLog.defense, 2);
   assert.ok(C.foeFighter(35, 30).tower); assert.ok(!C.foeFighter(30, 30).tower); });
+t('V1.45 小窩最多 7 隻、神秘老爺爺寄養 399（每隻一次）、血繼小屋 1000', () => { const s = hatched(); assert.equal(C.CONFIG.den[C.CONFIG.den.length - 1].cap, 7);
+  s.den.level = 2; s.roster = [C.snapshotPet(Object.assign(hatched(), { name: '小花' }))]; s.coins = 400;
+  assert.ok(C.fosterOut(s, 0, T0).ok); assert.equal(s.coins, 1); assert.equal(s.roster.length, 0); assert.equal(s.foster.length, 1); assert.equal(C.petCount(s), 1);
+  assert.ok(C.fosterBack(s, 0, T0).ok); assert.ok(C.fosterOut(s, 0, T0).ok); assert.equal(s.coins, 1);   // 付過一次就不用再付
+  const z = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(z.foster.length, 1); assert.ok(z.foster[0].fosterPaid);
+  s.roster = [C.snapshotPet(hatched())]; assert.ok(!C.fosterBack(s, 0, T0).ok);   // 小窩滿了
+  s.coins = 1000; assert.ok(C.buyFusionHouse(s).ok); assert.ok(!C.buyFusionHouse(s).ok); });
 t('V1.41 訓練場：每次 20 金幣，達成目標才有經驗', () => { const s = hatched(); s.energy = 100; s.coins = 30; s.xp = 512; const L = C.level(512);
   assert.ok(C.startTrain(s, 'dodge', T0).ok); assert.equal(s.coins, 10); assert.equal(s.energy, 85); const f = C.finishTrain(s, 'dodge', false); assert.equal(f.xp, 0); assert.equal(s.xp, 512);
   assert.ok(!C.startTrain(s, 'zen', T0).ok); s.coins = 20; assert.ok(C.startTrain(s, 'zen', T0).ok); const w = C.finishTrain(s, 'zen', true, T0); assert.equal(w.xp, Math.round(10 + 4 * L)); assert.equal(s.trainLog.defense, 1);

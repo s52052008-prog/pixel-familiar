@@ -65,11 +65,13 @@ const CONFIG = {
   bossCoins: { mini: 15, big: 30 },
   foeHp: { normal: 1.3, mini: 1.5, big: 2 }, tower: { from: 31, hp: 1.8, atk: 1.3 },   // V1.44 野生怪血量；第 31～40 關「星之塔」更硬更痛
   heritage: { xp: 3, train: 2 },                             // V1.44 傳承之力：已經有星耀覺醒的夥伴，其他幻獸經驗 ×2、訓練成果 ×2
-  eggPrice: [300, 700, 1000],                               // V1.44 迎接新的蛋：第 1 顆 300、第 2 顆 700、之後 1000                        // V1.42 打贏小王／大王額外金幣                                    // V1.40 大絕招：屬性技 2.2 倍，每場一次
+  eggPrice: [300, 700, 1000],
+  foster: { price: 399 },                                   // V1.45 神秘老爺爺寄養：每隻付一次 399，之後隨時可以接回、再寄
+  fusionHouse: { price: 1000 },                             // V1.45 血繼限界的特殊幻獸要先花 1000 佈置新的小屋                               // V1.44 迎接新的蛋：第 1 顆 300、第 2 顆 700、之後 1000                        // V1.42 打贏小王／大王額外金幣                                    // V1.40 大絕招：屬性技 2.2 倍，每場一次
   rps: { seconds: 2, win: 0, tie: .8, lose: 1.2 },          // 敵人出招前猜拳：贏＝躲開、平手 0.8 倍、輸或超時 1.2 倍
   bond: { seconds: 2, steps: [[0, 1], [20, 2.2], [22, 2.5], [25, 2.7], [28, 3]], cost: 10, restHours: 2 },   // 羈絆之力：2 秒內連打；20 下 2.2 倍、22 下 2.5、25 下 2.7、28 下以上 3 倍（中間按比例）。要花 10 金幣買加油棒，之後 2 小時要休息不能冒險
   ballGame: { lives: 3, max: 99, goalCap: 5, coinEvery: 3, coinMax: 10 },   // 頂球：3 條命一直玩到漏接 3 次；每 3 球 1 金幣（最多 10）；冒險路線最多算 5 球
-  den: [ { name: '草叢小窩', cap: 1, cost: 0 }, { name: '稻草窩', cap: 2, cost: 120 }, { name: '樹根洞窟', cap: 3, cost: 300 }, { name: '大樹屋', cap: 4, cost: 600 } ],                            // 商店零食「星星糖」
+  den: [ { name: '草叢小窩', cap: 1, cost: 0 }, { name: '稻草窩', cap: 2, cost: 120 }, { name: '樹根洞窟', cap: 3, cost: 300 }, { name: '大樹屋', cap: 4, cost: 600 }, { name: '燈籠樹屋', cap: 5, cost: 1000 }, { name: '旗幟樹屋', cap: 6, cost: 1500 }, { name: '星光樹屋', cap: 7, cost: 2200 } ],   // V1.45 最多 7 隻（每個屬性一隻）                            // 商店零食「星星糖」
   decorSlots: ['paper', 'wall', 'lamp', 'plant', 'bed', 'rug', 'toy', 'toilet'],
   decor: {                                                                      // 房間家具：純裝飾，不影響數值
     paper_cream: { slot: 'paper', name: '奶油色壁紙', price: 0 },
@@ -226,7 +228,7 @@ function fresh(now = Date.now()) {
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] }, goalLv: 0,
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
-    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, eggBuys: 0, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
+    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, eggBuys: 0, foster: [], fusionHouse: false, fosterPaid: false, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
     events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
@@ -287,10 +289,11 @@ function sanitize(o, now = Date.now()) {
   const bl = o.ball && typeof o.ball === 'object' ? o.ball : {}; r.ball = { best: int(bl.best, 0, 0, 99), goals: int(bl.goals, 0, 0, 1e7) };
   r.den = { level: int(o.den && o.den.level, 1, 1, CONFIG.den.length) };
   r.roster = Array.isArray(o.roster) ? o.roster.filter(p => p && typeof p === 'object' && p.hatched).slice(0, CONFIG.den.length - 1).map(p => sanitizePet(p, now)) : [];
+  r.foster = Array.isArray(o.foster) ? o.foster.filter(p => p && typeof p === "object" && p.hatched).slice(0, 60).map(p => sanitizePet(p, now)) : [];
   r.pair = o.pair && typeof o.pair === 'object' && o.pair.hatched && r.hatched ? sanitizePet(o.pair, now) : null;
   if (r.pair && r.roster.length > CONFIG.den.length - 2) r.roster.length = CONFIG.den.length - 2;
   r.owner = typeof o.owner === 'string' ? o.owner.replace(/[<>&"]/g, '').trim().slice(0, 12) : '';
-  r.piggy = num(o.piggy, 0, 0, 1e5); r.pigCores = Array.isArray(o.pigCores) ? [...new Set(o.pigCores.filter(n => CONFIG.piggy.coreStages.includes(n)))] : []; r.pigBought = o.pigBought === true; r.eggBuys = int(o.eggBuys, 0, 0, 999);
+  r.piggy = num(o.piggy, 0, 0, 1e5); r.pigCores = Array.isArray(o.pigCores) ? [...new Set(o.pigCores.filter(n => CONFIG.piggy.coreStages.includes(n)))] : []; r.pigBought = o.pigBought === true; r.eggBuys = int(o.eggBuys, 0, 0, 999); r.fosterPaid = o.fosterPaid === true; r.fusionHouse = o.fusionHouse === true;
   r.awake = o.awake === true && r.stage === 'ascended';
   r.washes = int(o.washes, 0, 0, 1e7); r.earthWins = int(o.earthWins, 0, 0, 1e7);
   r.matGot = {}; if (o.matGot && typeof o.matGot === 'object') for (const k of ROUTES) if (Array.isArray(o.matGot[k])) r.matGot[k] = o.matGot[k].filter(n => [10, 20, 30, 40].includes(n)).slice(0, 4);
@@ -848,9 +851,21 @@ function finishBallGame(st, score, now = Date.now()) {
 }
 
 /* ---------------- 小窩：升級、讓多隻寵物住進來 ---------------- */
-const PET_FIELDS = ['trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
+const PET_FIELDS = ['fosterPaid', 'trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
 function snapshotPet(st) { const p = {}; for (const k of PET_FIELDS) p[k] = JSON.parse(JSON.stringify(st[k])); p.sleeping = false; return p; }
 function sanitizePet(p, now = Date.now()) { const r = sanitize(Object.assign({ v: 6 }, p, { roster: [], dex: [], pair: null }), now); return snapshotPet(r); }
+/* V1.45 神秘老爺爺的家：寄養不想養的幻獸（不佔小窩、數值不會變），每隻付一次錢 */
+function fosterOut(st, i, now = Date.now()) {
+  const p = st.roster[i]; if (!p) return { ok: false, msg: '小窩裡沒有這隻' };
+  const P = CONFIG.foster.price; if (!p.fosterPaid) { if (st.coins < P) return { ok: false, msg: `寄養要 ${P} 金幣（每隻只付一次）` }; st.coins -= P; p.fosterPaid = true; }
+  st.roster.splice(i, 1); (st.foster || (st.foster = [])).push(p); journal(st, now, `把 ${p.name} 寄養在神秘老爺爺家`); return { ok: true, msg: `${p.name} 去神秘老爺爺家住了，隨時可以接回來` };
+}
+function fosterBack(st, j, now = Date.now()) {
+  const p = (st.foster || [])[j]; if (!p) return { ok: false, msg: '老爺爺家沒有這隻' };
+  if (petCount(st) >= denCap(st)) return { ok: false, msg: '小窩住滿了，先升級小窩或把別隻寄養' };
+  st.foster.splice(j, 1); st.roster.push(p); journal(st, now, `從神秘老爺爺家接回 ${p.name}`); return { ok: true, msg: `${p.name} 回到小窩了！` };
+}
+function buyFusionHouse(st) { const P = CONFIG.fusionHouse.price; if (st.fusionHouse) return { ok: false, msg: '已經佈置好血繼小屋了' }; if (st.coins < P) return { ok: false, msg: `金幣不足（需要 ${P}）` }; st.coins -= P; st.fusionHouse = true; return { ok: true, msg: '血繼小屋佈置好了！特殊幻獸可以住進來了' }; }
 const denCap = st => CONFIG.den[st.den.level - 1].cap;
 const petCount = st => (st.hatched ? 1 : 0) + (st.pair ? 1 : 0) + st.roster.length;
 function upgradeDen(st) {
@@ -1010,7 +1025,7 @@ const API = { CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
-  MAX_LV, foeFighter, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
