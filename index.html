@@ -259,7 +259,7 @@ body.rm *{transition:none!important;animation:none!important}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.52.0';
+const VERSION='1.53.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -722,8 +722,8 @@ const ITEM_ICON={potion2:'potion2',soup:'soup',seeds2:'seed2',food:'apple',berry
 function buildIcons(){for(const k in ICONS){const I=ICONS[k],h=I.m.length,w=I.m[0].length,g=grid(w+2,h+2);
  I.m.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!=='.')px(g,x+1,y+1,I.p[ch])}));if(I.o)outline(g,I.o);ICV[k]=gridCanvas(g)}}
 /* 手繪道具圖（tools/import_items.py 產生）：載入後取代程式畫的家具與圖示 */
-const ITEM_NAMES=['den1','den2','den3','den4','den5','den6','den7','den_fusion','pig1','pig2','pig3','pig4','pig5','pig6','pigshard','pigcore','potion2','soup','seed2','bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec'];
-const ITEM_ICONS=new Set(['pigshard','pigcore','potion2','soup','seed2','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec']);
+const ITEM_NAMES=['relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','den1','den2','den3','den4','den5','den6','den7','den_fusion','pig1','pig2','pig3','pig4','pig5','pig6','pigshard','pigcore','potion2','soup','seed2','bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec'];
+const ITEM_ICONS=new Set(['relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','pigshard','pigcore','potion2','soup','seed2','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec']);
 function tintCanvas(src,rgba){const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const x=c.getContext('2d');x.drawImage(src,0,0);x.globalCompositeOperation='source-atop';x.fillStyle=rgba;x.fillRect(0,0,c.width,c.height);return c}
 /* V1.49 家具、小豬的黑邊換成深咖啡色，看起來比較乾淨柔和 */
 function softEdge(c){try{const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height),a=d.data;for(let i=0;i<a.length;i+=4)if(a[i+3]&&a[i]+a[i+1]+a[i+2]<150){a[i]=92;a[i+1]=58;a[i+2]=34}x.putImageData(d,0,0)}catch(e){}}
@@ -1027,8 +1027,8 @@ function draw(now){
    ctx.fillStyle='rgba(10,14,40,.55)';ctx.fillRect(0,0,W,H);ctx.drawImage(SS.sil,SS.idx.idle0*CELL,0,CELL,CELL,PX,PET_Y,CELL,CELL)}
   else if(e<3.1){ctx.fillStyle='#ffffff';ctx.globalAlpha=1-(e-2.6)/.5;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;ctx.drawImage(sheet(evo.to).cv,0,0,CELL,CELL,PX,PET_Y,CELL,CELL)}
   else{const done=evo.done;evo=null;done&&done()}}
- else if(petFace===1){ctx.save();ctx.translate(PX+CELL,0);ctx.scale(-1,1);ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,0,PET_Y+LIFT,CELL,CELL);ctx.restore()}   // 往右走時轉身，不會倒退走
- else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,PX,PET_Y+LIFT,CELL,CELL);
+ else{drawAura(ctx,S,fi,PX,PET_Y+LIFT,petFace===1,auraOf(s),now);if(petFace===1){ctx.save();ctx.translate(PX+CELL,0);ctx.scale(-1,1);ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,0,PET_Y+LIFT,CELL,CELL);ctx.restore()}   // 往右走時轉身，不會倒退走
+ else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,PX,PET_Y+LIFT,CELL,CELL)}
  if(!gone&&!evo&&s.hatched)drawStatusFx(now,S,fi,PX,LIFT,key);
  if(!gone&&!evo&&s.hatched)drawPick(now,key,LIFT);
  drawToy();drawCores(now);drawApple();drawBall();drawRingFront();drawPop(now);drawDrink(now);
@@ -1044,6 +1044,13 @@ function draw(now){
    餓（飽食 <25）：頭上冒出想吃東西的泡泡、肚子咕嚕
    心情差（心情 <25）：頭上一朵小烏雲在下雨
    累（體力 <15）：額頭冒汗 */
+/* V1.53 寶物光：戴 1 個綠光、2 個藍光；戴冰龍鱗片或赤龍之牙其中一個紫光、兩個都戴金光 */
+function auraOf(p){const L=(p&&p.relics)||[];if(!L.length)return null;const d=L.filter(k=>k==='iceScale'||k==='dragonFang').length;return d>=2?'#ffd34a':d===1?'#c070ff':L.length>=2?'#5ab0ff':'#5fe08a'}
+function drawAura(c,S,fi,x,y,flip,col,now){if(!col||!S||!S.cv)return;S.glow=S.glow||{};let g=S.glow[col];
+ if(!g){g=document.createElement('canvas');g.width=S.cv.width;g.height=S.cv.height;const x2=g.getContext('2d');x2.drawImage(S.cv,0,0);x2.globalCompositeOperation='source-in';x2.fillStyle=col;x2.fillRect(0,0,g.width,g.height);S.glow[col]=g}
+ const a=rm()?.8:.7+.25*Math.sin(now/300);c.save();if(flip){c.translate(x+CELL,0);c.scale(-1,1);x=0}
+ for(const[dx,dy,k]of[[-3,0,.2],[3,0,.2],[0,-3,.2],[-2,-2,.25],[2,-2,.25],[-2,0,.5],[2,0,.5],[0,-2,.5],[0,2,.35],[-1,-1,.9],[1,-1,.9],[-1,1,.9],[1,1,.9],[-1,0,1],[1,0,1],[0,-1,1],[0,1,1]]){c.globalAlpha=a*k;c.drawImage(g,fi*CELL,0,CELL,CELL,x+dx,y+dy,CELL,CELL)}
+ c.restore()}
 const FX_TMP=document.createElement('canvas');FX_TMP.width=CELL;FX_TMP.height=CELL;
 function petTopY(key,LIFT){const F=formOf(key),A=artFor(F);return PET_Y+LIFT+(A?artBox(A.open).top:10)}
 function drawStatusFx(now,S,fi,PX,LIFT,key){const top=petTopY(key,LIFT),cx=PX+24,t=now/1000,still=rm();
@@ -1142,7 +1149,7 @@ function updatePair(now,dt){const p=s.pair;if(!p||!s.hatched)return;
 function pairFrame(now){if(s.sleeping)return['sleep0','sleep0','sleep1','sleep1'][Math.floor(now/670)%4];if(PAIR.target!==null)return['idle1','jump0'][Math.floor(now/130)%2];
  if(PAIR.anim==='happy'&&now-PAIR.t0<1000)return['happy0','happy1'][Math.floor(now/200)%2];if((now+1300)%4100<150)return'blink';return['idle0','idle0','idle1','idle1'][Math.floor(now/500)%4]}
 function drawPair(now){if(!s.pair||!s.hatched||evo)return;const S=sheet(pairKey()),fn=pairFrame(now),fi=S.idx[fn]??0,X=Math.round(PAIR.x),LIFT=(S.lift&&S.lift[fi])||0;
- ctx.fillStyle='rgba(20,60,30,.28)';ctx.fillRect(X+11,PET_Y+44,26,2);
+ ctx.fillStyle='rgba(20,60,30,.28)';ctx.fillRect(X+11,PET_Y+44,26,2);drawAura(ctx,S,fi,X,PET_Y+LIFT,PAIR.face===1,auraOf(s.pair),now);
  if(PAIR.face===1){ctx.save();ctx.translate(X+CELL,0);ctx.scale(-1,1);ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,0,PET_Y+LIFT,CELL,CELL);ctx.restore()}else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,X,PET_Y+LIFT,CELL,CELL)}
 /* 目前照顧的那隻：頭上一個小箭頭 */
 function drawPick(now,key,LIFT){if(!s.pair||s.sleeping||mode||s.runaway)return;const top=petTopY(key,LIFT),x=Math.round(petX+24),y=Math.max(1,top-8)+(rm()?0:Math.round(Math.sin(now/220)));
@@ -1660,6 +1667,10 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
    for(const el of PC.ROUTES){const n=(s.inv.mats||{})[el]||0;out.push({id:'mat_'+el,name:C.materials[el],sub:`${ROUTE_ICON[el]}｜×${n}`,dim:!n,icon:'mat_'+el,desc:`${ROUTE_ICON[el]}${ROUTE_LABEL[el]}${ROUTE_LABEL[el]}的終極素材，進化到高階要 ${C.ascend.mats} 個（不夠可以用星辰碎片補）<br>第 ${C.ascend.bigBoss.join('、')} 關大王各掉一次（依你那時這隻的屬性）<br>擁有 ${n}`,btn:''})}
    {const n=(s.pigCores||[]).length,P=C.piggy;out.push({head:'🐷 小豬撲滿'});out.push({id:'pigshard',name:'核心碎片',sub:`×${n}/4`,dim:!n,icon:'pigshard',desc:`第 ${P.coreStages.join('、')} 關的王各掉一個，拿到就自動裝進小豬撲滿（+1 級）。<br>已拿到：${n?s.pigCores.slice().sort((a,b)=>a-b).map(x=>'第 '+x+' 關').join('、'):'還沒有'}<br>小豬撲滿現在 <b>${PC.pigLevel(s)} 級</b>，每小時 ${PC.piggyRate(s).toFixed(1)} 枚、最多存 ${PC.piggyCap(s)} 枚`,btn:''});
     if(s.pigBought)out.push({id:'pigcore',name:'小豬撲滿核心',sub:'已裝上',icon:'pigcore',desc:'商店買的唯一核心，已經裝進小豬撲滿（+1 級）',btn:''})}
+   {const RL=C.relics,RI=RL.items,iv=s.inv.relics||{},pets=[s].concat(s.pair?[s.pair]:[]),wornBy=k=>pets.filter(p=>(p.relics||[]).includes(k));   // V1.53 寶物也放在背包：可以看、可以搭配
+    const ks=Object.keys(RI).filter(k=>iv[k]||wornBy(k).length);if(ks.length){out.push({head:'🪎 王的寶物'});
+     for(const k of ks){const R=RI[k],w=wornBy(k),n=iv[k]||0,bt=[];pets.forEach((p,pi)=>{const L=p.relics||[];if(L.includes(k))bt.push(`<button class="btn" data-run="${pi}|${k}">從 ${esc(p.name)} 身上卸下</button>`);else if(n>0)bt.push(`<button class="btn pri" data-req="${pi}|${k}" ${L.length>=RL.slots?'disabled':''}>給 ${esc(p.name)} 戴${L.length>=RL.slots?'（欄位滿了）':''}</button>`)});if(n>0)bt.push(`<button class="btn" data-rsell="${k}">💰 賣掉（${RL.sell}）</button>`);
+      out.push({id:'rl_'+k,name:R.name,sub:`×${n}${w.length?'｜戴著 '+w.length:''}`,icon:'relic_'+k,desc:`<b>${R.text}</b><br>第 ${Object.keys(C.bosses).find(x=>C.bosses[x].relic===k)} 關「${R.boss}」的寶物${w.length?'<br>🐾 戴在：'+w.map(p=>esc(p.name)).join('、'):''}<br>背包裡還有 ${n} 個（每隻最多戴 ${RL.slots} 個，同一種只能戴一個）<br>💚 戴 1 個發綠光、💙 2 個藍光；冰龍鱗片或赤龍之牙其中一個 💜 紫光、兩個都戴 💛 金光`,btn:bt.join('')})}}}
    out.push({head:'🌟 星辰寶物'});
    out.push({id:'shards',name:'星辰碎片',sub:`×${s.inv.shards||0}`,dim:!s.inv.shards,icon:'gem',desc:`可以抵 1 個任何屬性的終極素材（例如羽毛只有 2 個，加 1 個碎片就能湊滿 ${C.ascend.mats} 個）。<br>第 ${C.starHeart.stage} 關大王：每個屬性第一次打贏必掉，之後 ${Math.round(C.starHeart.shardRepeat*100)}%<br>擁有 ${s.inv.shards||0}`,btn:''});
    {const w=PC.canAwaken(s);out.push({id:'hearts',name:'星辰之心',sub:`×${s.inv.hearts||0}`,dim:!s.inv.hearts,icon:'star',desc:`給<b>高階</b>的幻獸使用：星耀覺醒！全部能力 +${Math.round((C.starHeart.statX-1)*100)}%、存錢筒 ×${C.starHeart.piggyX}、名字前加「星耀」、身上有星光。<br>每個屬性第一次打倒第 ${C.starHeart.stage} 關大王得到<br>擁有 ${s.inv.hearts||0}${s.awake?'<br>✨ '+esc(s.name)+' 已經星耀覺醒了':''}`,btn:w?`<button class="btn" disabled>${w}</button>`:`<button class="btn pri" id="useHeart">✨ 給 ${esc(s.name)} 使用</button>`})}}
@@ -1679,6 +1690,10 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
   document.querySelectorAll('[data-bi]').forEach(b=>b.onclick=()=>{const r=PC.buyItem(s,b.dataset.bi);toast(r.ok?r.msg:'❌ '+r.msg);if(r.ok){sfx('tap');save();renderUI()}render()});
   document.querySelectorAll('#shopBody canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));
   document.querySelectorAll('[data-feedk]').forEach(b=>b.onclick=()=>{closeModal();FEED.kind=b.dataset.feedk;act('feed')});
+  {const pets=[s].concat(s.pair?[s.pair]:[]);
+   document.querySelectorAll('[data-req]').forEach(b=>b.onclick=()=>{const[i,k]=b.dataset.req.split('|'),r=PC.equipRelic(s,pets[+i],k);toast(r.ok?'🪎 '+r.msg:'❌ '+r.msg);if(r.ok){sfx('level');save();renderUI()}render()});
+   document.querySelectorAll('[data-run]').forEach(b=>b.onclick=()=>{const[i,k]=b.dataset.run.split('|'),r=PC.unequipRelic(s,pets[+i],k);toast(r.msg);sfx('tap');save();renderUI();render()});
+   document.querySelectorAll('[data-rsell]').forEach(b=>b.onclick=()=>{const k=b.dataset.rsell,R=C.relics.items[k];confirmBox('💰 真的要賣掉嗎？',`確定要把「${R.name}」賣掉換 ${C.relics.sell} 金幣嗎？賣掉就拿不回來了。`,`確定賣掉（+${C.relics.sell}）`,()=>{const r=PC.sellRelic(s,k);toast(r.ok?'💰 '+r.msg:'❌ '+r.msg,3000);if(r.ok){sfx('level');save();renderUI()}shopDialog('bag')})})}
   if($('goFarm'))$('goFarm').onclick=()=>{closeModal();farmDialog()};
   if($('buyPigCore'))$('buyPigCore').onclick=()=>{const r=PC.buyPigCore(s);toast(r.ok?'🐷 '+r.msg:'❌ '+r.msg,3500);if(r.ok){sfx('level');buzz(30);save();renderUI()}render()};
   if($('drinkSoup'))$('drinkSoup').onclick=()=>{const r=PC.useSoup(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}closeModal();playAnim('eat');sfx('eat');spawn('heart',4,{y:70,life:1.1});say(r.msg);save();renderUI()};
@@ -1693,22 +1708,22 @@ function shopDialog(tab){PC.claimDaily(s,Date.now());
 /* =========================================================
    ⚔️ 冒險：關卡制回合戰鬥
    ========================================================= */
-const EL_NAME={fire:'🔥火',water:'💧水',leaf:'🌿森',earth:'🪨土',bird:'🐦鳥',elec:'⚡電',metal:'⚙️金',none:'⭐無'};
+const EL_NAME={dragon:'🐲龍',fire:'🔥火',water:'💧水',leaf:'🌿森',earth:'🪨土',bird:'🐦鳥',elec:'⚡電',metal:'⚙️金',none:'⭐無'};
 const ULT_NAME={fire:'烈焰風暴',water:'怒濤海嘯',leaf:'森羅萬象',earth:'地裂山崩',bird:'九天颶風',elec:'萬雷天降',metal:'千刃斬',none:'流星雨'};
 const SP_NAME={fire:'火球術',water:'泡泡砲',leaf:'飛葉刃',earth:'碎岩擊',bird:'旋風羽',elec:'雷光閃',metal:'鋼刃斬',none:'星星衝撞'},SP_ICON={fire:'fire',water:'bubble',leaf:'leaf',earth:'rock',bird:'feather',elec:'bolt',metal:'shard',none:'star'};
 const AREAS=['青草原','迷霧湖','火山口','古森林','大地峽谷','天空之巔','雷雲山','鋼鐵礦坑','星之塔'];
 function areaName(n){return AREAS[Math.min(8,Math.floor((n-1)/5))]+' '+(n>40?n-40:((n-1)%5)+1)}
 /* 野生怪獸用另一套（程式繪製）的外型，不會跟 7 系幻獸長得一樣 */
 function foeFighter(n){const f=PC.foeFor(n,lvl()),key=petKey(f.id,formCode(f.stage,f.route))+'|wild'+(f.mon?'|'+WILD_MON.findIndex(m=>m[0]===f.mon):''),F=formOf(key);
- return PC.foeFighter(n,lvl(),(f.big?'👑大王 ':f.boss?'小王 ':'野生的 ')+F.name,key)}   // 血量：一般 ×1.3、小王 ×1.5、大王 ×2；第 31 關起星之塔再 ×1.8、攻擊 ×1.3
+ const ft=PC.foeFighter(n,lvl(),(f.big?'👑大王 ':f.boss?'小王 ':'野生的 ')+F.name,key);ft.elTxt=EL_NAME[ft.el]+(ft.el2?'＋'+EL_NAME[ft.el2]:'');return ft}   // 血量：一般 ×1.3、小王 ×1.5、大王 ×2；第 31 關起星之塔再 ×1.8、攻擊 ×1.3
 let B=null;const bparts=[];const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 /* V1.42 關卡清單的相剋提示：▲ 你剋牠、▼ 牠剋你 */
-function elemHint(f){const me={el:PC.ELEM[s.route]||'none'},a=PC.elemMult(me,f,true),b=PC.elemMult(f,me,true);return a>1?' <b class="ehint up">▲你剋牠</b>':b>1?' <b class="ehint dn">▼牠剋你</b>':''}
+function elemHint(f){const me={el:PC.ELEM[s.route]||'none'},a=PC.elemMult(me,f,true),b=Math.max(PC.elemMult(f,me,true),f.el2?PC.elemMult({el:f.el2},me,true):0);return a>1?' <b class="ehint up">▲你剋牠</b>':b>1?' <b class="ehint dn">▼牠剋你</b>':''}
 function buffText(p){const tb=PC.trainBonus(p),sx=CONFIG.stageX[p.stage]||1,pc=x=>Math.round(x*100);return`進化階段 ×${sx}　🤸閃避 +${pc(tb.dodge)}%　👊攻擊 +${pc(tb.attack)}%　🧘防禦 +${pc(tb.defense)}%${p.awake?'　🌟星耀 ×'+CONFIG.starHeart.statX:''}${p===s&&!s.awake&&PC.hasHeritage(s)?`　✨傳承之力：經驗 ×${CONFIG.heritage.xp}、訓練 ×${CONFIG.heritage.train}`:''}`}
 function advDialog(){PC.claimDaily(s,Date.now());tick();
  const why=PC.canAdventure(s,s.adv.stage);let list='';const top=s.adv.stage,A=CONFIG.adventure;
  for(let n=top;n>=Math.max(1,top-5);n--){const f=foeFighter(n),ev=Object.keys(CONFIG.bossStages).find(k=>CONFIG.bossStages[k]===n);
-  list+=`<button class="btn stagebtn ${n===top?'pri':''}" data-st="${n}"><span>${n>=CONFIG.tower.from?'🌌':''}${n%10===0?'👑 大王 ':n%5===0?'⭐ 小王 ':''}第 ${n} 關 · ${CONFIG.bosses[n]?CONFIG.bosses[n].mon:areaName(n)}${ev&&!s.events[ev]?' ✨':''}</span><span class="small" style="color:inherit">Lv.${f.level} ${EL_NAME[f.el]}${elemHint(f)}</span></button>`}
+  list+=`<button class="btn stagebtn ${n===top?'pri':''}" data-st="${n}"><span>${n>=CONFIG.tower.from?'🌌':''}${n%10===0?'👑 大王 ':n%5===0?'⭐ 小王 ':''}第 ${n} 關 · ${CONFIG.bosses[n]?CONFIG.bosses[n].mon:areaName(n)}${ev&&!s.events[ev]?' ✨':''}</span><span class="small" style="color:inherit">Lv.${f.level} ${EL_NAME[f.el]}${f.el2?'＋'+EL_NAME[f.el2]:''}${elemHint(f)}</span></button>`}
  openModal('⚔️ 冒險',`<p>體力：<b>${Math.round(s.energy)}</b>（出發需要 ${A.minEnergy}，會消耗 20）　戰績：${s.adv.wins} 勝 ${s.adv.losses} 敗</p>
 <p class="small">不限次數，有體力就能出發。<br>完成：經驗 +${A.xp}、金幣 +${A.coinsMin}～${A.coinsMax}、🔥 焰系 +${A.flame}；勝利再加經驗 +10、金幣 +4、🔥 +2。失敗不扣東西，經驗 +3。<br>第一次打通新關卡＝發現新地點（🌿 森系 +2）。✨ 標記的 Boss 關有特殊事件。<br>屬性相剋：屬性技剋制 1.4 倍、被剋 0.75 倍。清單上 <b class="ehint up">▲你剋牠</b>、<b class="ehint dn">▼牠剋你</b>。<br>小王、大王是固定等級，練功就打得贏；🌌 第 31 關起是「星之塔」，怪物更硬更痛；打贏小王金幣 +${CONFIG.bossCoins.mini}、大王 +${CONFIG.bossCoins.big}。<br>💪 目前加成：${buffText(s)}</p>
 ${why&&why!=='這一關還沒解鎖'?'<p class="err">'+why+'</p>':''}
@@ -1719,25 +1734,25 @@ ${list}`);
  document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{const n=+b.dataset.st,w=PC.canAdventure(s,n);if(w){toast(w);return}closeModal();startBattle(n)})}
 /* 🪎 V1.52 寶物：戴上／卸下／賣掉／圖鑑 */
 function relicDialog(){const RL=CONFIG.relics,RI=RL.items,iv=s.inv.relics||{},pets=[s].concat(s.pair?[s.pair]:[]);
- const tag=k=>`${RI[k].icon} <b>${RI[k].name}</b> <span class="small">${RI[k].text}</span>`;
+ const tag=k=>`<canvas class="picon" data-icon="relic_${k}" data-s="2" style="vertical-align:middle"></canvas> <b>${RI[k].name}</b> <span class="small">${RI[k].text}</span>`;
  const worn=pets.map((p,pi)=>`<div class="eggrow" style="display:block"><b>${esc(p.name)}</b>${sexMark(p)} <span class="small">寶物欄 ${(p.relics||[]).length}/${RL.slots}</span>${[0,1].map(i=>{const k=(p.relics||[])[i];return `<div style="display:flex;align-items:center;gap:6px;margin-top:4px"><div style="flex:1">${k?tag(k):'<span class="small">（空的欄位）</span>'}</div>${k?`<button class="btn" data-un="${pi}|${k}" style="flex:0 0 auto">卸下</button>`:''}</div>`}).join('')}</div>`).join('');
  const bag=Object.keys(RI).filter(k=>iv[k]).map(k=>`<div class="eggrow" style="display:block"><div>${tag(k)} <b>×${iv[k]}</b></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">${pets.map((p,pi)=>`<button class="btn pri" data-eq="${pi}|${k}">給 ${esc(p.name)} 戴</button>`).join('')}<button class="btn" data-sell="${k}">💰 賣掉（${RL.sell}）</button></div></div>`).join('')||'<p class="small">背包裡沒有寶物。</p>';
- const book=Object.keys(CONFIG.bosses).map(n=>{const B0=CONFIG.bosses[n],k=B0.relic,got=(s.relicGot||[]).includes(+n);return `<div class="small" style="margin:3px 0">${+n%10===0?'👑':'⭐'} 第 ${n} 關 ${B0.mon}（${EL_NAME[PC.ELEM[B0.route]]||''}）→ ${got?`${RI[k].icon} ${RI[k].name}：${RI[k].text}`:'❓ 還沒打開過'}</div>`}).join('');
+ const book=Object.keys(CONFIG.bosses).map(n=>{const B0=CONFIG.bosses[n],k=B0.relic,got=(s.relicGot||[]).includes(+n);return `<div class="small" style="margin:3px 0">${+n%10===0?'👑':'⭐'} 第 ${n} 關 ${B0.mon}（${EL_NAME[PC.ELEM[B0.route]]||''}＋${EL_NAME[B0.route2==='dragon'?'dragon':PC.ELEM[B0.route2]]||''}）→ ${got?`${RI[k].icon} ${RI[k].name}：${RI[k].text}`:'❓ 還沒打開過'}</div>`}).join('');
  openModal('🪎 寶物',`<p class="small">戴在身上的寶物上場戰鬥就有效果；同一種寶物每隻只能戴一個。重複拿到的可以給其他幻獸戴，或賣掉換金幣。小窩裡休息的幻獸會保留牠身上的寶物。</p>
 <p><b>🐾 戴在身上</b></p>${worn}<p style="margin-top:10px"><b>🎒 背包</b></p>${bag}<p style="margin-top:10px"><b>📖 王的寶物圖鑑</b></p>${book}<div class="err" id="rlErr"></div>`);
- const P=i=>pets[+i];
+ const P=i=>pets[+i];document.querySelectorAll('canvas.picon[data-icon^="relic_"]').forEach(c=>paintIcon(c,c.dataset.icon));
  document.querySelectorAll('[data-eq]').forEach(b=>b.onclick=()=>{const[i,k]=b.dataset.eq.split('|'),r=PC.equipRelic(s,P(i),k);if(!r.ok){$('rlErr').textContent='❌ '+r.msg;return}sfx('level');toast('🪎 '+r.msg);save();relicDialog()});
  document.querySelectorAll('[data-un]').forEach(b=>b.onclick=()=>{const[i,k]=b.dataset.un.split('|'),r=PC.unequipRelic(s,P(i),k);toast(r.msg);sfx('tap');save();relicDialog()});
  document.querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>{const k=b.dataset.sell,R=RI[k];confirmBox('💰 真的要賣掉嗎？',`確定要把「${R.icon} ${R.name}」賣掉換 ${RL.sell} 金幣嗎？賣掉就拿不回來了（只能再打王碰運氣）。`,`確定賣掉（+${RL.sell}）`,()=>{const r=PC.sellRelic(s,k);toast(r.ok?'💰 '+r.msg:'❌ '+r.msg,3000);if(r.ok){sfx('level');save();renderUI()}relicDialog()})})}
 function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();petX=PET_X;const r=PC.startAdventure(s,n,Date.now());if(!r.ok){toast(r.msg);return}save();renderUI();
  const me=PC.mkFighter(s.name,formKey(),lvl(),s.route,tier(),s.mood,s.bond),foe=foeFighter(n);
- PC.buffFighter(me,s);   // V1.42：進化階段、訓練成果、星耀覺醒
- const duo=PC.pairAdventureCost(s),P=s.pair,me2=duo?PC.buffFighter(PC.mkFighter(P.name,pairKey(),PC.level(P.xp),P.route,tier(),P.mood,P.bond),P):null;   // 第二隻有體力就一起上場
+ PC.buffFighter(me,s);me.aura=auraOf(s);   // V1.42：進化階段、訓練成果、星耀覺醒
+ const duo=PC.pairAdventureCost(s),P=s.pair,me2=duo?PC.buffFighter(PC.mkFighter(P.name,pairKey(),PC.level(P.xp),P.route,tier(),P.mood,P.bond),P):null;if(me2)me2.aura=auraOf(P);   // 第二隻有體力就一起上場
  if(duo){foe.max=foe.hp=Math.round(foe.max*CONFIG.pair.foeHp);save()}
  const fx0=()=>({dx:0,dy:0,flash:0,faint:0,anim:null,t0:0});
  B={n,full:r.full,arena:arenaFor(n,foe),bondUsed:false,ultUsed:false,me,me2,duo,foe,busy:false,over:false,fx:{me:fx0(),me2:fx0(),foe:fx0()}};bparts.length=0;
  $('battle').classList.remove('hidden');$('bResult').classList.add('hidden');$('moves').classList.remove('hidden');showPanel('mpMain');
- $('mvSp').textContent='✨ '+SP_NAME[me.el];blog(`📍 ${ARENA_NAME[arenaFor(n,foe)]}\n${foe.name} 出現了！（${EL_NAME[foe.el]} Lv.${foe.level}）${duo?`\n🐾 ${me.name} 和 ${me2.name} 一起上場！`:s.pair?`\n（${s.pair.name} 體力不夠，留在家休息）`:''}`);bUI();sfx('play')}
+ $('mvSp').textContent='✨ '+SP_NAME[me.el];blog(`📍 ${ARENA_NAME[arenaFor(n,foe)]}\n${foe.name} 出現了！（${foe.elTxt||EL_NAME[foe.el]} Lv.${foe.level}）${duo?`\n🐾 ${me.name} 和 ${me2.name} 一起上場！`:s.pair?`\n（${s.pair.name} 體力不夠，留在家休息）`:''}`);bUI();sfx('play')}
 function blog(t){$('blog').textContent=t}
 /* ---------------- 戰鬥場地：依怪獸屬性決定 ---------------- */
 const ARENA_NAME={meadow:'🌼 草原',rock:'🌋 火山岩地',water:'🌊 水邊',forest:'🌲 森林深處',canyon:'🪨 大地峽谷',sky:'☁️ 天空之巔',storm:'⛈️ 雷雲山',mine:'⚙️ 鋼鐵礦坑',tower:'✨ 星之塔'};
@@ -1794,7 +1809,7 @@ function makeArena(k){if(ARENA_CACHE[k])return ARENA_CACHE[k];const cv=document.
  return ARENA_CACHE[k]=cv}
 /* ---------------- 戰鬥介面 ---------------- */
 function bUI(){const{me,foe}=B,danger=dangerNow();
- $('fName').textContent=`${foe.name}  Lv.${foe.level} ${EL_NAME[foe.el]}`;$('fHp').textContent=`${foe.hp}/${foe.max}`;$('fBar').style.width=foe.hp/foe.max*100+'%';
+ $('fName').textContent=`${foe.name}  Lv.${foe.level} ${foe.elTxt||EL_NAME[foe.el]}`;$('fHp').textContent=`${foe.hp}/${foe.max}`;$('fBar').style.width=foe.hp/foe.max*100+'%';
  $('mName').textContent=`${me.name}  Lv.${me.level} ${EL_NAME[me.el]}${tier()?' '+'✦'.repeat(tier()):''}${me.charged?' ⚡蓄力中':''}${danger?'　⚠️ 危險！':''}`;$('mHp').textContent=`${me.hp}/${me.max}${B.me2?`　🐾${B.me2.name} ${Math.max(0,B.me2.hp)}/${B.me2.max}`:''}`;$('mBar').style.width=me.hp/me.max*100+'%';
  $('mBar').style.background=me.hp/me.max<.3?'#e86a6a':'';
  const tag=(sp)=>{const e=PC.expectDamage(me,foe,sp),m=PC.elemMult(me,foe,sp),pct=Math.round(e/Math.max(1,foe.hp)*100);return`約 ${e}${m>1?' ▲':m<1?' ▼':''}${pct>=100?'（可擊倒）':''}`};
@@ -1816,7 +1831,7 @@ async function doMove(a,d,mv,side,boost=1){
  if(mv==='guard'){a.guard=true;const h=Math.round(a.max*.08);a.hp=Math.min(a.max,a.hp+h);blog(`${a.name} 擺出防禦姿勢！（回復 ${h}）`);A.anim='happy';A.t0=performance.now();sfx('pet');bUI();await sleep(900);return}
  if(mv==='charge'){if(side==='me')PC.battleCharge(s);a.charged=true;blog(`${a.name} 集中力量…下一擊威力 ×2！`);A.anim='happy';A.t0=performance.now();sfx('wake');spawn('bolt',3,{x:BPOS[side][0],y:BPOS[side][1]-2,vy:-16,jx:20,life:.8,spread:12},bparts);bUI();await sleep(900);return}
  if(mv==='potion'||mv==='potion2'){const sup=mv==='potion2',h=Math.min(a.max-a.hp,Math.round(a.max*(sup?CONFIG.superPotion.heal:CONFIG.potion.heal)));a.hp+=h;s.inv[mv]--;save();blog(`${a.name} 喝下${sup?'超級藥水，HP 全滿':'回復藥水'}！HP +${h}`);A.anim='happy';A.t0=performance.now();sfx('level');spawn('heart',4,{x:BPOS[side][0],y:BPOS[side][1]-2,vy:-18,jx:20,life:1,spread:14},bparts);bUI();await sleep(1000);return}
- const sp=mv==='special'||mv==='bond'||mv==='ult';if(mv==='special')a.cd=3;if(mv==='ult')boost*=CONFIG.ult.power;
+ const sp=mv==='special'||mv==='bond'||mv==='ult';if(mv==='special')a.cd=3;if(sp&&a.el2&&a.el2!=='dragon'&&Math.random()<.5){const e=a.el;a.el=a.el2;a.el2=e}   // V1.53 雙屬性的王：屬性技隨機用其中一個屬性if(mv==='ult')boost*=CONFIG.ult.power;
  blog(mv==='bond'?`💗 ${a.name} 的羈絆之力爆發！`:mv==='ult'?`🌟 ${a.name} 的大絕招「${ULT_NAME[a.el]||'大絕招'}」！${a.charged?'（蓄力 ×2）':''}`:`${a.name} 使出${sp?'「'+SP_NAME[a.el]+'」':'衝撞'}！${a.charged?'（蓄力 ×2）':''}`);A.anim='jump';A.t0=performance.now();const dir=side==='foe'?-1:1;A.dx=10*dir;A.dy=-6*dir;sfx(sp?'evolve':'tap');await sleep(220);A.dx=0;A.dy=0;
  const{dmg,mult,crit,endured,revived}=PC.damage(a,d,sp,Math.random,boost);D.flash=performance.now()+500;buzz(mv==='bond'||mv==='ult'?60:20);if(mv==='ult'){flashUntil=performance.now()+400}
  const tx=BPOS[dside][0],ty=BPOS[dside][1];spawn(mv==='bond'?'heart':sp?SP_ICON[a.el]:'spark',mv==='bond'||mv==='ult'?12:sp?6:3,{x:tx,y:ty,vy:-20,jx:30,life:.8,spread:16},bparts);sfx('crack');bUI();
@@ -1881,7 +1896,7 @@ function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond
  if(r.potion)rows.push(['potion','回復藥水','+1','']);
  if(r.ember)rows.push(['ember','經驗火種','+1','Boss 寶物！']);
 
- if(r.relic){const R=CONFIG.relics.items[r.relic];rows.push(['gem',`${R.icon} ${R.name}`,'+1',`${r.chest==='gold'?'🟨 金':'🟫 銅'}寶箱！${R.text}`])}
+ if(r.relic){const R=CONFIG.relics.items[r.relic];rows.push(['chest_'+r.chest,r.chest==='gold'?'金寶箱':'銅寶箱','打開！',`第 ${n} 關的王掉的`]);rows.push(['relic_'+r.relic,R.name,'+1',R.text])}
  if(r.pigCore)rows.push(['pigshard','小豬撲滿核心碎片','+1',`小豬撲滿升到 ${r.pigCore} 級！`]);
  if(r.heart)rows.push(['star','星辰之心','+1','🌟 最終大王的寶物！']);if(r.shard)rows.push(['gem','星辰碎片','+1','可抵 1 個終極素材']);if(r.mat)rows.push(['mat_'+r.mat,CONFIG.materials[r.mat],'+1',`💎 終極素材 ${Math.min(r.matN,CONFIG.ascend.mats)}/${CONFIG.ascend.mats}`]);
  const notes=[];if(r.trial)notes.push(`🏅 通過${ROUTE_LABEL[r.trial]}的高階試煉！`);if(r.unlocked)notes.push(`🗺️ 發現新地點！解鎖第 ${r.unlocked} 關`);for(const e of r.events)if(e!=='place')notes.push(`✨ 發生了「${PC.EVENT_TEXT[e]}」事件！`);
@@ -1901,6 +1916,7 @@ function drawBattle(now){if(!B)return;const c=bctx;c.drawImage(makeArena(B.arena
   else if(FX.anim==='happy'&&now-FX.t0<800)fr='happy0';else fr=f.hp<f.max*.3?['tired0','tired1'][Math.floor(now/600)%2]:['idle0','idle0','idle1','idle1'][Math.floor(now/400)%4];
   const fade=FX.faint?Math.max(0,1-(now-FX.faint)/700):1;c.globalAlpha=fade;
   const src=(FX.flash>now&&Math.floor(now/70)%2===0)?S.sil:S.cv;const yy=y+FX.dy+(FX.faint?Math.min(8,(now-FX.faint)/60):0);
+  if(f.aura&&f.hp>0)drawAura(c,S,S.idx[fr],x+FX.dx,yy,side==='me',f.aura,now);
   if(side==='me'){c.save();c.translate(x+FX.dx+CELL,0);c.scale(-1,1);c.drawImage(src,S.idx[fr]*CELL,0,CELL,CELL,0,yy,CELL,CELL);c.restore()}   // 我方轉身面向敵人
   else c.drawImage(src,S.idx[fr]*CELL,0,CELL,CELL,x+FX.dx,yy,CELL,CELL);c.globalAlpha=1;
   if(f.charged&&Math.floor(now/150)%2){c.fillStyle='#ffe066';c.fillRect(x+10,y+6,2,2);c.fillRect(x+36,y+10,2,2)}};

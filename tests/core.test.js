@@ -377,16 +377,21 @@ t('V1.52 王固定、屬性照長相；王的寶箱第一次必掉、之後 20%�
   const B = { 5: ['苔石巨人', 'earth'], 10: ['熔岩犀', 'earth'], 15: ['骷髏騎士', 'metal'], 20: ['巫師幽靈', 'elec'], 25: ['小死神', 'elec'], 30: ['火鳳', 'bird'], 35: ['赤龍', 'flame'], 40: ['冰龍', 'tide'] };
   for (const n in B) { const f = C.foeFor(+n); assert.equal(f.mon, B[n][0]); assert.equal(f.route, B[n][1]); assert.ok(f.boss); }
   const s = hatched(); s.relics = []; let o = C.finishAdventure(s, 10, 'win', true, T0, () => .99); assert.equal(o.relic, 'rhinoCharm'); assert.equal(o.chest, 'gold');
-  o = C.finishAdventure(s, 10, 'win', true, T0, () => .99); assert.equal(o.relic, undefined); o = C.finishAdventure(s, 10, 'win', true, T0, () => .1); assert.equal(o.relic, 'rhinoCharm'); assert.equal(s.inv.relics.rhinoCharm, 2);
+  o = C.finishAdventure(s, 10, 'win', true, T0, () => .99); assert.equal(o.relic, undefined); o = C.finishAdventure(s, 10, 'win', true, T0, () => .15); assert.equal(o.relic, undefined); o = C.finishAdventure(s, 10, 'win', true, T0, () => .05); assert.equal(o.relic, 'rhinoCharm'); assert.equal(s.inv.relics.rhinoCharm, 2);
   assert.ok(C.equipRelic(s, s, 'rhinoCharm').ok); assert.ok(!C.equipRelic(s, s, 'rhinoCharm').ok); s.pair = { name: 'B', relics: [] }; assert.ok(C.equipRelic(s, s.pair, 'rhinoCharm').ok); assert.ok(!C.equipRelic(s, s, 'iceScale').ok);
   s.inv.relics.iceScale = 1; s.inv.relics.dragonFang = 1; assert.ok(C.equipRelic(s, s, 'iceScale').ok); assert.ok(!C.equipRelic(s, s, 'dragonFang').ok);
   const plain = C.buffFighter(C.mkFighter('a', 'k', 10, 'flame', 0, 80, 0), Object.assign({}, s, { relics: [] })), f = C.buffFighter(C.mkFighter('a', 'k', 10, 'flame', 0, 80, 0), s);
-  assert.ok(Math.abs(f.def / plain.def - 1.1) < 1e-9); assert.equal(f.max, Math.round(plain.max * 1.2));
+  assert.ok(Math.abs(f.def / plain.def - 1.1 * 1.2) < 1e-9); assert.equal(f.max, Math.round(plain.max * 1.2)); assert.ok(Math.abs(f.dodge - plain.dodge - .1) < 1e-9);
   const c0 = s.coins; assert.ok(C.sellRelic(s, 'dragonFang').ok); assert.equal(s.coins, c0 + 999); assert.ok(!C.sellRelic(s, 'dragonFang').ok);
   assert.ok(C.unequipRelic(s, s, 'iceScale').ok); assert.equal(s.inv.relics.iceScale, 1);
   const z = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.deepEqual(z.relics, ['rhinoCharm']); assert.deepEqual(z.relicGot, [10]); assert.equal(z.inv.relics.iceScale, 1);
   const d = { hp: 10, max: 100, def: 1, revive: .4 }, a = { atk: 500, el: 'fire' }; const r = C.damage(a, d, false, () => .5); assert.ok(r.revived); assert.equal(d.hp, 40); assert.ok(!C.damage(a, d, false, () => .5).revived); assert.equal(d.hp, 0);
   const cut = { hp: 1e4, max: 1e4, def: 10, dmgCut: .1 }, nc = { hp: 1e4, max: 1e4, def: 10 }; const x1 = C.damage({ atk: 100, el: 'fire' }, cut, false, () => .5).dmg, x2 = C.damage({ atk: 100, el: 'fire' }, nc, false, () => .5).dmg; assert.equal(x1, Math.round(x2 * .9)); });
+t('V1.53 王雙屬性、龍屬性全抗性', () => {
+  const B = { 5: ['leaf', 'earth'], 10: ['earth', 'fire'], 15: ['metal', 'leaf'], 20: ['elec', 'earth'], 25: ['elec', 'metal'], 30: ['bird', 'fire'], 35: ['fire', 'dragon'], 40: ['water', 'dragon'] };
+  for (const n in B) { const f = C.foeFighter(+n, 10); assert.deepEqual([f.el2, f.el].sort(), B[n].slice().sort()); }
+  const w = { el: 'water' }; assert.equal(C.elemMult(w, { el: 'earth', el2: 'fire' }, true), 1.96); assert.equal(C.elemMult(w, { el: 'fire', el2: 'dragon' }, true), 1.05);
+  assert.equal(C.elemMult({ el: 'leaf' }, { el: 'water', el2: 'dragon' }, true), 1.05); assert.equal(C.elemMult({ el: 'fire' }, { el: 'water', el2: 'dragon' }, true), .563); assert.equal(C.elemMult({ el: 'fire' }, { el: 'leaf' }, false), 1); });
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

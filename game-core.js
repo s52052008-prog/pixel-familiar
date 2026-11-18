@@ -64,17 +64,17 @@ const CONFIG = {
   trainBonus: { per: .02, max: .2 },   // V1.44：每次 +2%，每種 10 次練滿                       // V1.42 訓練成功一次 +1%，每種最多 +20%：閃避＝猜拳輸也可能閃開、攻擊＝攻擊力、防禦＝防禦力和血量
   bossCoins: { mini: 15, big: 30 },
   // V1.52 固定的小王／大王（照長相決定屬性）與專屬寶物
-  bosses: { 5: { mon: '苔石巨人', route: 'earth', relic: 'mossHeart' }, 10: { mon: '熔岩犀', route: 'earth', relic: 'rhinoCharm' }, 15: { mon: '骷髏騎士', route: 'metal', relic: 'boneShield' },
-    20: { mon: '巫師幽靈', route: 'elec', relic: 'ghostHat' }, 25: { mon: '小死神', route: 'elec', relic: 'reaperBlade' }, 30: { mon: '火鳳', route: 'bird', relic: 'phoenixFeather' },
-    35: { mon: '赤龍', route: 'flame', relic: 'dragonFang' }, 40: { mon: '冰龍', route: 'tide', relic: 'iceScale' } },
-  relics: { repeatDrop: .2, sell: 999, slots: 2, items: {
+  bosses: { 5: { mon: '苔石巨人', route: 'earth', route2: 'forest', relic: 'mossHeart' }, 10: { mon: '熔岩犀', route: 'earth', route2: 'flame', relic: 'rhinoCharm' }, 15: { mon: '骷髏騎士', route: 'metal', route2: 'forest', relic: 'boneShield' },
+    20: { mon: '巫師幽靈', route: 'elec', route2: 'earth', relic: 'ghostHat' }, 25: { mon: '小死神', route: 'elec', route2: 'metal', relic: 'reaperBlade' }, 30: { mon: '火鳳', route: 'bird', route2: 'flame', relic: 'phoenixFeather' },
+    35: { mon: '赤龍', route: 'flame', route2: 'dragon', relic: 'dragonFang' }, 40: { mon: '冰龍', route: 'tide', route2: 'dragon', relic: 'iceScale' } },   // V1.53 王有雙屬性；龍＝全抗性
+  relics: { repeatDrop: .1, sell: 999, slots: 2, items: {
     rhinoCharm:     { name: '犀角護符',   icon: '📿', boss: '熔岩犀',   def: .1,   text: '防禦 +10%' },
     reaperBlade:    { name: '死神鐮刃',   icon: '🌙', boss: '小死神',   crit: .1,  text: '會心一擊機率 +10%' },
     boneShield:     { name: '骷髏騎士盾', icon: '🛡️', boss: '骷髏騎士', cut: .1,   text: '受到的傷害 −10%' },
-    iceScale:       { name: '冰龍鱗片',   icon: '💠', boss: '冰龍',     hp: .2,    text: '血量 +20%' },
+    iceScale:       { name: '冰龍鱗片',   icon: '💠', boss: '冰龍',     def: .2, hp: .2, dodge: .1, text: '防禦 +20%、血量 +20%、閃避 +10%' },
     mossHeart:      { name: '苔石之心',   icon: '💚', boss: '苔石巨人', regen: .15, text: '每回合回復 15% 血量' },
     phoenixFeather: { name: '不死鳥羽毛', icon: '🪶', boss: '火鳳',     revive: .4, text: '每場戰鬥倒下一次時，用 40% 血量復活' },
-    dragonFang:     { name: '赤龍之牙',   icon: '🦷', boss: '赤龍',     atk: .2,   text: '攻擊 +20%' },
+    dragonFang:     { name: '赤龍之牙',   icon: '🦷', boss: '赤龍',     atk: .2, hp: .2, text: '攻擊 +20%、血量 +20%' },
     ghostHat:       { name: '幽靈魔帽',   icon: '🎩', boss: '巫師幽靈', sp: .2,    text: '屬性技和大絕招的傷害 +20%' } } },
   foeHp: { normal: 1.3, mini: 1.5, big: 2 }, tower: { from: 31, hp: 1.8, atk: 1.3 },   // V1.44 野生怪血量；第 31～40 關「星之塔」更硬更痛
   heritage: { xp: 3, train: 2 },                             // V1.44 傳承之力：已經有星耀覺醒的夥伴，其他幻獸經驗 ×2、訓練成果 ×2
@@ -618,7 +618,7 @@ function mkFighter(name, key, lvl, route, tierN, mood, bond) {
 /* V1.44 野生怪戰鬥數值（畫面和模擬共用） */
 function foeFighter(n, myLvl, name = '野生怪', key = 'k') {
   const f = foeFor(n, myLvl), H0 = CONFIG.foeHp, T = CONFIG.tower, ft = mkFighter(name, key, f.level, f.route, 0, 80, 0), tw = n >= T.from;
-  ft.max = ft.hp = Math.round(ft.max * (f.big ? H0.big : f.boss ? H0.mini : H0.normal) * (tw ? T.hp : 1)); if (tw) ft.atk *= T.atk; ft.tower = tw; return ft;
+  ft.max = ft.hp = Math.round(ft.max * (f.big ? H0.big : f.boss ? H0.mini : H0.normal) * (tw ? T.hp : 1)); if (tw) ft.atk *= T.atk; ft.tower = tw; if (f.route2) ft.el2 = f.route2 === 'dragon' ? 'dragon' : ELEM[f.route2]; return ft;
 }
 const hasHeritage = st => !!(st.awake || (st.pair && st.pair.awake) || (st.roster || []).some(p => p.awake));
 /* V1.42 我方加成：進化階段、訓練成果、星耀覺醒 */
@@ -628,7 +628,7 @@ function buffFighter(f, p) {
   f.atk *= sx * (1 + tb.attack) * aw; f.def *= sx * (1 + tb.defense) * aw; f.max = f.hp = Math.round(f.max * sx * (1 + tb.defense) * aw); f.dodge = tb.dodge; f.stageX = sx;
   for (const k of (p.relics || [])) { const R = CONFIG.relics.items[k]; if (!R) continue;   // V1.52 寶物
     if (R.def) f.def *= 1 + R.def; if (R.atk) f.atk *= 1 + R.atk; if (R.hp) f.max = f.hp = Math.round(f.max * (1 + R.hp));
-    if (R.crit) f.critUp = (f.critUp || 0) + R.crit; if (R.cut) f.dmgCut = (f.dmgCut || 0) + R.cut; if (R.regen) f.regen = (f.regen || 0) + R.regen; if (R.revive) f.revive = R.revive; if (R.sp) f.spUp = (f.spUp || 0) + R.sp; }
+    if (R.crit) f.critUp = (f.critUp || 0) + R.crit; if (R.cut) f.dmgCut = (f.dmgCut || 0) + R.cut; if (R.regen) f.regen = (f.regen || 0) + R.regen; if (R.revive) f.revive = R.revive; if (R.sp) f.spUp = (f.spUp || 0) + R.sp; if (R.dodge) f.dodge = (f.dodge || 0) + R.dodge; }
   return f;
 }
 /* 冒險區域（每 5 關一區）主要出現的屬性 */
@@ -639,9 +639,11 @@ function foeFor(n, myLvl = 1) {
   const BS = CONFIG.bosses[n], area = AREA_ROUTE[Math.min(AREA_ROUTE.length - 1, Math.floor((n - 1) / 5))], route = BS ? BS.route : area && (seed >>> 8) % 10 < 7 ? area : ROUTES[seed % ROUTES.length], stage = n >= 4 ? 'adult' : (n >= 2 ? 'adolescent' : 'juvenile');
   const lvl = boss ? (n <= 5 ? n + 1 : Math.round(4 + n * .6) + (big ? 4 : 2))   // V1.42：小王／大王固定等級，不會跟著你變強（練功就打得贏）
     : n <= 5 ? Math.max(n, Math.round(myLvl) - 2) : Math.max(1, Math.round(4 + n * .6), Math.round(myLvl) - 1);   // 一般野生怪：新手區比你低 2 級；之後跟著你的等級（最低 ≈ 4＋關卡×0.6）   // 新手區（1–5 關）比你低 2 級；之後野生怪跟著你的等級，最低等級 ≈ 4＋關卡×0.6（V1.33 前是關卡數，後期太難）
-  return { id: 'x:' + encodeGenome(G), route, stage, level: lvl, boss, big, mon: BS ? BS.mon : null };
+  return { id: 'x:' + encodeGenome(G), route, route2: BS ? BS.route2 : null, stage, level: lvl, boss, big, mon: BS ? BS.mon : null };
 }
-function elemMult(a, d, special) { if (!special || a.el === 'none' || d.el === 'none') return 1; return (BEATS[a.el] || []).includes(d.el) ? 1.4 : (BEATS[d.el] || []).includes(a.el) ? .75 : 1; }
+function elemMult(a, d, special) { if (!special || !a.el || a.el === 'none' || a.el === 'dragon') return 1;   // V1.53 雙屬性相乘；龍屬性被打一律 ×0.75（全抗性）
+  const one = y => !y || y === 'none' ? 1 : y === 'dragon' ? .75 : (BEATS[a.el] || []).includes(y) ? 1.4 : (BEATS[y] || []).includes(a.el) ? .75 : 1;
+  return Math.round(one(d.el) * one(d.el2) * 1000) / 1000; }
 /* 預估傷害（不含隨機與會心一擊）：用來顯示「這一擊強不強」、判斷是不是快撐不住了 */
 function expectDamage(a, d, special, boost = 1) {
   const pow = special ? (a.el === 'none' ? 1.15 : 1.3) : 1, ch = a.charged ? 2 : 1;

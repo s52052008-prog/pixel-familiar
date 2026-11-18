@@ -1,11 +1,11 @@
 // 幻獸日記 Service Worker — 離線快取
 // 更新遊戲時，請把 VERSION 改成新版本號，iPhone 才會換成新檔案。
-const VERSION = 'pf-1.52.0';
+const VERSION = 'pf-1.53.0';
 const CORE = ['./', './index.html', './game-core.js'];
 const EXTRA = ['./manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png',
   ...['flame','tide','forest','earth','bird','elec','metal'].flatMap(el => [0,1,2,3,4].flatMap(n => ['open','closed'].map(e => `./sprites/${el}_${n}_${e}.png`))),
   ...['flame','tide','forest','earth','bird','elec','metal'].map(el => `./sprites/egg_${el}.png`),
-  ...['bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','den1','den2','den3','den4','den5','den6','den7','den_fusion','pig1','pig2','pig3','pig4','pig5','pig6','pigshard','pigcore','potion','potion2','soup','seed2','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec'].map(n => `./sprites/items/${n}.png`),
+  ...['relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','den1','den2','den3','den4','den5','den6','den7','den_fusion','pig1','pig2','pig3','pig4','pig5','pig6','pigshard','pigcore','potion','potion2','soup','seed2','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec'].map(n => `./sprites/items/${n}.png`),
   ...['apple', 'backpack', 'bolt', 'book', 'calendar', 'check', 'cheese', 'chest', 'coin', 'dumbbell', 'floppy', 'gear', 'gem', 'heart', 'house', 'info', 'leaf', 'leafbook', 'levelup', 'map', 'meat', 'moon', 'paw', 'pawbook', 'pawlight', 'picture', 'question', 'refresh', 'scroll', 'shop', 'star', 'stew', 'swords', 'trophy', 'waterbowl', 'zzz'].map(n => `./sprites/ui/${n}.png`),
   './sprites/wild_n.png', './sprites/wild_b.png'];
 
