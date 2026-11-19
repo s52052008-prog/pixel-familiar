@@ -243,6 +243,7 @@ h1{font-size:17px}.ver{font-size:9px}
 .rpsbtns img.ci{width:40px;height:40px;display:block;margin:0 auto 2px}
 #moves img.ci,#mvBond img.ci{width:18px;height:18px;vertical-align:-4px}
 .food{position:relative}.food.crave{box-shadow:0 0 0 2px #ff7aa8,0 0 8px #ff7aa8}.cvtag{position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#ff5a8a;color:#fff;font-size:10px;padding:0 4px;border-radius:6px;white-space:nowrap;z-index:1}
+.dexh{margin:12px 0 6px;font-size:15px}.dexgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.dexi{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:6px 4px;background:rgba(0,0,0,.08);border-radius:8px;font-size:12px;line-height:1.25}.dexi canvas{width:36px;height:36px;image-rendering:pixelated;object-fit:contain}.dexi.un b{color:#7a6a5a}.dexi .small{font-size:10.5px}
 </style>
 </head>
 <body>
@@ -338,7 +339,7 @@ h1{font-size:17px}.ver{font-size:9px}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.73.0';
+const VERSION='1.74.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1432,7 +1433,7 @@ function renderPairBar(){const el=$('pairBar'),p=s.pair;if(!p||!s.hatched){el.cl
  const low=v=>v<20?' style="color:#ff8a8a"':'';
  el.innerHTML=`<canvas id="pbT" width="48" height="48"></canvas><div><b>${MI_UI('paw')}${esc(p.name)}${sexMark(p)}</b> Lv.${PC.level(p.xp)}<br><span${low(p.hunger)}>${MI('apple','🍎')}${Math.round(p.hunger)}</span> <span${low(p.mood)}>${MI('heart','😊')}${Math.round(p.mood)}</span> <span${low(p.clean)}>${MI('tub','🛁')}${Math.round(p.clean)}</span> <span${low(p.energy)}>${MI('bolt','⚡')}${Math.round(p.energy)}</span></div><button class="btn" id="pbSw">換照顧牠</button>`;
  thumb($('pbT'),pairKey(),'idle0');$('pbSw').onclick=()=>switchToPair()}
-function renderUI(){
+function renderUI(){if(s&&s.inv)PC.markSeen(s);
  $('coins').textContent=s.coins;renderPairBar();
  const F=formOf(formKey()),rar=F.genome&&F.genome.rarity>1&&!F.classic?` · ${STARS[F.genome.rarity]}${RARITY[F.genome.rarity]}`:'',tierN=PC.stepTier(s);
  $('petname').innerHTML=s.hatched?`${s.awake?'🌟星耀 ':''}${esc(s.name)}${sexMark(s)}　Lv.${lvl()}${tierN?' '+'✦'.repeat(Math.min(5,tierN)):''}`:F.name;
@@ -1569,6 +1570,24 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',pixify(`
 <p><b>💞 配對：</b>成年期以後可以和朋友交換「配對碼」，生出混合雙方基因的蛋。</p>
 <p><b>存檔：</b>存在這台裝置的瀏覽器裡，可能被清除。請定期到「⚙️ 選單 → 💾 存檔」匯出存檔碼。</p>`))}
 
+/* V1.74 物品圖鑑：拿到過就會亮起來；還沒拿到是黑色剪影＋名字 ？？？＋取得線索 */
+function itemDexDialog(){PC.markSeen(s);const C=CONFIG,F=C.foods,SN=s.seen||{},RI=C.relics.items;
+ const bossOf=k=>{const n=Object.keys(C.bosses).find(x=>C.bosses[x].relic===k);return n?`第 ${n} 關「${C.bosses[n].mon}」`:'王'};
+ const powerHint='冒險打贏 10%、打贏小王／大王必掉、★★★ 任務、優良種子 8%、神秘種子 30%';
+ const CAT=[
+  ['🍽️ 食物',['food','berry','fish','meat','cake'].map(k=>[k,F[k].name,ITEM_ICON[k],k==='food'?'商店、每日登入、冒險掉落、採集':'商店「食物」'])],
+  ['🍓 家園水果',['cranberry','blueberry','strawberry'].map(k=>[k,F[k].name,F[k].icon,`家園種植（${k==='strawberry'?'優良種子比較容易':'種子收成'}）`])],
+  ['⚡ 能力水果',Object.keys(F).filter(k=>F[k].power).map(k=>[k,F[k].name,ITEM_ICON[k],powerHint])],
+  ['🧰 道具',[['seeds','種子','seed','商店、冒險撿到'],['seeds2','優良種子','seed2','商店'],['seeds3','神秘種子','seed2','冒險打贏 8%、打王必掉'],['candy','星星糖','candy','商店道具'],['potion','回復藥水','potion','商店、冒險掉落'],['potion2','超級藥水','potion2','商店道具'],['soup','神秘婆婆熬製雞湯','soup','商店道具'],['ember','經驗火種','ember','打贏 Boss 有機會掉']]],
+  ['💎 進化素材',PC.ROUTES.map(el=>['mat_'+el,C.materials[el],'mat_'+el,`${ROUTE_ICON[el]}${ROUTE_LABEL[el]}的幻獸打贏第 10／20／30 關大王`]).concat([['shards','星辰碎片','gem',`第 ${C.starHeart.stage} 關最終大王`],['hearts','星辰之心','star',`第 ${C.starHeart.stage} 關最終大王`]])],
+  ['🪎 王的寶物',Object.keys(RI).map(k=>['rl_'+k,RI[k].name,'relic_'+k,`打贏${bossOf(k)}的寶箱`])]];
+ let tot=0,got=0;const html=CAT.map(([h,L])=>{const cells=L.map(([k,nm,ic,hint])=>{tot++;const ok=!!SN[k];if(ok)got++;
+   return`<div class="dexi ${ok?'':'un'}"><canvas class="picon" data-icon="${ic}" data-s="2" data-sil="${ok?0:1}"></canvas><b>${ok?esc(nm):'？？？'}</b><span class="small">${ok?'✅ 已獲得':'🔍 '+hint}</span></div>`}).join('');
+  return`<h3 class="dexh">${h}</h3><div class="dexgrid">${cells}</div>`}).join('');
+ openModal('📖 圖鑑',`<div class="row" style="margin-top:0"><button class="btn" id="cxPets">🐾 幻獸</button><button class="btn pri">🎒 物品</button><button class="btn" id="cxJ2">📔 日記</button></div>
+ <p class="small">已收集 <b>${got}</b> / ${tot}。黑色剪影是還沒拿到的，下面有取得線索。</p>${html}`);
+ $('cxPets').onclick=codexDialog;$('cxJ2').onclick=journalDialog;
+ document.querySelectorAll('.dexi canvas').forEach(c=>{paintIcon(c,c.dataset.icon);if(c.dataset.sil==='1'){const x=c.getContext('2d');x.globalCompositeOperation='source-in';x.fillStyle='#14100c';x.fillRect(0,0,c.width,c.height)}})}
 function codexDialog(){   // V1.67 每個物種列出 5 種型態：還沒進化到的用黑色剪影、名字 ？？？，引導玩家把牠養大
  const dex=s.dex.slice().reverse(),ORD=['baby','juvenile','adolescent','adult','ascended'];
  const cards=dex.length?dex.map((e,di)=>{const route=e.route||genomeFromId(e.id).el||null,reach=ORD.indexOf(e.stage),cur=e.id===gidOf(s)&&s.hatched;
@@ -1579,10 +1598,10 @@ function codexDialog(){   // V1.67 每個物種列出 5 種型態：還沒進化
   return`<div class="eggrow" style="display:block"><b>${route?ROUTE_ICON[route]+' ':''}${esc(F.name)}</b> <span class="small">${F.classic?'經典種':STARS[G.rarity]+' '+RARITY[G.rarity]}｜${cur?'🏠 現在的夥伴：':'回憶：'}${esc(e.petName||'')}</span><div class="evorow">${row}</div><div class="small" style="margin-top:4px">${tip}</div></div>`}).join('')
   :'<p class="small">還沒有任何物種。孵化第一顆蛋吧！</p>';
  const n=s.dex.length,full=s.dex.filter(e=>e.stage==='ascended').length;
- openModal('📖 物種圖鑑',`<div class="row" style="margin-top:0"><button class="btn" id="cxJournal">📔 成長日記</button></div>
+ openModal('📖 圖鑑',`<div class="row" style="margin-top:0"><button class="btn pri">🐾 幻獸</button><button class="btn" id="cxItems">🎒 物品</button><button class="btn" id="cxJournal">📔 日記</button></div>
  <p class="small">已發現 <b>${n}</b> 種、養到最高階段 <b>${full}</b> 種。黑色剪影是還沒見過的型態，把幻獸養大就會揭曉！</p>
  <p>🏅 養過的屬性 <b>${PC.playedRoutes(s).length}</b> / 7：${PC.ROUTES.map(r=>PC.playedRoutes(s).includes(r)?ROUTE_ICON[r]:'❔').join(' ')}</p>${cards}`);
- $('cxJournal').onclick=journalDialog;
+ $('cxJournal').onclick=journalDialog;$('cxItems').onclick=itemDexDialog;
  document.querySelectorAll('.evorow canvas').forEach(c=>{const S=sheet(c.dataset.k),x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(S.cv,(S.idx.idle0??0)*CELL,0,CELL,CELL,0,0,48,48);
   if(c.dataset.sil==='1'){x.globalCompositeOperation='source-in';x.fillStyle='#14100c';x.fillRect(0,0,48,48)}})}
 function journalDialog(){const J=s.journal.slice().reverse();
@@ -1867,8 +1886,8 @@ function shopDialog(tab,bagOnly=tab==='bag'){PC.claimDaily(s,Date.now());
    out.push({head:'🌟 星辰寶物'});
    out.push({id:'shards',name:'星辰碎片',sub:`×${s.inv.shards||0}`,dim:!s.inv.shards,icon:'gem',desc:`可以抵 1 個任何屬性的終極素材（例如羽毛只有 2 個，加 1 個碎片就能湊滿 ${C.ascend.mats} 個）。<br>第 ${C.starHeart.stage} 關大王：每個屬性第一次打贏必掉，之後 ${Math.round(C.starHeart.shardRepeat*100)}%<br>擁有 ${s.inv.shards||0}`,btn:''});
    {const w=PC.canAwaken(s);out.push({id:'hearts',name:'星辰之心',sub:`×${s.inv.hearts||0}`,dim:!s.inv.hearts,icon:'star',desc:`給<b>高階</b>的幻獸使用：星耀覺醒！全部能力 +${Math.round((C.starHeart.statX-1)*100)}%、存錢筒 ×${C.starHeart.piggyX}、名字前加「星耀」、身上有星光。<br>每個屬性第一次打倒第 ${C.starHeart.stage} 關大王得到<br>擁有 ${s.inv.hearts||0}${s.awake?'<br>✨ '+esc(s.name)+' 已經星耀覺醒了':''}`,btn:w?`<button class="btn" disabled>${w}</button>`:`<button class="btn pri" id="useHeart">✨ 給 ${esc(s.name)} 使用</button>`})}}
-  if(tab==='bag'){const ORD=['🪎 王的寶物','🧰 道具','🍽️ 食物','🍓 水果','💎 進化素材','🐷 小豬撲滿','🌟 星辰寶物'],G=[];let cur=null;for(const e of out){if(e.head){cur={h:e.head,L:[e]};G.push(cur)}else if(cur)cur.L.push(e)}   // V1.55 背包順序：裝備→道具→食物→水果→素材
-   const rk=h=>{const i=ORD.indexOf(h);return i<0?99:i};G.sort((a,b)=>rk(a.h)-rk(b.h));return G.flatMap(g=>g.L)}
+  if(tab==='bag'){const ORD=['🪎 王的寶物','🧰 道具','🍽️ 食物','🍓 水果','💎 進化素材','🐷 小豬撲滿','🌟 星辰寶物'],G=[];let cur=null;for(const e of out.filter(e=>e.head||!(e.dim||e.id==='rl_none'))){   /* V1.74 背包只顯示擁有的 */if(e.head){cur={h:e.head,L:[e]};G.push(cur)}else if(cur)cur.L.push(e)}   // V1.55 背包順序：裝備→道具→食物→水果→素材
+   const rk=h=>{const i=ORD.indexOf(h);return i<0?99:i};G.sort((a,b)=>rk(a.h)-rk(b.h));return G.filter(g=>g.L.length>1).flatMap(g=>g.L)}
   return out};
  const render=()=>{const sl0=document.querySelector('#shopBody .slist'),keepY=sl0?sl0.scrollTop:0,mb=$('sheet'),keepM=mb?mb.scrollTop:0;   // 點選後清單停在原本的位置
   render0();const sl1=document.querySelector('#shopBody .slist');if(sl1)sl1.scrollTop=keepY;if(mb)mb.scrollTop=keepM};
@@ -1897,7 +1916,7 @@ function shopDialog(tab,bagOnly=tab==='bag'){PC.claimDaily(s,Date.now());
   if($('eatCandy'))$('eatCandy').onclick=()=>{const x0=s.xp,r=PC.useCandy(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}
    closeModal();playAnim('eat');sfx('eat');spawn('star',4,{y:66,life:1.1,stagger:.15});spawn('heart',3,{y:70,life:1.1});say(r.msg+(r.xp?`　經驗 +${r.xp}`:''));save();renderUI();afterChange(x0)}};
  openModal(bagOnly?'🎒 背包':'🛒 商店',`<p>🪙 金幣 <b id="shopCoins">${s.coins}</b>　<span class="small">${bagOnly?'依序是裝備（寶物）、道具、食物、水果、素材。':'左邊選東西，右邊看說明。家具買了會自動擺進小窩。'}</span></p>
-<div class="shoptabs" ${bagOnly?'style="display:none"':''}><button class="btn" data-tab="decor"><img class="uic" src="sprites/ui/house.png" alt="">家具</button><button class="btn" data-tab="food"><img class="uic" src="sprites/ui/meat.png" alt="">食物</button><button class="btn" data-tab="power"><img class="uic" src="sprites/ui/gem.png" alt="">能力水果</button><button class="btn" data-tab="tools"><img class="uic" src="sprites/ui/chest.png" alt="">道具</button><button class="btn" id="toBag"><img class="uic" src="sprites/ui/backpack.png" alt="">背包</button></div><div id="shopBody"></div>`);
+<div class="shoptabs" ${bagOnly?'style="display:none"':''}><button class="btn" data-tab="decor"><img class="uic" src="sprites/ui/house.png" alt="">家具</button><button class="btn" data-tab="food"><img class="uic" src="sprites/ui/meat.png" alt="">食物</button><button class="btn" data-tab="tools"><img class="uic" src="sprites/ui/chest.png" alt="">道具</button><button class="btn" id="toBag"><img class="uic" src="sprites/ui/backpack.png" alt="">背包</button></div><div id="shopBody"></div>`);
  document.querySelectorAll('.shoptabs .btn[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render()});if($('toBag'))$('toBag').onclick=()=>shopDialog('bag');render()}
 
 /* =========================================================
