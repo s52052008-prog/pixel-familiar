@@ -65,7 +65,7 @@ const CONFIG = {
   powerDrop: { win: .1, seed: .08 },
   appleTree: { growHours: 3, max: 3 },
   berryBush: { growHours: 3, max: 4 },   // V1.83 院子的野莓叢：每 3 小時長 1 顆，最多 4 顆
-  fishing: { bait: 5, bait2: 20, premiumX: 2.5, weight: [40, 20, 8, 3, 1], junk: { j_boot: 5, j_can: 5, chest: 2 }, zapPerDay: 3, tideBar: .05, xp: 3, eatHunger: 10, eatEnergy: 5, eatStep: 5, cookX: 2, cookCost: 5 },   // V1.83 釣魚
+  fishing: { bait: 5, bait2: 20, premiumX: 2.5, weight: [40, 20, 8, 3, 1], junk: { j_boot: 5, j_can: 5, chest: 2 }, zapPerDay: 3, tideBar: .04, xp: 3, eatHunger: 10, eatEnergy: 5, eatStep: 5, cookX: 2, cookCost: 5 },   // V1.83 釣魚
   skills: { fossilLuck: .02, fossilAll: .05, digMin: 10, digMax: 30, gemChance: .25, fossilChance: .15, fossilDup: 30, birdPower: .15, powerMin: 20, powerMax: 50, amuletChance: .6, grow: 1.2, soupX: 1.5 },   // V1.83 生活技能（成年才有）
   chargeMult: 1.5,   // V1.82 蓄力後下一擊 ×1.5（原本 ×2 太強）   // V1.76 院子的蘋果樹：每 3 小時長 1 顆（樹上＋地上最多 3 顆），熟了會掉下來，撿起來免費   // V1.73 能力水果商店不賣：冒險打贏 10% 掉 1 顆、打贏王必掉 1 顆；稀有種子打贏 8%、打王必掉        // 優良種子：收成多 1 顆，比較容易長出藍莓、草莓
   seedOdds: { normal: [['cranberry', .55], ['blueberry', .3], ['strawberry', .15]], good: [['cranberry', .3], ['blueberry', .4], ['strawberry', .3]], rare: [['cranberry', .2], ['blueberry', .3], ['strawberry', .5]] },   // V1.41 種子都是綜合：蔓越莓／藍莓／草莓
@@ -819,20 +819,20 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
 /* ---------------- V1.83 釣魚、生活技能 ---------------- */
 // 時段：早 5–10、午 10–17、黃昏 17–19、夜 19–5（台灣時間）；天氣沿用 weatherAt
 const FISH = {
-  f_creek:   { name: '小溪魚',   star: 1, price: 5 },
-  f_carp:    { name: '鯉魚',     star: 1, price: 8,   t: ['morning', 'day'], w: ['clear'] },
-  f_catfish: { name: '鯰魚',     star: 2, price: 15,  t: ['night'] },
-  f_ayu:     { name: '香魚',     star: 2, price: 15,  t: ['morning'], w: ['clear', 'breeze'] },
-  f_rain:    { name: '雨點魚',   star: 2, price: 18,  w: ['rain'] },
-  f_koi:     { name: '錦鯉',     star: 3, price: 35,  t: ['day'], w: ['clear'] },
-  f_dew:     { name: '晨露魚',   star: 3, price: 35,  t: ['morning'], w: ['breeze'] },
-  f_sunset:  { name: '夕陽鱒',   star: 3, price: 40,  t: ['dusk'], w: ['clear'] },
-  f_moon:    { name: '月光魚',   star: 3, price: 40,  t: ['night'], w: ['clear'] },
-  f_eel:     { name: '雷光鰻',   star: 3, price: 45,  w: ['storm'] },
-  f_rainbow: { name: '彩虹鱒',   star: 4, price: 90,  t: ['morning'], w: ['rain'] },
-  f_star:    { name: '星空魚',   star: 4, price: 90,  t: ['night'], w: ['breeze'] },
-  f_king:    { name: '暴風鯰王', star: 5, price: 200, t: ['night'], w: ['storm'] },
-  f_dragon:  { name: '金龍魚',   star: 5, price: 250, t: ['dusk'], w: ['storm'], rod: 'gold' },
+  f_creek:   { name: '小溪魚',   star: 1, price: 5 , mv: 'calm' },
+  f_carp:    { name: '鯉魚',     star: 1, price: 8,   t: ['morning', 'day'], w: ['clear'] , mv: 'calm' },
+  f_catfish: { name: '鯰魚',     star: 2, price: 15,  t: ['night'] , mv: 'dart' },
+  f_ayu:     { name: '香魚',     star: 2, price: 15,  t: ['morning'], w: ['clear', 'breeze'] , mv: 'zig' },
+  f_rain:    { name: '雨點魚',   star: 2, price: 18,  w: ['rain'] , mv: 'sine' },
+  f_koi:     { name: '錦鯉',     star: 3, price: 35,  t: ['day'], w: ['clear'] , mv: 'float' },
+  f_dew:     { name: '晨露魚',   star: 3, price: 35,  t: ['morning'], w: ['breeze'] , mv: 'sine' },
+  f_sunset:  { name: '夕陽鱒',   star: 3, price: 40,  t: ['dusk'], w: ['clear'] , mv: 'zig' },
+  f_moon:    { name: '月光魚',   star: 3, price: 40,  t: ['night'], w: ['clear'] , mv: 'float' },
+  f_eel:     { name: '雷光鰻',   star: 3, price: 45,  w: ['storm'] , mv: 'burst' },
+  f_rainbow: { name: '彩虹鱒',   star: 4, price: 90,  t: ['morning'], w: ['rain'] , mv: 'float' },
+  f_star:    { name: '星空魚',   star: 4, price: 90,  t: ['night'], w: ['breeze'] , mv: 'float' },
+  f_king:    { name: '暴風鯰王', star: 5, price: 200, t: ['night'], w: ['storm'] , mv: 'burst' },
+  f_dragon:  { name: '金龍魚',   star: 5, price: 250, t: ['dusk'], w: ['storm'], rod: 'gold' , mv: 'float' },
 };
 const JUNK = { j_boot: { name: '舊靴子', price: 2 }, j_can: { name: '空罐', price: 1 } };
 const SLOT_NAME = { morning: '早上', day: '中午', dusk: '黃昏', night: '晚上' }, WEATHER_NAME = { clear: '晴天', breeze: '微風', rain: '下雨', storm: '暴風雨' };
@@ -841,7 +841,7 @@ const GOODS = {
   scrap: { name: '廢鐵', price: 20 }, amulet: { name: '小護身符', price: 0 },
 };
 const FOSSILS = { fo_trilobite: '三葉蟲化石', fo_ammonite: '菊石', fo_tooth: '恐龍牙化石', fo_feather: '羽毛化石', fo_fish: '魚化石', fo_amber: '琥珀' };
-const RODS = [{ id: 'bamboo', name: '竹竿', price: 0, bar: .30, steady: 0 }, { id: 'carbon', name: '碳纖竿', price: 300, bar: .40, steady: .5 }, { id: 'gold', name: '黃金竿', price: 1200, bar: .50, steady: .8 }];
+const RODS = [{ id: 'bamboo', name: '竹竿', price: 0, bar: .22, steady: 0 }, { id: 'carbon', name: '碳纖竿', price: 300, bar: .28, steady: .5 }, { id: 'gold', name: '黃金竿', price: 1200, bar: .35, steady: .8 }];   // V1.83.1 綠框縮小
 const SKILL = {
   flame: { name: '小廚師', icon: '🔥' }, tide: { name: '捕魚', icon: '💧' }, forest: { name: '催熟', icon: '🌿' }, earth: { name: '挖寶', icon: '🪨' },
   bird: { name: '採集', icon: '🐦' }, elec: { name: '發電', icon: '⚡' }, metal: { name: '回收', icon: '⚙️' },
@@ -875,18 +875,20 @@ function buyRod(st, id) {
   st.coins -= R.price; F.rod = id; return { ok: true, msg: `換上${R.name}！綠框變寬、更穩了 🎣` };
 }
 /* 拋竿：先扣魚餌、決定這一竿會是什麼（UI 再玩拉條）。zap＝雷系電魚（每天前 3 竿保證釣到） */
-function castLine(st, now = Date.now(), r = Math.random, premium = false) {
+/* power：蓄力甩竿的力道 0～1，甩越遠越容易釣到好魚 */
+function castLine(st, now = Date.now(), r = Math.random, premium = false, power = .5) {
   const F = fishOf(st), C = CONFIG.fishing, key = premium ? 'bait2' : 'bait';
   if (F[key] < 1) return { ok: false, code: 'nobait', msg: premium ? '沒有高級魚餌了' : '沒有魚餌了（釣具店可以買，5 金幣一個）' };
   F[key]--;
   const pool = fishPool(st, now), list = [];
-  for (const k of pool) { const s = FISH[k].star; list.push([k, C.weight[s - 1] * (premium && s >= 3 ? C.premiumX : 1)]); }
-  for (const [k, w] of Object.entries(C.junk)) list.push([k, w]);
+  const pw = Math.max(0, Math.min(1, +power || 0));
+  for (const k of pool) { const s = FISH[k].star; list.push([k, C.weight[s - 1] * (premium && s >= 3 ? C.premiumX : 1) * (s >= 3 ? 1 + 1.5 * pw : s === 2 ? 1 + .6 * pw : 1)]); }
+  for (const [k, w] of Object.entries(C.junk)) list.push([k, w * (1.3 - .6 * pw)]);
   let tot = list.reduce((a, b) => a + b[1], 0), x = r() * tot, pick = list[list.length - 1][0];
   for (const [k, w] of list) { if (x < w) { pick = k; break; } x -= w; }
   const day = dayKey(now); if (F.zap[0] !== day) F.zap = [day, 0];
   const zap = hasSkill(st, 'elec') && F.zap[1] < C.zapPerDay; if (zap) F.zap[1]++;
-  return { ok: true, key: pick, star: FISH[pick] ? FISH[pick].star : 0, zap, bar: rodOf(st).bar + (hasSkill(st, 'tide') ? C.tideBar : 0), steady: rodOf(st).steady };
+  return { ok: true, key: pick, star: FISH[pick] ? FISH[pick].star : 0, heavy: !FISH[pick], mv: FISH[pick] ? FISH[pick].mv : null, power: pw, zap, bar: rodOf(st).bar + (hasSkill(st, 'tide') ? C.tideBar : 0), steady: rodOf(st).steady };
 }
 /* 收竿：ok＝拉條成功 */
 function landFish(st, key, ok, r = Math.random) {

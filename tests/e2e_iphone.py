@@ -389,9 +389,10 @@ async def main():
         ok('佈置房間：可以拖動床、按完成後重開還在', vis and abs((r0[0] - r1[0]) - 30) <= 2 and kept is not None and not await a.is_visible('#arrPanel'), (r0, r1, kept))
         # ---------- V1.83 釣魚 ----------
         await a.evaluate("(()=>{PF.state.coins=500;PF.state.view='yard';renderUI()})()"); await a.wait_for_timeout(300)
-        await a.evaluate("PF.openFish()"); await a.wait_for_timeout(400); vis = await a.is_visible('#fishZone')
+        await a.click('#bFish'); await a.wait_for_timeout(400); vis = await a.is_visible('#fishZone')
         await a.click('#fsCast'); await a.wait_for_timeout(600); shop = await a.is_visible('#modal'); await a.click('[data-fb=b10]'); await a.wait_for_timeout(200); await a.evaluate("closeModal()")
-        await a.click('#fsCast'); await a.wait_for_timeout(800); await a.evaluate("FZ.c.key='f_creek';FZ.c.star=1;FZ.biteAt=0"); await a.wait_for_timeout(200)
+        await a.dispatch_event('#fsCast', 'pointerdown'); await a.wait_for_timeout(500); await a.dispatch_event('#fsCast', 'pointerup'); await a.wait_for_timeout(800)
+        await a.evaluate("FZ.c.key='f_creek';FZ.c.star=1;FZ.c.heavy=false;FZ.c.mv='calm';FZ.c.zap=false;FZ.escAt=0;FZ.biteAt=0"); await a.wait_for_timeout(200)
         await a.dispatch_event('#fsReel', 'pointerdown'); await a.wait_for_timeout(200); reel = await a.evaluate("FZ.ph")
         await a.evaluate("FZ.prog=1.2"); await a.wait_for_timeout(900); card = await a.is_visible('#gResult'); await a.click('#gDone'); f = await a.evaluate("JSON.stringify(PF.state.fish)")
         await a.click('#fsHome'); await a.wait_for_timeout(300)

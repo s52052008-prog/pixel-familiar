@@ -454,16 +454,18 @@ t('V1.83 釣魚：時段天氣決定魚種、魚餌、拉條成功才拿到、�
   assert.equal(C.fishSlot(D), 'morning'); assert.equal(C.fishSlot(Date.UTC(2026, 10, 20, 12, 0)), 'night');
   const pool = C.fishPool(s, D); assert.ok(pool.includes('f_creek')); assert.ok(!pool.includes('f_dragon'));
   assert.equal(C.castLine(s, D).code, 'nobait'); s.coins = 100; assert.ok(C.buyBait(s, 'normal', 2).ok); assert.equal(s.coins, 90); assert.equal(s.fish.bait, 2);
-  const c = C.castLine(s, D, () => 0); assert.ok(c.ok && c.key === pool[0] && c.bar === .3 && !c.zap); assert.equal(s.fish.bait, 1);
+  const c = C.castLine(s, D, () => 0); assert.ok(c.ok && c.key === pool[0] && c.bar === .22 && !c.zap && !c.heavy); assert.equal(s.fish.bait, 1);
   assert.ok(!C.landFish(s, 'f_creek', false).ok); assert.ok(!s.fish.raw.f_creek);
   const l = C.landFish(s, 'f_creek', true); assert.ok(l.ok && l.first); assert.equal(s.fish.raw.f_creek, 1); assert.equal(s.fish.dex.f_creek, 1);
   s.hunger = 50; s.energy = 50; const e = C.eatFish(s, 'f_creek', T0 + 1000); assert.ok(e.ok && !e.cooked); assert.equal(Math.round(s.hunger), 60); assert.equal(Math.round(s.energy), 55);
   C.landFish(s, 'f_koi', true); assert.ok(C.cookFish(s, 'f_koi').ok); assert.equal(s.coins, 85); assert.equal(s.fish.cooked.f_koi, 1);
   s.hunger = 10; s.energy = 10; assert.ok(C.eatFish(s, 'f_koi', T0 + 2000).cooked); assert.equal(Math.round(s.hunger), 10 + (10 + 10) * 2); assert.equal(Math.round(s.energy), 10 + (5 + 10) * 2);
   C.landFish(s, 'f_moon', true); assert.ok(C.sellFish(s, 'f_moon').ok); assert.equal(s.coins, 125); C.landFish(s, 'j_can', true); assert.equal(s.fish.junk.j_can, 1);
-  assert.ok(!C.buyRod(s, 'gold').ok); s.coins = 2000; assert.ok(C.buyRod(s, 'carbon').ok); assert.ok(!C.buyRod(s, 'bamboo').ok); assert.equal(C.rodOf(s).bar, .4);
+  assert.ok(!C.buyRod(s, 'gold').ok); s.coins = 2000; assert.ok(C.buyRod(s, 'carbon').ok); assert.ok(!C.buyRod(s, 'bamboo').ok); assert.equal(C.rodOf(s).bar, .28);
   const r = C.sanitize(JSON.parse(JSON.stringify(s))); assert.equal(r.fish.rod, 'carbon'); assert.equal(r.fish.junk.j_can, 1); assert.equal(r.fish.dex.f_koi, 1);
-  const st2 = C.fishPool(s, Date.UTC(2026, 10, 20, 10, 0)); assert.ok(st2.every(k => C.FISH[k].star >= 1));
+  const st2 = C.fishPool(s, Date.UTC(2026, 10, 20, 10, 0)); assert.ok(st2.every(k => C.FISH[k].star >= 1 && C.FISH[k].mv));
+  const cnt = pw => { const q = C.hatched ? null : null; const z = hatched(); z.fish = { bait: 4000 }; let good = 0; let x = 1; const rr = () => { x = (x * 16807) % 2147483647; return x / 2147483647; }; for (let i = 0; i < 2000; i++) { const o = C.castLine(z, D, rr, false, pw); if (o.star >= 2) good++; } return good; };
+  assert.ok(cnt(1) > cnt(0) * 1.2, '甩越遠好魚越多');
 });
 t('V1.83 生活技能：成年才有、同系不疊加、每天一次；水系免水費、草系長快、雷系電魚、岩系化石加掉寶', () => {
   const s = hatched(); s.route = 'tide'; s.stage = 'adolescent'; assert.equal(C.runSkills(s, T0), null); assert.equal(C.washCost(s) > 0, true);

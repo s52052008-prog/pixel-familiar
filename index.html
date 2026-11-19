@@ -92,7 +92,7 @@ img.uic{width:21px;height:21px;vertical-align:-5px;margin-right:5px;display:inli
 #fsMsg{text-align:center;font-weight:800;font-size:18px;min-height:52px;color:#ffd86a;display:flex;align-items:center;justify-content:center;line-height:1.35;padding:0 6px}
 #fishZone .fctl{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}#fishZone .fctl .btn{min-height:58px;font-size:17px;margin:0;padding:6px 4px}#fishZone .fctl small{display:block;font-size:13px;opacity:.85}
 #fishZone .fctl>.btn:not(#fsReel){grid-column:span 2;height:64px;min-height:64px}#fsReel{grid-column:span 6;min-height:110px!important;font-size:22px!important;display:none;touch-action:none}
-#fishZone .busy .fctl>.btn:not(#fsReel),#fishZone .reel .fctl>.btn:not(#fsReel){display:none}#fishZone .busy #fsReel,#fishZone .reel #fsReel{display:block}
+#fishZone .busy .fctl>.btn:not(#fsReel),#fishZone .reel .fctl>.btn:not(#fsReel),#fishZone .heavy .fctl>.btn{display:none}#fishZone .heavy .fctl{min-height:110px}#fsCast,#fsCast2{touch-action:none;-webkit-touch-callout:none}#fishZone .busy #fsReel,#fishZone .reel #fsReel{display:block}
 .fishrow{display:flex;align-items:center;gap:8px;padding:8px;margin:6px 0;background:#fff3dc;border:2px solid #b8854e;border-radius:6px}.fishrow canvas{width:auto!important;height:30px!important;image-rendering:pixelated}
 .fishrow{color:#3a2414}.fishrow .fn{flex:1;min-width:0}.fishrow .fn b{font-size:16px}.fishrow .small{color:#6a4a2a}.cxtabs{flex-wrap:nowrap!important}.cxtabs .btn{flex:1 1 0;min-width:0;padding:6px 2px;font-size:14px;white-space:nowrap}.fishrow .star{color:#e89a10}.fishrow .fb{display:flex;flex-direction:column;gap:4px}.fishrow .fb .btn{min-height:34px;padding:4px 8px;font-size:14px;margin:0}
 .skrow{color:#3a2414;background:#fff3dc;border:2px solid #b8854e;border-radius:6px;padding:8px 10px;margin:8px 0}.skg{margin:4px 0 0 6px;font-size:15px}.skg img.mi{height:18px;vertical-align:middle}#trainZone .tin{width:100%;max-width:460px;color:#fff3d0;display:flex;flex-direction:column;gap:6px;position:relative}
@@ -374,7 +374,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
   <button class="tool big" id="bGoals"><img class="uic" src="sprites/ui/calendar.png" alt="">任務<span id="goalDot" class="dot hidden"></span></button>
   <button class="tool big" id="bSteps"><img class="uic" src="sprites/ui/paw.png" alt="">步數</button>
   <button class="tool" id="bTrain"><img class="uic" src="sprites/ui/dumbbell.png" alt="">訓練</button>
-  <button class="tool" id="bRename"><img class="uic" src="sprites/ui/scroll.png" alt="">改名</button>
+  <button class="tool" id="bFish"><img class="uic" src="sprites/items/rod_bamboo.png" alt="" style="image-rendering:pixelated">釣魚</button>
   <button class="tool" id="bCodex"><img class="uic" src="sprites/ui/pawbook.png" alt="">圖鑑</button>
   <button class="tool" id="bMate"><img class="uic" src="sprites/ui/heart.png" alt="">配對</button>
   <button class="tool" id="bMenu"><img class="uic" src="sprites/ui/gear.png" alt="">選單</button>
@@ -429,7 +429,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.83.0';
+const VERSION='1.83.1';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1835,14 +1835,14 @@ function menuDialog(){
  const snd=()=>s.settings.sound?'🔊 音效：開':'🔇 音效：關',mo=()=>s.settings.reducedMotion?'🐢 減少動畫：開':'✨ 減少動畫：關';
  openModal('⚙️ 選單',`
 <div class="row" style="margin-top:0"><button class="btn" id="mHelp">❔ 遊戲說明</button><button class="btn" id="mSave">💾 存檔</button></div>
-<div class="row"><button class="btn" id="mOwner">👤 主人名字：${esc(ownerName())}</button>${!s.hatched&&s.eggTaps===0?'<button class="btn" id="mQuiz">🔮 性格測驗選蛋</button>':''}</div>
+<div class="row"><button class="btn" id="mRename">✏️ 幻獸改名</button><button class="btn" id="mOwner">👤 主人名字：${esc(ownerName())}</button>${!s.hatched&&s.eggTaps===0?'<button class="btn" id="mQuiz">🔮 性格測驗選蛋</button>':''}</div>
 <div class="row"><button class="btn" id="mSound">${snd()}</button><button class="btn" id="mMotion">${mo()}</button></div>
 <p style="margin-top:10px"><b>🪄 金手指</b></p><div class="row"><input id="mCheat" placeholder="輸入密碼" autocomplete="off" autocapitalize="off" style="flex:1;min-width:0;font-size:16px;padding:8px;border:3px solid var(--line)"><button class="btn" id="mCheatGo">確定</button></div>
 <div class="row"><button class="btn" id="mBasketM">🧺 蛋籃（${s.eggs.length}）</button></div>
 <div class="row"><button class="btn" id="mUpdate">🔄 檢查更新</button></div>
 <div class="row"><button class="btn pri" id="mReset">🥚 迎接新的蛋（🪙 ${PC.eggPrice(s)}）</button></div>
 <p class="small" style="margin-top:12px">版本 V${VERSION}｜存檔位置：${standalone()?'主畫面 App':'瀏覽器'}（${location.host||'本機'}）${store.ok?'':'｜⚠️ 無法寫入'}</p>`);
- $('mOwner').onclick=()=>ownerDialog(false);if($('mQuiz'))$('mQuiz').onclick=()=>quizIntro(false);$('mHelp').onclick=helpDialog;$('mSave').onclick=saveDialog;$('mBasketM').onclick=basketDialog;
+ $('mOwner').onclick=()=>ownerDialog(false);$('mRename').onclick=()=>renameDialog(false);if($('mQuiz'))$('mQuiz').onclick=()=>quizIntro(false);$('mHelp').onclick=helpDialog;$('mSave').onclick=saveDialog;$('mBasketM').onclick=basketDialog;
  $('mSound').onclick=()=>{s.settings.sound=!s.settings.sound;if(!s.settings.sound)bgmStop();save();unlockAudio();sfx('tap');$('mSound').textContent=snd()};
  $('mCheatGo').onclick=()=>{const c=$('mCheat').value.trim().toLowerCase().replace(/\s+/g,' ');$('mCheat').value='';
   if(c==='poor me'){s.coins+=500;PC.journal(s,Date.now(),'用了金手指 poor me');save();renderUI();sfx('level');buzz(20);toast('🪄 金手指生效！金幣 +500 💰',3000)}else{sfx('no');toast('❌ 密碼不對喔')}};
@@ -2472,8 +2472,9 @@ function drawBattle(now){if(!B)return;const c=bctx;c.save();if(B.shake>now&&!rm(
  const shadow=(cx,base,k,a)=>{c.fillStyle=`rgba(0,0,0,${a})`;c.beginPath();c.ellipse(cx,base-2*k,15*k,3.5*k,0,0,Math.PI*2);c.fill()};
  const bk=f=>f.big?1.5:f.boss?1.3:1;   // 大王 ×1.5、小王 ×1.3
  const F2=!!(B.foe2&&(B.foe2.hp>0||now-B.fx.foe2.faint<800)),M2=!!B.me2;
- const LF=F2?{foe:[78,76+OY,bk(B.foe)],foe2:[106,50+OY,.8]}:{foe:[B.foe.boss?90:94,B.foe.boss?74+OY:70+OY,bk(B.foe)]};
- const LM=M2?{me:[28,109+OY,1],me2:[60,95+OY,.8]}:{me:[34,106+OY,1]};
+ /* V1.83.1 兩隻一起時：同一邊的兩隻都站在自己的圓台附近，一隻前、一隻稍微後面，不要往對方靠 */
+ const LF=F2?{foe:[86,74+OY,bk(B.foe)],foe2:[108,65+OY,.85]}:{foe:[B.foe.boss?90:94,B.foe.boss?74+OY:70+OY,bk(B.foe)]};
+ const LM=M2?{me:[40,109+OY,1],me2:[18,101+OY,.85]}:{me:[34,106+OY,1]};
  const FK={foe:B.foe,foe2:B.foe2,me:B.me,me2:B.me2},topOf=f=>{if(!f)return 10;if(TOPC[f.key]===undefined){try{TOPC[f.key]=petTopY(f.key,0)-PET_Y}catch(e){TOPC[f.key]=10}}return TOPC[f.key]};
  for(const[k,[x,y,sc]]of Object.entries({...LF,...LM})){BPOS[k]=[x,Math.round(y-24*sc)];BTOP[k]=[x,Math.round(y-CELL*sc+topOf(FK[k])*sc)]}
  // 影子（先畫），再由後往前畫
@@ -2684,7 +2685,9 @@ function drawGlow(x,y,now){const g=ctx.createRadialGradient(x,y,1,x,y,10);const 
 function renderFoodBar(){const bar=$('foodBar');if(mode!=='feed'){bar.classList.add('hidden');return}bar.classList.remove('hidden');
  const F=CONFIG.foods;if(!FEED.kind)FEED.kind=Object.keys(F).find(k=>(s.inv[k]||0)>0)||'food';
  PC.fixFresh(s);bar.innerHTML=Object.keys(F).filter(k=>!(F[k].power||F[k].farm)||(s.inv[k]||0)>0||(s.crave&&s.crave.kind===k)).map(k=>{const n=s.inv[k]||0,fav=s.route&&F[k].fav.includes(s.route),cv=s.crave&&s.crave.kind===k&&Date.now()<s.crave.until,fr=(s.inv.fresh&&s.inv.fresh[k])||0;return`<button class="food ${FEED.kind===k?'on':''} ${fr?'fresh':''} ${cv?'crave':''}" data-food="${k}">${cv?'<b class="cvtag">想吃！</b>':''}<canvas data-fi="${F[k].icon}" width="14" height="14"></canvas><span>${F[k].name}${fav?'❤️':''}</span><small>${n?'×'+n:F[k].farm?'要自己種':F[k].power?'買不到':'🪙'+F[k].price}${fr?` ✨${fr}`:''}</small></button>`}).join('');
- bar.querySelectorAll('canvas').forEach(c=>{const ic=ICV[c.dataset.fi];c.width=ic.width;c.height=ic.height;const x=c.getContext('2d');x.drawImage(ic,0,0)});
+ {const Fh=PC.fishOf(s),nf=Object.values(Fh.raw).reduce((a,b)=>a+b,0)+Object.values(Fh.cooked).reduce((a,b)=>a+b,0);if(nf)bar.insertAdjacentHTML('afterbegin',`<button class="food" id="feedFish"><canvas data-fi="${ICV.grill_fish?'grill_fish':'fish'}" width="14" height="14"></canvas><span>魚簍</span><small>×${nf}</small></button>`)}   /* V1.83.1 釣到的魚：只佔一格，點了再選 */
+ bar.querySelectorAll('canvas').forEach(c=>{const ic=ICV[c.dataset.fi];if(!ic)return;c.width=ic.width;c.height=ic.height;const x=c.getContext('2d');x.drawImage(ic,0,0)});
+ if($('feedFish'))$('feedFish').onclick=e=>{e.stopPropagation();if(FEED.apple)return;sfx('tap');feedFishPick()};
  bar.querySelectorAll('[data-food]').forEach(b=>b.onclick=e=>{e.stopPropagation();if(FEED.apple)return;FEED.kind=b.dataset.food;renderFoodBar();sfx('tap')})}
 function finishFeed(){const A=FEED.apple,x0=s.xp,r=PC.act(s,'feed',Date.now(),A.k);handleTime(r.tm);
  if(r.ok){if(r.crave){spawn('heart',8,{x:petX+24,y:62,vy:-22,life:1.3,spread:16});spawn('star',4,{x:petX+24,y:60,life:.9,spread:14});sfx('level');renderUI()}if(r.left)PC.addCore(s,A.x,Date.now(),curView(),r.left);spawn('heart',r.fav?6:3,{x:petX+24,y:70,life:1.1,stagger:.25});say(r.msg+(r.xp?`　經驗 +${r.xp}`:''));$('log').textContent=r.msg+(r.left?`　記得把${r.left==='bone'?'骨頭':'果核'}清掉，不然會發臭喔！`:'')}
@@ -2792,7 +2795,6 @@ cv.addEventListener('pointerdown',e=>{const p=toLogical(e);unlockAudio();request
  if(mode==='wash'){WASH.down=true;WASH.px=p.x;WASH.py=p.y;WASH.lastMove=performance.now();try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
  if(!mode&&!coreAt(p.x,p.y)&&treeTap(p.x,p.y))return;   // V1.76 蘋果樹
  if(!mode&&!coreAt(p.x,p.y)&&!nearToy(p.x,p.y)&&bushTap(p.x,p.y))return;   /* V1.83 野莓叢 */
- if(!mode&&curView()==='yard'&&s.hatched&&!nearToy(p.x,p.y)){const b=yBox('pond');if(p.x>=b[0]-2&&p.x<=b[2]+2&&p.y>=b[1]-3&&p.y<=b[3]+2){openFish();return}}   /* V1.83 點水池去釣魚 */
  if(!mode&&nearToy(p.x,p.y)&&!coreAt(p.x,p.y)){toyGrab(p.x,p.y);try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
  if(mode==='play'&&BALL.b&&!BALL.b.hit){playTap();return}   // V1.46 頂球：點一下就跳（不用蓄力）
  pointerTap(p.x,p.y)});
@@ -2820,7 +2822,6 @@ $('yaPlus').onclick=()=>yaScale(.1);$('yaMinus').onclick=()=>yaScale(-.1);$('yaF
 $('arrReset').onclick=()=>{if(YA.on){yaReset();return}const sl=ARR.pick;if(sl){if(s.decor.pos)delete s.decor.pos[sl];if(s.decor.flip)delete s.decor.flip[sl];toast(`↺ ${RNAME[sl]||'家具'}回到原本的樣子`,2200)}else{s.decor.pos={};s.decor.flip={};toast('↺ 家具回到原本的位置',2200)}save();sfx('tap');arHint()};
 let denTapAt=0;
 function pointerTap(x,y){if(evo)return;
- if(!mode&&s.hatched&&curView()==='yard'&&!overPet(x,y)&&s.plots.some((p,i)=>{const[cx,cy,k]=plotP(i);return Math.abs(x-cx)<=10*k+2&&y>=cy-16*k-2&&y<=cy+2})){farmDialog();return}   // V1.47 點遠處的田＝打開家園
  if(mode==='feed'){placeApple(x,y);return}
  if(mode==='play'){playTap();return}
  if(s.hatched&&tryClearCore(x,y))return;
@@ -2844,7 +2845,7 @@ $('lightBtn').onclick=()=>{s.settings.light=s.settings.light===false;save();sync
 /* 開燈按鈕：只在小窩裡、傍晚到晚上出現 */
 function syncLightBtn(force){const show=s.hatched&&curView()==='room'&&['night','dusk'].includes(phase()),b=$('lightBtn');b.classList.toggle('hidden',!show);if(show)b.textContent=s.settings.light===false?'💡 開燈':'🌙 關燈'}
 setInterval(syncLightBtn,1000);$('bSteps').onclick=stepsDialog;$('bMate').onclick=mateDialog;
-$('bRename').onclick=()=>renameDialog(false);$('bCodex').onclick=codexDialog;$('bTrain').onclick=trainDialog;$('bMenu').onclick=menuDialog;
+$('bFish').onclick=()=>{sfx('tap');openFish()};$('bCodex').onclick=codexDialog;$('bTrain').onclick=trainDialog;$('bMenu').onclick=menuDialog;
 $('homeTipX').onclick=()=>{$('homeTip').classList.add('hidden');store.set(TIP_KEY,'1')};
 
 /* ---------------- 啟動 ---------------- */
@@ -3110,38 +3111,70 @@ let FZ=null;const fcv=$('fscv'),fctx=fcv.getContext('2d');fctx.imageSmoothingEna
 const FTR={x:6,y:10,w:14,h:90};   // 拉條軌道
 const fsMsg=t=>{$('fsMsg').innerHTML=`<span>${t}</span>`};
 function fsInfo(){const F=PC.fishOf(s),R=PC.rodOf(s),now=Date.now();$('fsInfo').textContent=`${PC.SLOT_NAME[PC.fishSlot(now)]}・${PC.WEATHER_NAME[PC.weatherAt(now)]}・${R.name}`;
- $('fsCast').innerHTML=`🎣 拋竿 <small>魚餌 ×${F.bait}</small>`;$('fsCast2').innerHTML=`✨ 高級魚餌 <small>×${F.bait2}</small>`;$('fsCast2').disabled=F.bait2<1}
+ $('fsCast').innerHTML=`🎣 按住蓄力 <small>魚餌 ×${F.bait}</small>`;$('fsCast2').innerHTML=`✨ 高級魚餌 <small>按住蓄力 ×${F.bait2}</small>`;$('fsCast2').disabled=F.bait2<1}
 function openFish(){if(!s.hatched){toast('先把蛋孵出來吧！');return}if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();unlockAudio();
- FZ={ph:'idle',t:0,S:sheet(formKey()),fx:[],hold:false,c:null,res:null};$('fishZone').classList.remove('hidden');$('fsFin').className='fin';fsInfo();
+ FZ={ph:'idle',t:0,fx:[],hold:false,c:null,res:null,qx:58,qy:66};$('fishZone').classList.remove('hidden');$('fsFin').className='fin';fsInfo();
  const P=PC.fishPool(s,Date.now()).filter(k=>PC.fishOf(s).dex[k]),N=PC.fishPool(s,Date.now()).length;
- fsMsg(`現在這個時間、天氣有 <b>${N}</b> 種魚${P.length<N?`（還有 ${N-P.length} 種沒釣過！）`:''}`);sfx('tap');let last=performance.now();
+ fsMsg(`按住拋竿蓄力，放開甩出去，甩越遠越容易釣到好魚。現在有 <b>${N}</b> 種魚${P.length<N?`（${N-P.length} 種沒釣過）`:''}`);sfx('tap');let last=performance.now();
  const loop=now=>{if(!FZ)return;const dt=Math.min(.05,(now-last)/1000);last=now;fsUpdate(dt,now);fsDraw(now);requestAnimationFrame(loop)};requestAnimationFrame(loop)}
-function closeFish(){if(FZ&&['wait','bite','reel','fly'].includes(FZ.ph)&&!FZ.leave){FZ.leave=1;toast('還在釣魚喔，再按一次就回院子（這一竿會放掉）');setTimeout(()=>{if(FZ)FZ.leave=0},2500);return}FZ=null;$('fishZone').classList.add('hidden');save();renderUI()}
-function fsCast(premium){if(!FZ||!['idle','result'].includes(FZ.ph))return;const r=PC.castLine(s,Date.now(),Math.random,premium);
- if(!r.ok){fsMsg('❌ '+r.msg);sfx('no');if(r.code==='nobait')setTimeout(fishShop,350);return}save();fsInfo();
- FZ.c=r;FZ.res=null;FZ.ph='fly';FZ.t=0;FZ.premium=premium;$('fsFin').className='fin busy';$('fsReel').textContent='等魚上鉤…';fsMsg(r.zap?'⚡ 雷系幫忙電魚中…':'安靜等浮標往下沉…');sfx('tap')}
+function closeFish(){if(FZ&&['wait','bite','reel','fly','heavy','charge'].includes(FZ.ph)&&!FZ.leave){FZ.leave=1;toast('還在釣魚喔，再按一次就回院子（這一竿會放掉）');setTimeout(()=>{if(FZ)FZ.leave=0},2500);return}FZ=null;$('fishZone').classList.add('hidden');save();renderUI()}
+/* 第一段：按住蓄力（力道來回擺），放開甩出去 */
+function fsCharge(premium){if(!FZ||!['idle','result'].includes(FZ.ph))return;const F=PC.fishOf(s);if((premium?F.bait2:F.bait)<1){fsMsg('❌ '+(premium?'沒有高級魚餌了':'沒有魚餌了（釣具店可以買，5 金幣一個）'));sfx('no');if(!premium)setTimeout(fishShop,350);return}
+ FZ.ph='charge';FZ.t=0;FZ.premium=premium;FZ.pw=0;FZ.res=null;fsMsg('力道條最滿的時候放開！');sfx('tap')}
+function fsRelease(){if(!FZ||FZ.ph!=='charge')return;const pw=FZ.pw,r=PC.castLine(s,Date.now(),Math.random,FZ.premium,pw);
+ if(!r.ok){FZ.ph='idle';fsMsg('❌ '+r.msg);sfx('no');return}save();fsInfo();FZ.c=r;FZ.back=pw;FZ.qx=Math.round(74-32*pw);FZ.qy=Math.round(84-34*pw);FZ.ph='fly';FZ.t=0;
+ $('fsFin').className='fin busy';$('fsReel').textContent='等魚上鉤…';fsMsg(`${pw>.85?'💪 甩得超遠！':pw>.55?'甩得不錯！':'甩得有點近…'}${r.zap?'　⚡ 雷系幫忙電魚中…':'　安靜等浮標往下沉…'}`);sfx('wake');buzz(20)}
+/* 第二段：等魚。好魚等比較久，也有機會游走 */
+function fsWaitPlan(){const Z=FZ,C=Z.c,st=C.star||0;Z.biteAt=C.zap?1:C.heavy?1.8+Math.random()*2.2:1.2+st*1.1+Math.random()*2.6;
+ Z.escAt=!C.zap&&Math.random()<.06+st*.05?.6+Math.random()*Math.max(.4,Z.biteAt-.8):0;Z.nib=[];for(let t=.8;t<Z.biteAt-.3;t+=.7+Math.random()*1.4)if(Math.random()<.5+st*.08)Z.nib.push(t)}
 function fsTap(down){if(!FZ)return;FZ.hold=down;if(!down)return;
- if(FZ.ph==='wait'){FZ.ph='result';FZ.res={fail:1};fsMsg('😣 太早拉了，魚被嚇跑了…');$('fsFin').className='fin';sfx('no');return}
- if(FZ.ph==='bite'){FZ.ph='reel';FZ.t=0;const st=FZ.c.star||0,C=FZ.c;FZ.bh=Math.round(FTR.h*C.bar);FZ.by=FTR.h-FZ.bh;FZ.v=0;FZ.fy=FTR.h*.6;FZ.ft=FZ.fy;FZ.fn=0;FZ.prog=.3;FZ.spd=18+st*15;
-  $('fsFin').className='fin reel';$('fsReel').textContent='按住：綠框往上　放開：往下';fsMsg('讓魚待在綠框裡！');sfx('wake')}}
-function fsLand(ok){const r=PC.landFish(s,FZ.c.key,ok);const x0=s.xp;save();renderUI();FZ.ph='result';FZ.t=0;FZ.res=Object.assign({fail:!ok},r);$('fsFin').className='fin';fsInfo();
- if(!ok){fsMsg('💦 '+r.msg);sfx('no');buzz(40);return}
- fsMsg(r.msg+(r.xp?`　經驗 +${r.xp}`:''));sfx(r.first||(FZ.c.star||0)>=3?'level':'eat');buzz(30);for(let i=0;i<(r.first?10:5);i++)FZ.fx.push({x:60,y:50,vx:(Math.random()-.5)*50,vy:-30-Math.random()*25,t:0,life:.9});
+ if(FZ.ph==='wait'){FZ.ph='result';FZ.t=0;FZ.res={fail:1};fsMsg('😣 太早拉了，魚被嚇跑了…');$('fsFin').className='fin';sfx('no');return}
+ if(FZ.ph==='bite'){const C=FZ.c;FZ.t=0;
+  if(C.heavy){FZ.ph='heavy';FZ.prog=.08;FZ.ten=0;FZ.ang=null;FZ.spd=0;FZ.snapAt=Math.random()<.15?.35+Math.random()*.4:2;$('fsFin').className='fin heavy';fsMsg('好重！🔄 在畫面上<b>順時針畫圓</b>慢慢收線，太快會斷！');sfx('punch');buzz(60);return}
+  const st=C.star||0;FZ.ph='reel';FZ.bh=Math.round(FTR.h*C.bar);FZ.by=FTR.h-FZ.bh;FZ.v=0;FZ.fy=FTR.h*.6;FZ.ft=FZ.fy;FZ.fn=0;FZ.prog=.3;FZ.dir=1;FZ.ph0=Math.random()*6;FZ.mv=C.mv||'calm';FZ.st=st;
+  $('fsFin').className='fin reel';$('fsReel').textContent='按住：綠框往上　放開：往下';fsMsg('上鉤了！讓 🐟 待在綠框裡！');sfx('wake')}}
+/* 第三段：每種魚動的方式不一樣；稀有的飄來飄去 */
+function fishMove(Z,dt,now){const H=FTR.h,st=Z.st,t=Z.t,mid=H/2,k=1+st*.18;let ty;
+ switch(Z.mv){
+  case'sine':ty=mid+(H*.34)*Math.sin(t*(1.6+st*.25)+Z.ph0);break;
+  case'float':ty=mid+(H*.26)*Math.sin(t*(1.1+st*.15)+Z.ph0)+(H*.18)*Math.sin(t*(2.7+st*.3)+Z.ph0*2)+(H*.06)*Math.sin(t*7.3);break;
+  case'zig':Z.fy+=Z.dir*(26+st*9)*dt;if(Z.fy<6){Z.fy=6;Z.dir=1}if(Z.fy>H-6){Z.fy=H-6;Z.dir=-1}if(Math.random()<dt*.5)Z.dir*=-1;return;
+  case'dart':Z.fn-=dt;if(Z.fn<=0){Z.fn=1+Math.random()*1.4;Z.ft=6+Math.random()*(H-12);Z.dash=.35}if(Z.dash>0){Z.dash-=dt;ty=Z.ft;const d=ty-Z.fy;Z.fy+=Math.sign(d)*Math.min(Math.abs(d),95*k*dt);return}Z.fy+=Math.sin(t*3)*4*dt;return;
+  case'burst':Z.fn-=dt;if(Z.fn<=0){Z.fn=.35+Math.random()*.45;Z.ft=6+Math.random()*(H-12)}ty=Z.ft;{const d=ty-Z.fy;Z.fy+=Math.sign(d)*Math.min(Math.abs(d),(55+st*12)*dt)}return;
+  default:Z.fn-=dt;if(Z.fn<=0){Z.fn=1.4+Math.random()*1.1;Z.ft=10+Math.random()*(H-20)}ty=Z.ft;{const d=ty-Z.fy;Z.fy+=Math.sign(d)*Math.min(Math.abs(d),18*k*dt)}return}
+ Z.fy+=(Math.max(6,Math.min(H-6,ty))-Z.fy)*Math.min(1,dt*6)}
+/* 寶箱、雜物：順時針畫圓收線 */
+const HC={x:64,y:58,r:28};
+function fsHeavyMove(x,y){const Z=FZ;if(!Z||Z.ph!=='heavy'||!Z.hold)return;const a=Math.atan2(y-HC.y,x-HC.x),now=performance.now();
+ if(Z.ang!=null&&Math.hypot(x-HC.x,y-HC.y)>8){let d=a-Z.ang;if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;const dt=Math.max(.008,(now-Z.at)/1000);Z.spd=Z.spd*.7+(d/dt)*.3;
+  if(d>0){Z.prog+=d/(2*Math.PI*5);Z.spin=(Z.spin||0)+d}else Z.prog+=d/(2*Math.PI*10)}
+ Z.ang=a;Z.at=now}
+function fsLand(ok,why){const r=PC.landFish(s,FZ.c.key,ok);const x0=s.xp;save();renderUI();FZ.ph='result';FZ.t=0;FZ.res=Object.assign({fail:!ok},r);$('fsFin').className='fin';fsInfo();
+ if(!ok){fsMsg('💦 '+(why||r.msg));sfx('no');buzz(40);return}
+ fsMsg(r.msg+(r.xp?`　經驗 +${r.xp}`:''));sfx(r.first||(FZ.c.star||0)>=3?'level':'eat');buzz(30);for(let i=0;i<(r.first?10:5);i++)FZ.fx.push({x:FZ.qx,y:FZ.qy-10,vx:(Math.random()-.5)*50,vy:-30-Math.random()*25,t:0,life:.9});
  const k=FZ.c.key,f=PC.FISH[k],rows=[];
  if(f){const E=PC.fishFood(k,false);rows.push([k,f.name,'×1',`${'★'.repeat(f.star)}${r.first?'　🆕 新魚種':''}`]);if(r.xp)rows.push(['star','經驗',`+${r.xp}`,'']);
   setTimeout(()=>resultCard(r.first?'🎉 釣到新魚種！':'🎣 釣到了！',rows,`生吃：飽食 +${E.hunger}、體力 +${E.energy}（烤過 ×${CONFIG.fishing.cookX}）<br>可以賣 🪙${f.price}，放在 🧺 魚簍${FZ&&FZ.c.zap?'<br>⚡ 雷系電魚，保證釣到！':''}`).then(()=>afterChange(x0)),450)}
  else{if(PC.JUNK[k])rows.push([k,PC.JUNK[k].name,'×1','雜物']);else if(r.coins)rows.push(['coin','小寶箱裡的金幣',`+${r.coins}`,'']);else rows.push(['seed2','小寶箱裡的優良種子','+1','']);
-  setTimeout(()=>resultCard(PC.JUNK[k]?'😅 釣到雜物…':'🎁 釣到小寶箱！',rows,PC.JUNK[k]?(PC.hasSkill(s,'metal')?'⚙️ 鋼系會幫你回收成廢鐵（一個賣 20）':`可以賣 🪙${PC.JUNK[k].price}；家裡有成年鋼系會幫你回收成廢鐵`):'').then(()=>afterChange(x0)),450)}}
+  setTimeout(()=>resultCard(PC.JUNK[k]?'😅 拉上來是雜物…':'🎁 拉上來一個小寶箱！',rows,PC.JUNK[k]?(PC.hasSkill(s,'metal')?'⚙️ 鋼系會幫你回收成廢鐵（一個賣 20）':`可以賣 🪙${PC.JUNK[k].price}；家裡有成年鋼系會幫你回收成廢鐵`):'').then(()=>afterChange(x0)),450)}}
+function fsFail(msg){const Z=FZ;Z.ph='result';Z.t=0;Z.res={fail:1};fsMsg(msg);$('fsFin').className='fin';sfx('no');buzz(40)}
 function fsUpdate(dt,now){const Z=FZ;Z.t+=dt;for(let i=Z.fx.length-1;i>=0;i--){const p=Z.fx[i];p.t+=dt;if(p.t>p.life){Z.fx.splice(i,1);continue}p.vy+=60*dt;p.x+=p.vx*dt;p.y+=p.vy*dt}
- if(Z.ph==='fly'&&Z.t>.6){Z.ph='wait';Z.t=0;Z.biteAt=Z.c.zap?1:1.4+Math.random()*3.6}
- else if(Z.ph==='wait'&&Z.t>=Z.biteAt){if(Z.c.zap){Z.zapT=now;sfx('boom');buzz(60);fsLand(true);return}Z.ph='bite';Z.t=0;$('fsReel').textContent='❗ 拉！';fsMsg('❗❗ 上鉤了！快點一下！');sfx('wake');buzz(40)}
- else if(Z.ph==='bite'&&Z.t>.95){Z.ph='result';Z.res={fail:1};fsMsg('😣 太慢了，魚把餌吃掉跑了…');$('fsFin').className='fin';sfx('no')}
+ if(Z.ph==='charge'){Z.pw=(1-Math.cos(Z.t*3.2))/2}
+ else if(Z.ph==='fly'&&Z.t>.55){Z.ph='wait';Z.t=0;fsWaitPlan()}
+ else if(Z.ph==='wait'){if(Z.escAt&&Z.t>=Z.escAt){fsFail('🐟 魚咬了一下就游走了…（好魚比較容易跑掉）');return}
+  if(Z.t>=Z.biteAt){if(Z.c.zap){Z.zapT=now;sfx('boom');buzz(60);fsLand(true);return}Z.ph='bite';Z.t=0;Z.win=Math.max(.55,1-(Z.c.star||0)*.08);$('fsReel').textContent='❗ 拉！';fsMsg('❗❗ 上鉤了！快點一下！');sfx('wake');buzz(40)}}
+ else if(Z.ph==='bite'&&Z.t>Z.win)fsFail('😣 太慢了，魚把餌吃掉跑了…');
  else if(Z.ph==='reel'){const st=Z.c.steady,acc=Z.hold?-300:230;Z.v+=acc*dt;Z.v*=1-(1.5+st*3.5)*dt;Z.by+=Z.v*dt;
   if(Z.by<0){Z.by=0;Z.v=-Z.v*.35*(1-st)}if(Z.by>FTR.h-Z.bh){Z.by=FTR.h-Z.bh;Z.v=-Z.v*.35*(1-st)}
-  Z.fn-=dt;const star=Z.c.star||0;if(Z.fn<=0){Z.fn=Math.max(.35,1.5-star*.22)*(.6+Math.random()*.8);Z.ft=6+Math.random()*(FTR.h-12)}
-  const d=Z.ft-Z.fy;Z.fy+=Math.sign(d)*Math.min(Math.abs(d),Z.spd*dt*(star>=4?1+.6*Math.abs(Math.sin(now/180)):1));
-  const inn=Z.fy>=Z.by-2&&Z.fy<=Z.by+Z.bh+2;Z.inn=inn;Z.prog+=(inn?.34:-.24)*dt;
-  if(Z.prog>=1)fsLand(true);else if(Z.prog<=0)fsLand(false)}}
+  fishMove(Z,dt,now);Z.fy=Math.max(4,Math.min(FTR.h-4,Z.fy));
+  const inn=Z.fy>=Z.by-1&&Z.fy<=Z.by+Z.bh+1;Z.inn=inn;Z.prog+=(inn?.3:-.26)*dt;
+  if(Z.prog>=1)fsLand(true);else if(Z.prog<=0)fsLand(false)}
+ else if(Z.ph==='heavy'){const sp=Z.spd||0;Z.spd*=Math.pow(.2,dt);if(!Z.hold)Z.spd=0;
+  Z.ten=Math.max(0,Math.min(1.05,Z.ten+(sp>8?(sp-8)*.09*dt:-.5*dt)));Z.prog-=.025*dt;
+  if(Z.ten>=1){fsLand(false,'💥 拉太快，繩子斷了！');return}
+  if(Z.prog>=Z.snapAt){fsLand(false,'💥 啪！拉到一半繩子斷掉了…');return}
+  if(Z.prog<=0){fsLand(false,'東西又沉回水底了…');return}
+  if(Z.prog>=1)fsLand(true)}}
 /* V1.83 第一人稱：看到自己的魚竿、甩出去的線和浮標（底圖 sprites/arena/pond_fp.png；沒有就用程式畫的） */
 const FPIMG=new Image();FPIMG.src='sprites/arena/pond_fp.png';let FPBG=null;
 function fpBg(ph){const k=ph;if(FPBG&&FPBG.k===k)return FPBG.c;const c=document.createElement('canvas');c.width=128;c.height=112;const g=c.getContext('2d'),N=ph==='night',D=ph==='dusk';
@@ -3153,33 +3186,47 @@ function fpBg(ph){const k=ph;if(FPBG&&FPBG.k===k)return FPBG.c;const c=document.
  g.fillStyle=N?'#1a3020':'#3a8a30';for(let i=0;i<14;i++){const x=i<7?i*3:128-(i-7)*3,h=18+((i*11)%14);g.fillRect(x,112-h-6,2,h)}g.fillStyle=N?'#5a4030':'#8a5a30';for(let i=0;i<14;i+=3){const x=i<7?i*3:128-(i-7)*3;g.fillRect(x,112-28-((i*11)%14)+6,2,5)}
  g.fillStyle=N?'#24402a':'#5aa040';g.fillRect(0,104,128,8);g.fillStyle=N?'#1a3020':'#4a8a34';for(let x=0;x<128;x+=3)g.fillRect(x,101+((x*7)%4),2,4);
  FPBG={k,c};return c}
+let FSIL=null;const fishSil=()=>{if(FSIL)return FSIL;const im=ICV.f_creek;if(!im)return null;const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);x.globalCompositeOperation='source-in';x.fillStyle='#d8ecff';x.fillRect(0,0,c.width,c.height);return FSIL=c};
 function fsDraw(now){const c=fctx,Z=FZ,ph=phase();c.clearRect(0,0,128,112);
  if(FPIMG.complete&&FPIMG.naturalWidth){c.drawImage(FPIMG,0,0);if(ph==='night'||ph==='dusk'){c.fillStyle=ph==='night'?'rgba(20,24,70,.45)':'rgba(255,120,60,.18)';c.fillRect(0,0,128,112)}}else c.drawImage(fpBg(ph),0,0);
  const w=PC.weatherAt(Date.now());if(w==='rain'||w==='storm'){c.fillStyle='rgba(200,220,255,.55)';for(let i=0;i<(w==='storm'?40:22);i++){const x=(i*37+now/6)%132-2,y=(i*53+now/(w==='storm'?3:4))%112;c.fillRect(Math.round(x),Math.round(y),1,3)}}
- /* 浮標落點：遠一點的水面 */const BX=46,BY=60;
- /* 魚竿：從右下角伸出去（用手繪的三種魚竿；角度：待機 20°、甩竿往後再往前、拉線時抖動） */
- let a=20;if(Z.ph==='fly'){const k=Z.t/.6;a=k<.35?20+30*(k/.35):50-42*Math.min(1,(k-.35)/.65)}else if(Z.ph==='reel')a=26+Math.sin(now/70)*2.5;else if(Z.ph==='bite')a=24;else if(Z.ph==='wait')a=8+Math.sin(now/900)*1.5;else if(Z.ph==='result')a=Z.t<.4?8+30*(Z.t/.4):38-18*Math.min(1,(Z.t-.4)/.5);
+ const BX=Z.qx,BY=Z.qy;
+ /* 魚竿角度：蓄力時往後拉（越滿越往後），放開大力往前甩 */
+ let a=20;const back=20+34*(Z.back||0);
+ if(Z.ph==='charge')a=20+34*Z.pw;else if(Z.ph==='fly'){const k=Math.min(1,Z.t/.32);a=back-(back+14)*(1-Math.pow(1-k,3))+(Z.t>.32?Math.min(14,(Z.t-.32)*60):0)}
+ else if(Z.ph==='reel')a=26+Math.sin(now/70)*2.5;else if(Z.ph==='heavy')a=34+Math.sin(now/40)*3*(Z.ten||0)+Math.sin(now/120)*1.5;else if(Z.ph==='bite')a=24;else if(Z.ph==='wait')a=8+Math.sin(now/900)*1.5;else if(Z.ph==='result')a=Z.t<.4?8+30*(Z.t/.4):38-18*Math.min(1,(Z.t-.4)/.5);
  const rod=PC.rodOf(s).id,RI=ICV['rod_'+rod+'_fp'],HX=122,HY=114,ar=a*Math.PI/180,rw=RI?RI.width:79,RS=.85,lx0=-(rw-6)*RS,ly0=-72*RS;
  const tx=HX+lx0*Math.cos(ar)-ly0*Math.sin(ar),ty=HY+lx0*Math.sin(ar)+ly0*Math.cos(ar);
  if(RI){c.save();c.translate(HX,HY);c.rotate(ar);c.scale(-RS,RS);c.drawImage(RI,-2,-74);c.restore()}
  else{c.strokeStyle='#2a170a';c.lineWidth=4;c.beginPath();c.moveTo(HX,HY);c.lineTo(tx,ty);c.stroke();c.strokeStyle='#d8a858';c.lineWidth=2;c.beginPath();c.moveTo(HX,HY);c.lineTo(tx,ty);c.stroke()}
- if(Z.ph!=='idle'&&!(Z.ph==='result'&&Z.t>1.2)){let bx=BX,by=BY;if(Z.ph==='fly'){const k=Math.max(0,(Z.t/.6-.35)/.65);bx=tx+(BX-tx)*k;by=ty+(BY-ty)*k-Math.sin(k*Math.PI)*20}
-  if(Z.ph==='wait')by+=Math.round(Math.sin(now/300))+((Z.biteAt-Z.t)<.6&&Math.floor(now/90)%2?1:0);if(Z.ph==='bite')by+=2;if(Z.ph==='reel'||Z.ph==='result'){bx=BX+Math.round(Math.sin(now/90)*2);by=BY+1}
-  c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=1;c.beginPath();c.moveTo(tx,ty);c.quadraticCurveTo((tx+bx)/2,Math.min(ty,by)+(Z.ph==='reel'?2:16),bx,by);c.stroke();
-  if(Z.ph!=='fly'){c.strokeStyle='rgba(230,245,255,.75)';c.beginPath();c.ellipse(bx,by+1,4+(Z.ph==='bite'||Z.ph==='reel'?Math.sin(now/100)*2+2:Math.sin(now/400)),1.3,0,0,Math.PI*2);c.stroke()}
-  const BB=ICV.bobber_s;if(BB&&Z.ph!=='bite')c.drawImage(BB,Math.round(bx-BB.width/2),Math.round(by-BB.height+2));else if(BB){c.drawImage(BB,0,0,BB.width,Math.ceil(BB.height/2),Math.round(bx-BB.width/2),Math.round(by-2),BB.width,Math.ceil(BB.height/2))}
+ if(Z.ph==='charge'){const x0=10,y0=100,w0=70,p=Z.pw;c.fillStyle='rgba(20,12,6,.85)';c.fillRect(x0-2,y0-2,w0+4,9);const g=c.createLinearGradient(x0,0,x0+w0,0);g.addColorStop(0,'#7ae06a');g.addColorStop(.6,'#ffd040');g.addColorStop(1,'#ff5a3a');c.fillStyle=g;c.fillRect(x0,y0,Math.round(w0*p),5);c.fillStyle='#fff';c.fillRect(x0+Math.round(w0*p),y0-1,1,7);c.fillStyle='#ffe8a0';c.font='bold 8px sans-serif';c.fillText('力道',x0,y0-4)}
+ if(!['idle','charge'].includes(Z.ph)&&!(Z.ph==='result'&&Z.t>1.2)){let bx=BX,by=BY;if(Z.ph==='fly'){const k=Math.min(1,Z.t/.55);bx=tx+(BX-tx)*k;by=ty+(BY-ty)*k-Math.sin(k*Math.PI)*(16+22*(Z.back||0))}
+  if(Z.ph==='wait'){by+=Math.round(Math.sin(now/300));if(Z.nib&&Z.nib.some(n=>Z.t>n&&Z.t<n+.18))by+=1;if((Z.biteAt-Z.t)<.5&&Math.floor(now/90)%2)by+=1}
+  if(Z.ph==='bite')by+=2;if(Z.ph==='reel'||Z.ph==='result'){bx=BX+Math.round(Math.sin(now/90)*2);by=BY+1}if(Z.ph==='heavy'){bx=BX+Math.round(Math.sin(now/60)*1);by=BY+2}
+  c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=1;c.beginPath();c.moveTo(tx,ty);c.quadraticCurveTo((tx+bx)/2,Math.min(ty,by)+(Z.ph==='reel'||Z.ph==='heavy'?2:16),bx,by);c.stroke();
+  if(Z.ph!=='fly'){c.strokeStyle='rgba(230,245,255,.75)';c.beginPath();c.ellipse(bx,by+1,4+(['bite','reel','heavy'].includes(Z.ph)?Math.sin(now/100)*2+2:Math.sin(now/400)),1.3,0,0,Math.PI*2);c.stroke()}
+  const BB=ICV.bobber_s;if(BB&&Z.ph!=='bite'&&Z.ph!=='heavy')c.drawImage(BB,Math.round(bx-BB.width/2),Math.round(by-BB.height+2));else if(BB){c.drawImage(BB,0,0,BB.width,Math.ceil(BB.height/2),Math.round(bx-BB.width/2),Math.round(by-2),BB.width,Math.ceil(BB.height/2))}
   if(Z.ph==='bite'){c.fillStyle='#ffe066';c.font='bold 16px sans-serif';c.fillText('!',bx-2,by-8)}}
- if(Z.zapT&&now-Z.zapT<600){c.fillStyle=`rgba(255,240,120,${.5*(1-(now-Z.zapT)/600)})`;c.fillRect(0,0,128,112);c.strokeStyle='#fff6a0';c.lineWidth=2;c.beginPath();c.moveTo(54,10);c.lineTo(64,36);c.lineTo(56,40);c.lineTo(66,62);c.stroke()}
+ if(Z.zapT&&now-Z.zapT<600){c.fillStyle=`rgba(255,240,120,${.5*(1-(now-Z.zapT)/600)})`;c.fillRect(0,0,128,112);c.strokeStyle='#fff6a0';c.lineWidth=2;c.beginPath();c.moveTo(BX-6,10);c.lineTo(BX+4,36);c.lineTo(BX-4,40);c.lineTo(BX+6,BY);c.stroke()}
  if(Z.ph==='reel'){const T=FTR;c.fillStyle='rgba(20,12,6,.8)';c.fillRect(T.x-2,T.y-2,T.w+4,T.h+4);c.fillStyle='#16324a';c.fillRect(T.x,T.y,T.w,T.h);
   c.fillStyle=Z.inn?'rgba(110,230,110,.85)':'rgba(80,190,80,.6)';c.fillRect(T.x,T.y+Math.round(Z.by),T.w,Z.bh);c.fillStyle='#d8ffd0';c.fillRect(T.x,T.y+Math.round(Z.by),T.w,1);c.fillRect(T.x,T.y+Math.round(Z.by)+Z.bh-1,T.w,1);
-  const fi=ICV[FZ.c.key]||ICV.fish;if(fi){const w=13,h=Math.round(fi.height*w/fi.width);c.drawImage(fi,T.x,Math.round(T.y+Z.fy-h/2),w,h)}
+  const fi=fishSil();if(fi){const w=13,h=Math.round(fi.height*w/fi.width);c.drawImage(fi,T.x,Math.round(T.y+Z.fy-h/2),w,h)}
   c.fillStyle='rgba(20,12,6,.8)';c.fillRect(T.x+T.w+3,T.y-2,5,T.h+4);const pp=Math.max(0,Math.min(1,Z.prog));c.fillStyle=pp>.7?'#7ae06a':pp>.35?'#ffd040':'#ff6a4a';c.fillRect(T.x+T.w+4,T.y+Math.round(T.h*(1-pp)),3,Math.round(T.h*pp))}
+ if(Z.ph==='heavy'){const{x,y,r}=HC,rot=now/300;c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=2;c.setLineDash([4,3]);c.lineDashOffset=-now/40;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.stroke();c.setLineDash([]);
+  for(let i=0;i<3;i++){const t=rot+i*2.094,ax=x+r*Math.cos(t),ay=y+r*Math.sin(t),dx=-Math.sin(t),dy=Math.cos(t);c.fillStyle='#ffe066';c.beginPath();c.moveTo(ax+dx*5,ay+dy*5);c.lineTo(ax-dy*3,ay+dx*3);c.lineTo(ax+dy*3,ay-dx*3);c.closePath();c.fill()}
+  if(Z.ang!=null&&Z.hold){c.fillStyle='#fff';c.beginPath();c.arc(x+r*Math.cos(Z.ang),y+r*Math.sin(Z.ang),3,0,Math.PI*2);c.fill()}
+  const pp=Math.max(0,Math.min(1,Z.prog)),tn=Math.min(1,Z.ten||0);c.fillStyle='rgba(20,12,6,.85)';c.fillRect(8,98,112,10);c.fillStyle='#7ae06a';c.fillRect(10,100,Math.round(52*pp),6);c.fillStyle=tn>.75?'#ff4a3a':tn>.45?'#ffb040':'#5ab0ff';c.fillRect(66,100,Math.round(52*tn),6);
+  c.fillStyle='#fff';c.font='bold 7px sans-serif';c.fillText('收線',12,97);c.fillText('張力',68,97);
+  const sh=Math.round(BY+6-pp*14);c.fillStyle='rgba(10,20,30,.45)';c.beginPath();c.ellipse(BX,sh,6+pp*3,2+pp,0,0,Math.PI*2);c.fill()}
  if(Z.ph==='result'&&Z.res&&!Z.res.fail&&Z.res.key){const big=ICV[Z.res.key+'_b']||ICV[Z.res.key]||ICV.coin;if(big){const k=Math.min(1,Z.t/.35),y=Math.round(BY-k*26+Math.sin(now/250)*1.5);c.fillStyle='rgba(255,255,220,.35)';c.beginPath();c.arc(BX,y,18,0,Math.PI*2);c.fill();c.drawImage(big,Math.round(BX-big.width/2),Math.round(y-big.height/2))}}
  for(const p of Z.fx){c.globalAlpha=Math.max(0,1-p.t/p.life);c.fillStyle=p.t%0.2<.1?'#fff6a0':'#ffd040';c.fillRect(Math.round(p.x),Math.round(p.y),2,2);c.fillRect(Math.round(p.x)-1,Math.round(p.y)+.5,4,1);c.globalAlpha=1}}
-fcv.addEventListener('pointerdown',e=>{e.preventDefault();fsTap(true)});
+const fsXY=e=>{const r=fcv.getBoundingClientRect();return[(e.clientX-r.left)/r.width*128,(e.clientY-r.top)/r.height*112]};
+fcv.addEventListener('pointerdown',e=>{e.preventDefault();try{fcv.setPointerCapture(e.pointerId)}catch(_){}if(FZ&&FZ.ph==='heavy'){FZ.hold=true;FZ.ang=null;fsHeavyMove(...fsXY(e));return}fsTap(true)});
+fcv.addEventListener('pointermove',e=>{if(FZ&&FZ.ph==='heavy')fsHeavyMove(...fsXY(e))});
 $('fsReel').addEventListener('pointerdown',e=>{e.preventDefault();fsTap(true)});
-for(const ev of['pointerup','pointercancel','pointerleave']){fcv.addEventListener(ev,()=>fsTap(false));$('fsReel').addEventListener(ev,()=>fsTap(false))}
-$('fsCast').onclick=()=>fsCast(false);$('fsCast2').onclick=()=>fsCast(true);$('fsHome').onclick=closeFish;$('fsShop').onclick=fishShop;$('fsDex').onclick=fishDexDialog;$('fsBag').onclick=fishBag;
+for(const ev of['pointerup','pointercancel','pointerleave']){fcv.addEventListener(ev,()=>{if(FZ&&FZ.ph==='heavy'){FZ.hold=false;FZ.ang=null;return}fsTap(false)});$('fsReel').addEventListener(ev,()=>fsTap(false))}
+for(const[id,pr]of[['fsCast',false],['fsCast2',true]]){const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(_){}fsCharge(pr)});for(const ev of['pointerup','pointercancel'])b.addEventListener(ev,()=>fsRelease())}
+$('fsHome').onclick=closeFish;$('fsShop').onclick=fishShop;$('fsDex').onclick=fishDexDialog;$('fsBag').onclick=fishBag;
 /* 🛒 釣具店 */
 function fishShop(){const F=PC.fishOf(s),C=CONFIG.fishing,cur=PC.RODS.findIndex(r=>r.id===F.rod);
  const tile=(id,ic,nm,sub,price,dis)=>`<button class="selltile" data-fb="${id}" ${dis?'disabled':''}>${ic}<b>${nm}</b><span>${sub}</span><i>${price}</i></button>`,EI=(e,big)=>`<span style="font-size:${big||26}px;line-height:30px">${e}</span>`;
@@ -3204,6 +3251,12 @@ function fishBag(){const F=PC.fishOf(s),L=PC.lootOf(s),C=CONFIG.fishing,fire=PC.
  document.querySelectorAll('[data-fe]').forEach(b=>b.onclick=()=>{const x0=s.xp,r=PC.eatFish(s,b.dataset.fe,Date.now());if(r.tm)handleTime(r.tm);if(done(r,'eat')){if(!FZ){playAnim('eat');spawn('heart',2,{y:70,life:1})}afterChange(x0)}});
  document.querySelectorAll('[data-fc]').forEach(b=>b.onclick=()=>done(PC.cookFish(s,b.dataset.fc),'tap'));
  document.querySelectorAll('[data-fs]').forEach(b=>b.onclick=()=>done(PC.sellFish(s,b.dataset.fs),'coin'))}
+/* 餵食 → 魚簍：選一條魚直接餵（烤過的優先） */
+function feedFishPick(){const F=PC.fishOf(s),keys=Object.keys(PC.FISH).filter(k=>(F.raw[k]||0)+(F.cooked[k]||0)>0);
+ openModal('🐟 餵哪一條魚？',`<div class="sellrow">${keys.map(k=>{const f=PC.FISH[k],b=F.cooked[k]||0,a=F.raw[k]||0,E=PC.fishFood(k,b>0);return`<button class="selltile" data-ff="${k}"><canvas class="picon" data-icon="${k}" data-s="3"></canvas><b>${b?'烤':''}${f.name}</b><span>${b?`烤 ×${b}`:''}${b&&a?'・':''}${a?`生 ×${a}`:''}</span><i>飽+${E.hunger}</i></button>`}).join('')}</div><p class="small">烤過的會先吃，效果 ×${CONFIG.fishing.cookX}。生魚可以到 🧺 魚簍烤。</p>`);
+ document.querySelectorAll('#sheet canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));pixifyDom($('sheet'));
+ document.querySelectorAll('[data-ff]').forEach(b=>b.onclick=()=>{const x0=s.xp,r=PC.eatFish(s,b.dataset.ff,Date.now());if(r.tm)handleTime(r.tm);closeModal();if(!r.ok){toast('❌ '+r.msg);return}
+  setMode(null);playAnim('eat');sfx('eat');spawn('heart',3,{x:petX+24,y:70,life:1.1,stagger:.25});say(r.msg+(r.xp?`　經驗 +${r.xp}`:''));save();renderUI();afterChange(x0)})}
 /* 🐟 圖鑑：魚類、化石 */
 function fishDexDialog(){const F=PC.fishOf(s),L=PC.lootOf(s),K=CONFIG.skills;let got=0;
  const cells=Object.entries(PC.FISH).map(([k,f])=>{const ok=!!F.dex[k];if(ok)got++;const cond=[f.t?f.t.map(x=>PC.SLOT_NAME[x]).join('、'):'任何時段',f.w?f.w.map(x=>PC.WEATHER_NAME[x]).join('、'):'任何天氣'].join('・')+(f.rod?'・要黃金竿':'');
