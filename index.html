@@ -248,10 +248,10 @@ h1{font-size:17px}.ver{font-size:9px}
 /* V1.75 開寶箱過場 */
 #chestScene{position:fixed;inset:0;z-index:30;background:radial-gradient(circle at 50% 45%,#3a2410 0,#120a04 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff3c0;overflow:hidden;touch-action:manipulation}
 #chestScene .csBox{position:relative;width:168px;height:150px;cursor:pointer;filter:drop-shadow(0 0 10px #ffd34a88);animation:csGlow 1.4s ease-in-out infinite}
-#chestScene canvas{image-rendering:pixelated;position:absolute;left:0;width:168px}
+#chestScene canvas{image-rendering:pixelated;position:absolute;left:0}
 #csBody{bottom:0}
 #chestScene.open #csBody{animation:csPop .45s cubic-bezier(.3,1.6,.5,1)}@keyframes csPop{from{transform:scale(.8)}}
-#chestScene.shake .csBox{animation:csShake .08s linear infinite}
+#chestScene.shake .csBox{animation:csShake .08s linear infinite;filter:drop-shadow(0 0 16px #ffe680) brightness(1.1)}
 #chestScene.open .csBox{animation:none;filter:drop-shadow(0 0 22px #ffe680)}
 .csRays{position:absolute;left:50%;top:45%;width:900px;height:900px;margin:-450px 0 0 -450px;opacity:0;background:repeating-conic-gradient(from 0deg,#ffd34a55 0 10deg,transparent 10deg 24deg);border-radius:50%;-webkit-mask:radial-gradient(circle,#000 0,transparent 60%);mask:radial-gradient(circle,#000 0,transparent 60%);transition:opacity .5s;animation:csSpin 9s linear infinite;pointer-events:none}
 #chestScene.open .csRays{opacity:1}
@@ -364,7 +364,7 @@ h1{font-size:17px}.ver{font-size:9px}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.75.0';
+const VERSION='1.76.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -827,7 +827,7 @@ const ITEM_ICON={potion2:'potion2',soup:'soup',seeds2:'seed2',food:'apple',berry
 function buildIcons(){for(const k in ICONS){const I=ICONS[k],h=I.m.length,w=I.m[0].length,g=grid(w+2,h+2);
  I.m.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!=='.')px(g,x+1,y+1,I.p[ch])}));if(I.o)outline(g,I.o);ICV[k]=gridCanvas(g)}}
 /* 手繪道具圖（tools/import_items.py 產生）：載入後取代程式畫的家具與圖示 */
-const ITEM_NAMES=['ic_ball','ic_sun','ic_sponge','ic_tub','ic_shoe','ic_bite','ic_poop','ic_ember','ic_note','ic_cranberry','ic_blueberry','ic_strawberry','ic_drop','ic_fly','ic_worry','ic_el_fire','ic_el_water','ic_el_leaf','ic_el_earth','ic_el_bird','ic_el_elec','ic_el_metal','ic_sex_m','ic_sex_f','ic_bondheart','relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','den1','den2','den3','den4','den5','den6','den7','den_fusion','pig1','pig2','pig3','pig4','pig5','pig6','pigshard','pigcore','potion2','soup','seed2','bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec'];
+const ITEM_NAMES=['ic_ball','ic_sun','ic_sponge','ic_tub','ic_shoe','ic_bite','ic_poop','ic_ember','ic_note','ic_cranberry','ic_blueberry','ic_strawberry','ic_drop','ic_fly','ic_worry','ic_el_fire','ic_el_water','ic_el_leaf','ic_el_earth','ic_el_bird','ic_el_elec','ic_el_metal','ic_sex_m','ic_sex_f','ic_bondheart','relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','den1','den2','den3','den4','den5','den6','den7','den_fusion','pig1','pig2','pig3','pig4','pig5','pig6','pigshard','pigcore','potion2','soup','seed2','bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec','chest_gold_c','chest_gold_h','chest_bronze_c','chest_bronze_h'];
 const ITEM_ICONS=new Set(['ic_ball','ic_sun','ic_sponge','ic_tub','ic_shoe','ic_bite','ic_poop','ic_ember','ic_note','ic_cranberry','ic_blueberry','ic_strawberry','ic_drop','ic_fly','ic_worry','ic_el_fire','ic_el_water','ic_el_leaf','ic_el_earth','ic_el_bird','ic_el_elec','ic_el_metal','ic_sex_m','ic_sex_f','ic_bondheart','relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','pigshard','pigcore','potion2','soup','seed2','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec']);
 function tintCanvas(src,rgba){const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const x=c.getContext('2d');x.drawImage(src,0,0);x.globalCompositeOperation='source-atop';x.fillStyle=rgba;x.fillRect(0,0,c.width,c.height);return c}
 /* V1.49 家具、小豬的黑邊換成深咖啡色，看起來比較乾淨柔和 */
@@ -908,7 +908,7 @@ function makeBg(ph,lvl=1){
   outlineSelf(g);c.drawImage(gridCanvas(g),ox-tx,oy-base-1)};
  const bush=(cx,cy,rx,ry)=>{const P=4,g=grid(rx*2+4+2*P,ry*2+4+P);canopy(g,P+rx+2-rx*.35,P+ry+3,rx*.6,ry*.8);canopy(g,P+rx+2+rx*.35,P+ry+3,rx*.6,ry*.8);canopy(g,P+rx+2,P+ry+2,rx*.7,ry);outlineSelf(g);c.drawImage(gridCanvas(g),cx-rx-2-P,cy-ry-2-P)};
  tree(58,66,.62,false,11);
- tree(104,67,.9,true,29);   // 不要超出畫面右邊
+ tree(104,67,.9,false,29);   // V1.76 蘋果改成動態畫（會長、會掉）   // 不要超出畫面右邊
  for(const[x,r]of[[48,5],[74,6]])bush(x,64,r,3);
  if(s&&s.loveNest){   // 愛的小窩：粉紅小屋＋愛心屋頂
   const g=grid(20,18),R2=(x,y,w,h,col)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)px(g,x+i,y+j,col)};
@@ -1121,7 +1121,7 @@ function draw(now){
   ctx.drawImage(bgCache,0,0);
   const ca=ph==='night'?.35:ph==='dusk'?.75:1;ctx.globalAlpha=ca;
   const wsp=weather()==='breeze'?3:weather()==='storm'?4:1;ctx.drawImage(cloudCv,Math.round(((t*2*wsp)%(W+60))-30),10);ctx.drawImage(cloudCv,Math.round(((t*1.3*wsp+80)%(W+60))-30),26);ctx.globalAlpha=1;
-  drawAmbient(now,ph);
+  drawAmbient(now,ph);drawTreeApples(now);
   const nowMs=Date.now();for(let i=0;i<s.plots.length;i++){const q=PC.plotState(s,i,nowMs),st=plotStage(q),[cx,cy,k]=PLOT_POS[i],w=Math.round(20*k),h=Math.round(16*k),x=Math.round(cx-w/2),y=Math.round(cy-h);   // V1.47 田在右上方遠處：小一點、糊一點，生長和家園同步
    ctx.save();ctx.imageSmoothingEnabled=true;ctx.globalAlpha=.92;ctx.drawImage(PLOT_SPR[st],x,y,w,h);ctx.restore();
    if(['food','berry','cranberry','blueberry','strawberry'].includes(st)&&Math.floor(now/400)%3===0){ctx.fillStyle='#ffffff';ctx.fillRect(cx,y,1,1)}
@@ -1228,6 +1228,22 @@ function drawWeather(now,dt,inRoom){if(rm()){return}const w=weather(),t=now/1000
   ctx.fillStyle='rgba(255,255,255,.35)';for(let i=0;i<3;i++){const x=Math.round(((t*60+i*53)%(W+40))-20),y=30+i*22;ctx.fillRect(x,y,8,1);ctx.fillRect(x+10,y,3,1)}}
  else WXS.leaves.length=0;
  if(!inRoom){const ic=w==='clear'?'sun':w==='breeze'?'leaf':w==='rain'?'drop':'bolt',im=UIIMG[ic]||ICV[ic];if(im){ctx.fillStyle='rgba(20,12,6,.45)';ctx.fillRect(2,2,13,13);ctx.drawImage(im,0,0,im.width,im.height,3,3,11,11)}}}
+/* ---------------- V1.76 院子的蘋果樹：每 3 小時長 1 顆，熟了會掉下來，點地上的蘋果免費撿；點樹可以搖下來 ---------------- */
+const TREE_POS=[[96,45],[108,39],[115,49]],TREE_GND=[[95,73],[104,74],[113,73]],TREE={next:performance.now()+20000,fall:[],shake:0};
+function treeApple(x,y){const c=ctx;c.fillStyle='#3a1a08';c.fillRect(x-1,y-1,4,4);c.fillStyle='#e8433f';c.fillRect(x-1,y,4,2);c.fillRect(x,y-1,2,4);c.fillStyle='#ff9a8a';c.fillRect(x,y,1,1);c.fillStyle='#5a3a10';c.fillRect(x+1,y-2,1,1)}
+function drawTreeApples(now){if(!s.hatched||!s.tree)return;const T=s.tree,sh=TREE.shake>now?Math.round(Math.sin(now/30)*1):0;
+ for(let i=0;i<Math.min(T.n,3);i++){const[x,y]=TREE_POS[i];treeApple(x+sh,y)}
+ const im=ICV.apple;for(let i=0;i<Math.min(T.ground,3);i++){if(TREE.fall.some(f=>f.slot===i))continue;const[x,y]=TREE_GND[i];ctx.fillStyle='rgba(0,0,0,.25)';ctx.fillRect(x-2,y+2,5,1);treeApple(x,y)}
+ for(let k=TREE.fall.length-1;k>=0;k--){const f=TREE.fall[k],a=Math.min(1,(now-f.t0)/650),[x0,y0]=f.from,[x1,y1]=TREE_GND[f.slot],x=x0+(x1-x0)*a,y=y0+(y1-y0)*a*a-(a>.85?Math.sin((a-.85)/.15*Math.PI)*3:0);
+  treeApple(Math.round(x),Math.round(y));if(a>=1){TREE.fall.splice(k,1)}}
+ if(curView()==='yard'&&!s.sleeping&&T.n>0&&now>TREE.next&&!mode){TREE.next=now+40000+Math.random()*50000;treeDrop(false)}}
+function treeDrop(all){const T=s.tree,n0=T.n,g0=T.ground,k=PC.dropApple(s,all,Date.now());if(!k)return 0;
+ for(let j=0;j<k;j++){const slot=Math.min(2,g0+j);TREE.fall.push({from:TREE_POS[Math.max(0,n0-1-j)],slot,t0:performance.now()+j*180})}
+ setTimeout(()=>sfx('bounce'),600);save();return k}
+function treeTap(x,y){if(curView()!=='yard'||!s.hatched||!s.tree)return false;const T=s.tree;
+ for(let i=Math.min(T.ground,3)-1;i>=0;i--){const[gx,gy]=TREE_GND[i];if(Math.abs(x-gx)<=5&&y>=gy-6&&y<=gy+5){const r=PC.pickApple(s,Date.now());if(r.ok){sfx('eat');toast(r.msg,1800);spawn('star',3,{x:gx,y:gy-6,vy:-20,life:.7,spread:4});save();renderUI()}return true}}
+ if(x>=86&&x<=124&&y>=28&&y<=60){TREE.shake=performance.now()+400;sfx('leaf');if(T.n>0){treeDrop(true);toast('搖一搖～蘋果掉下來了！點地上的蘋果撿起來',2200)}else{const left=Math.max(1,Math.ceil((T.at+CONFIG.appleTree.growHours*3600000-Date.now())/60000));toast(T.ground?'地上還有蘋果，點它撿起來 🍎':`樹上還沒有蘋果…大約 ${left>=60?Math.ceil(left/60)+' 小時':left+' 分鐘'}後長出下一顆`,2400)}return true}
+ return false}
 function drawAmbient(now,ph){if(rm())return;const t=now/1000;
  if(ph==='night'){for(let i=0;i<7;i++){const a=Math.sin(t*1.7+i*2.3);if(a<.2)continue;ctx.globalAlpha=a;ctx.fillStyle='#fff3a0';ctx.fillRect(Math.round(10+((i*37+t*3)%108)),Math.round(70+12*Math.sin(t*.6+i)+i*3),1,1)}ctx.globalAlpha=1;return}
  const cols=[['#ffd34a','#ff9a3a'],['#b8a0ff','#ffffff']];
@@ -1589,7 +1605,7 @@ function renameDialog(first){
 function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',pixify(`
 <p><b>目標：</b>照顧幻獸，陪牠慢慢長大。沒有死亡、離線不扣親密度、不需要每天簽到。</p>
 <ul>
-<li>🍎 <b>餵食</b>：按「餵食」後點畫面放蘋果，牠會走過去吃掉。吃完會留下果核，<b>要點一下清掉</b>，放超過 10 分鐘會發臭長果蠅，讓心情一直變差。用 1 個食物（沒有就花 ${C.feed.price} 金幣買），飽食 +${C.feed.hunger}、經驗 +${C.feed.xp}。吃飽時不能餵。<br>💭 <b>想吃的水果</b>：牠頭上會冒出泡泡，裡面是現在最想吃的水果（每 3 小時換一次）。剛好餵到 → 飽食、心情、體力、親密度、經驗都加更多，之後吃飽滿足 3 小時才會再想吃別的。<br>⚡ <b>能力水果</b>商店買不到：冒險打贏 10%、打王必掉、★★★ 任務、優良種子 8%、神秘種子（冒險、打王才撿得到）30%。</li>
+<li>🍎 <b>餵食</b>：按「餵食」後點畫面放蘋果，牠會走過去吃掉。吃完會留下果核，<b>要點一下清掉</b>，放超過 10 分鐘會發臭長果蠅，讓心情一直變差。用 1 個食物（沒有就花 ${C.feed.price} 金幣買），飽食 +${C.feed.hunger}、經驗 +${C.feed.xp}。吃飽時不能餵。<br>💭 <b>想吃的水果</b>：牠頭上會冒出泡泡，裡面是現在最想吃的水果（每 3 小時換一次）。剛好餵到 → 飽食、心情、體力、親密度、經驗都加更多，之後吃飽滿足 3 小時才會再想吃別的。<br>⚡ <b>能力水果</b>商店買不到：冒險打贏 10%、打王必掉、★★★ 任務、優良種子 8%、神秘種子（冒險、打王才撿得到）30%。<br>🌳 <b>蘋果樹</b>：院子右邊的蘋果樹每 3 小時長 1 顆（最多 3 顆），熟了會自己掉下來，點地上的蘋果就能<b>免費</b>撿進背包；也可以點樹搖一搖。</li>
 <li>⭐ <b>等級</b>：最高 Lv.30（練滿）。需要經驗＝7.5×(等級−1)²。已經有一隻「星耀覺醒」的夥伴後，其他幻獸會得到 <b>✨傳承之力</b>：經驗 ×3、訓練成果 ×2，第二隻會快很多。</li><li>🥚 <b>迎接新的蛋</b>：第 1 顆 300 金幣、第 2 顆 700、之後每顆 1000（配對、愛的小窩生的蛋不用錢）。</li><li>🐷 <b>小豬撲滿</b>：在小窩（室內）右邊牆上的木架，會幫你存錢，每小時 1＋等級×0.35 枚（最多算到 Lv.30；金系 ×1.5；第二隻一起出來再加牠的一半）。心情 30 以上才會存、睡覺時減半，點小豬就能領。小豬撲滿有 1～6 級：第 15、20、25、30 關的王各掉一個「核心碎片」（+1 級），商店道具有唯一的「小豬撲滿核心」1000 元（+1 級）。等級越高越大隻、存得越快越多（×1／1.25／1.5／1.8／2.2／3，最多存 12～24 小時），6 級最肥、會發光。</li><li>🎾 <b>玩耍（頂球）</b>：按「玩耍」後點畫面開始，球會一顆一顆掉下來。要在球快碰到頭的那一刻點畫面跳起來頂（可以一直點），時機越準越會進；完美時機還會預判移動中的籃框。有 3 條命，漏接 3 次就結束，每連進 5 球補 1 條命。進越多球，籃框會開始上下、左右移動，球也掉得越快、越斜。每進 3 球得 1 金幣（最多 10）。體力 ${C.play.minEnergy} 以上，心情 +${C.play.mood}、體力 −10、經驗 +${C.play.xp}（每 30 分鐘最多 3 次有經驗）。</li>
 <li>🫧 <b>洗澡</b>：按「洗澡」後用手指拿海綿 🧽 在牠身上來回刷 3 秒。清潔 +${C.wash.clean}、經驗 +${C.wash.xp}，想洗就洗（髒了才能洗）。</li>
 <li>👆 <b>摸摸</b>：隨時都能摸；每 30 分鐘第一次：親密度 +2、心情 +3。</li>
@@ -1618,7 +1634,7 @@ function itemDexDialog(){PC.markSeen(s);const C=CONFIG,F=C.foods,SN=s.seen||{},R
  const bossOf=k=>{const n=Object.keys(C.bosses).find(x=>C.bosses[x].relic===k);return n?`「${C.bosses[n].mon}」`:'王'};
  const powerHint='冒險打贏 10%、打贏小王／大王必掉、★★★ 任務、優良種子 8%、神秘種子 30%';
  const CAT=[
-  ['🍽️ 食物',['food','berry','fish','meat','cake'].map(k=>[k,F[k].name,ITEM_ICON[k],k==='food'?'商店、每日登入、冒險掉落、採集':'商店「食物」'])],
+  ['🍽️ 食物',['food','berry','fish','meat','cake'].map(k=>[k,F[k].name,ITEM_ICON[k],k==='food'?'院子的蘋果樹會長（免費）、商店、每日登入':'商店「食物」'])],
   ['🍓 家園水果',['cranberry','blueberry','strawberry'].map(k=>[k,F[k].name,F[k].icon,`家園種植（${k==='strawberry'?'優良種子比較容易':'種子收成'}）`])],
   ['⚡ 能力水果',Object.keys(F).filter(k=>F[k].power).map(k=>[k,F[k].name,ITEM_ICON[k],powerHint])],
   ['🧰 道具',[['seeds','種子','seed','商店、冒險撿到'],['seeds2','優良種子','seed2','商店'],['seeds3','神秘種子','seed2','冒險打贏 8%、打王必掉'],['candy','星星糖','candy','商店道具'],['potion','回復藥水','potion','商店、冒險掉落'],['potion2','超級藥水','potion2','商店道具'],['soup','神秘婆婆熬製雞湯','soup','商店道具'],['ember','經驗火種','ember','打贏 Boss 有機會掉']]],
@@ -2239,13 +2255,13 @@ function closedChest(kind){const G=kind==='gold',P=G?{o:'#3a1a08',l:'#ffe27a',m:
  return c}
 function chestScene(kind,relic){return new Promise(res=>{const z=$('chestScene'),R=CONFIG.relics.items[relic],open=UIIMG['chest_'+kind]||ICV['chest_'+kind]||DSPR['chest_'+kind],body=$('csBody');
  if(!R){res();return}
- const paint=src=>{body.width=src.width;body.height=src.height;const x=body.getContext('2d');x.imageSmoothingEnabled=false;x.clearRect(0,0,src.width,src.height);x.drawImage(src,0,0);body.style.height=Math.round(168*src.height/src.width)+'px';z.querySelector('.csBox').style.height=body.style.height};
- paint(closedChest(kind));
+ const SC=6.5,bx=z.querySelector('.csBox'),paint=src=>{body.width=src.width;body.height=src.height;const x=body.getContext('2d');x.imageSmoothingEnabled=false;x.clearRect(0,0,src.width,src.height);x.drawImage(src,0,0);body.style.width=Math.round(src.width*SC)+'px';body.style.height=Math.round(src.height*SC)+'px';body.style.left=Math.round((168-src.width*SC)/2)+'px';bx.style.height=body.style.height};
+ const IM=n=>UIIMG[n]||ICV[n]||DSPR[n],half=IM(`chest_${kind}_h`);paint(IM(`chest_${kind}_c`)||closedChest(kind));   // V1.76 GPT 畫的關著／掀開一點的寶箱
  const rc=$('csRelic'),ri=UIIMG['relic_'+relic]||ICV['relic_'+relic]||DSPR['relic_'+relic];if(ri){rc.width=ri.width;rc.height=ri.height;const x=rc.getContext('2d');x.imageSmoothingEnabled=false;x.clearRect(0,0,ri.width,ri.height);x.drawImage(ri,0,0)}
  $('csName').textContent=R.name;$('csText').textContent=R.text;$('csFrom').textContent=`「${R.boss}」的寶物`;
  z.className='';z.querySelector('.csItem').className='csItem hidden';z.querySelector('.csCard').classList.add('hidden');$('csHint').textContent=`${kind==='gold'?'金':'銅'}寶箱在發光…點一下打開！`;
  let st=0;const box=z.querySelector('.csBox'),item=z.querySelector('.csItem');
- box.onclick=()=>{if(st)return;st=1;sfx('tap');z.classList.add('shake');buzz(30);$('csHint').textContent='';
+ box.onclick=()=>{if(st)return;st=1;sfx('tap');if(half)paint(half);z.classList.add('shake');buzz(30);$('csHint').textContent='';
   setTimeout(()=>{z.classList.remove('shake');if(open)paint(open);z.classList.add('open');sfx('boom');setTimeout(()=>sfx('level'),150);buzz(60);
    setTimeout(()=>{item.className='csItem show';setTimeout(()=>{z.querySelector('.csCard').classList.remove('hidden');$('csHint').textContent='點寶物收進背包';st=2},500)},280)},650)};
  item.onclick=()=>{if(st!==2)return;st=3;sfx('net');item.classList.add('fly');$('csHint').textContent='🎒 收進背包了！';z.querySelector('.csCard').classList.add('hidden');
@@ -2593,6 +2609,7 @@ function toLogical(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.l
 cv.addEventListener('pointerdown',e=>{const p=toLogical(e);unlockAudio();requestPersist();
  if(ARR.on){if(arrDown(p.x,p.y))try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
  if(mode==='wash'){WASH.down=true;WASH.px=p.x;WASH.py=p.y;WASH.lastMove=performance.now();try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
+ if(!mode&&!coreAt(p.x,p.y)&&treeTap(p.x,p.y))return;   // V1.76 蘋果樹
  if(!mode&&nearToy(p.x,p.y)&&!coreAt(p.x,p.y)){toyGrab(p.x,p.y);try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
  if(mode==='play'&&BALL.b&&!BALL.b.hit){playTap();return}   // V1.46 頂球：點一下就跳（不用蓄力）
  pointerTap(p.x,p.y)});

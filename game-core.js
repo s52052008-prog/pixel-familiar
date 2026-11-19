@@ -61,7 +61,8 @@ const CONFIG = {
   soup: { price: 120, hunger: 10, mood: 20, energy: 20 },   // V1.41 神秘婆婆熬製雞湯：飽食 +10、心情 +20、體力 +20，還會消除羈絆之力後的 2 小時休息
   goodSeed: { price: 8, fruitMin: 3, fruitMax: 4, powerChance: .08 },   // V1.73 優良種子 8% 多長 1 顆能力水果
   mysterySeed: { powerChance: .3, powerMin: 1, powerMax: 2 },   // V1.73 神秘種子：只能冒險掉落（打王必掉），30% 長出能力水果
-  powerDrop: { win: .1, seed: .08 },   // V1.73 能力水果商店不賣：冒險打贏 10% 掉 1 顆、打贏王必掉 1 顆；神秘種子打贏 8%、打王必掉        // 優良種子：收成多 1 顆，比較容易長出藍莓、草莓
+  powerDrop: { win: .1, seed: .08 },
+  appleTree: { growHours: 3, max: 3 },   // V1.76 院子的蘋果樹：每 3 小時長 1 顆（樹上＋地上最多 3 顆），熟了會掉下來，撿起來免費   // V1.73 能力水果商店不賣：冒險打贏 10% 掉 1 顆、打贏王必掉 1 顆；神秘種子打贏 8%、打王必掉        // 優良種子：收成多 1 顆，比較容易長出藍莓、草莓
   seedOdds: { normal: [['cranberry', .55], ['blueberry', .3], ['strawberry', .15]], good: [['cranberry', .3], ['blueberry', .4], ['strawberry', .3]] },   // V1.41 種子都是綜合：蔓越莓／藍莓／草莓
   train: { cost: 20, energy: -15, hunger: -10, clean: -8, minEnergy: 15, base: 10, perLv: 4,   // V1.41 訓練場：每次 20 金幣（器材＋場地費），達成目標才拿到經驗＝10＋等級×4
     kinds: { dodge: { name: '閃避訓練：躲避球', skill: 'dodge' }, rush: { name: '攻擊訓練：沙包連打', skill: 'attack' }, combo: { name: '攻擊訓練：組合拳', skill: 'attack' }, flash: { name: '攻擊訓練：靈光一閃', skill: 'attack' }, zen: { name: '防禦訓練：瀑布打坐', skill: 'defense' } } },
@@ -344,6 +345,7 @@ function sanitize(o, now = Date.now()) {
   r.piggy = num(o.piggy, 0, 0, 1e5); r.pigCores = Array.isArray(o.pigCores) ? [...new Set(o.pigCores.filter(n => CONFIG.piggy.coreStages.includes(n)))] : []; r.pigBought = o.pigBought === true; r.eggBuys = int(o.eggBuys, 0, 0, 999); r.fosterPaid = o.fosterPaid === true; r.fusionHouse = o.fusionHouse === true;
   r.awake = o.awake === true && r.stage === 'ascended';
   r.washes = int(o.washes, 0, 0, 1e7); r.earthWins = int(o.earthWins, 0, 0, 1e7);
+  r.tree = o.tree && typeof o.tree === 'object' ? { n: int(o.tree.n, 0, 0, CONFIG.appleTree.max), ground: int(o.tree.ground, 0, 0, CONFIG.appleTree.max), at: num(o.tree.at, now, 0, now) } : { n: 0, ground: 0, at: now };
   r.seen = {}; if (o.seen && typeof o.seen === 'object') for (const k in o.seen) if (/^[a-zA-Z0-9_]{1,30}$/.test(k) && o.seen[k]) r.seen[k] = 1;   // V1.74 圖鑑：拿到過的東西
   r.crave = o.crave && typeof o.crave === 'object' ? { kind: CONFIG.foods[o.crave.kind] ? o.crave.kind : null, until: num(o.crave.until, 0, 0, now + 24 * H) } : null;   // 想吃的水果（含冷卻）也要存
   r.matGot = {}; if (o.matGot && typeof o.matGot === 'object') for (const k of ROUTES) if (Array.isArray(o.matGot[k])) r.matGot[k] = o.matGot[k].filter(n => [10, 20, 30, 40].includes(n)).slice(0, 4);
@@ -406,9 +408,22 @@ function markSeen(st) {   // V1.74 背包裡有過的東西記進圖鑑
   for (const k of (st.relics || [])) S['rl_' + k] = 1;
   return S;
 }
+function growTree(st, now = Date.now()) {
+  const A = CONFIG.appleTree, T = st.tree || (st.tree = { n: 0, ground: 0, at: now }), step = A.growHours * H;
+  if (!(T.at > 0) || T.at > now) T.at = now;
+  while (now - T.at >= step) { T.at += step; if (T.n + T.ground < A.max) T.n++; }
+  if (T.n + T.ground >= A.max) T.at = Math.max(T.at, now - step + 1);   // 滿了就先不累積
+  return T;
+}
+function dropApple(st, all = false, now = Date.now()) { const T = growTree(st, now); if (T.n <= 0) return 0; const k = all ? T.n : 1; T.n -= k; T.ground += k; return k; }
+function pickApple(st, now = Date.now()) {
+  const T = growTree(st, now); if (T.ground <= 0) return { ok: false, msg: '地上沒有蘋果' };
+  T.ground--; st.inv.food = (st.inv.food || 0) + 1; if (T.n + T.ground === CONFIG.appleTree.max - 1) T.at = now;
+  return { ok: true, msg: '撿到 1 顆蘋果 🍎（免費！）' };
+}
 function ensureCrave(st, now = Date.now()) { if (st.hatched && (!st.crave || now >= st.crave.until)) pickCrave(st, now); return st.crave; }
 function applyTime(st, now = Date.now()) {
-  ensureCrave(st, now);
+  ensureCrave(st, now); growTree(st, now);
   if (now < st.lastTick) { st.clockWarn = now; return { warn: 'back', hours: 0, events: [] }; }   // 時間倒退：不回溯，記錄警告
   const hours = (now - st.lastTick) / H, eff = Math.min(hours, CONFIG.offlineCapHours);
   const last = st.lastTick; st.lastTick = now;
@@ -1131,6 +1146,6 @@ const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, S
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
   toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
-  trainBonus, buffFighter, useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
+  trainBonus, buffFighter, useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

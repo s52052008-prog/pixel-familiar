@@ -433,6 +433,13 @@ t('V1.73 能力水果商店不賣、餵不到；打王必掉能力水果和神�
   const h = C.harvest(f, 0, T0 + 2 * H + 60000, () => .1); assert.ok(h.ok && h.myst && h.bonus && h.bonusN >= 1); assert.equal(f.inv[h.bonus], h.bonusN);
   const z = hatched(); z.crave = { kind: null, until: T0 + H }; C.applyTime(z, T0 + 1000); assert.equal(z.crave.kind, null); C.applyTime(z, T0 + H + 1000); assert.ok(z.crave.kind && !C.CONFIG.foods[z.crave.kind].power);
 });
+t('V1.76 蘋果樹：每 3 小時長 1 顆、最多 3 顆；掉下來撿起來免費', () => {
+  const s = hatched(); s.tree = { n: 0, ground: 0, at: T0 }; s.inv.food = 0;
+  C.applyTime(s, T0 + 7 * H); assert.equal(s.tree.n, 2); C.applyTime(s, T0 + 20 * H); assert.equal(s.tree.n, 3);
+  assert.equal(C.dropApple(s, false, T0 + 20 * H), 1); assert.equal(s.tree.ground, 1); assert.ok(C.pickApple(s, T0 + 20 * H).ok); assert.equal(s.inv.food, 1); assert.equal(s.coins, C.CONFIG.start.coins);
+  assert.ok(!C.pickApple(s, T0 + 20 * H).ok); assert.equal(C.dropApple(s, true, T0 + 20 * H), 2); assert.equal(s.tree.n, 0);
+  const z = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 20 * H); assert.equal(z.tree.ground, 2);
+});
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);
