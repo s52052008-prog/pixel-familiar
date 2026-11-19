@@ -1,6 +1,6 @@
 {
   "name": "pixel-familiar",
-  "version": "1.77.0",
+  "version": "1.78.0",
   "private": true,
   "description": "幻獸日記 Pixel Familiar：網頁版（GitHub Pages）＋ iOS App（Capacitor，讀取健康步數）",
   "scripts": {

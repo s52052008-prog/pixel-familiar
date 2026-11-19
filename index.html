@@ -68,7 +68,7 @@ img.uic{width:21px;height:21px;vertical-align:-5px;margin-right:5px;display:inli
 .toolbar.three{grid-template-columns:repeat(3,1fr)}
 .dot{display:inline-block;width:9px;height:9px;background:#ff5a6a;border:2px solid #fff3d5;margin-left:4px;vertical-align:1px}
 .plots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.plot{background:#14203a;border:2px solid var(--line);box-shadow:inset 0 0 0 2px #3f5a88;padding:6px;text-align:center;font-size:12.5px}
-.plot canvas{width:80px;height:64px;image-rendering:pixelated;display:block;margin:0 auto 4px}.plot .btn{width:100%;min-width:0;margin-top:4px;padding:10px 2px}
+.plot canvas{width:80px;height:64px;object-fit:contain;image-rendering:pixelated;display:block;margin:0 auto 4px}.plot .btn{width:100%;min-width:0;margin-top:4px;padding:10px 2px}
 .goal{background:#14203a;border:2px solid var(--line);padding:8px 10px;margin-top:8px}.goal .gt{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .goal .btn{flex:0 0 auto;min-width:72px}.goal.done{opacity:.6}.tool.big{background:#5a3f78;box-shadow:inset 0 0 0 2px #8a6ab0;font-size:14px;padding:11px 2px}
 #battle{position:fixed;inset:0;z-index:15;background:#0e1528;overflow:auto;-webkit-overflow-scrolling:touch}
@@ -364,7 +364,7 @@ h1{font-size:17px}.ver{font-size:9px}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.77.0';
+const VERSION='1.78.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -827,8 +827,8 @@ const ITEM_ICON={potion2:'potion2',soup:'soup',seeds2:'seed2',food:'apple',berry
 function buildIcons(){for(const k in ICONS){const I=ICONS[k],h=I.m.length,w=I.m[0].length,g=grid(w+2,h+2);
  I.m.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!=='.')px(g,x+1,y+1,I.p[ch])}));if(I.o)outline(g,I.o);ICV[k]=gridCanvas(g)}}
 /* 手繪道具圖（tools/import_items.py 產生）：載入後取代程式畫的家具與圖示 */
-const ITEM_NAMES=['ic_ball','ic_sun','ic_sponge','ic_tub','ic_shoe','ic_bite','ic_poop','ic_ember','ic_note','ic_cranberry','ic_blueberry','ic_strawberry','ic_drop','ic_fly','ic_worry','ic_el_fire','ic_el_water','ic_el_leaf','ic_el_earth','ic_el_bird','ic_el_elec','ic_el_metal','ic_sex_m','ic_sex_f','ic_bondheart','relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','den1','den2','den3','den4','den5','den6','den7','den_fusion','pig1','pig2','pig3','pig4','pig5','pig6','pigshard','pigcore','potion2','soup','seed2','bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec','chest_gold_c','chest_gold_h','chest_bronze_c','chest_bronze_h'];
-const ITEM_ICONS=new Set(['ic_ball','ic_sun','ic_sponge','ic_tub','ic_shoe','ic_bite','ic_poop','ic_ember','ic_note','ic_cranberry','ic_blueberry','ic_strawberry','ic_drop','ic_fly','ic_worry','ic_el_fire','ic_el_water','ic_el_leaf','ic_el_earth','ic_el_bird','ic_el_elec','ic_el_metal','ic_sex_m','ic_sex_f','ic_bondheart','relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','pigshard','pigcore','potion2','soup','seed2','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec']);
+const ITEM_NAMES=['ic_ball','ic_sun','ic_sponge','ic_tub','ic_shoe','ic_bite','ic_poop','ic_ember','ic_note','ic_cranberry','ic_blueberry','ic_strawberry','ic_drop','ic_fly','ic_worry','ic_el_fire','ic_el_water','ic_el_leaf','ic_el_earth','ic_el_bird','ic_el_elec','ic_el_metal','ic_sex_m','ic_sex_f','ic_bondheart','relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','den1','den2','den3','den4','den5','den6','den7','den_fusion','pig1','pig2','pig3','pig4','pig5','pig6','pigshard','pigcore','potion2','soup','seed2','bed_round','bed_straw','bed_cloud','toilet_pot','rug_red','rug_star','plant_pot','plant_flower','lamp_candle','lamp_moon','wall_frame','wall_clock','toy_ball','toy_block','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec','chest_gold_c','chest_gold_h','chest_bronze_c','chest_bronze_h','seed3','seed4'];
+const ITEM_ICONS=new Set(['ic_ball','ic_sun','ic_sponge','ic_tub','ic_shoe','ic_bite','ic_poop','ic_ember','ic_note','ic_cranberry','ic_blueberry','ic_strawberry','ic_drop','ic_fly','ic_worry','ic_el_fire','ic_el_water','ic_el_leaf','ic_el_earth','ic_el_bird','ic_el_elec','ic_el_metal','ic_sex_m','ic_sex_f','ic_bondheart','relic_rhinoCharm','relic_reaperBlade','relic_boneShield','relic_iceScale','relic_mossHeart','relic_phoenixFeather','relic_dragonFang','relic_ghostHat','chest_bronze','chest_gold','pigshard','pigcore','potion2','soup','seed2','potion','apple','berry','fish','meat','cake','seed','candy','coin','core','bone','dragon','melonw','melon','potato','nut','coconut','banana','mat_flame','mat_tide','mat_forest','mat_earth','mat_bird','mat_metal','mat_elec','seed3','seed4']);
 function tintCanvas(src,rgba){const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const x=c.getContext('2d');x.drawImage(src,0,0);x.globalCompositeOperation='source-atop';x.fillStyle=rgba;x.fillRect(0,0,c.width,c.height);return c}
 /* V1.49 家具、小豬的黑邊換成深咖啡色，看起來比較乾淨柔和 */
 function softEdge(c){try{const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height),a=d.data;for(let i=0;i<a.length;i+=4)if(a[i+3]&&a[i]+a[i+1]+a[i+2]<150){a[i]=92;a[i+1]=58;a[i+2]=34}x.putImageData(d,0,0)}catch(e){}}
@@ -997,6 +997,9 @@ let cloudCv=null;
 
 /* ---------------- 田地像素圖（空地／種子／發芽／長葉／成熟） ---------------- */
 const PLOT_SPR={};
+/* V1.78 GPT 畫的田地作物：載入後取代程式畫的（過熟版是工具自動做的） */
+function loadPlots(){const L=['empty','seed','sprout','leafy','rot'];for(const k of['cranberry','blueberry','strawberry','dragon','melonw','melon','potato','nut','coconut','banana'])L.push(k,k+'_over');
+ for(const n of L){const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);PLOT_SPR[n]=c;PLOT_SPR[n].hd=1};im.src=`sprites/plots/${n}.png`}}
 function buildPlots(){const soil=g=>ellipse(g,10,12.5,9,3.2,(x,y,nx,ny)=>ny>.2?'#6a4428':((x+y)%3===0?'#8a5a34':'#7a4e2e'));
  const stem=g=>{for(let y=7;y<=11;y++)px(g,10,y,'#3a8a3a');px(g,9,8,'#7ccc5a');px(g,8,8,'#7ccc5a');px(g,11,7,'#7ccc5a');px(g,12,7,'#7ccc5a')};
  const bushy=(g,big)=>ellipse(g,10,6.5,big?6:5,big?4.5:4,(x,y,nx,ny)=>nx*.5+ny*.6>.4?'#3a8a3a':'#5fbf4a');
@@ -1122,8 +1125,8 @@ function draw(now){
   const ca=ph==='night'?.35:ph==='dusk'?.75:1;ctx.globalAlpha=ca;
   const wsp=weather()==='breeze'?3:weather()==='storm'?4:1;ctx.drawImage(cloudCv,Math.round(((t*2*wsp)%(W+60))-30),10);ctx.drawImage(cloudCv,Math.round(((t*1.3*wsp+80)%(W+60))-30),26);ctx.globalAlpha=1;
   drawAmbient(now,ph);drawTreeApples(now);
-  const nowMs=Date.now();for(let i=0;i<s.plots.length;i++){const q=PC.plotState(s,i,nowMs),st=plotStage(q),[cx,cy,k]=PLOT_POS[i],w=Math.round(20*k),h=Math.round(16*k),x=Math.round(cx-w/2),y=Math.round(cy-h);   // V1.47 田在右上方遠處：小一點、糊一點，生長和家園同步
-   ctx.save();ctx.imageSmoothingEnabled=true;ctx.globalAlpha=.92;ctx.drawImage(PLOT_SPR[st],x,y,w,h);ctx.restore();
+  const nowMs=Date.now();for(let i=0;i<s.plots.length;i++){const q=PC.plotState(s,i,nowMs),st=plotStage(q),[cx,cy,k]=PLOT_POS[i],SP=PLOT_SPR[st],sc=SP&&SP.hd?20*k/SP.width:k,w=Math.round((SP?SP.width:20)*sc),h=Math.round((SP?SP.height:16)*sc),x=Math.round(cx-w/2),y=Math.round(cy-h);   // V1.47 田在右上方遠處：小一點、糊一點，生長和家園同步
+   ctx.save();ctx.imageSmoothingEnabled=true;ctx.globalAlpha=.92;if(SP)ctx.drawImage(SP,x,y,w,h);ctx.restore();
    if(['food','berry','cranberry','blueberry','strawberry'].includes(st)&&Math.floor(now/400)%3===0){ctx.fillStyle='#ffffff';ctx.fillRect(cx,y,1,1)}
    if(st==='rot'&&!rm()){const a=now/300+i;ctx.drawImage(ICV.fly,Math.round(cx+3*Math.cos(a)),Math.round(y+2+2*Math.sin(a*1.7)))}}}
  if(mode==='play')drawRing();
@@ -1637,7 +1640,7 @@ function itemDexDialog(){PC.markSeen(s);const C=CONFIG,F=C.foods,SN=s.seen||{},R
   ['🍽️ 食物',['food','berry','fish','meat','cake'].map(k=>[k,F[k].name,ITEM_ICON[k],k==='food'?'院子的蘋果樹會長（免費）、商店、每日登入':'商店「食物」'])],
   ['🍓 家園水果',['cranberry','blueberry','strawberry'].map(k=>[k,F[k].name,F[k].icon,`家園種植（${k==='strawberry'?'優良種子比較容易':'種子收成'}）`])],
   ['⚡ 能力水果',Object.keys(F).filter(k=>F[k].power).map(k=>[k,F[k].name,ITEM_ICON[k],powerHint])],
-  ['🧰 道具',[['seeds','種子','seed','商店、冒險撿到'],['seeds2','優良種子','seed2','商店'],['seeds3','稀有種子','seed2','冒險打贏 8%、打王必掉'],['seeds4','神奇種子','seed2','打贏大王必掉、小王 25%'],['candy','星星糖','candy','商店道具'],['potion','回復藥水','potion','商店、冒險掉落'],['potion2','超級藥水','potion2','商店道具'],['soup','神秘婆婆熬製雞湯','soup','商店道具'],['ember','經驗火種','ember','打贏 Boss 有機會掉']]],
+  ['🧰 道具',[['seeds','種子','seed','商店、冒險撿到'],['seeds2','優良種子','seed2','商店'],['seeds3','稀有種子','seed3','冒險打贏 8%、打王必掉'],['seeds4','神奇種子','seed4','打贏大王必掉、小王 25%'],['candy','星星糖','candy','商店道具'],['potion','回復藥水','potion','商店、冒險掉落'],['potion2','超級藥水','potion2','商店道具'],['soup','神秘婆婆熬製雞湯','soup','商店道具'],['ember','經驗火種','ember','打贏 Boss 有機會掉']]],
   ['💎 進化素材',PC.ROUTES.map(el=>['mat_'+el,C.materials[el],'mat_'+el,`${ROUTE_ICON[el]}${ROUTE_LABEL[el]}的幻獸打贏大王`]).concat([['shards','星辰碎片','gem','打贏最終大王'],['hearts','星辰之心','star','打贏最終大王']])],
   ['🪎 王的寶物',Object.keys(RI).map(k=>['rl_'+k,RI[k].name,'relic_'+k,`打贏${bossOf(k)}的寶箱`])]];
  let tot=0,got=0;const html=CAT.map(([h,L])=>{const cells=L.map(([k,nm,ic,hint])=>{tot++;const ok=!!SN[k];if(ok)got++;
@@ -1864,7 +1867,7 @@ function fmtLeft(ms){const m=Math.ceil(ms/60000);return m>=60?`${Math.floor(m/60
 function farmDialog(){PC.claimDaily(s,Date.now());
  const F=CONFIG.farm;
  openModal('🌱 家園',`<p class="small">種子都是綜合的，${F.growHours} 小時後成熟，會長出 <b style="color:#ff7a8a">蔓越莓</b>（賣 ${CONFIG.sellFruit.cranberry}）、<b style="color:#9ab8ff">藍莓</b>（賣 ${CONFIG.sellFruit.blueberry}）或 <b style="color:#ff5a5a">草莓</b>（賣 ${CONFIG.sellFruit.strawberry}），每次 ${F.fruitMin}～${F.fruitMax} 顆；🌟優良種子 ${CONFIG.goodSeed.fruitMin}～${CONFIG.goodSeed.fruitMax} 顆、比較容易長出藍莓草莓、8% 多長能力水果；🔮稀有種子草莓 50%、30% 多長能力水果；✨神奇種子一定長出能力水果。自己種的會發光、能賣、吃了體力 +${CONFIG.freshBonus.energy}；成熟後放 ${F.freshHours} 小時會過熟（提醒你快收），放 ${F.rotHours} 小時就爛掉${s.hatched?`、經驗 +${F.xp}、🌿 森系 +${F.forest}`:''}。每塊田一次種一株。已收成 <b>${s.harvests}</b> 次${s.harvests<CONFIG.harvestsForOldTree?`（森系高階需要 ${CONFIG.harvestsForOldTree} 次）`:''}。</p>
-<p>🌱 種子 <b id="fSeeds">${s.inv.seeds}</b>　🌟 優良 <b id="fSeeds2">${s.inv.seeds2||0}</b>　🔮 稀有 <b id="fSeeds3">${s.inv.seeds3||0}</b>　✨ 神奇 <b id="fSeeds4">${s.inv.seeds4||0}</b>　🪙 <b id="fCoins">${s.coins}</b></p>
+<p>${MI('seed','🌱')} 種子 <b id="fSeeds">${s.inv.seeds}</b>　${MI('seed2','🌟')} 優良 <b id="fSeeds2">${s.inv.seeds2||0}</b>　${MI('seed3','🔮')} 稀有 <b id="fSeeds3">${s.inv.seeds3||0}</b>　${MI('seed4','✨')} 神奇 <b id="fSeeds4">${s.inv.seeds4||0}</b>　🪙 <b id="fCoins">${s.coins}</b></p>
 <div class="plots" id="plots"></div><div class="err" id="fErr"></div>
 <div class="row"><button class="btn" id="fBuy">買 1 顆種子（${F.seedPrice} 金幣）</button><button class="btn" id="fBuy2">買 1 顆🌟優良種子（${CONFIG.goodSeed.price} 金幣）</button></div><div class="row"><button class="btn" id="fExp"></button></div>
 <div class="sellrow" id="fSell"></div>
@@ -1873,7 +1876,7 @@ function farmDialog(){PC.claimDaily(s,Date.now());
   box.innerHTML=s.plots.map((p,i)=>{const q=PC.plotState(s,i,now),nm=q.kind?CONFIG.foods[q.kind].name:"";return`<div class="plot"><canvas data-p="${i}" width="20" height="16"></canvas>${q.empty?'空地':q.rotten?'<b>爛掉了…</b>':q.over?`<b>${nm}過熟了！</b><br><span class="small">快收，再放會爛掉</span>`:q.ripe?`<b>✨${nm}成熟了！</b><br><span class="small">快去收成吧</span>`:'還要 '+fmtLeft(q.left)}
 ${!q.empty&&p.g?`<span class="small">${p.g===3?'✨神奇':p.g===2?'🔮稀有':'🌟優良'}</span>`:''}
    <button class="btn ${q.empty||q.ripe?'pri':''}" data-pa="${i}" ${!q.empty&&!q.ripe?'disabled':''}>${q.empty?'種植':q.rotten?'清掉':q.ripe?'收成':'成長中'}</button>${q.empty&&s.inv.seeds2?`<button class="btn pri" data-pg="${i}">🌟 種優良</button>`:''}${q.empty&&s.inv.seeds3?`<button class="btn pri" data-pm="${i}">🔮 種稀有</button>`:''}${q.empty&&s.inv.seeds4?`<button class="btn pri" data-pk="${i}">✨ 種神奇</button>`:''}</div>`}).join('');
-  box.querySelectorAll('canvas').forEach(c=>{const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(PLOT_SPR[plotStage(PC.plotState(s,+c.dataset.p,now))],0,0)});
+  box.querySelectorAll('canvas').forEach(c=>{const S=PLOT_SPR[plotStage(PC.plotState(s,+c.dataset.p,now))];if(!S)return;c.width=S.width;c.height=S.height;c.style.height=S.hd?'80px':'64px';const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(S,0,0)});
   box.querySelectorAll('[data-pa],[data-pg],[data-pm],[data-pk]').forEach(b=>b.onclick=()=>{const i=+(b.dataset.pa??b.dataset.pg??b.dataset.pm??b.dataset.pk),q=PC.plotState(s,i,Date.now()),x0=s.xp;
    const r=q.empty?PC.plant(s,i,Date.now(),Math.random,b.dataset.pk!==undefined?'magic':b.dataset.pm!==undefined?'mystery':b.dataset.pg!==undefined||(s.inv.seeds<1&&(s.inv.seeds2||0)>0)):PC.harvest(s,i,Date.now());$('fErr').textContent=r.ok?'':'❌ '+r.msg;
    if(r.ok){toast(r.msg,r.bonus||r.magic?3500:2500);if(r.bonus||r.magic){sfx('level');spawn('star',5,{y:80,x:40,vy:-30,life:1.2,spread:20})}else sfx(q.empty?'tap':'eat');save();renderUI();afterChange(x0);if(!q.empty)spawn('apple',2,{y:90,x:20,vy:-30,life:1.2})}draw()});
@@ -1931,7 +1934,7 @@ function shopDialog(tab,bagOnly=tab==='bag'){PC.claimDaily(s,Date.now());
   else if(tab==='tools'){for(const k in tools)out.push(tools[k]())}
   else{   // 🎒 背包：自己有的東西
    const own=Object.keys(C.foods).filter(k=>(s.inv[k]||0)>0),isFruit=k=>!!(C.foods[k].power||C.foods[k].farm),F1=own.filter(k=>!isFruit(k)),F2=own.filter(isFruit);if(F1.length){out.push({head:'🍽️ 食物'});for(const k of F1)out.push(foodEntry(k,true))}if(F2.length){out.push({head:'🍓 水果'});for(const k of F2)out.push(foodEntry(k,true))}
-   const tl=[];if(s.inv.seeds)tl.push(Object.assign(tools.seeds(),{sub:`×${s.inv.seeds}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`}));if(s.inv.candy)tl.push(Object.assign(tools.candy(),{sub:`×${s.inv.candy}`,btn:`<button class="btn pri" id="eatCandy">給牠吃</button>`}));if(s.inv.seeds2)tl.push(Object.assign(tools.seeds2(),{sub:`×${s.inv.seeds2}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`}));if(s.inv.seeds4)tl.push({id:'seeds4',name:'神奇種子',sub:`×${s.inv.seeds4}`,icon:'seed2',desc:`打贏大王（必掉）、小王（${Math.round(C.magicSeed.miniDrop*100)}%）才拿得到的種子。<br>種下去<b>一定長出 ${C.magicSeed.min}～${C.magicSeed.maxN} 顆能力水果</b>！<br>擁有 ${s.inv.seeds4}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`});if(s.inv.seeds3)tl.push({id:'seeds3',name:'稀有種子',sub:`×${s.inv.seeds3}`,icon:'seed2',desc:`冒險、打王才撿得到的種子。<br>比較容易長出草莓（50%），收成時還有 ${Math.round(C.mysterySeed.powerChance*100)}% 機會多長出 ${C.mysterySeed.powerMin}～${C.mysterySeed.powerMax} 顆<b>能力水果</b>！<br>擁有 ${s.inv.seeds3}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`});if(s.inv.potion)tl.push(Object.assign(tools.potion(),{sub:`×${s.inv.potion}`,btn:''}));if(s.inv.potion2)tl.push(Object.assign(tools.potion2(),{sub:`×${s.inv.potion2}`,btn:''}));if(s.inv.soup)tl.push(Object.assign(tools.soup(),{sub:`×${s.inv.soup}`}));
+   const tl=[];if(s.inv.seeds)tl.push(Object.assign(tools.seeds(),{sub:`×${s.inv.seeds}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`}));if(s.inv.candy)tl.push(Object.assign(tools.candy(),{sub:`×${s.inv.candy}`,btn:`<button class="btn pri" id="eatCandy">給牠吃</button>`}));if(s.inv.seeds2)tl.push(Object.assign(tools.seeds2(),{sub:`×${s.inv.seeds2}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`}));if(s.inv.seeds4)tl.push({id:'seeds4',name:'神奇種子',sub:`×${s.inv.seeds4}`,icon:'seed4',desc:`打贏大王（必掉）、小王（${Math.round(C.magicSeed.miniDrop*100)}%）才拿得到的種子。<br>種下去<b>一定長出 ${C.magicSeed.min}～${C.magicSeed.maxN} 顆能力水果</b>！<br>擁有 ${s.inv.seeds4}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`});if(s.inv.seeds3)tl.push({id:'seeds3',name:'稀有種子',sub:`×${s.inv.seeds3}`,icon:'seed3',desc:`冒險、打王才撿得到的種子。<br>比較容易長出草莓（50%），收成時還有 ${Math.round(C.mysterySeed.powerChance*100)}% 機會多長出 ${C.mysterySeed.powerMin}～${C.mysterySeed.powerMax} 顆<b>能力水果</b>！<br>擁有 ${s.inv.seeds3}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`});if(s.inv.potion)tl.push(Object.assign(tools.potion(),{sub:`×${s.inv.potion}`,btn:''}));if(s.inv.potion2)tl.push(Object.assign(tools.potion2(),{sub:`×${s.inv.potion2}`,btn:''}));if(s.inv.soup)tl.push(Object.assign(tools.soup(),{sub:`×${s.inv.soup}`}));
    if(s.inv.ember)tl.push({id:'ember',name:'經驗火種',sub:`×${s.inv.ember}`,icon:'ember',desc:`打贏 Boss 得到的寶物<br>心情 +${C.ember.mood}、體力 +${C.ember.energy}、經驗 +${C.ember.xp}<br>擁有 ${s.inv.ember}`,btn:`<button class="btn pri" id="eatEmber">給牠吃</button>`});
    if(tl.length){out.push({head:'🧰 道具'});out.push(...tl)}
    out.push({head:'💎 進化素材'});
@@ -2279,8 +2282,8 @@ function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond
  if(r.food)rows.push(['apple','蘋果','+1','']);
  if(r.potion)rows.push(['potion','回復藥水','+1','']);
  if(r.power)rows.push([CONFIG.foods[r.power].icon,CONFIG.foods[r.power].name,'+1','⚡ 能力水果！']);
- if(r.seeds3)rows.push(['seed2','稀有種子','+1','🔮 種下去有機會長出能力水果']);
- if(r.seeds4)rows.push(['seed2','神奇種子','+1','✨ 種下去一定長出能力水果！']);
+ if(r.seeds3)rows.push(['seed3','稀有種子','+1','🔮 種下去有機會長出能力水果']);
+ if(r.seeds4)rows.push(['seed4','神奇種子','+1','✨ 種下去一定長出能力水果！']);
  if(r.ember)rows.push(['ember','經驗火種','+1','Boss 寶物！']);
 
  if(r.relic){const R=CONFIG.relics.items[r.relic];rows.push(['chest_'+r.chest,r.chest==='gold'?'金寶箱':'銅寶箱','打開！',`第 ${n} 關的王掉的`]);rows.push(['relic_'+r.relic,R.name,'+1',R.text])}
@@ -2652,7 +2655,7 @@ $('homeTipX').onclick=()=>{$('homeTip').classList.add('hidden');store.set(TIP_KE
 /* ---------------- 啟動 ---------------- */
 function init(){
  $('ver').textContent=VERSION;
- buildIcons();loadItems();buildPlots();cloudCv=gridCanvas(CLOUD);
+ buildIcons();loadItems();buildPlots();loadPlots();cloudCv=gridCanvas(CLOUD);
  buildStats();document.querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));
  const raw=parse(store.get(SAVE_KEY)),upgraded=!!(raw&&!(Number(raw.v)>=6));
  const L=load();s=L.s;
