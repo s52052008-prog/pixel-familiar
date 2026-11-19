@@ -218,11 +218,11 @@ t('種植：長出蔓越莓／藍莓／草莓；成熟 6 小時內是好品質�
   C.plant(s, 1, T0, () => 0); r = C.harvest(s, 1, T0 + 2 * H + 7 * H, () => 0); assert.ok(r.over); assert.equal(s.inv.cranberry, 2); assert.equal(s.inv.fresh.cranberry, 0);
   C.plant(s, 2, T0, () => 0); assert.ok(C.plotState(s, 2, T0 + 27 * H).rotten); r = C.harvest(s, 2, T0 + 27 * H); assert.ok(r.rotten); assert.equal(s.inv.cranberry, 2); assert.ok(C.plotState(s, 2, T0 + 27 * H).empty); });
 t('V1.71 想吃的水果：餵到頭上泡泡那種 → 飽食、心情、體力、親密度、經驗都多加，然後換想吃別的', () => {
-  const s = hatched(); s.hunger = 10; s.mood = 40; s.energy = 20; s.bond = 10; s.coins = 99; s.crave = { kind: 'banana', until: T0 + H };
+  const s = hatched(); s.hunger = 10; s.mood = 40; s.energy = 20; s.bond = 10; s.coins = 99; s.inv.banana = 1; s.crave = { kind: 'banana', until: T0 + H };
   const r = C.act(s, 'feed', T0, 'banana'); assert.ok(r.ok && r.crave && r.power);
   assert.equal(s.hunger, 10 + 10 + 10); assert.equal(s.mood, 40 + 10 + 15); assert.equal(s.energy, 20 + 10 + 10 + 10); assert.equal(s.bond, 13); assert.equal(s.xp, 10 + 15 + 10);
-  assert.ok(s.crave.kind !== 'banana' && s.crave.until > T0);
-  const w = hatched(); w.hunger = 10; w.coins = 99; w.crave = { kind: 'melon', until: T0 + H }; const r2 = C.act(w, 'feed', T0, 'banana'); assert.ok(!r2.crave && !r2.power); assert.equal(w.crave.kind, 'melon');
+  assert.equal(s.crave.kind, null); assert.equal(s.crave.until, T0 + 3 * H);   // V1.73 吃飽滿足，3 小時後才想吃別的
+  const w = hatched(); w.hunger = 10; w.coins = 99; w.inv.banana = 1; w.crave = { kind: 'melon', until: T0 + H }; const r2 = C.act(w, 'feed', T0, 'banana'); assert.ok(!r2.crave && !r2.power); assert.equal(w.crave.kind, 'melon');
   const z = hatched(); z.crave = { kind: 'nut', until: T0 }; C.applyTime(z, T0 + 1000); assert.ok(z.crave.kind !== 'nut' && C.CONFIG.crave.fruits.includes(z.crave.kind));
 });
 t('太久沒餵：餓到 0 再過 12 小時就離家出走；走 1 萬步找回來', () => { const s = hatched(); s.hunger = 40; C.applyTime(s, T0 + 9 * H); assert.equal(s.hunger, 4); assert.equal(s.runaway, null);
@@ -425,6 +425,14 @@ t('V1.67 天氣：同一時段固定、四種都會出現；在外面淋雨會�
   assert(a.clean < b.clean && a.mood < b.mood, [a.clean, b.clean, a.mood, b.mood]);
 });
 t('V1.72 家園水果只能自己種：沒有就不能用金幣買來餵', () => { const s = hatched(); s.hunger = 10; s.coins = 999; s.crave = { kind: 'strawberry', until: T0 + H }; const r = C.act(s, 'feed', T0, 'strawberry'); assert.ok(!r.ok); assert.equal(s.coins, 999); s.inv.strawberry = 1; assert.ok(C.act(s, 'feed', T0, 'strawberry').crave); });
+t('V1.73 能力水果商店不賣、餵不到；打王必掉能力水果和神秘種子；神秘種子 30% 長出能力水果', () => {
+  const s = hatched(); s.coins = 999; assert.ok(!C.buyItem(s, 'banana').ok); s.hunger = 10; assert.ok(!C.act(s, 'feed', T0, 'banana').ok); assert.equal(s.coins, 999);
+  const b = hatched(); b.adv.stage = 6; const out = C.finishAdventure(b, 5, 'win', true, T0, () => .99); assert.ok(out.power && C.CONFIG.foods[out.power].power && b.inv[out.power] === 1); assert.equal(out.seeds3, 1); assert.equal(b.inv.seeds3, 1);
+  const n = hatched(); const o2 = C.finishAdventure(n, 1, 'win', true, T0, () => .99); assert.ok(!o2.power && !o2.seeds3);
+  const f = hatched(); f.inv.seeds3 = 1; assert.ok(C.plant(f, 0, T0, () => .5, 'mystery').ok); assert.equal(f.inv.seeds3, 0); assert.equal(f.plots[0].g, 2);
+  const h = C.harvest(f, 0, T0 + 2 * H + 60000, () => .1); assert.ok(h.ok && h.myst && h.bonus && h.bonusN >= 1); assert.equal(f.inv[h.bonus], h.bonusN);
+  const z = hatched(); z.crave = { kind: null, until: T0 + H }; C.applyTime(z, T0 + 1000); assert.equal(z.crave.kind, null); C.applyTime(z, T0 + H + 1000); assert.ok(z.crave.kind && !C.CONFIG.foods[z.crave.kind].power);
+});
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);
