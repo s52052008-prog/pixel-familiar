@@ -60,10 +60,11 @@ const CONFIG = {
   superPotion: { price: 100, heal: 1 },                   // V1.40 超級藥水：戰鬥中回復全部 HP
   soup: { price: 120, hunger: 10, mood: 20, energy: 20 },   // V1.41 神秘婆婆熬製雞湯：飽食 +10、心情 +20、體力 +20，還會消除羈絆之力後的 2 小時休息
   goodSeed: { price: 8, fruitMin: 3, fruitMax: 4, powerChance: .08 },   // V1.73 優良種子 8% 多長 1 顆能力水果
-  mysterySeed: { powerChance: .3, powerMin: 1, powerMax: 2 },   // V1.73 神秘種子：只能冒險掉落（打王必掉），30% 長出能力水果
+  mysterySeed: { powerChance: .3, powerMin: 1, powerMax: 2 },   // （key 保留 mystery＝稀有種子）
+  magicSeed: { min: 1, maxN: 2, miniDrop: .25 },   // V1.77 神奇種子：必定長出能力水果 1～2 顆；打贏大王必掉、小王 25%   // V1.73 稀有種子：只能冒險掉落（打王必掉），30% 長出能力水果
   powerDrop: { win: .1, seed: .08 },
-  appleTree: { growHours: 3, max: 3 },   // V1.76 院子的蘋果樹：每 3 小時長 1 顆（樹上＋地上最多 3 顆），熟了會掉下來，撿起來免費   // V1.73 能力水果商店不賣：冒險打贏 10% 掉 1 顆、打贏王必掉 1 顆；神秘種子打贏 8%、打王必掉        // 優良種子：收成多 1 顆，比較容易長出藍莓、草莓
-  seedOdds: { normal: [['cranberry', .55], ['blueberry', .3], ['strawberry', .15]], good: [['cranberry', .3], ['blueberry', .4], ['strawberry', .3]] },   // V1.41 種子都是綜合：蔓越莓／藍莓／草莓
+  appleTree: { growHours: 3, max: 3 },   // V1.76 院子的蘋果樹：每 3 小時長 1 顆（樹上＋地上最多 3 顆），熟了會掉下來，撿起來免費   // V1.73 能力水果商店不賣：冒險打贏 10% 掉 1 顆、打贏王必掉 1 顆；稀有種子打贏 8%、打王必掉        // 優良種子：收成多 1 顆，比較容易長出藍莓、草莓
+  seedOdds: { normal: [['cranberry', .55], ['blueberry', .3], ['strawberry', .15]], good: [['cranberry', .3], ['blueberry', .4], ['strawberry', .3]], rare: [['cranberry', .2], ['blueberry', .3], ['strawberry', .5]] },   // V1.41 種子都是綜合：蔓越莓／藍莓／草莓
   train: { cost: 20, energy: -15, hunger: -10, clean: -8, minEnergy: 15, base: 10, perLv: 4,   // V1.41 訓練場：每次 20 金幣（器材＋場地費），達成目標才拿到經驗＝10＋等級×4
     kinds: { dodge: { name: '閃避訓練：躲避球', skill: 'dodge' }, rush: { name: '攻擊訓練：沙包連打', skill: 'attack' }, combo: { name: '攻擊訓練：組合拳', skill: 'attack' }, flash: { name: '攻擊訓練：靈光一閃', skill: 'attack' }, zen: { name: '防禦訓練：瀑布打坐', skill: 'defense' } } },
   ult: { power: 2.2 },
@@ -270,7 +271,7 @@ function fresh(now = Date.now()) {
     xp: 0, coins: S.coins, hunger: S.hunger, mood: S.mood, clean: S.clean, energy: S.energy, bond: 0, sleeping: false,
     path: { flame: 0, tide: 0, forest: 0, earth: 0, bird: 0, elec: 0, metal: 0 }, bondUses: 0, cleanups: 0,
     care: { petLastRewardAt: 0, bathLastAt: 0, playXpAt: [], gatherAt: 0 },
-    inv: Object.assign({ food: S.food, seeds: S.seeds, seeds2: 0, seeds3: 0, candy: 0, potion: 1, potion2: 0, soup: 0, ember: 0, shards: 0, hearts: 0, relics: {}, fresh: { food: 0, berry: 0, cranberry: 0, blueberry: 0, strawberry: 0 }, mats: {} }, ...Object.keys(CONFIG.foods).filter(k => k !== 'food').map(k => ({ [k]: 0 }))), harvests: 0, trainLog: { dodge: 0, attack: 0, defense: 0 }, trains: 0,
+    inv: Object.assign({ food: S.food, seeds: S.seeds, seeds2: 0, seeds3: 0, seeds4: 0, candy: 0, potion: 1, potion2: 0, soup: 0, ember: 0, shards: 0, hearts: 0, relics: {}, fresh: { food: 0, berry: 0, cranberry: 0, blueberry: 0, strawberry: 0 }, mats: {} }, ...Object.keys(CONFIG.foods).filter(k => k !== 'food').map(k => ({ [k]: 0 }))), harvests: 0, trainLog: { dodge: 0, attack: 0, defense: 0 }, trains: 0,
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] }, goalLv: 0,
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
@@ -319,7 +320,7 @@ function sanitize(o, now = Date.now()) {
   r.care.petLastRewardAt = num(c.petLastRewardAt, 0, 0, now); r.care.bathLastAt = num(c.bathLastAt, 0, 0, now); r.care.gatherAt = num(c.gatherAt, 0, 0, now);
   r.care.playXpAt = Array.isArray(c.playXpAt) ? c.playXpAt.map(Number).filter(t => Number.isFinite(t) && t <= now && now - t < CONFIG.play.xpWindowMin * MIN).slice(-10) : [];
   const iv = o.inv && typeof o.inv === 'object' ? o.inv : {};
-  r.inv.food = int(iv.food, CONFIG.start.food, 0, 9999); r.inv.seeds = int(iv.seeds, CONFIG.start.seeds, 0, 9999); r.inv.candy = int(iv.candy, 0, 0, 9999); r.inv.potion = int(iv.potion, 1, 0, 9999); r.inv.seeds2 = int(iv.seeds2, 0, 0, 9999); r.inv.seeds3 = int(iv.seeds3, 0, 0, 9999); r.inv.potion2 = int(iv.potion2, 0, 0, 9999); r.inv.soup = int(iv.soup, 0, 0, 9999);
+  r.inv.food = int(iv.food, CONFIG.start.food, 0, 9999); r.inv.seeds = int(iv.seeds, CONFIG.start.seeds, 0, 9999); r.inv.candy = int(iv.candy, 0, 0, 9999); r.inv.potion = int(iv.potion, 1, 0, 9999); r.inv.seeds2 = int(iv.seeds2, 0, 0, 9999); r.inv.seeds3 = int(iv.seeds3, 0, 0, 9999); r.inv.seeds4 = int(iv.seeds4, 0, 0, 9999); r.inv.potion2 = int(iv.potion2, 0, 0, 9999); r.inv.soup = int(iv.soup, 0, 0, 9999);
   for (const k of [...Object.keys(CONFIG.foods).filter(k => k !== 'food'), 'ember', 'shards', 'hearts']) r.inv[k] = int(iv[k], 0, 0, 9999);
   const mt = iv.mats && typeof iv.mats === 'object' ? iv.mats : {}; r.inv.mats = {}; for (const el of ROUTES) r.inv.mats[el] = int(mt[el], 0, 0, 99);
   const fr = iv.fresh && typeof iv.fresh === 'object' ? iv.fresh : {}; r.inv.fresh = {}; for (const k of FRESH_KEYS) r.inv.fresh[k] = Math.min(int(fr[k], 0, 0, 9999), r.inv[k] || 0);   // 自己種的、還沒賣的水果數
@@ -353,7 +354,7 @@ function sanitize(o, now = Date.now()) {
   r.trials = {}; for (const k of ROUTES) if ((o.trials && o.trials[k] === true) || (k !== 'tide' && o.events && o.events[ROUTE_EVENT[k]] === true)) r.trials[k] = true;   // 舊存檔：以前打過的屬性事件算通過試煉
   r.loveNest = o.loveNest === true; r.loveAt = num(o.loveAt, 0, 0, 9e15);
   r.harvests = int(o.harvests, 0, 0, 1e7); r.bondUses = int(o.bondUses, 0, 0, 1e7); r.cleanups = int(o.cleanups, 0, 0, 1e7); r.trains = int(o.trains, 0, 0, 1e7); { const tl = o.trainLog && typeof o.trainLog === 'object' ? o.trainLog : {}; r.trainLog = { dodge: int(tl.dodge, 0, 0, 1e7), attack: int(tl.attack, 0, 0, 1e7), defense: int(tl.defense, 0, 0, 1e7) }; }
-  if (Array.isArray(o.plots)) r.plots = Array.from({ length: Math.max(CONFIG.farm.plots, Math.min(CONFIG.farm.maxPlots, o.plots.length)) }, (_, i) => ({ at: num(o.plots[i] && o.plots[i].at, 0, 0, 9e15), k: o.plots[i] && PLOT_KINDS.includes(o.plots[i].k) ? o.plots[i].k : 'food', ...(o.plots[i] && o.plots[i].g ? { g: o.plots[i].g === 2 ? 2 : 1 } : {}) }));
+  if (Array.isArray(o.plots)) r.plots = Array.from({ length: Math.max(CONFIG.farm.plots, Math.min(CONFIG.farm.maxPlots, o.plots.length)) }, (_, i) => ({ at: num(o.plots[i] && o.plots[i].at, 0, 0, 9e15), k: o.plots[i] && PLOT_KINDS.includes(o.plots[i].k) ? o.plots[i].k : 'food', ...(o.plots[i] && o.plots[i].g ? { g: [1, 2, 3].includes(o.plots[i].g) ? o.plots[i].g : 1 } : {}) }));
   const gl = o.goals && typeof o.goals === 'object' ? o.goals : {};
   r.goalLv = int(o.goalLv, 0, 0, CONFIG.goals.maxLv);
   if (/^\d{4}-\d\d-\d\d$/.test(gl.date) && Array.isArray(gl.list)) r.goals = { date: gl.date, list: gl.list.filter(g => g && GOALS[g.id]).slice(0, 5).map((g, i) => { const tier = int(g.tier, Math.min(i, 2), 0, 2); return { id: g.id, tier, need: int(g.need, goalNeed(g.id, tier, r.goalLv), 1, 1e6), n: int(g.n, 0, 0, 1e6), claimed: g.claimed === true }; }) };
@@ -402,7 +403,7 @@ function pickCrave(st, now = Date.now(), rnd = Math.random) {
 }
 function markSeen(st) {   // V1.74 背包裡有過的東西記進圖鑑
   const S = st.seen || (st.seen = {}), iv = st.inv || {};
-  for (const k of [...Object.keys(CONFIG.foods), 'seeds', 'seeds2', 'seeds3', 'candy', 'potion', 'potion2', 'soup', 'ember', 'shards', 'hearts']) if ((iv[k] || 0) > 0) S[k] = 1;
+  for (const k of [...Object.keys(CONFIG.foods), 'seeds', 'seeds2', 'seeds3', 'seeds4', 'candy', 'potion', 'potion2', 'soup', 'ember', 'shards', 'hearts']) if ((iv[k] || 0) > 0) S[k] = 1;
   for (const el of ROUTES) if (((iv.mats || {})[el] || 0) > 0) S['mat_' + el] = 1;
   for (const k in (iv.relics || {})) if (iv.relics[k] > 0) S['rl_' + k] = 1;
   for (const k of (st.relics || [])) S['rl_' + k] = 1;
@@ -769,9 +770,10 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
     else out.xp = addXP(st, Math.round(xp * A.overCapXpRate));
     if (r() < A.dropFood) { st.inv.food++; out.food = 1; }
     if (r() < CONFIG.potion.drop) { st.inv.potion++; out.potion = 1; }
-    { const boss = !!foeFor(n).boss, PD = CONFIG.powerDrop, PW = Object.keys(CONFIG.foods).filter(x => CONFIG.foods[x].power);   // V1.73 能力水果、神秘種子
+    { const boss = !!foeFor(n).boss, PD = CONFIG.powerDrop, PW = Object.keys(CONFIG.foods).filter(x => CONFIG.foods[x].power);   // V1.73 能力水果、稀有種子
       if (boss || r() < PD.win) { const k = PW[Math.floor(r() * PW.length) % PW.length]; st.inv[k] = (st.inv[k] || 0) + 1; out.power = k; }
-      if (boss || r() < PD.seed) { st.inv.seeds3 = (st.inv.seeds3 || 0) + 1; out.seeds3 = 1; } }
+      if (boss || r() < PD.seed) { st.inv.seeds3 = (st.inv.seeds3 || 0) + 1; out.seeds3 = 1; }
+      if (boss && (foeFor(n).big || r() < CONFIG.magicSeed.miniDrop)) { st.inv.seeds4 = (st.inv.seeds4 || 0) + 1; out.seeds4 = 1; } }
     { const BS = CONFIG.bosses[n]; if (BS) { const got = st.relicGot || (st.relicGot = []), first = !got.includes(n);   // V1.52 王的寶箱：第一次一定掉，之後 20%
       if (first || r() < CONFIG.relics.repeatDrop) { if (first) got.push(n); const iv = st.inv.relics || (st.inv.relics = {}); iv[BS.relic] = (iv[BS.relic] || 0) + 1; out.relic = BS.relic; out.chest = n % 10 === 0 ? 'gold' : 'bronze';
         journal(st, now, `打開${n % 10 === 0 ? '金' : '銅'}寶箱，得到寶物「${CONFIG.relics.items[BS.relic].name}」！`); } } }
@@ -800,30 +802,31 @@ function plotState(st, i, now = Date.now()) {
   const F = CONFIG.farm, after = (el - grow) / H;   // 成熟後過了幾小時：太久沒收會過熟、再久會爛掉
   return { empty: false, kind: PLOT_KINDS.includes(p.k) ? p.k : 'food', progress: Math.min(1, el / grow), ripe: el >= grow, left: Math.max(0, grow - el), over: after >= F.freshHours && after < F.rotHours, rotten: after >= F.rotHours, freshLeft: Math.max(0, (F.freshHours - after) * H) };
 }
-const PLOT_KINDS = ['food', 'berry', 'cranberry', 'blueberry', 'strawberry'];
-function pickFruit(good, r = Math.random) { const T = CONFIG.seedOdds[good ? 'good' : 'normal']; let x = r(); for (const [k, p] of T) { if (x < p) return k; x -= p; } return T[T.length - 1][0]; }
+const PLOT_KINDS = ['food', 'berry', 'cranberry', 'blueberry', 'strawberry', 'dragon', 'melonw', 'melon', 'potato', 'nut', 'coconut', 'banana'];
+function pickFruit(good, r = Math.random) { const T = CONFIG.seedOdds[good === 'rare' ? 'rare' : good ? 'good' : 'normal']; let x = r(); for (const [k, p] of T) { if (x < p) return k; x -= p; } return T[T.length - 1][0]; }
 function plant(st, i, now = Date.now(), r = Math.random, good = false) {
   const q = plotState(st, i, now); if (!q) return { ok: false, msg: '沒有這塊田' };
   if (!q.empty) return { ok: false, msg: '這塊田已經種了東西' };
-  const myst = good === 'mystery', key = myst ? 'seeds3' : good ? 'seeds2' : 'seeds';
-  if ((st.inv[key] || 0) < 1) return { ok: false, code: 'noseed', msg: myst ? '沒有神秘種子了（冒險、打王才撿得到）' : good ? '沒有優良種子了（商店道具可以買）' : '沒有種子了（冒險有機會撿到，或花金幣買）' };
-  st.inv[key]--; st.plots[i].at = now; st.plots[i].k = pickFruit(!!good, r); if (good) st.plots[i].g = myst ? 2 : 1; else delete st.plots[i].g; track(st, 'plant', now);   // 長出來才知道：紅色＝蘋果、紫色＝莓果
-  if (myst) return { ok: true, msg: '種下一顆神秘種子 🔮（2 小時後收成，有機會長出能力水果！）' };
+  const magic = good === 'magic', myst = good === 'mystery', key = magic ? 'seeds4' : myst ? 'seeds3' : good ? 'seeds2' : 'seeds';
+  if ((st.inv[key] || 0) < 1) return { ok: false, code: 'noseed', msg: magic ? '沒有神奇種子了（打贏王才拿得到）' : myst ? '沒有稀有種子了（冒險、打王才撿得到）' : good ? '沒有優良種子了（商店道具可以買）' : '沒有種子了（冒險有機會撿到，或花金幣買）' };
+  st.inv[key]--; st.plots[i].at = now; const PW0 = Object.keys(CONFIG.foods).filter(x => CONFIG.foods[x].power); st.plots[i].k = magic ? PW0[Math.floor(r() * PW0.length) % PW0.length] : pickFruit(myst ? 'rare' : !!good, r); if (good) st.plots[i].g = magic ? 3 : myst ? 2 : 1; else delete st.plots[i].g; track(st, 'plant', now);   // 長出來才知道：紅色＝蘋果、紫色＝莓果
+  if (magic) return { ok: true, msg: '種下一顆神奇種子 ✨（2 小時後一定長出能力水果！）' };
+  if (myst) return { ok: true, msg: '種下一顆稀有種子 🔮（比較容易長出草莓，還有機會長出能力水果！）' };
   return { ok: true, msg: good ? '種下一顆優良種子 🌟（收成比較多，比較容易長出藍莓、草莓）' : '種下一顆綜合種子 🌱（2 小時後收成：蔓越莓、藍莓或草莓）' };
 }
 function harvest(st, i, now = Date.now(), r = Math.random) {
   const q = plotState(st, i, now); if (!q || q.empty) return { ok: false, msg: '這塊田是空的' };
   if (!q.ripe) return { ok: false, msg: `還沒成熟，再等 ${Math.ceil(q.left / MIN)} 分鐘` };
-  const F = CONFIG.farm, k = q.kind, name = CONFIG.foods[k].name, g = st.plots[i].g || 0, good = g >= 1, myst = g === 2, G = CONFIG.goodSeed; st.plots[i].at = 0; delete st.plots[i].g;
+  const F = CONFIG.farm, k = q.kind, name = CONFIG.foods[k].name, g = st.plots[i].g || 0, good = g >= 1, myst = g === 2, magic = g === 3, G = CONFIG.goodSeed; st.plots[i].at = 0; delete st.plots[i].g;
   if (q.rotten) { track(st, 'harvest', now); return { ok: true, rotten: true, n: 0, xp: 0, msg: `${name}放太久爛掉了…只好丟掉 🪰` }; }
-  const lo = good ? G.fruitMin : F.fruitMin, hi = good ? G.fruitMax : F.fruitMax, n = lo + Math.floor(r() * (hi - lo + 1));
+  const MG = CONFIG.magicSeed, lo = magic ? MG.min : good ? G.fruitMin : F.fruitMin, hi = magic ? MG.maxN : good ? G.fruitMax : F.fruitMax, n = lo + Math.floor(r() * (hi - lo + 1));
   const PW = Object.keys(CONFIG.foods).filter(x => CONFIG.foods[x].power), M = CONFIG.mysterySeed;
-  let bonus = null, bn = 0; if (myst ? r() < M.powerChance : good && r() < G.powerChance) { bonus = PW[Math.floor(r() * PW.length) % PW.length]; bn = myst ? M.powerMin + Math.floor(r() * (M.powerMax - M.powerMin + 1)) : 1; st.inv[bonus] = (st.inv[bonus] || 0) + bn; }
-  st.inv[k] = (st.inv[k] || 0) + n; if (!q.over) st.inv.fresh[k] = (st.inv.fresh[k] || 0) + n; st.harvests++;   // 過熟的不算「自己種的好品質」：不發光、不能賣、沒有加成
+  let bonus = null, bn = 0; if (magic) {} else if (myst ? r() < M.powerChance : good && r() < G.powerChance) { bonus = PW[Math.floor(r() * PW.length) % PW.length]; bn = myst ? M.powerMin + Math.floor(r() * (M.powerMax - M.powerMin + 1)) : 1; st.inv[bonus] = (st.inv[bonus] || 0) + bn; }
+  st.inv[k] = (st.inv[k] || 0) + n; if (FRESH_KEYS.includes(k)) st.inv.fresh[k] = (st.inv.fresh[k] || 0) + n; st.harvests++;   // V1.77 過熟的也還是自己種的：會發光、能賣、體力 +5
   let xp = 0; if (st.hatched) { xp = addXP(st, F.xp); st.path.forest += F.forest; }
   track(st, 'harvest', now);
   if (st.harvests === CONFIG.harvestsForOldTree) journal(st, now, `收成第 ${st.harvests} 次了！`);
-  return { ok: true, kind: k, n, over: q.over, xp, good, myst, bonus, bonusN: bn, forest: st.hatched ? F.forest : 0, msg: (q.over ? `${name}有點過熟了…收成 ${n} 顆（吃起來沒那麼好）` : `收成！✨${name} +${n}`) + (bonus ? `、⚡能力水果 ${CONFIG.foods[bonus].name} +${bn}！` : '') + (xp ? `、經驗 +${xp}、🌿 森 +${F.forest}` : '') };
+  return { ok: true, kind: k, n, over: q.over, xp, good, myst, magic, bonus, bonusN: bn, forest: st.hatched ? F.forest : 0, msg: (magic ? `✨神奇種子長出了能力水果！${name} +${n}` : q.over ? `${name}有點過熟了，趕快收！收成 ${n} 顆` : `收成！✨${name} +${n}`) + (bonus ? `、⚡能力水果 ${CONFIG.foods[bonus].name} +${bn}！` : '') + (xp ? `、經驗 +${xp}、🌿 森 +${F.forest}` : '') };
 }
 function buySeed(st) {
   const P = CONFIG.farm.seedPrice; if (st.coins < P) return { ok: false, msg: `金幣不足（種子 ${P} 金幣）` };
@@ -856,7 +859,7 @@ function buyItem(st, kind) {
   if (st.coins < price) return { ok: false, msg: `金幣不足（需要 ${price}）` };
   st.coins -= price; st.inv[kind] = (st.inv[kind] || 0) + 1; return { ok: true, msg: `買了 1 個${ITEM_NAME[kind] || CONFIG.foods[kind].name}（−${price} 金幣）` };
 }
-const ITEM_NAME = { food: '食物', seeds: '種子', seeds2: '優良種子', seeds3: '神秘種子', candy: '星星糖', potion: '回復藥水', potion2: '超級藥水', soup: '神秘婆婆熬製雞湯' };
+const ITEM_NAME = { food: '食物', seeds: '種子', seeds2: '優良種子', seeds3: '稀有種子', seeds4: '神奇種子', candy: '星星糖', potion: '回復藥水', potion2: '超級藥水', soup: '神秘婆婆熬製雞湯' };
 /* V1.40 神秘婆婆熬製雞湯：消除羈絆之力後的休息時間 */
 function useSoup(st, now = Date.now()) {
   const tm = applyTime(st, now);

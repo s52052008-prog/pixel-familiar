@@ -364,7 +364,7 @@ h1{font-size:17px}.ver{font-size:9px}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.76.0';
+const VERSION='1.77.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1007,8 +1007,8 @@ function buildPlots(){const soil=g=>ellipse(g,10,12.5,9,3.2,(x,y,nx,ny)=>ny>.2?'
  mk('seed',g=>{soil(g);px(g,8,11,'#3a2416');px(g,12,11,'#3a2416');px(g,10,10,'#7ccc5a')});
  mk('sprout',g=>{soil(g);stem(g)});
  mk('leafy',g=>{soil(g);stem(g);bushy(g,false)});
- const fruitCol={food:['#e8433f','#ff9a8a','#a8282e'],berry:['#8a3ac8','#c890f0','#5a1a8a'],cranberry:['#b8202e','#e8505a','#6a1018'],blueberry:['#3a5ac8','#8aa8f8','#1a2a6a'],strawberry:['#ff3a3a','#ffe066','#a8282e']};
- for(const k of['food','berry','cranberry','blueberry','strawberry']){
+ const fruitCol={food:['#e8433f','#ff9a8a','#a8282e'],berry:['#8a3ac8','#c890f0','#5a1a8a'],cranberry:['#b8202e','#e8505a','#6a1018'],blueberry:['#3a5ac8','#8aa8f8','#1a2a6a'],strawberry:['#ff3a3a','#ffe066','#a8282e'],dragon:['#e8337a','#ff9ac8','#8a1a4a'],melonw:['#3a9a3a','#8ae07a','#1a5a1a'],melon:['#c8d84a','#f0f8a0','#6a7a1a'],potato:['#a8506a','#e090a0','#5a2030'],nut:['#a8743a','#e0b070','#5a3a18'],coconut:['#7a5030','#c8a070','#3a2010'],banana:['#f2c81a','#fff08a','#a87a08']};
+ for(const k of Object.keys(fruitCol)){
   mk(k,g=>{soil(g);stem(g);bushy(g,true);for(const[x,y]of fruitAt){px(g,x,y,fruitCol[k][0]);px(g,x+1,y,fruitCol[k][0]);px(g,x,y-1,fruitCol[k][1])}});
   mk(k+'_over',g=>{soil(g);stem(g);ellipse(g,10,6.5,6,4.5,(x,y,nx,ny)=>nx*.5+ny*.6>.4?'#5a7a2a':'#8a9a3a');for(const[x,y]of fruitAt){px(g,x,y,fruitCol[k][2]);px(g,x+1,y,'#6a4a2a');px(g,x,y-1,fruitCol[k][0])}});   // 過熟：葉子變黃、果子變深有斑
  }
@@ -1605,7 +1605,7 @@ function renameDialog(first){
 function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',pixify(`
 <p><b>目標：</b>照顧幻獸，陪牠慢慢長大。沒有死亡、離線不扣親密度、不需要每天簽到。</p>
 <ul>
-<li>🍎 <b>餵食</b>：按「餵食」後點畫面放蘋果，牠會走過去吃掉。吃完會留下果核，<b>要點一下清掉</b>，放超過 10 分鐘會發臭長果蠅，讓心情一直變差。用 1 個食物（沒有就花 ${C.feed.price} 金幣買），飽食 +${C.feed.hunger}、經驗 +${C.feed.xp}。吃飽時不能餵。<br>💭 <b>想吃的水果</b>：牠頭上會冒出泡泡，裡面是現在最想吃的水果（每 3 小時換一次）。剛好餵到 → 飽食、心情、體力、親密度、經驗都加更多，之後吃飽滿足 3 小時才會再想吃別的。<br>⚡ <b>能力水果</b>商店買不到：冒險打贏 10%、打王必掉、★★★ 任務、優良種子 8%、神秘種子（冒險、打王才撿得到）30%。<br>🌳 <b>蘋果樹</b>：院子右邊的蘋果樹每 3 小時長 1 顆（最多 3 顆），熟了會自己掉下來，點地上的蘋果就能<b>免費</b>撿進背包；也可以點樹搖一搖。</li>
+<li>🍎 <b>餵食</b>：按「餵食」後點畫面放蘋果，牠會走過去吃掉。吃完會留下果核，<b>要點一下清掉</b>，放超過 10 分鐘會發臭長果蠅，讓心情一直變差。用 1 個食物（沒有就花 ${C.feed.price} 金幣買），飽食 +${C.feed.hunger}、經驗 +${C.feed.xp}。吃飽時不能餵。<br>💭 <b>想吃的水果</b>：牠頭上會冒出泡泡，裡面是現在最想吃的水果（每 3 小時換一次）。剛好餵到 → 飽食、心情、體力、親密度、經驗都加更多，之後吃飽滿足 3 小時才會再想吃別的。<br>⚡ <b>能力水果</b>商店買不到：冒險打贏 10%、打王必掉、★★★ 任務、優良種子 8%、稀有種子（冒險、打王才撿得到）30%。<br>🌳 <b>蘋果樹</b>：院子右邊的蘋果樹每 3 小時長 1 顆（最多 3 顆），熟了會自己掉下來，點地上的蘋果就能<b>免費</b>撿進背包；也可以點樹搖一搖。</li>
 <li>⭐ <b>等級</b>：最高 Lv.30（練滿）。需要經驗＝7.5×(等級−1)²。已經有一隻「星耀覺醒」的夥伴後，其他幻獸會得到 <b>✨傳承之力</b>：經驗 ×3、訓練成果 ×2，第二隻會快很多。</li><li>🥚 <b>迎接新的蛋</b>：第 1 顆 300 金幣、第 2 顆 700、之後每顆 1000（配對、愛的小窩生的蛋不用錢）。</li><li>🐷 <b>小豬撲滿</b>：在小窩（室內）右邊牆上的木架，會幫你存錢，每小時 1＋等級×0.35 枚（最多算到 Lv.30；金系 ×1.5；第二隻一起出來再加牠的一半）。心情 30 以上才會存、睡覺時減半，點小豬就能領。小豬撲滿有 1～6 級：第 15、20、25、30 關的王各掉一個「核心碎片」（+1 級），商店道具有唯一的「小豬撲滿核心」1000 元（+1 級）。等級越高越大隻、存得越快越多（×1／1.25／1.5／1.8／2.2／3，最多存 12～24 小時），6 級最肥、會發光。</li><li>🎾 <b>玩耍（頂球）</b>：按「玩耍」後點畫面開始，球會一顆一顆掉下來。要在球快碰到頭的那一刻點畫面跳起來頂（可以一直點），時機越準越會進；完美時機還會預判移動中的籃框。有 3 條命，漏接 3 次就結束，每連進 5 球補 1 條命。進越多球，籃框會開始上下、左右移動，球也掉得越快、越斜。每進 3 球得 1 金幣（最多 10）。體力 ${C.play.minEnergy} 以上，心情 +${C.play.mood}、體力 −10、經驗 +${C.play.xp}（每 30 分鐘最多 3 次有經驗）。</li>
 <li>🫧 <b>洗澡</b>：按「洗澡」後用手指拿海綿 🧽 在牠身上來回刷 3 秒。清潔 +${C.wash.clean}、經驗 +${C.wash.xp}，想洗就洗（髒了才能洗）。</li>
 <li>👆 <b>摸摸</b>：隨時都能摸；每 30 分鐘第一次：親密度 +2、心情 +3。</li>
@@ -1632,12 +1632,12 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',pixify(`
 /* V1.74 物品圖鑑：拿到過就會亮起來；還沒拿到是黑色剪影＋名字 ？？？＋取得線索 */
 function itemDexDialog(){PC.markSeen(s);const C=CONFIG,F=C.foods,SN=s.seen||{},RI=C.relics.items;
  const bossOf=k=>{const n=Object.keys(C.bosses).find(x=>C.bosses[x].relic===k);return n?`「${C.bosses[n].mon}」`:'王'};
- const powerHint='冒險打贏 10%、打贏小王／大王必掉、★★★ 任務、優良種子 8%、神秘種子 30%';
+ const powerHint='冒險打贏 10%、打贏小王／大王必掉、★★★ 任務、優良種子 8%、稀有種子 30%、神奇種子必定';
  const CAT=[
   ['🍽️ 食物',['food','berry','fish','meat','cake'].map(k=>[k,F[k].name,ITEM_ICON[k],k==='food'?'院子的蘋果樹會長（免費）、商店、每日登入':'商店「食物」'])],
   ['🍓 家園水果',['cranberry','blueberry','strawberry'].map(k=>[k,F[k].name,F[k].icon,`家園種植（${k==='strawberry'?'優良種子比較容易':'種子收成'}）`])],
   ['⚡ 能力水果',Object.keys(F).filter(k=>F[k].power).map(k=>[k,F[k].name,ITEM_ICON[k],powerHint])],
-  ['🧰 道具',[['seeds','種子','seed','商店、冒險撿到'],['seeds2','優良種子','seed2','商店'],['seeds3','神秘種子','seed2','冒險打贏 8%、打王必掉'],['candy','星星糖','candy','商店道具'],['potion','回復藥水','potion','商店、冒險掉落'],['potion2','超級藥水','potion2','商店道具'],['soup','神秘婆婆熬製雞湯','soup','商店道具'],['ember','經驗火種','ember','打贏 Boss 有機會掉']]],
+  ['🧰 道具',[['seeds','種子','seed','商店、冒險撿到'],['seeds2','優良種子','seed2','商店'],['seeds3','稀有種子','seed2','冒險打贏 8%、打王必掉'],['seeds4','神奇種子','seed2','打贏大王必掉、小王 25%'],['candy','星星糖','candy','商店道具'],['potion','回復藥水','potion','商店、冒險掉落'],['potion2','超級藥水','potion2','商店道具'],['soup','神秘婆婆熬製雞湯','soup','商店道具'],['ember','經驗火種','ember','打贏 Boss 有機會掉']]],
   ['💎 進化素材',PC.ROUTES.map(el=>['mat_'+el,C.materials[el],'mat_'+el,`${ROUTE_ICON[el]}${ROUTE_LABEL[el]}的幻獸打贏大王`]).concat([['shards','星辰碎片','gem','打贏最終大王'],['hearts','星辰之心','star','打贏最終大王']])],
   ['🪎 王的寶物',Object.keys(RI).map(k=>['rl_'+k,RI[k].name,'relic_'+k,`打贏${bossOf(k)}的寶箱`])]];
  let tot=0,got=0;const html=CAT.map(([h,L])=>{const cells=L.map(([k,nm,ic,hint])=>{tot++;const ok=!!SN[k];if(ok)got++;
@@ -1863,21 +1863,21 @@ let farmTimer=0;
 function fmtLeft(ms){const m=Math.ceil(ms/60000);return m>=60?`${Math.floor(m/60)} 小時 ${m%60} 分`:`${m} 分鐘`}
 function farmDialog(){PC.claimDaily(s,Date.now());
  const F=CONFIG.farm;
- openModal('🌱 家園',`<p class="small">種子都是綜合的，${F.growHours} 小時後成熟，會長出 <b style="color:#ff7a8a">蔓越莓</b>（賣 ${CONFIG.sellFruit.cranberry}）、<b style="color:#9ab8ff">藍莓</b>（賣 ${CONFIG.sellFruit.blueberry}）或 <b style="color:#ff5a5a">草莓</b>（賣 ${CONFIG.sellFruit.strawberry}），每次 ${F.fruitMin}～${F.fruitMax} 顆；🌟優良種子 ${CONFIG.goodSeed.fruitMin}～${CONFIG.goodSeed.fruitMax} 顆，也比較容易長出藍莓、草莓。成熟後 ${F.freshHours} 小時內收最新鮮（會發光、能賣），太久會過熟，放 ${F.rotHours} 小時就爛掉${s.hatched?`、經驗 +${F.xp}、🌿 森系 +${F.forest}`:''}。每塊田一次種一株。已收成 <b>${s.harvests}</b> 次${s.harvests<CONFIG.harvestsForOldTree?`（森系高階需要 ${CONFIG.harvestsForOldTree} 次）`:''}。</p>
-<p>🌱 種子 <b id="fSeeds">${s.inv.seeds}</b>　🌟 優良 <b id="fSeeds2">${s.inv.seeds2||0}</b>　🔮 神秘 <b id="fSeeds3">${s.inv.seeds3||0}</b>　🪙 <b id="fCoins">${s.coins}</b></p>
+ openModal('🌱 家園',`<p class="small">種子都是綜合的，${F.growHours} 小時後成熟，會長出 <b style="color:#ff7a8a">蔓越莓</b>（賣 ${CONFIG.sellFruit.cranberry}）、<b style="color:#9ab8ff">藍莓</b>（賣 ${CONFIG.sellFruit.blueberry}）或 <b style="color:#ff5a5a">草莓</b>（賣 ${CONFIG.sellFruit.strawberry}），每次 ${F.fruitMin}～${F.fruitMax} 顆；🌟優良種子 ${CONFIG.goodSeed.fruitMin}～${CONFIG.goodSeed.fruitMax} 顆、比較容易長出藍莓草莓、8% 多長能力水果；🔮稀有種子草莓 50%、30% 多長能力水果；✨神奇種子一定長出能力水果。自己種的會發光、能賣、吃了體力 +${CONFIG.freshBonus.energy}；成熟後放 ${F.freshHours} 小時會過熟（提醒你快收），放 ${F.rotHours} 小時就爛掉${s.hatched?`、經驗 +${F.xp}、🌿 森系 +${F.forest}`:''}。每塊田一次種一株。已收成 <b>${s.harvests}</b> 次${s.harvests<CONFIG.harvestsForOldTree?`（森系高階需要 ${CONFIG.harvestsForOldTree} 次）`:''}。</p>
+<p>🌱 種子 <b id="fSeeds">${s.inv.seeds}</b>　🌟 優良 <b id="fSeeds2">${s.inv.seeds2||0}</b>　🔮 稀有 <b id="fSeeds3">${s.inv.seeds3||0}</b>　✨ 神奇 <b id="fSeeds4">${s.inv.seeds4||0}</b>　🪙 <b id="fCoins">${s.coins}</b></p>
 <div class="plots" id="plots"></div><div class="err" id="fErr"></div>
 <div class="row"><button class="btn" id="fBuy">買 1 顆種子（${F.seedPrice} 金幣）</button><button class="btn" id="fBuy2">買 1 顆🌟優良種子（${CONFIG.goodSeed.price} 金幣）</button></div><div class="row"><button class="btn" id="fExp"></button></div>
 <div class="sellrow" id="fSell"></div>
 <p class="small">自己種的水果可以吃，也可以賣，拿錢去買肉排、烤魚、蛋糕或更多種子。種子也會在冒險打贏時得到。</p>`);
  const draw=()=>{const box=$('plots');if(!box){clearInterval(farmTimer);return}const now=Date.now();
-  box.innerHTML=s.plots.map((p,i)=>{const q=PC.plotState(s,i,now),nm=q.kind?CONFIG.foods[q.kind].name:"";return`<div class="plot"><canvas data-p="${i}" width="20" height="16"></canvas>${q.empty?'空地':q.rotten?'<b>爛掉了…</b>':q.over?`<b>${nm}過熟了！</b><br><span class="small">快收，品質變差</span>`:q.ripe?`<b>✨${nm}成熟了！</b><br><span class="small">${fmtLeft(q.freshLeft)}內收最新鮮</span>`:'還要 '+fmtLeft(q.left)}
-${!q.empty&&p.g?`<span class="small">${p.g===2?'🔮神秘':'🌟優良'}</span>`:''}
-   <button class="btn ${q.empty||q.ripe?'pri':''}" data-pa="${i}" ${!q.empty&&!q.ripe?'disabled':''}>${q.empty?'種植':q.rotten?'清掉':q.ripe?'收成':'成長中'}</button>${q.empty&&s.inv.seeds2?`<button class="btn pri" data-pg="${i}">🌟 種優良</button>`:''}${q.empty&&s.inv.seeds3?`<button class="btn pri" data-pm="${i}">🔮 種神秘</button>`:''}</div>`}).join('');
+  box.innerHTML=s.plots.map((p,i)=>{const q=PC.plotState(s,i,now),nm=q.kind?CONFIG.foods[q.kind].name:"";return`<div class="plot"><canvas data-p="${i}" width="20" height="16"></canvas>${q.empty?'空地':q.rotten?'<b>爛掉了…</b>':q.over?`<b>${nm}過熟了！</b><br><span class="small">快收，再放會爛掉</span>`:q.ripe?`<b>✨${nm}成熟了！</b><br><span class="small">快去收成吧</span>`:'還要 '+fmtLeft(q.left)}
+${!q.empty&&p.g?`<span class="small">${p.g===3?'✨神奇':p.g===2?'🔮稀有':'🌟優良'}</span>`:''}
+   <button class="btn ${q.empty||q.ripe?'pri':''}" data-pa="${i}" ${!q.empty&&!q.ripe?'disabled':''}>${q.empty?'種植':q.rotten?'清掉':q.ripe?'收成':'成長中'}</button>${q.empty&&s.inv.seeds2?`<button class="btn pri" data-pg="${i}">🌟 種優良</button>`:''}${q.empty&&s.inv.seeds3?`<button class="btn pri" data-pm="${i}">🔮 種稀有</button>`:''}${q.empty&&s.inv.seeds4?`<button class="btn pri" data-pk="${i}">✨ 種神奇</button>`:''}</div>`}).join('');
   box.querySelectorAll('canvas').forEach(c=>{const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(PLOT_SPR[plotStage(PC.plotState(s,+c.dataset.p,now))],0,0)});
-  box.querySelectorAll('[data-pa],[data-pg],[data-pm]').forEach(b=>b.onclick=()=>{const i=+(b.dataset.pa??b.dataset.pg??b.dataset.pm),q=PC.plotState(s,i,Date.now()),x0=s.xp;
-   const r=q.empty?PC.plant(s,i,Date.now(),Math.random,b.dataset.pm!==undefined?'mystery':b.dataset.pg!==undefined||(s.inv.seeds<1&&(s.inv.seeds2||0)>0)):PC.harvest(s,i,Date.now());$('fErr').textContent=r.ok?'':'❌ '+r.msg;
-   if(r.ok){toast(r.msg,r.bonus?3500:2500);if(r.bonus){sfx('level');spawn('star',5,{y:80,x:40,vy:-30,life:1.2,spread:20})}else sfx(q.empty?'tap':'eat');save();renderUI();afterChange(x0);if(!q.empty)spawn('apple',2,{y:90,x:20,vy:-30,life:1.2})}draw()});
-  $('fSeeds').textContent=s.inv.seeds;$('fSeeds2').textContent=s.inv.seeds2||0;$('fSeeds3').textContent=s.inv.seeds3||0;$('fCoins').textContent=s.coins;
+  box.querySelectorAll('[data-pa],[data-pg],[data-pm],[data-pk]').forEach(b=>b.onclick=()=>{const i=+(b.dataset.pa??b.dataset.pg??b.dataset.pm??b.dataset.pk),q=PC.plotState(s,i,Date.now()),x0=s.xp;
+   const r=q.empty?PC.plant(s,i,Date.now(),Math.random,b.dataset.pk!==undefined?'magic':b.dataset.pm!==undefined?'mystery':b.dataset.pg!==undefined||(s.inv.seeds<1&&(s.inv.seeds2||0)>0)):PC.harvest(s,i,Date.now());$('fErr').textContent=r.ok?'':'❌ '+r.msg;
+   if(r.ok){toast(r.msg,r.bonus||r.magic?3500:2500);if(r.bonus||r.magic){sfx('level');spawn('star',5,{y:80,x:40,vy:-30,life:1.2,spread:20})}else sfx(q.empty?'tap':'eat');save();renderUI();afterChange(x0);if(!q.empty)spawn('apple',2,{y:90,x:20,vy:-30,life:1.2})}draw()});
+  $('fSeeds').textContent=s.inv.seeds;$('fSeeds2').textContent=s.inv.seeds2||0;$('fSeeds3').textContent=s.inv.seeds3||0;$('fSeeds4').textContent=s.inv.seeds4||0;$('fCoins').textContent=s.coins;
   const ep=PC.expandPrice(s);$('fExp').textContent=ep?`擴建田地（第 ${s.plots.length+1} 格，${ep} 金幣）`:`田地已經最大（${CONFIG.farm.maxPlots} 格）`;$('fExp').disabled=!ep;
   PC.fixFresh(s);$('fSell').innerHTML=PC.FRESH_KEYS.filter(k=>!['food','berry'].includes(k)||(s.inv.fresh[k]||0)>0).map(k=>{const c=s.inv.fresh[k]||0;return`<button class="btn" data-sell="${k}" ${c?'':'disabled'}>賣 ✨${CONFIG.foods[k].name}（${c} 顆）+${CONFIG.sellFruit[k]}</button>`}).join('');
   $('fSell').querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>{const r=PC.sellFruit(s,b.dataset.sell);$('fErr').textContent=r.ok?'':'❌ '+r.msg;if(r.ok){toast(r.msg);sfx('tap');save();renderUI()}draw()})};
@@ -1918,7 +1918,7 @@ function shopDialog(tab,bagOnly=tab==='bag'){PC.claimDaily(s,Date.now());
     btn:`<button class="btn ${!own||!on?'pri':''}" data-dz="${id}" ${(sl==='paper'&&on)?'disabled':''}>${!own?'購買':on?(sl==='paper'?'使用中':(sl==='bed'?'收起（右邊）':'收起')):(sl==='bed'?'擺在右邊':'擺上')}</button>${sl==='bed'&&own?`<button class="btn ${s.decor.placed.bed2===id?'':'pri'}" data-bed2="${id}">${s.decor.placed.bed2===id?'收起（左邊）':'擺在左邊'}</button>`:''}`})}}return out}
   const fr=k=>(s.inv.fresh&&s.inv.fresh[k])||0,out=[];
   const foodEntry=(k,bag)=>{const F=C.foods[k];return{id:k,name:F.name,sub:bag?`×${s.inv[k]||0}${fr(k)?` ✨${fr(k)}`:''}`:`🪙${F.price}｜×${s.inv[k]||0}`,icon:ITEM_ICON[k],fresh:fr(k),desc:`${foodDesc(F)}<br>擁有 ${s.inv[k]||0}${fr(k)?`（✨自己種的 ${fr(k)}）`:''}`,
-   btn:bag?`<button class="btn pri" data-feedk="${k}">🍽️ 拿去餵牠</button>`:F.power?'<p class="small">🔒 商店不賣：冒險打贏 10% 掉 1 顆、打贏小王／大王必掉 1 顆、★★★ 任務獎勵、優良種子 8%、神秘種子 30%</p>':`<button class="btn pri" data-bi="${k}">買 1 個（🪙 ${F.price}）</button>`}};
+   btn:bag?`<button class="btn pri" data-feedk="${k}">🍽️ 拿去餵牠</button>`:F.power?'<p class="small">🔒 商店不賣：冒險打贏 10% 掉 1 顆、打贏小王／大王必掉 1 顆、★★★ 任務獎勵、優良種子 8%、稀有種子 30%</p>':`<button class="btn pri" data-bi="${k}">買 1 個（🪙 ${F.price}）</button>`}};
   const tools={seeds:()=>({id:'seeds',name:'種子',sub:`🪙${C.farm.seedPrice}｜×${s.inv.seeds}`,icon:'seed',desc:`種在家園的田裡，${C.farm.growHours} 小時後長出蘋果或莓果<br>擁有 ${s.inv.seeds}`,btn:`<button class="btn pri" data-bi="seeds">買 1 個（🪙 ${C.farm.seedPrice}）</button>`}),
    candy:()=>({id:'candy',name:'星星糖',sub:`🪙${C.candy.price}｜×${s.inv.candy||0}`,icon:'candy',desc:`吃了<b>直接升 1 級</b>！（進化還是要等時間）<br>心情 +${C.candy.mood}、飽食 +${C.candy.hunger}<br>擁有 ${s.inv.candy||0}`,btn:`<button class="btn pri" data-bi="candy">買 1 個（🪙 ${C.candy.price}）</button><button class="btn" id="eatCandy" ${s.inv.candy?'':'disabled'}>給牠吃</button>`}),
    seeds2:()=>({id:'seeds2',name:'優良種子',sub:`🪙${C.goodSeed.price}｜×${s.inv.seeds2||0}`,icon:'seed2',desc:`比較會長的種子：每次收成 ${C.goodSeed.fruitMin}～${C.goodSeed.fruitMax} 顆（普通種子 ${C.farm.fruitMin}～${C.farm.fruitMax} 顆），新鮮收成還有 ${Math.round(C.goodSeed.powerChance*100)}% 多長一顆自己屬性的能力水果<br>擁有 ${s.inv.seeds2||0}`,btn:`<button class="btn pri" data-bi="seeds2">買 1 個（🪙 ${C.goodSeed.price}）</button>`}),
@@ -1931,7 +1931,7 @@ function shopDialog(tab,bagOnly=tab==='bag'){PC.claimDaily(s,Date.now());
   else if(tab==='tools'){for(const k in tools)out.push(tools[k]())}
   else{   // 🎒 背包：自己有的東西
    const own=Object.keys(C.foods).filter(k=>(s.inv[k]||0)>0),isFruit=k=>!!(C.foods[k].power||C.foods[k].farm),F1=own.filter(k=>!isFruit(k)),F2=own.filter(isFruit);if(F1.length){out.push({head:'🍽️ 食物'});for(const k of F1)out.push(foodEntry(k,true))}if(F2.length){out.push({head:'🍓 水果'});for(const k of F2)out.push(foodEntry(k,true))}
-   const tl=[];if(s.inv.seeds)tl.push(Object.assign(tools.seeds(),{sub:`×${s.inv.seeds}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`}));if(s.inv.candy)tl.push(Object.assign(tools.candy(),{sub:`×${s.inv.candy}`,btn:`<button class="btn pri" id="eatCandy">給牠吃</button>`}));if(s.inv.seeds2)tl.push(Object.assign(tools.seeds2(),{sub:`×${s.inv.seeds2}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`}));if(s.inv.seeds3)tl.push({id:'seeds3',name:'神秘種子',sub:`×${s.inv.seeds3}`,icon:'seed2',desc:`冒險、打王才撿得到的種子。<br>收成時有 ${Math.round(C.mysterySeed.powerChance*100)}% 機會多長出 ${C.mysterySeed.powerMin}～${C.mysterySeed.powerMax} 顆<b>能力水果</b>！<br>擁有 ${s.inv.seeds3}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`});if(s.inv.potion)tl.push(Object.assign(tools.potion(),{sub:`×${s.inv.potion}`,btn:''}));if(s.inv.potion2)tl.push(Object.assign(tools.potion2(),{sub:`×${s.inv.potion2}`,btn:''}));if(s.inv.soup)tl.push(Object.assign(tools.soup(),{sub:`×${s.inv.soup}`}));
+   const tl=[];if(s.inv.seeds)tl.push(Object.assign(tools.seeds(),{sub:`×${s.inv.seeds}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`}));if(s.inv.candy)tl.push(Object.assign(tools.candy(),{sub:`×${s.inv.candy}`,btn:`<button class="btn pri" id="eatCandy">給牠吃</button>`}));if(s.inv.seeds2)tl.push(Object.assign(tools.seeds2(),{sub:`×${s.inv.seeds2}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`}));if(s.inv.seeds4)tl.push({id:'seeds4',name:'神奇種子',sub:`×${s.inv.seeds4}`,icon:'seed2',desc:`打贏大王（必掉）、小王（${Math.round(C.magicSeed.miniDrop*100)}%）才拿得到的種子。<br>種下去<b>一定長出 ${C.magicSeed.min}～${C.magicSeed.maxN} 顆能力水果</b>！<br>擁有 ${s.inv.seeds4}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`});if(s.inv.seeds3)tl.push({id:'seeds3',name:'稀有種子',sub:`×${s.inv.seeds3}`,icon:'seed2',desc:`冒險、打王才撿得到的種子。<br>比較容易長出草莓（50%），收成時還有 ${Math.round(C.mysterySeed.powerChance*100)}% 機會多長出 ${C.mysterySeed.powerMin}～${C.mysterySeed.powerMax} 顆<b>能力水果</b>！<br>擁有 ${s.inv.seeds3}`,btn:`<button class="btn pri" id="goFarm">🌱 去種田</button>`});if(s.inv.potion)tl.push(Object.assign(tools.potion(),{sub:`×${s.inv.potion}`,btn:''}));if(s.inv.potion2)tl.push(Object.assign(tools.potion2(),{sub:`×${s.inv.potion2}`,btn:''}));if(s.inv.soup)tl.push(Object.assign(tools.soup(),{sub:`×${s.inv.soup}`}));
    if(s.inv.ember)tl.push({id:'ember',name:'經驗火種',sub:`×${s.inv.ember}`,icon:'ember',desc:`打贏 Boss 得到的寶物<br>心情 +${C.ember.mood}、體力 +${C.ember.energy}、經驗 +${C.ember.xp}<br>擁有 ${s.inv.ember}`,btn:`<button class="btn pri" id="eatEmber">給牠吃</button>`});
    if(tl.length){out.push({head:'🧰 道具'});out.push(...tl)}
    out.push({head:'💎 進化素材'});
@@ -2279,7 +2279,8 @@ function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond
  if(r.food)rows.push(['apple','蘋果','+1','']);
  if(r.potion)rows.push(['potion','回復藥水','+1','']);
  if(r.power)rows.push([CONFIG.foods[r.power].icon,CONFIG.foods[r.power].name,'+1','⚡ 能力水果！']);
- if(r.seeds3)rows.push(['seed2','神秘種子','+1','🔮 種下去有機會長出能力水果']);
+ if(r.seeds3)rows.push(['seed2','稀有種子','+1','🔮 種下去有機會長出能力水果']);
+ if(r.seeds4)rows.push(['seed2','神奇種子','+1','✨ 種下去一定長出能力水果！']);
  if(r.ember)rows.push(['ember','經驗火種','+1','Boss 寶物！']);
 
  if(r.relic){const R=CONFIG.relics.items[r.relic];rows.push(['chest_'+r.chest,r.chest==='gold'?'金寶箱':'銅寶箱','打開！',`第 ${n} 關的王掉的`]);rows.push(['relic_'+r.relic,R.name,'+1',R.text])}

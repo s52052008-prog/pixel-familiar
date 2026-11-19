@@ -212,10 +212,10 @@ t('金系經驗只吸收 7 成，戰鬥常拿 1.5 倍金幣；土系撿莓果、
 t('電系攻擊有機會麻痺對手', () => { assert.equal(C.mkFighter('a', 'k', 5, 'elec', 0, 80, 0).stunChance, .25); assert.equal(C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0).stunChance, 0); });
 t('羈絆之力要花 10 金幣，之後 2 小時不能冒險', () => { const s = hatched(); s.coins = 9; assert.ok(C.canBond(s)); assert.equal(C.battleBond(s, T0), false); s.coins = 10; assert.equal(C.battleBond(s, T0), true); assert.equal(s.coins, 0); s.energy = 100; assert.ok(C.canAdventure(s, 1, T0 + H)); assert.equal(C.canAdventure(s, 1, T0 + 2 * H), null); });
 t('自己種的水果吃了體力再 +5（先吃買來的）', () => { const s = hatched(); s.hunger = 10; s.energy = 50; s.inv.food = 2; s.inv.fresh = { food: 1, berry: 0 }; let r = C.act(s, 'feed', T0); assert.ok(!r.fresh); assert.equal(s.energy, 55); r = C.act(s, 'feed', T0); assert.ok(r.fresh); assert.equal(s.energy, 65); });
-t('種植：長出蔓越莓／藍莓／草莓；成熟 6 小時內是好品質，過熟沒加成，放 24 小時會爛掉', () => {
+t('種植：長出蔓越莓／藍莓／草莓；過熟（6 小時後）還是自己種的，放 24 小時會爛掉', () => {
   const s = hatched(); s.inv.seeds = 9; C.plant(s, 0, T0, () => .7); assert.equal(C.plotState(s, 0, T0).kind, 'blueberry');
   let r = C.harvest(s, 0, T0 + 2 * H + 5 * H, () => 0); assert.equal(r.kind, 'blueberry'); assert.equal(r.n, 2); assert.equal(s.inv.fresh.blueberry, 2);
-  C.plant(s, 1, T0, () => 0); r = C.harvest(s, 1, T0 + 2 * H + 7 * H, () => 0); assert.ok(r.over); assert.equal(s.inv.cranberry, 2); assert.equal(s.inv.fresh.cranberry, 0);
+  C.plant(s, 1, T0, () => 0); r = C.harvest(s, 1, T0 + 2 * H + 7 * H, () => 0); assert.ok(r.over); assert.equal(s.inv.cranberry, 2); assert.equal(s.inv.fresh.cranberry, 2);
   C.plant(s, 2, T0, () => 0); assert.ok(C.plotState(s, 2, T0 + 27 * H).rotten); r = C.harvest(s, 2, T0 + 27 * H); assert.ok(r.rotten); assert.equal(s.inv.cranberry, 2); assert.ok(C.plotState(s, 2, T0 + 27 * H).empty); });
 t('V1.71 想吃的水果：餵到頭上泡泡那種 → 飽食、心情、體力、親密度、經驗都多加，然後換想吃別的', () => {
   const s = hatched(); s.hunger = 10; s.mood = 40; s.energy = 20; s.bond = 10; s.coins = 99; s.inv.banana = 1; s.crave = { kind: 'banana', until: T0 + H };
@@ -425,7 +425,7 @@ t('V1.67 天氣：同一時段固定、四種都會出現；在外面淋雨會�
   assert(a.clean < b.clean && a.mood < b.mood, [a.clean, b.clean, a.mood, b.mood]);
 });
 t('V1.72 家園水果只能自己種：沒有就不能用金幣買來餵', () => { const s = hatched(); s.hunger = 10; s.coins = 999; s.crave = { kind: 'strawberry', until: T0 + H }; const r = C.act(s, 'feed', T0, 'strawberry'); assert.ok(!r.ok); assert.equal(s.coins, 999); s.inv.strawberry = 1; assert.ok(C.act(s, 'feed', T0, 'strawberry').crave); });
-t('V1.73 能力水果商店不賣、餵不到；打王必掉能力水果和神秘種子；神秘種子 30% 長出能力水果', () => {
+t('V1.73 能力水果商店不賣、餵不到；打王必掉能力水果和稀有種子；稀有種子 30% 長出能力水果', () => {
   const s = hatched(); s.coins = 999; assert.ok(!C.buyItem(s, 'banana').ok); s.hunger = 10; assert.ok(!C.act(s, 'feed', T0, 'banana').ok); assert.equal(s.coins, 999);
   const b = hatched(); b.adv.stage = 6; const out = C.finishAdventure(b, 5, 'win', true, T0, () => .99); assert.ok(out.power && C.CONFIG.foods[out.power].power && b.inv[out.power] === 1); assert.equal(out.seeds3, 1); assert.equal(b.inv.seeds3, 1);
   const n = hatched(); const o2 = C.finishAdventure(n, 1, 'win', true, T0, () => .99); assert.ok(!o2.power && !o2.seeds3);
@@ -439,6 +439,14 @@ t('V1.76 蘋果樹：每 3 小時長 1 顆、最多 3 顆；掉下來撿起來�
   assert.equal(C.dropApple(s, false, T0 + 20 * H), 1); assert.equal(s.tree.ground, 1); assert.ok(C.pickApple(s, T0 + 20 * H).ok); assert.equal(s.inv.food, 1); assert.equal(s.coins, C.CONFIG.start.coins);
   assert.ok(!C.pickApple(s, T0 + 20 * H).ok); assert.equal(C.dropApple(s, true, T0 + 20 * H), 2); assert.equal(s.tree.n, 0);
   const z = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 20 * H); assert.equal(z.tree.ground, 2);
+});
+t('V1.77 稀有種子比較容易長草莓、神奇種子一定長能力水果、過熟還是自己種的', () => {
+  const f = hatched(); f.inv.seeds4 = 1; f.inv.seeds3 = 1; assert.ok(C.plant(f, 0, T0, () => .1, 'magic').ok); assert.ok(C.plant(f, 1, T0, () => .9, 'mystery').ok);
+  assert.ok(C.CONFIG.foods[f.plots[0].k].power); assert.equal(f.plots[1].k, 'strawberry');
+  const h = C.harvest(f, 0, T0 + 2 * H + 1000, () => .1); assert.ok(h.ok && h.magic && C.CONFIG.foods[h.kind].power && h.n >= 1); assert.equal(f.inv[h.kind], h.n);
+  const g = hatched(); g.inv.seeds = 1; C.plant(g, 0, T0, () => .1); const o = C.harvest(g, 0, T0 + 2 * H + 8 * H, () => .1); assert.ok(o.over); assert.equal(g.inv.fresh[o.kind], o.n);
+  const b = hatched(); b.adv.stage = 11; const out = C.finishAdventure(b, 10, 'win', true, T0, () => .99); assert.equal(out.seeds4, 1); assert.equal(b.inv.seeds4, 1);
+  const n = hatched(); const o2 = C.finishAdventure(n, 1, 'win', true, T0, () => .01); assert.ok(!o2.seeds4);
 });
 
 console.log(`\n${pass}/${pass + fail} passed`);
