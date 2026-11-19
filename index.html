@@ -62,7 +62,7 @@ img.uic{width:21px;height:21px;vertical-align:-5px;margin-right:5px;display:inli
 .panel{background:var(--panel);border:2px solid var(--line);box-shadow:inset 0 0 0 2px var(--hi);padding:9px 11px;font-size:13px}
 .xph{display:flex;justify-content:space-between;font-weight:700}
 .xpbar{height:10px;background:#0a1020;margin-top:6px}
-.xpbar i{display:block;height:100%;background:var(--gold);transition:width .4s;box-shadow:inset 0 3px 0 #fff6}
+.xpbar i{display:block;height:100%;background:var(--gold);box-shadow:inset 0 3px 0 #fff6}
 #log{margin:7px 0 0;color:#d8e5f8;min-height:1.4em}
 .toolbar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .toolbar.three{grid-template-columns:repeat(3,1fr)}
@@ -244,6 +244,31 @@ h1{font-size:17px}.ver{font-size:9px}
 #moves img.ci,#mvBond img.ci{width:18px;height:18px;vertical-align:-4px}
 .food{position:relative}.food.crave{box-shadow:0 0 0 2px #ff7aa8,0 0 8px #ff7aa8}.cvtag{position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#ff5a8a;color:#fff;font-size:10px;padding:0 4px;border-radius:6px;white-space:nowrap;z-index:1}
 .dexh{margin:12px 0 6px;font-size:15px}.dexgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.dexi{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:6px 4px;background:rgba(0,0,0,.08);border-radius:8px;font-size:12px;line-height:1.25}.dexi canvas{width:36px;height:36px;image-rendering:pixelated;object-fit:contain}.dexi.un b{color:#7a6a5a}.dexi .small{font-size:10.5px}
+
+/* V1.75 開寶箱過場 */
+#chestScene{position:fixed;inset:0;z-index:30;background:radial-gradient(circle at 50% 45%,#3a2410 0,#120a04 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff3c0;overflow:hidden;touch-action:manipulation}
+#chestScene .csBox{position:relative;width:168px;height:150px;cursor:pointer;filter:drop-shadow(0 0 10px #ffd34a88);animation:csGlow 1.4s ease-in-out infinite}
+#chestScene canvas{image-rendering:pixelated;position:absolute;left:0;width:168px}
+#csBody{bottom:0}
+#chestScene.open #csBody{animation:csPop .45s cubic-bezier(.3,1.6,.5,1)}@keyframes csPop{from{transform:scale(.8)}}
+#chestScene.shake .csBox{animation:csShake .08s linear infinite}
+#chestScene.open .csBox{animation:none;filter:drop-shadow(0 0 22px #ffe680)}
+.csRays{position:absolute;left:50%;top:45%;width:900px;height:900px;margin:-450px 0 0 -450px;opacity:0;background:repeating-conic-gradient(from 0deg,#ffd34a55 0 10deg,transparent 10deg 24deg);border-radius:50%;-webkit-mask:radial-gradient(circle,#000 0,transparent 60%);mask:radial-gradient(circle,#000 0,transparent 60%);transition:opacity .5s;animation:csSpin 9s linear infinite;pointer-events:none}
+#chestScene.open .csRays{opacity:1}
+.csItem{position:absolute;left:50%;top:15%;transform:translate(-50%,40px) scale(.2);opacity:0;transition:transform .6s cubic-bezier(.2,1.5,.4,1),opacity .3s;cursor:pointer;filter:drop-shadow(0 0 12px #fff8)}
+.csItem.show{transform:translate(-50%,0) scale(1);opacity:1;animation:csFloat 1.6s ease-in-out .6s infinite}
+.csItem.fly{transition:transform .55s ease-in,opacity .55s ease-in;transform:translate(-50%,62vh) scale(.15)!important;opacity:0;animation:none}
+#csRelic{width:96px;height:96px;image-rendering:pixelated;position:static!important}
+.csCard{display:flex;flex-direction:column;align-items:center;gap:4px;max-width:300px;text-align:center;background:#2a170af0;border:3px solid #b8854e;border-radius:10px;padding:10px 14px;box-shadow:0 4px 0 #000a;animation:csIn .4s ease-out}
+.csCard b{font-size:20px;color:#ffe680}.csCard span{font-size:14px}.csCard small{font-size:12px;opacity:.8}
+#csHint{font-size:15px;font-weight:900;text-shadow:0 2px 0 #000;animation:csBlink 1.2s ease-in-out infinite;margin:0}
+@keyframes csGlow{50%{filter:drop-shadow(0 0 18px #ffd34acc)}}@keyframes csShake{25%{transform:translate(-3px,1px) rotate(-2deg)}75%{transform:translate(3px,-1px) rotate(2deg)}}
+@keyframes csSpin{to{transform:rotate(360deg)}}@keyframes csFloat{50%{transform:translate(-50%,-8px) scale(1)}}@keyframes csIn{from{opacity:0;transform:translateY(12px)}}@keyframes csBlink{50%{opacity:.45}}
+/* V1.75 升級視窗 */
+.lvup{text-align:center}.lvup .big{font-size:26px;font-weight:900;color:#ffd34a;text-shadow:0 2px 0 #2a170a;margin:2px 0 8px}
+.lvtab{width:100%;border-collapse:collapse;font-size:14px}.lvtab td{padding:5px 6px;border-bottom:1px solid #0002}.lvtab td:first-child{text-align:left}.lvtab td.up{color:#3a9a3a;font-weight:900;text-align:right}
+.xpplus{position:absolute;right:10px;top:-6px;color:#ffd34a;font-weight:900;font-size:13px;text-shadow:0 1px 0 #000;pointer-events:none;animation:xpUp 1.2s ease-out forwards}
+@keyframes xpUp{from{opacity:1;transform:translateY(4px)}to{opacity:0;transform:translateY(-16px)}}
 </style>
 </head>
 <body>
@@ -339,7 +364,7 @@ h1{font-size:17px}.ver{font-size:9px}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.74.0';
+const VERSION='1.75.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1341,9 +1366,27 @@ function buzz(ms){try{if(navigator.vibrate)navigator.vibrate(ms)}catch(e){}}   /
    ========================================================= */
 const lvl=()=>PC.level(s.xp);
 /* 每次有變化後：檢查等級顯示與成長階段 */
+/* V1.75 升級視窗：列出這次能力提升了哪些（等戰鬥、訓練、進化、其他視窗都結束才跳） */
+const LVQ=[];
+function flushLv(){if(!LVQ.length)return;if(window.PF_NO_LVPOP){LVQ.length=0;return}if(B||evo||TG||!$('modal').classList.contains('hidden')||!$('chestScene').classList.contains('hidden')){setTimeout(flushLv,1000);return}
+ const L0=Math.min(...LVQ.map(x=>x[0])),L1=Math.max(...LVQ.map(x=>x[1]));LVQ.length=0;
+ const F=L=>PC.buffFighter(PC.mkFighter(s.name,formKey(),L,s.route,tier(),80,s.bond),s),a=F(L0),b=F(L1),pg=L=>PC.piggyRateOf(Object.assign({},s,{xp:PC.lvBase(L)}));
+ const row=(ic,nm,x,y,f=v=>Math.round(v))=>`<tr><td>${ic} ${nm}</td><td>${f(x)}</td><td>→</td><td class="up">${f(y)}　▲${f(y)-f(x)>0?(Number.isInteger(f(y)-f(x))?f(y)-f(x):(f(y)-f(x)).toFixed(1)):0}</td></tr>`;
+ openModal('🎉 升級了！',`<div class="lvup"><div class="big">Lv.${L0} → Lv.${L1}</div><p class="small">${esc(s.name)}變得更強了！</p>
+ <table class="lvtab">${row('❤️','血量',a.max,b.max)}${row('👊','攻擊',a.atk,b.atk)}${row('🛡️','防禦',a.def,b.def)}${row('🏃','速度',a.spd,b.spd)}${row('🐷','小豬存錢／小時',pg(L0),pg(L1),v=>Math.round(v*10)/10)}</table>
+ ${L1>=PC.MAX_LV?'<p><b>🏆 已經練到最高等級了！</b></p>':`<p class="small">下一級還差 ${PC.toNextLv(s.xp)} 經驗</p>`}</div>`,[{t:'太棒了！',cls:'pri'}]);sfx('level')}
+/* V1.75 經驗條：獲得經驗時慢慢長上去，跨等級會先滿再從頭開始 */
+let XPS=null,xpRaf=0;
+function xpPaint(){const v=XPS,L=PC.level(v),b0=PC.lvBase(L),b1=PC.lvBase(L+1),max=L>=PC.MAX_LV,f=max?1:(v-b0)/Math.max(1,b1-b0);$('xpbar').style.width=(f*100).toFixed(1)+'%';
+ $('lvNeed').textContent=max?`· Lv.${L} 已練滿`:`· Lv.${L}　${Math.floor(v-b0)} / ${b1-b0}`}
+function xpAnim(){if(!s.hatched){XPS=null;$('xpbar').style.width='0%';$('lvNeed').textContent='';return}
+ if(XPS===null||XPS>s.xp||rm()){XPS=s.xp;xpPaint();return}if(XPS===s.xp){if(!xpRaf)xpPaint();return}if(xpRaf)return;
+ const from=XPS,to=s.xp,t0=performance.now(),D=Math.min(1800,600+(to-from)*12),bar=$('xpbar').parentNode;bar.style.position='relative';
+ const pl=document.createElement('span');pl.className='xpplus';pl.textContent=`+${Math.round(to-from)} XP`;bar.appendChild(pl);setTimeout(()=>pl.remove(),1300);
+ const step=now=>{const k=Math.min(1,(now-t0)/D),e=1-Math.pow(1-k,3);XPS=from+(to-from)*e;if(k>=1)XPS=to;xpPaint();if(k<1&&s.xp===to)xpRaf=requestAnimationFrame(step);else{xpRaf=0;if(XPS!==s.xp)xpAnim()}};xpRaf=requestAnimationFrame(step)}
 function afterChange(x0){
  const L0=PC.level(x0),L1=lvl();
- if(L1>L0){say(`升到 Lv.${L1}！`,{q:true});sfx('level');spawn('star',6,{y:70,vy:-30,jx:40,life:1.3})}
+ if(L1>L0){say(`升到 Lv.${L1}！`,{q:true});sfx('level');spawn('star',6,{y:70,vy:-30,jx:40,life:1.3});LVQ.push([L0,L1]);setTimeout(flushLv,1400)}
  runStages()}
 const evoQueue=[];
 function runStages(){if(!s.hatched)return;const wasAdult=s.stage==='adult';
@@ -1448,8 +1491,8 @@ function renderUI(){if(s&&s.inv)PC.markSeen(s);
  $('sleepLabel').textContent=s.sleeping?'叫醒':'睡覺';$('sleepBtn').classList.toggle('on',s.sleeping);
  const want=s.sleeping?'sun':'moon';if($('sleepIcon').dataset.icon!==want){$('sleepIcon').dataset.icon=want;paintIcon($('sleepIcon'),want)}
  const q=s.hatched&&PC.stageReq(s,Date.now()),goal=q?q.xp:0;
- {const L=PC.level(s.xp),n=PC.toNextLv(s.xp);$('lvNeed').textContent=!s.hatched?'':n?`· Lv.${L+1} 還差 ${n}`:'· 已練滿 Lv.'+L}
- $('xptext').textContent=!s.hatched?'—':q?(s.xp>=goal?`${s.xp} XP（${STAGE_NAME[q.next]} XP 已達標 ✓）`:`${s.xp} / ${goal} XP（${STAGE_NAME[q.next]}）`):`${s.xp} XP`;$('xpbar').style.width=(!s.hatched?0:q?Math.min(100,s.xp/goal*100):100)+'%';
+ xpAnim();
+ $('xptext').textContent=!s.hatched?'—':q?(s.xp>=goal?`${s.xp} XP（${STAGE_NAME[q.next]} XP 已達標 ✓）`:`${s.xp} / ${goal} XP（${STAGE_NAME[q.next]}）`):`${s.xp} XP`;
  document.body.classList.toggle('rm',rm());
  $('viewBtn').classList.toggle('hidden',!s.hatched||s.view!=='room');$('viewBtn').textContent='🌳 出門';$('denBtn').classList.toggle('hidden',!s.hatched||s.view!=='room');   // 進窩改成點兩下建築物
  $('goalDot').classList.toggle('hidden',!(s.goals.list||[]).some(g=>!g.claimed&&g.n>=g.need))}
@@ -1572,14 +1615,14 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',pixify(`
 
 /* V1.74 物品圖鑑：拿到過就會亮起來；還沒拿到是黑色剪影＋名字 ？？？＋取得線索 */
 function itemDexDialog(){PC.markSeen(s);const C=CONFIG,F=C.foods,SN=s.seen||{},RI=C.relics.items;
- const bossOf=k=>{const n=Object.keys(C.bosses).find(x=>C.bosses[x].relic===k);return n?`第 ${n} 關「${C.bosses[n].mon}」`:'王'};
+ const bossOf=k=>{const n=Object.keys(C.bosses).find(x=>C.bosses[x].relic===k);return n?`「${C.bosses[n].mon}」`:'王'};
  const powerHint='冒險打贏 10%、打贏小王／大王必掉、★★★ 任務、優良種子 8%、神秘種子 30%';
  const CAT=[
   ['🍽️ 食物',['food','berry','fish','meat','cake'].map(k=>[k,F[k].name,ITEM_ICON[k],k==='food'?'商店、每日登入、冒險掉落、採集':'商店「食物」'])],
   ['🍓 家園水果',['cranberry','blueberry','strawberry'].map(k=>[k,F[k].name,F[k].icon,`家園種植（${k==='strawberry'?'優良種子比較容易':'種子收成'}）`])],
   ['⚡ 能力水果',Object.keys(F).filter(k=>F[k].power).map(k=>[k,F[k].name,ITEM_ICON[k],powerHint])],
   ['🧰 道具',[['seeds','種子','seed','商店、冒險撿到'],['seeds2','優良種子','seed2','商店'],['seeds3','神秘種子','seed2','冒險打贏 8%、打王必掉'],['candy','星星糖','candy','商店道具'],['potion','回復藥水','potion','商店、冒險掉落'],['potion2','超級藥水','potion2','商店道具'],['soup','神秘婆婆熬製雞湯','soup','商店道具'],['ember','經驗火種','ember','打贏 Boss 有機會掉']]],
-  ['💎 進化素材',PC.ROUTES.map(el=>['mat_'+el,C.materials[el],'mat_'+el,`${ROUTE_ICON[el]}${ROUTE_LABEL[el]}的幻獸打贏第 10／20／30 關大王`]).concat([['shards','星辰碎片','gem',`第 ${C.starHeart.stage} 關最終大王`],['hearts','星辰之心','star',`第 ${C.starHeart.stage} 關最終大王`]])],
+  ['💎 進化素材',PC.ROUTES.map(el=>['mat_'+el,C.materials[el],'mat_'+el,`${ROUTE_ICON[el]}${ROUTE_LABEL[el]}的幻獸打贏大王`]).concat([['shards','星辰碎片','gem','打贏最終大王'],['hearts','星辰之心','star','打贏最終大王']])],
   ['🪎 王的寶物',Object.keys(RI).map(k=>['rl_'+k,RI[k].name,'relic_'+k,`打贏${bossOf(k)}的寶箱`])]];
  let tot=0,got=0;const html=CAT.map(([h,L])=>{const cells=L.map(([k,nm,ic,hint])=>{tot++;const ok=!!SN[k];if(ok)got++;
    return`<div class="dexi ${ok?'':'un'}"><canvas class="picon" data-icon="${ic}" data-s="2" data-sil="${ok?0:1}"></canvas><b>${ok?esc(nm):'？？？'}</b><span class="small">${ok?'✅ 已獲得':'🔍 '+hint}</span></div>`}).join('');
@@ -1882,7 +1925,7 @@ function shopDialog(tab,bagOnly=tab==='bag'){PC.claimDaily(s,Date.now());
    {const RL=C.relics,RI=RL.items,iv=s.inv.relics||{},pets=[s].concat(s.pair?[s.pair]:[]),wornBy=k=>pets.filter(p=>(p.relics||[]).includes(k));   // V1.53 寶物也放在背包：可以看、可以搭配
     const ks=Object.keys(RI).filter(k=>iv[k]||wornBy(k).length);if(!ks.length){out.push({head:'🪎 王的寶物'});out.push({id:'rl_none',name:'還沒有寶物',sub:'打王掉寶箱',dim:true,icon:'chest',desc:`打贏小王、大王會掉寶箱（第一次一定掉，之後 ${Math.round(RL.repeatDrop*100)}%），每隻幻獸可以戴 ${RL.slots} 個寶物。`,btn:''})}if(ks.length){out.push({head:'🪎 王的寶物'});
      for(const k of ks){const R=RI[k],w=wornBy(k),n=iv[k]||0,bt=[];pets.forEach((p,pi)=>{const L=p.relics||[];if(L.includes(k))bt.push(`<button class="btn" data-run="${pi}|${k}">從 ${esc(p.name)} 身上卸下</button>`);else if(n>0)bt.push(`<button class="btn pri" data-req="${pi}|${k}" ${L.length>=RL.slots?'disabled':''}>給 ${esc(p.name)} 戴${L.length>=RL.slots?'（欄位滿了）':''}</button>`)});if(n>0)bt.push(`<button class="btn" data-rsell="${k}">💰 賣掉（${RL.sell}）</button>`);
-      out.push({id:'rl_'+k,name:R.name,sub:`×${n}${w.length?'｜戴著 '+w.length:''}`,icon:'relic_'+k,desc:`<b>${R.text}</b><br>第 ${Object.keys(C.bosses).find(x=>C.bosses[x].relic===k)} 關「${R.boss}」的寶物${w.length?'<br>🐾 戴在：'+w.map(p=>esc(p.name)).join('、'):''}<br>背包裡還有 ${n} 個（每隻最多戴 ${RL.slots} 個，同一種只能戴一個）<br>💚 戴 1 個發綠光、💙 2 個藍光；冰龍鱗片或赤龍之牙其中一個 💜 紫光、兩個都戴 💛 金光`,btn:bt.join('')})}}}
+      out.push({id:'rl_'+k,name:R.name,sub:`×${n}${w.length?'｜戴著 '+w.length:''}`,icon:'relic_'+k,desc:`<b>${R.text}</b><br>「${R.boss}」的寶物${w.length?'<br>🐾 戴在：'+w.map(p=>esc(p.name)).join('、'):''}<br>背包裡還有 ${n} 個（每隻最多戴 ${RL.slots} 個，同一種只能戴一個）<br>💚 戴 1 個發綠光、💙 2 個藍光；冰龍鱗片或赤龍之牙其中一個 💜 紫光、兩個都戴 💛 金光`,btn:bt.join('')})}}}
    out.push({head:'🌟 星辰寶物'});
    out.push({id:'shards',name:'星辰碎片',sub:`×${s.inv.shards||0}`,dim:!s.inv.shards,icon:'gem',desc:`可以抵 1 個任何屬性的終極素材（例如羽毛只有 2 個，加 1 個碎片就能湊滿 ${C.ascend.mats} 個）。<br>第 ${C.starHeart.stage} 關大王：每個屬性第一次打贏必掉，之後 ${Math.round(C.starHeart.shardRepeat*100)}%<br>擁有 ${s.inv.shards||0}`,btn:''});
    {const w=PC.canAwaken(s);out.push({id:'hearts',name:'星辰之心',sub:`×${s.inv.hearts||0}`,dim:!s.inv.hearts,icon:'star',desc:`給<b>高階</b>的幻獸使用：星耀覺醒！全部能力 +${Math.round((C.starHeart.statX-1)*100)}%、存錢筒 ×${C.starHeart.piggyX}、名字前加「星耀」、身上有星光。<br>每個屬性第一次打倒第 ${C.starHeart.stage} 關大王得到<br>擁有 ${s.inv.hearts||0}${s.awake?'<br>✨ '+esc(s.name)+' 已經星耀覺醒了':''}`,btn:w?`<button class="btn" disabled>${w}</button>`:`<button class="btn pri" id="useHeart">✨ 給 ${esc(s.name)} 使用</button>`})}}
@@ -2185,6 +2228,29 @@ async function onMove(mv){if(!B||B.over||(mv!=='frozen'&&B.busy))return;unlockAu
  if(B.me.hp<=0){B.fx.me.faint=performance.now();blog(`${B.me.name} 沒力氣了…`);await sleep(900);endBattle(false);return}
  if(B.me.frozen>0&&!B.over){bUI();setTimeout(()=>onMove('frozen'),500);return}   // 被冰凍：這回合自動跳過
  B.busy=false;bUI();if(dangerNow()&&!B.bondUsed)blog('⚠️ 下一擊可能撐不住了！可以喝藥水，或用「💗 羈絆之力」為牠打氣！')}
+/* V1.75 開寶箱過場：寶箱微微發光 → 點它 → 打開發金光 → 寶物跳出來＋介紹 → 點寶物收進背包 */
+function closedChest(kind){const G=kind==='gold',P=G?{o:'#3a1a08',l:'#ffe27a',m:'#f2b21a',d:'#b07a08',b:'#8a5a10',k:'#fff6c8'}:{o:'#2a1408',l:'#f0b888',m:'#c07a48',d:'#7a4a28',b:'#5a3418',k:'#ffe0c0'};
+ const c=document.createElement('canvas');c.width=24;c.height=22;const x=c.getContext('2d'),f=(col,a,b,w,h)=>{x.fillStyle=col;x.fillRect(a,b,w,h)};
+ f(P.o,4,2,16,1);f(P.o,2,3,20,18);f(P.o,3,2,1,1);f(P.o,20,2,1,1);   // 外框
+ f(P.m,3,4,18,6);f(P.l,4,3,16,1);f(P.l,3,4,18,1);f(P.d,3,9,18,1);   // 蓋子＋亮邊
+ f(P.o,3,10,18,1);f(P.m,3,11,18,9);f(P.d,3,18,18,2);f(P.l,3,11,18,1);   // 箱身
+ for(const bx of[6,16]){f(P.b,bx,3,2,17);f(P.l,bx,3,1,17)}   // 金屬條
+ f(P.o,10,7,4,6);f(P.k,11,8,2,4);f(P.o,11,10,2,1);f(P.o,11,11,1,1);   // 鎖
+ return c}
+function chestScene(kind,relic){return new Promise(res=>{const z=$('chestScene'),R=CONFIG.relics.items[relic],open=UIIMG['chest_'+kind]||ICV['chest_'+kind]||DSPR['chest_'+kind],body=$('csBody');
+ if(!R){res();return}
+ const paint=src=>{body.width=src.width;body.height=src.height;const x=body.getContext('2d');x.imageSmoothingEnabled=false;x.clearRect(0,0,src.width,src.height);x.drawImage(src,0,0);body.style.height=Math.round(168*src.height/src.width)+'px';z.querySelector('.csBox').style.height=body.style.height};
+ paint(closedChest(kind));
+ const rc=$('csRelic'),ri=UIIMG['relic_'+relic]||ICV['relic_'+relic]||DSPR['relic_'+relic];if(ri){rc.width=ri.width;rc.height=ri.height;const x=rc.getContext('2d');x.imageSmoothingEnabled=false;x.clearRect(0,0,ri.width,ri.height);x.drawImage(ri,0,0)}
+ $('csName').textContent=R.name;$('csText').textContent=R.text;$('csFrom').textContent=`「${R.boss}」的寶物`;
+ z.className='';z.querySelector('.csItem').className='csItem hidden';z.querySelector('.csCard').classList.add('hidden');$('csHint').textContent=`${kind==='gold'?'金':'銅'}寶箱在發光…點一下打開！`;
+ let st=0;const box=z.querySelector('.csBox'),item=z.querySelector('.csItem');
+ box.onclick=()=>{if(st)return;st=1;sfx('tap');z.classList.add('shake');buzz(30);$('csHint').textContent='';
+  setTimeout(()=>{z.classList.remove('shake');if(open)paint(open);z.classList.add('open');sfx('boom');setTimeout(()=>sfx('level'),150);buzz(60);
+   setTimeout(()=>{item.className='csItem show';setTimeout(()=>{z.querySelector('.csCard').classList.remove('hidden');$('csHint').textContent='點寶物收進背包';st=2},500)},280)},650)};
+ item.onclick=()=>{if(st!==2)return;st=3;sfx('net');item.classList.add('fly');$('csHint').textContent='🎒 收進背包了！';z.querySelector('.csCard').classList.add('hidden');
+  setTimeout(()=>{z.classList.add('hidden');res()},900)};
+ z.classList.remove('hidden')})}
 function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond').classList.add('hidden');const n=B.n,x0=s.xp;
  const res=win===null?'run':win?'win':'loss',r=PC.finishAdventure(s,n,res,B.full,Date.now()),px=B.duo&&s.pair?PC.pairGain(s,r.xp||0,res):0;
  // 結算：一行一個戰利品（圖示＋名稱＋數量）
@@ -2211,7 +2277,7 @@ function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond
  $('rTitle').textContent=win?'🎉 勝利！戰利品':win===false?'😢 輸了…':'🏃 逃走了';
  $('rRows').innerHTML=rows.length?rows.map(([ic,nm,v,tag])=>`<div class="rrow"><canvas class="picon" data-icon="${ic}" data-s="3"></canvas><b>${nm}</b>${tag?`<span class="rtag">${tag}</span>`:''}<i>${v}</i></div>`).join(''):'<p class="small" style="text-align:center">這次沒有拿到東西</p>';
  $('rNote').innerHTML=notes.join('<br>');$('rRows').querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));
- setTimeout(()=>{if(B&&B.over)$('bResult').classList.remove('hidden')},win?900:500);   // 先看一下勝負，再跳出結算
+ setTimeout(async()=>{if(r.relic&&B&&B.over)await chestScene(r.chest||'bronze',r.relic);if(B&&B.over)$('bResult').classList.remove('hidden')},win?900:500);   // V1.75 有寶箱先開寶箱   // 先看一下勝負，再跳出結算
  save();renderUI();setTimeout(()=>afterChange(x0),0)}
 function closeBattle(){$('battle').classList.add('hidden');B=null;renderUI();if(s.hatched)say(s.mood>60?'冒險好好玩！':'有點累了…')}
 const bcv=$('bcv'),bctx=bcv.getContext('2d');bctx.imageSmoothingEnabled=false;
@@ -2824,5 +2890,6 @@ window.PF={get state(){return s},startArrange:()=>startArrange(),get ARR(){retur
  debug:{info(){return{busy:busyUntil-Date.now(),evo:!!evo,modal:!$('modal').classList.contains('hidden'),taps:s.eggTaps,h:s.hatched,battle:!!B}},skip(min){s.lastTick-=min*60000;tick();renderUI();save()},age(h){s.hatchedAt-=h*3600000;save();runStages();renderUI()},xp(n){const x0=s.xp;PC.addXP(s,n);save();renderUI();afterChange(x0)},set(o){Object.assign(s,o);renderUI();save()}}};
 try{init()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<div style="padding:12px;background:#a8394c;color:#fff">啟動錯誤：${esc(e.message)}</div>`);throw e}
 </script>
+<div id="chestScene" class="hidden"><div class="csRays"></div><div class="csBox"><canvas id="csBody"></canvas></div><div class="csItem hidden"><canvas id="csRelic"></canvas></div><div class="csCard hidden"><b id="csName"></b><span id="csText"></span><small id="csFrom"></small></div><p id="csHint">寶箱在發光…點一下打開！</p></div>
 </body>
 </html>
