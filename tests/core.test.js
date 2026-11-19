@@ -266,7 +266,7 @@ t('藥水：開局 1 瓶、商店 40 金幣；超級藥水 100', () => { const s
 t('V1.72 雞湯 120 金幣：飽食 +10、心情 +20、體力 +20，消除羈絆之力的休息', () => { const s = hatched(); s.coins = 300; assert.ok(C.buyItem(s, 'soup').ok); assert.equal(s.coins, 180); s.hunger = 50; s.mood = 50; s.energy = 50; s.bondRestUntil = T0 + 3600000; assert.ok(C.canAdventure(s, 1, T0)); const r = C.useSoup(s, T0); assert.ok(r.ok && r.rest); assert.equal(s.inv.soup, 0); assert.equal(C.canAdventure(s, 1, T0), null); assert.equal(Math.round(s.hunger), 60); assert.equal(Math.round(s.mood), 70); assert.equal(Math.round(s.energy), 70); C.buyItem(s, 'soup'); assert.ok(C.useSoup(s, T0).ok); });
 t('V1.41 綜合種子：蔓越莓／藍莓／草莓，賣 15／20／30；優良種子收成 3～4 顆、比較容易長草莓', () => { const s = hatched(); s.coins = 13; assert.ok(C.buyItem(s, 'seeds2').ok); assert.ok(C.buyItem(s, 'seeds').ok); assert.equal(s.coins, 0);
   assert.equal(C.pickFruit(false, () => 0.1), 'cranberry'); assert.equal(C.pickFruit(false, () => 0.7), 'blueberry'); assert.equal(C.pickFruit(false, () => 0.95), 'strawberry'); assert.equal(C.pickFruit(true, () => 0.75), 'strawberry');
-  assert.ok(C.plant(s, 0, T0, () => 0.95, true).ok); assert.equal(s.inv.seeds2, 0); const r = C.harvest(s, 0, T0 + 2.5 * 3600000, () => 0.99); assert.ok(r.ok && r.n === 4 && r.good && r.kind === 'strawberry'); assert.equal(s.inv.fresh.strawberry, 4);
+  assert.ok(C.plant(s, 0, T0, () => 0.95, true).ok); assert.equal(s.inv.seeds2, 0); const r = C.harvest(s, 0, T0 + 3.5 * 3600000, () => 0.99); assert.ok(r.ok && r.n === 4 && r.good && r.kind === 'strawberry'); assert.equal(s.inv.fresh.strawberry, 4);
   assert.ok(C.sellFruit(s, 'strawberry').ok); assert.equal(s.coins, 30); assert.ok(!C.plant(s, 1, T0, Math.random, true).ok);
   const t2 = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(t2.inv.fresh.strawberry, 3); });
 t('V1.40 第一天不送金幣（開局 50）', () => { const s = C.fresh(T0); C.claimDaily(s, T0); assert.equal(s.coins, 50); C.claimDaily(s, T0 + 86400000); assert.equal(s.coins, 60); });
@@ -430,7 +430,7 @@ t('V1.73 能力水果商店不賣、餵不到；打王必掉能力水果和稀�
   const b = hatched(); b.adv.stage = 6; const out = C.finishAdventure(b, 5, 'win', true, T0, () => .99); assert.ok(out.power && C.CONFIG.foods[out.power].power && b.inv[out.power] === 1); assert.equal(out.seeds3, 1); assert.equal(b.inv.seeds3, 1);
   const n = hatched(); const o2 = C.finishAdventure(n, 1, 'win', true, T0, () => .99); assert.ok(!o2.power && !o2.seeds3);
   const f = hatched(); f.inv.seeds3 = 1; assert.ok(C.plant(f, 0, T0, () => .5, 'mystery').ok); assert.equal(f.inv.seeds3, 0); assert.equal(f.plots[0].g, 2);
-  const h = C.harvest(f, 0, T0 + 2 * H + 60000, () => .1); assert.ok(h.ok && h.myst && h.bonus && h.bonusN >= 1); assert.equal(f.inv[h.bonus], h.bonusN);
+  const h = C.harvest(f, 0, T0 + 6 * H + 60000, () => .1); assert.ok(h.ok && h.myst && h.bonus && h.bonusN >= 1); assert.equal(f.inv[h.bonus], h.bonusN);
   const z = hatched(); z.crave = { kind: null, until: T0 + H }; C.applyTime(z, T0 + 1000); assert.equal(z.crave.kind, null); C.applyTime(z, T0 + H + 1000); assert.ok(z.crave.kind && !C.CONFIG.foods[z.crave.kind].power);
 });
 t('V1.76 蘋果樹：每 3 小時長 1 顆、最多 3 顆；掉下來撿起來免費', () => {
@@ -443,11 +443,43 @@ t('V1.76 蘋果樹：每 3 小時長 1 顆、最多 3 顆；掉下來撿起來�
 t('V1.77 稀有種子比較容易長草莓、神奇種子一定長能力水果、過熟還是自己種的', () => {
   const f = hatched(); f.inv.seeds4 = 1; f.inv.seeds3 = 1; assert.ok(C.plant(f, 0, T0, () => .1, 'magic').ok); assert.ok(C.plant(f, 1, T0, () => .9, 'mystery').ok);
   assert.ok(C.CONFIG.foods[f.plots[0].k].power); assert.equal(f.plots[1].k, 'strawberry');
-  const h = C.harvest(f, 0, T0 + 2 * H + 1000, () => .1); assert.ok(h.ok && h.magic && C.CONFIG.foods[h.kind].power && h.n >= 1); assert.equal(f.inv[h.kind], h.n);
+  const h = C.harvest(f, 0, T0 + 12 * H + 1000, () => .1); assert.ok(h.ok && h.magic && C.CONFIG.foods[h.kind].power && h.n >= 1); assert.equal(f.inv[h.kind], h.n);
   const g = hatched(); g.inv.seeds = 1; C.plant(g, 0, T0, () => .1); const o = C.harvest(g, 0, T0 + 2 * H + 8 * H, () => .1); assert.ok(o.over); assert.equal(g.inv.fresh[o.kind], o.n);
   const b = hatched(); b.adv.stage = 11; const out = C.finishAdventure(b, 10, 'win', true, T0, () => .99); assert.equal(out.seeds4, 1); assert.equal(b.inv.seeds4, 1);
   const n = hatched(); const o2 = C.finishAdventure(n, 1, 'win', true, T0, () => .01); assert.ok(!o2.seeds4);
 });
 
+t('V1.83 釣魚：時段天氣決定魚種、魚餌、拉條成功才拿到、吃魚、烤魚、賣魚、存檔', () => {
+  const s = hatched(), D = Date.UTC(2026, 10, 20, 23, 0);   // 台灣早上 7 點
+  assert.equal(C.fishSlot(D), 'morning'); assert.equal(C.fishSlot(Date.UTC(2026, 10, 20, 12, 0)), 'night');
+  const pool = C.fishPool(s, D); assert.ok(pool.includes('f_creek')); assert.ok(!pool.includes('f_dragon'));
+  assert.equal(C.castLine(s, D).code, 'nobait'); s.coins = 100; assert.ok(C.buyBait(s, 'normal', 2).ok); assert.equal(s.coins, 90); assert.equal(s.fish.bait, 2);
+  const c = C.castLine(s, D, () => 0); assert.ok(c.ok && c.key === pool[0] && c.bar === .3 && !c.zap); assert.equal(s.fish.bait, 1);
+  assert.ok(!C.landFish(s, 'f_creek', false).ok); assert.ok(!s.fish.raw.f_creek);
+  const l = C.landFish(s, 'f_creek', true); assert.ok(l.ok && l.first); assert.equal(s.fish.raw.f_creek, 1); assert.equal(s.fish.dex.f_creek, 1);
+  s.hunger = 50; s.energy = 50; const e = C.eatFish(s, 'f_creek', T0 + 1000); assert.ok(e.ok && !e.cooked); assert.equal(Math.round(s.hunger), 60); assert.equal(Math.round(s.energy), 55);
+  C.landFish(s, 'f_koi', true); assert.ok(C.cookFish(s, 'f_koi').ok); assert.equal(s.coins, 85); assert.equal(s.fish.cooked.f_koi, 1);
+  s.hunger = 10; s.energy = 10; assert.ok(C.eatFish(s, 'f_koi', T0 + 2000).cooked); assert.equal(Math.round(s.hunger), 10 + (10 + 10) * 2); assert.equal(Math.round(s.energy), 10 + (5 + 10) * 2);
+  C.landFish(s, 'f_moon', true); assert.ok(C.sellFish(s, 'f_moon').ok); assert.equal(s.coins, 125); C.landFish(s, 'j_can', true); assert.equal(s.fish.junk.j_can, 1);
+  assert.ok(!C.buyRod(s, 'gold').ok); s.coins = 2000; assert.ok(C.buyRod(s, 'carbon').ok); assert.ok(!C.buyRod(s, 'bamboo').ok); assert.equal(C.rodOf(s).bar, .4);
+  const r = C.sanitize(JSON.parse(JSON.stringify(s))); assert.equal(r.fish.rod, 'carbon'); assert.equal(r.fish.junk.j_can, 1); assert.equal(r.fish.dex.f_koi, 1);
+  const st2 = C.fishPool(s, Date.UTC(2026, 10, 20, 10, 0)); assert.ok(st2.every(k => C.FISH[k].star >= 1));
+});
+t('V1.83 生活技能：成年才有、同系不疊加、每天一次；水系免水費、草系長快、雷系電魚、岩系化石加掉寶', () => {
+  const s = hatched(); s.route = 'tide'; s.stage = 'adolescent'; assert.equal(C.runSkills(s, T0), null); assert.equal(C.washCost(s) > 0, true);
+  s.stage = 'adult'; assert.equal(C.washCost(s), 0); s.pair = { name: '二號', route: 'tide', stage: 'adult', hatched: true }; assert.equal(C.skillPets(s).length, 1);
+  const o = C.runSkills(s, T0, () => .1); assert.ok(o && o.list.length === 1); assert.ok(Object.values(s.fish.raw).reduce((a, b) => a + b, 0) >= 1); assert.equal(C.runSkills(s, T0 + 1000), null); assert.ok(C.runSkills(s, T0 + 24 * H, () => .1));
+  const f = hatched(); f.route = 'forest'; f.stage = 'adult'; f.inv.seeds = 1; C.plant(f, 0, T0); assert.ok(C.plotState(f, 0, T0 + 1.7 * H).ripe);
+  const e = hatched(); e.route = 'elec'; e.stage = 'adult'; e.fish = { bait: 5 }; const z = [0, 1, 2, 3].map(() => C.castLine(e, T0, () => .5).zap); assert.deepEqual(z, [true, true, true, false]);
+  const k = hatched(); k.route = 'earth'; k.stage = 'adult'; const ko = C.runSkills(k, T0, () => .01); assert.ok(ko.list[0].got.length >= 2); assert.ok(Math.abs(C.fossilLuck(k) - .02) < 1e-9);
+  const m = hatched(); m.route = 'metal'; m.stage = 'ascended'; C.landFish(m, 'j_boot', true); C.landFish(m, 'j_can', true); C.runSkills(m, T0, () => .1); assert.equal(m.loot.scrap, 2); assert.equal(m.loot.amulet, 1); assert.ok(C.sellFish(m, 'scrap').ok);
+  const fl = hatched(); fl.route = 'flame'; fl.stage = 'adult'; C.landFish(fl, 'f_carp', true); C.runSkills(fl, T0, () => .1); assert.equal(fl.fish.cooked.f_carp, 1); assert.ok(C.cookFish(fl, 'f_carp').ok === false);
+});
+
+t('V1.83 野莓叢：每 3 小時 1 顆、最多 4 顆、摘完重新計時', () => {
+  const s = hatched(); s.bush = { at: T0 }; assert.equal(C.bushBerries(s, T0 + 2 * H), 0); assert.ok(!C.pickBerries(s, T0 + 2 * H).ok);
+  assert.equal(C.bushBerries(s, T0 + 3 * H), 1); assert.equal(C.bushBerries(s, T0 + 30 * H), 4); const b0 = s.inv.berry || 0; const r = C.pickBerries(s, T0 + 30 * H); assert.ok(r.ok && r.n === 4); assert.equal(s.inv.berry, b0 + 4); assert.equal(C.bushBerries(s, T0 + 31 * H), 0);
+  assert.equal(C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 31 * H).bush.at, T0 + 30 * H);
+});
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

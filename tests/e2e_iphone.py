@@ -14,7 +14,7 @@ async def tap(p, x=64, y=80):
     await p.mouse.click(b['x'] + x / 128 * b['width'], b['y'] + y / 112 * b['height'])
 async def newpage(br, dev, init=None):
     ctx = await br.new_context(**dev); p = await ctx.new_page()
-    await p.add_init_script('window.PF_NO_WANDER=1;window.PF_NO_RPS=1;window.PF_NO_TRAITS=1;window.PF_NO_WEATHER=1;window.PF_NO_CRAVE=1;window.PF_NO_LVPOP=1;window.PF_SKIP_INTRO=1')   # 測試時關掉待命亂走與猜拳（猜拳另外測）
+    await p.add_init_script('window.PF_NO_WANDER=1;window.PF_NO_RPS=1;window.PF_NO_TRAITS=1;window.PF_NO_WEATHER=1;window.PF_NO_CRAVE=1;window.PF_NO_LVPOP=1;window.PF_NO_SKILLS=1;window.PF_SKIP_INTRO=1')   # 測試時關掉待命亂走與猜拳（猜拳另外測）
     p.on('pageerror', lambda e: errors.append(str(e)))
     p.on('console', lambda m: errors.append(m.text) if m.type == 'error' and 'favicon' not in m.text else None)
     if init: await p.add_init_script(init)
@@ -74,7 +74,7 @@ async def main():
         ok('V1.66 跳過會再問一次、第二次跳過才給隨機蛋', '真的不做' in t1 and not await p.is_visible('#modal'), t1)
         await hatch(p, '露米')
         s = await st(p); ok('孵化並命名、孵化時就有屬性（嬰兒期）', s['hatched'] and s['stage'] == 'baby' and s['name'] == '露米' and s['route'] in ['flame','tide','forest','earth','bird','elec','metal'], s['route'])
-        stx = await p.evaluate("document.getElementById('stageText').textContent"); ok('畫面顯示屬性', any(k in stx for k in ['焰系','潮系','森系','土系','鳥系','電系','金系']), stx)
+        stx = await p.evaluate("document.getElementById('stageText').textContent"); ok('畫面顯示屬性', any(k in stx for k in ['火系','水系','草系','岩系','飛行系','雷系','鋼系']), stx)
         await p.reload(); await p.wait_for_timeout(700); s = await st(p); ok('刷新後保留', s['hatched'] and s['name'] == '露米')
         ok('每日禮物刷新後不重複', s['coins'] == 50, s['coins'])
         # ---------- 2. 照顧行為 ----------
@@ -116,7 +116,7 @@ async def main():
             await p.wait_for_timeout(300); s = await st(p); eff = min(hrs, 12)
             ok(f'離線 {hrs} 小時 → 只計算 {eff} 小時（飽食用真實時間，20 小時會餓到 0）', abs(s['hunger'] - (0 if hrs >= 20 else 80 - 4 * eff)) < .2 and (s['runaway'] is not None) == (hrs >= 32) and abs(s['energy'] - min(100, 20 + 8 * eff)) < .2, (round(s['hunger'], 1), round(s['energy'], 1)))
         await p.wait_for_timeout(500); ok('離家出走時畫面提示要走路找回來', '離家出走' in await p.inner_text('#growText'))
-        await p.evaluate("PF.creditSteps((PF.state.steps.days[PF.PC.dayKey(Date.now())]||0)+10000)"); await p.wait_for_timeout(300); s = await st(p); ok('走 1 萬步把牠找回來', s['runaway'] is None and s['hunger'] == 40, (s['runaway'], s['hunger']))
+        await p.evaluate("PF.creditSteps((PF.state.steps.days[PF.PC.dayKey(Date.now())]||0)+10000)"); await p.wait_for_timeout(300); s = await st(p); ok('走 1 萬步把牠找回來', s['runaway'] is None and abs(s['hunger'] - 40) < .1, (s['runaway'], s['hunger']))
         await p.evaluate("PF.debug.set({hunger:80,mood:80,clean:80,energy:60})")
         # ---------- 5. 成長門檻（用 debug 把孵化時間往前移） ----------
         await p.evaluate("PF.debug.set({xp:449})"); await p.evaluate("PF.debug.age(12)"); await p.wait_for_timeout(4500)
@@ -349,7 +349,7 @@ async def main():
             ok('猜拳有結果（贏／平手／輸）', any(k in m for k in ['躲開', '0.8', '1.2']), m)
         await ctx7.close()
         # ---------- iOS App 版：模擬 Capacitor 健康外掛，打開就自動同步步數 ----------
-        mock = """window.PF_NO_WANDER=1;window.PF_NO_RPS=1;window.PF_NO_TRAITS=1;window.PF_NO_WEATHER=1;window.PF_NO_CRAVE=1;window.PF_NO_LVPOP=1;window.PF_SKIP_INTRO=1;
+        mock = """window.PF_NO_WANDER=1;window.PF_NO_RPS=1;window.PF_NO_TRAITS=1;window.PF_NO_WEATHER=1;window.PF_NO_CRAVE=1;window.PF_NO_LVPOP=1;window.PF_NO_SKILLS=1;window.PF_SKIP_INTRO=1;
           const _d=n=>{const t=new Date(Date.now()-n*86400000);return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei'}).format(t)};
           window.Capacitor={isNativePlatform:()=>true,Plugins:{HealthSteps:{requestAuthorization:async()=>({granted:true}),getDailySteps:async()=>({days:[{date:_d(1),steps:4200},{date:_d(0),steps:6800}]})}}};"""
         ctx8 = await br.new_context(**I13); q = await ctx8.new_page(); await q.add_init_script(mock)
@@ -377,7 +377,7 @@ async def main():
         # ---------- V1.51 自由佈置房間 ----------
         ctxA, a = await newpage(br, I13); await hatch(a)
         await a.evaluate("PF.startArrange()"); await a.wait_for_timeout(300)
-        vis = await a.is_visible('#arrBar')
+        vis = await a.is_visible('#arrPanel')
         r0 = await a.evaluate("PF.arrItems().find(o=>o.sl==='bed').r")
         box = await a.locator('#scene').bounding_box(); sx = box['width'] / 128; sy = box['height'] / 112
         cx, cy = box['x'] + (r0[0] + r0[2] / 2) * sx, box['y'] + (r0[1] + r0[3] / 2) * sy
@@ -386,7 +386,16 @@ async def main():
         await a.screenshot(path=f'{OUT}/15_arrange.png')
         await a.click('#arrDone'); await a.reload(); await a.wait_for_timeout(800)
         kept = await a.evaluate("PF.state.decor.pos.bed")
-        ok('佈置房間：可以拖動床、按完成後重開還在', vis and abs((r0[0] - r1[0]) - 30) <= 2 and kept is not None and not await a.is_visible('#arrBar'), (r0, r1, kept))
+        ok('佈置房間：可以拖動床、按完成後重開還在', vis and abs((r0[0] - r1[0]) - 30) <= 2 and kept is not None and not await a.is_visible('#arrPanel'), (r0, r1, kept))
+        # ---------- V1.83 釣魚 ----------
+        await a.evaluate("(()=>{PF.state.coins=500;PF.state.view='yard';renderUI()})()"); await a.wait_for_timeout(300)
+        await a.evaluate("PF.openFish()"); await a.wait_for_timeout(400); vis = await a.is_visible('#fishZone')
+        await a.click('#fsCast'); await a.wait_for_timeout(600); shop = await a.is_visible('#modal'); await a.click('[data-fb=b10]'); await a.wait_for_timeout(200); await a.evaluate("closeModal()")
+        await a.click('#fsCast'); await a.wait_for_timeout(800); await a.evaluate("FZ.c.key='f_creek';FZ.c.star=1;FZ.biteAt=0"); await a.wait_for_timeout(200)
+        await a.dispatch_event('#fsReel', 'pointerdown'); await a.wait_for_timeout(200); reel = await a.evaluate("FZ.ph")
+        await a.evaluate("FZ.prog=1.2"); await a.wait_for_timeout(900); card = await a.is_visible('#gResult'); await a.click('#gDone'); f = await a.evaluate("JSON.stringify(PF.state.fish)")
+        await a.click('#fsHome'); await a.wait_for_timeout(300)
+        ok('釣魚：沒餌會開釣具店、買餌、拋竿、上鉤拉條、跳結算視窗、記進圖鑑、回院子', vis and shop and reel == 'reel' and '"f_creek":1' in f and '"bait":9' in f and card and not await a.is_visible('#fishZone'), (vis, shop, reel, card, f))
         await ctxA.close()
         # ---------- 小螢幕 ----------
         ctx6, q = await newpage(br, pw.devices['iPhone SE']); await q.screenshot(path=f'{OUT}/14_iphoneSE.png', full_page=True)
