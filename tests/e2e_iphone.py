@@ -164,7 +164,7 @@ async def main():
         s = await st(p); ok('買 7 件家具、扣錢、自動擺上', len(s['decor']['owned']) == 9 and s['coins'] == 400 - 30 - 45 - 50 - 35 - 80 - 60 - 25 and s['decor']['placed']['bed'] == 'bed_cloud', s['coins'])
         await p.click('[data-si="toy_block"]'); await p.click('[data-dz="toy_block"]'); await p.wait_for_timeout(150); ok('收起家具', 'toy' not in (await st(p))['decor']['placed'])
         await p.click('[data-dz="toy_block"]'); await p.wait_for_timeout(150)
-        await p.evaluate("PF.state.coins+=300"); lv0 = await p.evaluate("PF.PC.level(PF.state.xp)")
+        await p.evaluate("PF.state.coins+=600"); lv0 = await p.evaluate("PF.PC.level(PF.state.xp)")
         await p.click('[data-tab="tools"]'); await p.wait_for_timeout(150); await p.click('[data-si="candy"]'); await p.click('[data-bi="candy"]'); await p.wait_for_timeout(150)
         ok('買星星糖', (await st(p))['inv']['candy'] == 1); await p.click('#eatCandy'); await p.wait_for_timeout(1500)
         s = await st(p); ok('吃星星糖：心情 +20、升 1 級', s['inv']['candy'] == 0 and round(s['mood']) >= 69 and await p.evaluate("PF.PC.level(PF.state.xp)") == lv0 + 1, round(s['mood']))
@@ -269,7 +269,7 @@ async def main():
         await p.click('#tClose'); await p.wait_for_timeout(300)
         await p.evaluate(f"PF.debug.set({{coins:200,bondRestUntil:Date.now()+3600000,energy:40}})")
         r = await p.evaluate("(()=>{const s=PF.state;const a=PF.PC.buyItem(s,'soup');const b=PF.PC.useSoup(s,Date.now());return [a.ok,b.ok,s.coins,s.bondRestUntil,Math.round(s.energy)]})()")
-        ok('雞湯 99 金幣、喝了不用休息、體力 +20', r[0] and r[1] and r[2] == 101 and r[3] == 0 and r[4] == 60, r)
+        ok('雞湯 120 金幣、喝了不用休息、體力 +20', r[0] and r[1] and r[2] == 80 and r[3] == 0 and r[4] == 60, r)
         # ---------- 步數 ----------
         await p.goto(URL + '?steps=12345'); await p.wait_for_timeout(900); s = await st(p)
         ok('捷徑網址登記步數', s['steps']['total'] == 12345 and 'steps' not in p.url, (s['steps']['total'], p.url))

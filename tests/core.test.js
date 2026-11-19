@@ -173,7 +173,7 @@ t('家具：存檔亂碼被過濾（沒買的、放錯格的、不存在的）',
   assert.deepEqual(r.decor.owned, ['paper_cream', 'bed_round', 'rug_red']); assert.deepEqual(r.decor.placed, { paper: 'paper_cream', rug: 'rug_red', bed: 'bed_round' });
 });
 t('道具：買食物／種子／星星糖、吃星星糖', () => {
-  const s = hatched(); s.coins = 250; C.buyItem(s, 'candy'); assert.equal(s.coins, 50); assert.equal(s.inv.candy, 1); s.mood = 50; s.hunger = 50;
+  const s = hatched(); s.coins = 550; C.buyItem(s, 'candy'); assert.equal(s.coins, 50); assert.equal(s.inv.candy, 1); s.mood = 50; s.hunger = 50;
   const r = C.useCandy(s, T0); assert.ok(r.ok); assert.equal(s.mood, 70); assert.equal(s.hunger, 60); assert.equal(s.xp, 8); assert.ok(!C.useCandy(s, T0).ok);
   s.coins = 2; assert.ok(!C.buyItem(s, 'food').ok); assert.ok(nonNeg(s));
 });
@@ -220,7 +220,7 @@ t('種植：長出蔓越莓／藍莓／草莓；成熟 6 小時內是好品質�
 t('V1.71 想吃的水果：餵到頭上泡泡那種 → 飽食、心情、體力、親密度、經驗都多加，然後換想吃別的', () => {
   const s = hatched(); s.hunger = 10; s.mood = 40; s.energy = 20; s.bond = 10; s.coins = 99; s.crave = { kind: 'banana', until: T0 + H };
   const r = C.act(s, 'feed', T0, 'banana'); assert.ok(r.ok && r.crave && r.power);
-  assert.equal(s.hunger, 10 + 15 + 10); assert.equal(s.mood, 40 + 5 + 15); assert.equal(s.energy, 20 + 10 + 10 + 10); assert.equal(s.bond, 13); assert.equal(s.xp, 5 + 15 + 10);
+  assert.equal(s.hunger, 10 + 10 + 10); assert.equal(s.mood, 40 + 10 + 15); assert.equal(s.energy, 20 + 10 + 10 + 10); assert.equal(s.bond, 13); assert.equal(s.xp, 10 + 15 + 10);
   assert.ok(s.crave.kind !== 'banana' && s.crave.until > T0);
   const w = hatched(); w.hunger = 10; w.coins = 99; w.crave = { kind: 'melon', until: T0 + H }; const r2 = C.act(w, 'feed', T0, 'banana'); assert.ok(!r2.crave && !r2.power); assert.equal(w.crave.kind, 'melon');
   const z = hatched(); z.crave = { kind: 'nut', until: T0 }; C.applyTime(z, T0 + 1000); assert.ok(z.crave.kind !== 'nut' && C.CONFIG.crave.fruits.includes(z.crave.kind));
@@ -263,7 +263,7 @@ t('新存檔與舊存檔都有小圓床', () => { assert.equal(C.fresh(T0).decor
   const s = hatched(); C.placeDecor(s, 'bed_round'); assert.equal(C.sanitize(JSON.parse(JSON.stringify(s)), T0).decor.placed.bed, undefined); });
 // 戰鬥擴充
 t('藥水：開局 1 瓶、商店 40 金幣；超級藥水 100', () => { const s = hatched(); assert.equal(s.inv.potion, 1); C.buyItem(s, 'potion'); assert.equal(s.inv.potion, 2); assert.equal(s.coins, 10); s.coins = 100; assert.ok(C.buyItem(s, 'potion2').ok); assert.equal(s.inv.potion2, 1); assert.equal(s.coins, 0); });
-t('V1.41 雞湯 99 金幣：飽食 +10、心情 +20、體力 +20，消除羈絆之力的休息', () => { const s = hatched(); s.coins = 200; assert.ok(C.buyItem(s, 'soup').ok); assert.equal(s.coins, 101); s.hunger = 50; s.mood = 50; s.energy = 50; s.bondRestUntil = T0 + 3600000; assert.ok(C.canAdventure(s, 1, T0)); const r = C.useSoup(s, T0); assert.ok(r.ok && r.rest); assert.equal(s.inv.soup, 0); assert.equal(C.canAdventure(s, 1, T0), null); assert.equal(Math.round(s.hunger), 60); assert.equal(Math.round(s.mood), 70); assert.equal(Math.round(s.energy), 70); C.buyItem(s, 'soup'); assert.ok(C.useSoup(s, T0).ok); });
+t('V1.72 雞湯 120 金幣：飽食 +10、心情 +20、體力 +20，消除羈絆之力的休息', () => { const s = hatched(); s.coins = 300; assert.ok(C.buyItem(s, 'soup').ok); assert.equal(s.coins, 180); s.hunger = 50; s.mood = 50; s.energy = 50; s.bondRestUntil = T0 + 3600000; assert.ok(C.canAdventure(s, 1, T0)); const r = C.useSoup(s, T0); assert.ok(r.ok && r.rest); assert.equal(s.inv.soup, 0); assert.equal(C.canAdventure(s, 1, T0), null); assert.equal(Math.round(s.hunger), 60); assert.equal(Math.round(s.mood), 70); assert.equal(Math.round(s.energy), 70); C.buyItem(s, 'soup'); assert.ok(C.useSoup(s, T0).ok); });
 t('V1.41 綜合種子：蔓越莓／藍莓／草莓，賣 15／20／30；優良種子收成 3～4 顆、比較容易長草莓', () => { const s = hatched(); s.coins = 13; assert.ok(C.buyItem(s, 'seeds2').ok); assert.ok(C.buyItem(s, 'seeds').ok); assert.equal(s.coins, 0);
   assert.equal(C.pickFruit(false, () => 0.1), 'cranberry'); assert.equal(C.pickFruit(false, () => 0.7), 'blueberry'); assert.equal(C.pickFruit(false, () => 0.95), 'strawberry'); assert.equal(C.pickFruit(true, () => 0.75), 'strawberry');
   assert.ok(C.plant(s, 0, T0, () => 0.95, true).ok); assert.equal(s.inv.seeds2, 0); const r = C.harvest(s, 0, T0 + 2.5 * 3600000, () => 0.99); assert.ok(r.ok && r.n === 4 && r.good && r.kind === 'strawberry'); assert.equal(s.inv.fresh.strawberry, 4);
@@ -373,7 +373,7 @@ t('第 40 關大王：星辰之心＋碎片；碎片可以抵終極素材；星�
 t('新蛋不重複：優先給還沒玩過的屬性', () => { const s = hatched(); s.route = 'flame'; s.dex = [{ id: 'g:1', route: 'tide' }, { id: 'g:2', route: 'bird' }];
   const u = C.unplayedRoutes(s); assert.ok(!u.includes('flame') && !u.includes('tide') && !u.includes('bird')); assert.equal(u.length, 4);
   s.dex = C.EL_LIST.map((e, i) => ({ id: 'g:' + i, route: e })); assert.equal(C.unplayedRoutes(s).length, 7); assert.equal(C.genomeOfSeed(C.seedForEl('metal')).el, 'metal'); });
-t('星星糖 200 金幣，吃了直接升 1 級', () => { const s = hatched(); s.coins = 500; s.xp = 50; const L = C.level(50); assert.ok(C.buyItem(s, 'candy').ok); assert.equal(s.coins, 300);
+t('星星糖 500 金幣，吃了直接升 1 級', () => { const s = hatched(); s.coins = 700; s.xp = 50; const L = C.level(50); assert.ok(C.buyItem(s, 'candy').ok); assert.equal(s.coins, 200);
   const r = C.useCandy(s, T0); assert.ok(r.ok); assert.equal(C.level(s.xp), L + 1); assert.equal(s.xp, Math.ceil(7.5 * L * L)); });
 t('第二張床：已擁有的床可以擺在右邊，存檔保留；買彈力球會換掉爆掉的球', () => { const s = hatched(); assert.ok(C.placeBed2(s, 'bed_round').ok); assert.equal(s.decor.placed.bed2, 'bed_round');
   assert.ok(!C.placeBed2(s, 'bed_cloud').ok); assert.equal(C.sanitize(JSON.parse(JSON.stringify(s)), T0).decor.placed.bed2, 'bed_round'); assert.ok(C.placeBed2(s, 'bed_round').ok); assert.equal(s.decor.placed.bed2, undefined);
@@ -424,6 +424,7 @@ t('V1.67 天氣：同一時段固定、四種都會出現；在外面淋雨會�
   C.CONFIG.weatherOn = false;
   assert(a.clean < b.clean && a.mood < b.mood, [a.clean, b.clean, a.mood, b.mood]);
 });
+t('V1.72 家園水果只能自己種：沒有就不能用金幣買來餵', () => { const s = hatched(); s.hunger = 10; s.coins = 999; s.crave = { kind: 'strawberry', until: T0 + H }; const r = C.act(s, 'feed', T0, 'strawberry'); assert.ok(!r.ok); assert.equal(s.coins, 999); s.inv.strawberry = 1; assert.ok(C.act(s, 'feed', T0, 'strawberry').crave); });
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

@@ -49,7 +49,7 @@ const CONFIG = {
   pair: { rate: .5, advMinEnergy: 20, foeHp: 1.5, xpShare: .6 },   // 第二隻一起出來：狀態變化速度減半；一起冒險時敵人血量 ×1.5、第二隻分到 6 成經驗
   farm: { plots: 3, maxPlots: 9, expand: [90, 150, 300, 500, 700, 999],   /* V1.64 開始 3 格，最多 9 格 */ growHours: 2, fruitMin: 2, fruitMax: 3, freshHours: 6, rotHours: 24, xp: 5, forest: 3, seedPrice: 5 },   // 收成：蘋果、莓果各隨機 1～2 顆；田可以花錢擴建到 6 格     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
   goals: { perDay: 3, coins: [15, 30, 50], maxLv: 10, needPerLv: .2, rewardPerLv: .2 },   // 每天 ★／★★／★★★ 三個；每天 3 個都完成，任務等級 +1（更難、獎勵更好）
-  candy: { price: 200, mood: 20, hunger: 10 },   // V1.39：星星糖 200 金幣，吃了直接升 1 級（不受屬性經驗加成影響）
+  candy: { price: 500, mood: 20, hunger: 10 },   // V1.39：星星糖 200 金幣，吃了直接升 1 級（不受屬性經驗加成影響）
   core: { rotMin: 10, moodPerHour: 4, max: 8 },
   // V1.67 天氣：每 3 小時換一次（同一時段大家都一樣）；在外面淋雨、打雷會影響幻獸，在小窩裡就安全（雷雨還是會有點怕）
   weatherOn: true,
@@ -58,7 +58,7 @@ const CONFIG = {
   poop: { delayMin: 40, rotMin: 3 },                      // 每吃一次，40 分鐘後大便；大便 3 分鐘沒清就發臭
   potion: { price: 40, heal: .5, drop: .15 },             // 回復藥水：回復 50% 最大 HP（V1.40：20 → 40 金幣）
   superPotion: { price: 100, heal: 1 },                   // V1.40 超級藥水：戰鬥中回復全部 HP
-  soup: { price: 99, hunger: 10, mood: 20, energy: 20 },   // V1.41 神秘婆婆熬製雞湯：飽食 +10、心情 +20、體力 +20，還會消除羈絆之力後的 2 小時休息
+  soup: { price: 120, hunger: 10, mood: 20, energy: 20 },   // V1.41 神秘婆婆熬製雞湯：飽食 +10、心情 +20、體力 +20，還會消除羈絆之力後的 2 小時休息
   goodSeed: { price: 8, fruitMin: 3, fruitMax: 4 },        // 優良種子：收成多 1 顆，比較容易長出藍莓、草莓
   seedOdds: { normal: [['cranberry', .55], ['blueberry', .3], ['strawberry', .15]], good: [['cranberry', .3], ['blueberry', .4], ['strawberry', .3]] },   // V1.41 種子都是綜合：蔓越莓／藍莓／草莓
   train: { cost: 20, energy: -15, hunger: -10, clean: -8, minEnergy: 15, base: 10, perLv: 4,   // V1.41 訓練場：每次 20 金幣（器材＋場地費），達成目標才拿到經驗＝10＋等級×4
@@ -136,13 +136,13 @@ const CONFIG = {
     berry: { name: '莓果', icon: 'berry', hunger: 10, mood: 10, energy: 0,  xp: 3, price: 10, left: null,   fav: [] },
     fish:  { name: '烤魚', icon: 'fish',  hunger: 20, mood: 0,  energy: 20, xp: 5, price: 20, left: 'bone', fav: ['tide', 'metal', 'forest'] },
     meat:  { name: '肉排', icon: 'meat',  hunger: 20, mood: 0,  energy: 20, xp: 5, price: 20, left: 'bone', fav: ['flame', 'elec', 'bird'] },
-    dragon:  { name: '火龍果', icon: 'dragon',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, el: 'flame', fav: [] },
-    melonw:  { name: '西瓜',   icon: 'melonw',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, el: 'tide', fav: [] },
-    melon:   { name: '哈密瓜', icon: 'melon',   power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, el: 'forest', fav: [] },
-    potato:  { name: '地瓜',   icon: 'potato',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, el: 'earth', fav: [] },
-    nut:     { name: '堅果',   icon: 'nut',     power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, el: 'bird', fav: [] },
-    coconut: { name: '椰子',   icon: 'coconut', power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, el: 'metal', fav: [] },
-    banana:  { name: '香蕉',   icon: 'banana',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, el: 'elec', fav: [] },
+    dragon:  { name: '火龍果', icon: 'dragon',  power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: null, el: 'flame', fav: [] },
+    melonw:  { name: '西瓜',   icon: 'melonw',  power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: null, el: 'tide', fav: [] },
+    melon:   { name: '哈密瓜', icon: 'melon',   power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: null, el: 'forest', fav: [] },
+    potato:  { name: '地瓜',   icon: 'potato',  power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: null, el: 'earth', fav: [] },
+    nut:     { name: '堅果',   icon: 'nut',     power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: null, el: 'bird', fav: [] },
+    coconut: { name: '椰子',   icon: 'coconut', power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: null, el: 'metal', fav: [] },
+    banana:  { name: '香蕉',   icon: 'banana',  power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: null, el: 'elec', fav: [] },
     cranberry:  { name: '蔓越莓', icon: 'cranberry',  farm: true, hunger: 10, mood: 5,  energy: 5, xp: 3, price: 15, left: null, fav: [] },   // V1.41 家園種出來的（商店不賣）
     blueberry:  { name: '藍莓',   icon: 'blueberry',  farm: true, hunger: 12, mood: 8,  energy: 5, xp: 4, price: 20, left: null, fav: [] },
     strawberry: { name: '草莓',   icon: 'strawberry', farm: true, hunger: 12, mood: 12, energy: 8, xp: 5, price: 30, left: null, fav: [] },
@@ -388,7 +388,8 @@ function weatherAt(t = Date.now()) {
 }
 function weatherFx(st, now) { if (!CONFIG.weatherOn) return null; const F = CONFIG.weather.fx[weatherAt(now)]; return F ? F[st.view === 'room' ? 'in' : 'out'] || null : null; }
 function pickCrave(st, now = Date.now(), rnd = Math.random) {
-  const C = CONFIG.crave, cur = st.crave && st.crave.kind, all = C.fruits.filter(k => k !== cur), own = all.filter(k => (st.inv[k] || 0) > 0);
+  const C = CONFIG.crave, cur = st.crave && st.crave.kind, all = C.fruits.filter(k => k !== cur && (!(CONFIG.foods[k] || {}).farm || (st.inv[k] || 0) > 0)),   // 家園水果有種出來才會想吃
+    own = all.filter(k => (st.inv[k] || 0) > 0);
   const pool = own.length && rnd() < C.ownedChance ? own : all;
   st.crave = { kind: pool[Math.floor(rnd() * pool.length) % pool.length], until: now + C.hours * H }; return st.crave;
 }
@@ -494,6 +495,7 @@ function act(st, a, now = Date.now(), opt) {
     let paid = '';
     fixFresh(st); const fr0 = (st.inv.fresh && st.inv.fresh[kind]) || 0, freshEat = fr0 > 0 && (st.inv[kind] || 0) <= fr0;   // 先吃買來的，只剩自己種的才吃到
     if ((st.inv[kind] || 0) > 0) { st.inv[kind]--; paid = `用掉 1 個${FD.name}`; }
+    else if (FD.farm) return { ok: false, code: 'nofood', msg: `${FD.name}只能自己在家園種，買不到喔`, tm };   // V1.72 家園水果只能自己種
     else if (st.coins >= FD.price) { st.coins -= FD.price; paid = `花 ${FD.price} 金幣買${FD.name}`; }
     else return { ok: false, code: 'nofood', msg: `沒有${FD.name}也沒有金幣了…可以去「採集」或種田`, tm };
     const fav = !!(st.route && FD.fav.includes(st.route)), B = CONFIG.favBonus, crave = !!(st.crave && st.crave.kind === kind && now < st.crave.until), CB = crave ? CONFIG.crave.bonus : null;
