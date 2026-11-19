@@ -454,15 +454,15 @@ t('V1.83 釣魚：時段天氣決定魚種、魚餌、拉條成功才拿到、�
   assert.equal(C.fishSlot(D), 'morning'); assert.equal(C.fishSlot(Date.UTC(2026, 10, 20, 12, 0)), 'night');
   const pool = C.fishPool(s, D); assert.ok(pool.includes('f_creek')); assert.ok(!pool.includes('f_dragon'));
   assert.equal(C.castLine(s, D).code, 'nobait'); s.coins = 100; assert.ok(C.buyBait(s, 'normal', 2).ok); assert.equal(s.coins, 90); assert.equal(s.fish.bait, 2);
-  const c = C.castLine(s, D, () => 0); assert.ok(c.ok && c.key === pool[0] && c.bar === .22 && !c.zap && !c.heavy); assert.equal(s.fish.bait, 1);
+  const c = C.castLine(s, D, () => 0); assert.ok(c.ok && c.key === pool[0] && c.bar === .2 && !c.zap && !c.heavy); assert.equal(s.fish.bait, 1);
   assert.ok(!C.landFish(s, 'f_creek', false).ok); assert.ok(!s.fish.raw.f_creek);
   const l = C.landFish(s, 'f_creek', true); assert.ok(l.ok && l.first); assert.equal(s.fish.raw.f_creek, 1); assert.equal(s.fish.dex.f_creek, 1);
-  s.hunger = 50; s.energy = 50; const e = C.eatFish(s, 'f_creek', T0 + 1000); assert.ok(e.ok && !e.cooked); assert.equal(Math.round(s.hunger), 60); assert.equal(Math.round(s.energy), 55);
+  s.hunger = 50; s.energy = 50; assert.equal(C.eatFish(s, 'f_creek', T0 + 1000).code, 'raw'); s.coins += 5; assert.ok(C.cookFish(s, 'f_creek').ok); s.coins -= 0; const e = C.eatFish(s, 'f_creek', T0 + 1000); assert.ok(e.ok && e.cooked); assert.equal(Math.round(s.hunger), 70); assert.equal(Math.round(s.energy), 60);
   C.landFish(s, 'f_koi', true); assert.ok(C.cookFish(s, 'f_koi').ok); assert.equal(s.coins, 85); assert.equal(s.fish.cooked.f_koi, 1);
   s.hunger = 10; s.energy = 10; assert.ok(C.eatFish(s, 'f_koi', T0 + 2000).cooked); assert.equal(Math.round(s.hunger), 10 + (10 + 10) * 2); assert.equal(Math.round(s.energy), 10 + (5 + 10) * 2);
   C.landFish(s, 'f_moon', true); assert.ok(C.sellFish(s, 'f_moon').ok); assert.equal(s.coins, 125); C.landFish(s, 'j_can', true); assert.equal(s.fish.junk.j_can, 1);
-  assert.ok(!C.buyRod(s, 'gold').ok); s.coins = 2000; assert.ok(C.buyRod(s, 'carbon').ok); assert.ok(!C.buyRod(s, 'bamboo').ok); assert.equal(C.rodOf(s).bar, .28);
-  const r = C.sanitize(JSON.parse(JSON.stringify(s))); assert.equal(r.fish.rod, 'carbon'); assert.equal(r.fish.junk.j_can, 1); assert.equal(r.fish.dex.f_koi, 1);
+  assert.ok(!C.buyRod(s, 'gold').ok); s.coins = 2000; assert.ok(C.buyRod(s, 'carbon').ok); assert.ok(!C.buyRod(s, 'bamboo').ok); assert.equal(C.rodOf(s).bar, .3); assert.ok(C.selectRod(s, 'bamboo').ok); assert.equal(C.rodOf(s).bar, .2); assert.ok(!C.selectRod(s, 'gold').ok);
+  const r = C.sanitize(JSON.parse(JSON.stringify(s))); assert.equal(r.fish.rod, 'bamboo'); assert.deepEqual(r.fish.rods, ['bamboo', 'carbon']); assert.equal(r.fish.junk.j_can, 1); assert.equal(r.fish.dex.f_koi, 1);
   const st2 = C.fishPool(s, Date.UTC(2026, 10, 20, 10, 0)); assert.ok(st2.every(k => C.FISH[k].star >= 1 && C.FISH[k].mv));
   const cnt = pw => { const q = C.hatched ? null : null; const z = hatched(); z.fish = { bait: 4000 }; let good = 0; let x = 1; const rr = () => { x = (x * 16807) % 2147483647; return x / 2147483647; }; for (let i = 0; i < 2000; i++) { const o = C.castLine(z, D, rr, false, pw); if (o.star >= 2) good++; } return good; };
   assert.ok(cnt(1) > cnt(0) * 1.2, '甩越遠好魚越多');
@@ -482,6 +482,17 @@ t('V1.83 野莓叢：每 3 小時 1 顆、最多 4 顆、摘完重新計時', ()
   const s = hatched(); s.bush = { at: T0 }; assert.equal(C.bushBerries(s, T0 + 2 * H), 0); assert.ok(!C.pickBerries(s, T0 + 2 * H).ok);
   assert.equal(C.bushBerries(s, T0 + 3 * H), 1); assert.equal(C.bushBerries(s, T0 + 30 * H), 4); const b0 = s.inv.berry || 0; const r = C.pickBerries(s, T0 + 30 * H); assert.ok(r.ok && r.n === 4); assert.equal(s.inv.berry, b0 + 4); assert.equal(C.bushBerries(s, T0 + 31 * H), 0);
   assert.equal(C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 31 * H).bush.at, T0 + 30 * H);
+});
+t('V1.84 遊戲紀錄：自動記帳（來源／去向）、計次、遊玩時間、連續天數、每週回顧、成就徽章', () => {
+  const s = hatched(); s.coins = 500; s.hunger = 50; s.inv.food = 0;
+  C.buySeed(s); assert.equal(s.stats.spend.item, C.CONFIG.farm.seedPrice);
+  const f = C.act(s, 'feed', T0 + 1000, 'food'); assert.ok(f.ok); assert.equal(s.stats.cnt.feed, 1); assert.ok(s.stats.spend.food > 0);
+  C.fishOf(s).raw.f_koi = 1; C.sellFish(s, 'f_koi'); assert.equal(s.stats.earn.sellFish, 35);
+  C.playTick(s, 60000, T0); C.playTick(s, 60000, T0 + 24 * H); assert.equal(s.stats.days, 2); assert.equal(s.stats.streak, 2); assert.equal(s.stats.today.ms, 60000);
+  const rc = C.playTick(s, 1000, T0 + 8 * 24 * H); assert.ok(rc && rc.d.play >= 61000); assert.equal(s.stats.streak, 1);
+  s.stats.cnt.feed = 100; const got = C.checkBadges(s, T0); assert.ok(got.some(b => b.id === 'feed1' && b.name === '很會餵的人')); assert.ok(!C.checkBadges(s, T0).length);
+  const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 9 * 24 * H); assert.equal(r.stats.cnt.feed, 100); assert.ok(r.badges.feed1); assert.equal(r.stats.earn.sellFish, 35);
+  const w = hatched(); delete w.stats; w.washes = 7; assert.equal(C.statsOf(w).cnt.wash, 7);
 });
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

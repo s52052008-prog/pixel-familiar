@@ -65,7 +65,7 @@ const CONFIG = {
   powerDrop: { win: .1, seed: .08 },
   appleTree: { growHours: 3, max: 3 },
   berryBush: { growHours: 3, max: 4 },   // V1.83 院子的野莓叢：每 3 小時長 1 顆，最多 4 顆
-  fishing: { bait: 5, bait2: 20, premiumX: 2.5, weight: [40, 20, 8, 3, 1], junk: { j_boot: 5, j_can: 5, chest: 2 }, zapPerDay: 3, tideBar: .04, xp: 3, eatHunger: 10, eatEnergy: 5, eatStep: 5, cookX: 2, cookCost: 5 },   // V1.83 釣魚
+  fishing: { bait: 5, bait2: 20, premiumX: 2.5, weight: [40, 20, 8, 3, 1], junk: { j_boot: 8, j_can: 8, chest: 5 }, energy: 4, minEnergy: 10, zapPerDay: 3, tideBar: .04, xp: 3, eatHunger: 10, eatEnergy: 5, eatStep: 5, cookX: 2, cookCost: 5 },   // V1.83 釣魚
   skills: { fossilLuck: .02, fossilAll: .05, digMin: 10, digMax: 30, gemChance: .25, fossilChance: .15, fossilDup: 30, birdPower: .15, powerMin: 20, powerMax: 50, amuletChance: .6, grow: 1.2, soupX: 1.5 },   // V1.83 生活技能（成年才有）
   chargeMult: 1.5,   // V1.82 蓄力後下一擊 ×1.5（原本 ×2 太強）   // V1.76 院子的蘋果樹：每 3 小時長 1 顆（樹上＋地上最多 3 顆），熟了會掉下來，撿起來免費   // V1.73 能力水果商店不賣：冒險打贏 10% 掉 1 顆、打贏王必掉 1 顆；稀有種子打贏 8%、打王必掉        // 優良種子：收成多 1 顆，比較容易長出藍莓、草莓
   seedOdds: { normal: [['cranberry', .55], ['blueberry', .3], ['strawberry', .15]], good: [['cranberry', .3], ['blueberry', .4], ['strawberry', .3]], rare: [['cranberry', .2], ['blueberry', .3], ['strawberry', .5]] },   // V1.41 種子都是綜合：蔓越莓／藍莓／草莓
@@ -353,9 +353,14 @@ function sanitize(o, now = Date.now()) {
   r.washes = int(o.washes, 0, 0, 1e7); r.earthWins = int(o.earthWins, 0, 0, 1e7);
   r.tree = o.tree && typeof o.tree === 'object' ? { n: int(o.tree.n, 0, 0, CONFIG.appleTree.max), ground: int(o.tree.ground, 0, 0, CONFIG.appleTree.max), at: num(o.tree.at, now, 0, now) } : { n: 0, ground: 0, at: now };
   { const F = o.fish && typeof o.fish === 'object' ? o.fish : {}, cnt = m => { const q = {}; if (m && typeof m === 'object') for (const k in m) if ((FISH[k] || JUNK[k]) && Number.isFinite(+m[k]) && +m[k] > 0) q[k] = int(m[k], 0, 0, 9999); return q; };   // V1.83 釣魚
-    r.fish = { rod: RODS.some(x => x.id === F.rod) ? F.rod : 'bamboo', bait: int(F.bait, 0, 0, 9999), bait2: int(F.bait2, 0, 0, 9999), raw: cnt(F.raw), cooked: cnt(F.cooked), dex: cnt(F.dex), junk: cnt(F.junk), zap: Array.isArray(F.zap) && typeof F.zap[0] === 'string' ? [F.zap[0], int(F.zap[1], 0, 0, 99)] : ['', 0] }; }
+    r.fish = { rods: Array.isArray(F.rods) ? F.rods.filter(k => RODS.some(x => x.id === k)) : undefined, rod: RODS.some(x => x.id === F.rod) ? F.rod : 'bamboo', bait: int(F.bait, 0, 0, 9999), bait2: int(F.bait2, 0, 0, 9999), raw: cnt(F.raw), cooked: cnt(F.cooked), dex: cnt(F.dex), junk: cnt(F.junk), zap: Array.isArray(F.zap) && typeof F.zap[0] === 'string' ? [F.zap[0], int(F.zap[1], 0, 0, 99)] : ['', 0] }; }
   { const L = o.loot && typeof o.loot === 'object' ? o.loot : {}; r.loot = { fossils: {} }; for (const k in GOODS) r.loot[k] = int(L[k], 0, 0, 9999); if (L.fossils && typeof L.fossils === 'object') for (const k in FOSSILS) if (L.fossils[k]) r.loot.fossils[k] = 1; }
   r.bush = { at: o.bush && typeof o.bush === 'object' ? num(o.bush.at, now, 0, now) : now };
+  { const S = o.stats && typeof o.stats === 'object' ? o.stats : {}, n0 = v => Math.max(0, Math.floor(+v || 0)), obj = (m, keys) => { const q = {}; if (m && typeof m === 'object') for (const k in m) if (!keys || keys.includes(k)) q[k] = n0(m[k]); return q; };   // V1.84 遊戲紀錄
+    r.stats = { seeded: S.seeded ? 1 : 0, first: num(S.first, 0, 0, now), play: n0(S.play), days: n0(S.days), streak: n0(S.streak), best: n0(S.best), star5: n0(S.star5), lastDay: typeof S.lastDay === 'string' ? S.lastDay.slice(0, 10) : '', earn: obj(S.earn, Object.keys(EARN_NAME)), spend: obj(S.spend, Object.keys(SPEND_NAME)), cnt: obj(S.cnt, STAT_KEYS),
+      today: S.today && typeof S.today.d === 'string' ? { d: S.today.d.slice(0, 10), ms: n0(S.today.ms) } : {}, wk: S.wk && typeof S.wk.key === 'string' ? { key: S.wk.key.slice(0, 10), base: obj(S.wk.base) } : {}, recap: S.recap && typeof S.recap.week === 'string' ? { week: S.recap.week.slice(0, 10), d: obj(S.recap.d), seen: !!S.recap.seen } : null };
+    if (!r.stats.first) delete r.stats.first;
+    r.badges = {}; if (o.badges && typeof o.badges === 'object') for (const k in o.badges) if (BADGE[k]) r.badges[k] = num(o.badges[k], now, 0, now); }
   r.skillDay = typeof o.skillDay === 'string' ? o.skillDay.slice(0, 10) : '';
   r.yard = {}; if (o.yard && typeof o.yard === 'object') for (const k of ['den', 'nest', 'tree1', 'tree2', 'bush', 'path', 'pond', 'plots', 'gen', 'fire']) { const v = o.yard[k]; if (Array.isArray(v) && (v.length === 3 || v.length === 4) && v.every(Number.isFinite)) r.yard[k] = [Math.max(-130, Math.min(130, Math.round(v[0]))), Math.max(-80, Math.min(80, Math.round(v[1]))), Math.max(.5, Math.min(1.8, Math.round(v[2] * 10) / 10)), v[3] ? 1 : 0]; }   // V1.82 院子佈置：位移與大小
   r.seen = {}; if (o.seen && typeof o.seen === 'object') for (const k in o.seen) if (/^[a-zA-Z0-9_]{1,30}$/.test(k) && o.seen[k]) r.seen[k] = 1;   // V1.74 圖鑑：拿到過的東西
@@ -841,7 +846,7 @@ const GOODS = {
   scrap: { name: '廢鐵', price: 20 }, amulet: { name: '小護身符', price: 0 },
 };
 const FOSSILS = { fo_trilobite: '三葉蟲化石', fo_ammonite: '菊石', fo_tooth: '恐龍牙化石', fo_feather: '羽毛化石', fo_fish: '魚化石', fo_amber: '琥珀' };
-const RODS = [{ id: 'bamboo', name: '竹竿', price: 0, bar: .22, steady: 0 }, { id: 'carbon', name: '碳纖竿', price: 300, bar: .28, steady: .5 }, { id: 'gold', name: '黃金竿', price: 1200, bar: .35, steady: .8 }];   // V1.83.1 綠框縮小
+const RODS = [{ id: 'bamboo', name: '破爛釣竿', price: 0, bar: .20, steady: 0 }, { id: 'carbon', name: '碳纖竿', price: 300, bar: .30, steady: .5 }, { id: 'gold', name: '黃金釣竿', price: 1200, bar: .40, steady: .8 }];   // V1.84 綠框 20／30／40%
 const SKILL = {
   flame: { name: '小廚師', icon: '🔥' }, tide: { name: '捕魚', icon: '💧' }, forest: { name: '催熟', icon: '🌿' }, earth: { name: '挖寶', icon: '🪨' },
   bird: { name: '採集', icon: '🐦' }, elec: { name: '發電', icon: '⚡' }, metal: { name: '回收', icon: '⚙️' },
@@ -850,6 +855,7 @@ function fishSlot(now = Date.now()) { const h = hourIn(now); return h >= 5 && h 
 function fishOf(st) {
   const F = st.fish || (st.fish = {}); F.rod = RODS.some(r => r.id === F.rod) ? F.rod : 'bamboo';
   for (const k of ['raw', 'cooked', 'dex', 'junk']) if (!F[k] || typeof F[k] !== 'object') F[k] = {};
+  if (!Array.isArray(F.rods)) F.rods = RODS.slice(0, RODS.findIndex(r => r.id === F.rod) + 1).map(r => r.id); if (!F.rods.includes('bamboo')) F.rods.unshift('bamboo'); if (!F.rods.includes(F.rod)) F.rods.push(F.rod);
   F.bait = F.bait || 0; F.bait2 = F.bait2 || 0; F.zap = Array.isArray(F.zap) ? F.zap : ['', 0]; return F;
 }
 function lootOf(st) { const L = st.loot || (st.loot = {}); if (!L.fossils || typeof L.fossils !== 'object') L.fossils = {}; for (const k in GOODS) L[k] = L[k] || 0; return L; }
@@ -869,21 +875,24 @@ function buyBait(st, kind, n = 1) {
   st.coins -= cost; F[kind === 'premium' ? 'bait2' : 'bait'] += n; return { ok: true, msg: `買了 ${n} 個${kind === 'premium' ? '高級魚餌' : '魚餌'}` };
 }
 function buyRod(st, id) {
-  const R = RODS.find(r => r.id === id), F = fishOf(st), cur = RODS.findIndex(r => r.id === F.rod), i = RODS.indexOf(R);
-  if (!R || i <= cur) return { ok: false, msg: '已經有更好的魚竿了' };
+  const R = RODS.find(r => r.id === id), F = fishOf(st);
+  if (!R) return { ok: false, msg: '沒有這支魚竿' };
+  if (F.rods.includes(id)) return { ok: false, msg: '已經有這支魚竿了' };
   if (st.coins < R.price) return { ok: false, msg: `金幣不夠（要 ${R.price}）` };
-  st.coins -= R.price; F.rod = id; return { ok: true, msg: `換上${R.name}！綠框變寬、更穩了 🎣` };
+  st.coins -= R.price; F.rods.push(id); F.rod = id; return { ok: true, msg: `買了${R.name}，已經換上！🎣` };
 }
+function selectRod(st, id) { const F = fishOf(st), R = RODS.find(r => r.id === id); if (!R || !F.rods.includes(id)) return { ok: false, msg: '還沒有這支魚竿' }; F.rod = id; return { ok: true, msg: `換上${R.name}` }; }
 /* 拋竿：先扣魚餌、決定這一竿會是什麼（UI 再玩拉條）。zap＝雷系電魚（每天前 3 竿保證釣到） */
 /* power：蓄力甩竿的力道 0～1，甩越遠越容易釣到好魚 */
 function castLine(st, now = Date.now(), r = Math.random, premium = false, power = .5) {
   const F = fishOf(st), C = CONFIG.fishing, key = premium ? 'bait2' : 'bait';
+  if (st.hatched && st.energy < C.minEnergy) return { ok: false, code: 'tired', msg: `牠太累了（體力要 ${C.minEnergy} 以上），先休息一下吧` };
   if (F[key] < 1) return { ok: false, code: 'nobait', msg: premium ? '沒有高級魚餌了' : '沒有魚餌了（釣具店可以買，5 金幣一個）' };
-  F[key]--;
+  F[key]--; if (st.hatched) st.energy = clamp(st.energy - C.energy);   // V1.84 拋一次竿花一點體力
   const pool = fishPool(st, now), list = [];
   const pw = Math.max(0, Math.min(1, +power || 0));
   for (const k of pool) { const s = FISH[k].star; list.push([k, C.weight[s - 1] * (premium && s >= 3 ? C.premiumX : 1) * (s >= 3 ? 1 + 1.5 * pw : s === 2 ? 1 + .6 * pw : 1)]); }
-  for (const [k, w] of Object.entries(C.junk)) list.push([k, w * (1.3 - .6 * pw)]);
+  for (const [k, w] of Object.entries(C.junk)) list.push([k, w * (1.15 - .35 * pw)]);
   let tot = list.reduce((a, b) => a + b[1], 0), x = r() * tot, pick = list[list.length - 1][0];
   for (const [k, w] of list) { if (x < w) { pick = k; break; } x -= w; }
   const day = dayKey(now); if (F.zap[0] !== day) F.zap = [day, 0];
@@ -907,7 +916,7 @@ function eatFish(st, key, now = Date.now()) {
   if (!st.hatched) return { ok: false, msg: '先把蛋孵出來吧！', tm };
   if (st.sleeping) return { ok: false, msg: '牠在睡覺，醒來再吃吧', tm };
   if (!f) return { ok: false, msg: '?', tm };
-  const cooked = (F.cooked[key] || 0) > 0; if (!cooked && !(F.raw[key] > 0)) return { ok: false, msg: `沒有${f.name}了`, tm };
+  const cooked = (F.cooked[key] || 0) > 0; if (!cooked) return { ok: false, code: F.raw[key] > 0 ? 'raw' : 'none', msg: F.raw[key] > 0 ? `生的${f.name}不能吃，先到 🧺 魚簍烤一下吧` : `沒有烤${f.name}了`, tm };   // V1.84 幻獸不吃生魚
   if (st.hunger >= CONFIG.full) return { ok: false, msg: '牠已經吃飽了', tm };
   F[cooked ? 'cooked' : 'raw'][key]--; const E = fishFood(key, cooked);
   st.hunger = clamp(st.hunger + E.hunger); st.energy = clamp(st.energy + E.energy); const xp = addXP(st, 2 + f.star);
@@ -1306,11 +1315,97 @@ function equipRelic(st, p, k) { const R = CONFIG.relics.items[k]; if (!R) return
 function unequipRelic(st, p, k) { const L = p.relics || []; const i = L.indexOf(k); if (i < 0) return { ok: false, msg: '沒有戴這個寶物' }; L.splice(i, 1); const iv = st.inv.relics || (st.inv.relics = {}); iv[k] = (iv[k] || 0) + 1; return { ok: true, msg: `卸下「${CONFIG.relics.items[k].name}」，放回背包` }; }
 function sellRelic(st, k) { const R = CONFIG.relics.items[k]; if (!R || relicCount(st, k) < 1) return { ok: false, msg: '背包裡沒有這個寶物' }; st.inv.relics[k]--; if (!st.inv.relics[k]) delete st.inv.relics[k]; st.coins += CONFIG.relics.sell; return { ok: true, msg: `賣掉「${R.name}」，得到 ${CONFIG.relics.sell} 金幣` }; }
 
+/* ---------------- V1.84 遊戲紀錄、成就徽章、每週回顧 ---------------- */
+const EARN_NAME = { adv: '冒險', boss: '打王獎金', sellFruit: '賣水果', sellFish: '賣魚、雜物、寶石', sellRelic: '賣寶物', piggy: '存錢筒', skill: '生活技能', fishChest: '釣魚寶箱', goal: '任務', daily: '每日登入', steps: '步數突破', ball: '頂球', badge: '成就獎勵', other: '其他' };
+const SPEND_NAME = { food: '食物', wash: '洗澡水費', toy: '玩具', item: '道具、種子', decor: '家具', fish: '魚餌、魚竿、柴火', farm: '擴建田地', train: '訓練', den: '小窩', egg: '買蛋', breed: '配對', bond: '羈絆', foster: '寄養', piggy: '存錢筒', other: '其他' };
+const STAT_KEYS = ['feed', 'wash', 'play', 'sleep', 'clean', 'battle', 'win', 'loss', 'boss', 'crit', 'plant', 'harvest', 'rot', 'cast', 'catch', 'miss', 'chest', 'junk', 'hatch', 'evolve', 'breed', 'berry', 'apple'];
+const BADGES = [
+  ['feed1', '很會餵的人', '🍽️', 'feed', 100, 50], ['feed2', '靈魂餵手', '🍽️', 'feed', 200, 100], ['feed3', '雷霆·餵你吃到飽', '⚡', 'feed', 300, 200],
+  ['wash1', '黃色小鴨陪洗員', '🐤', 'wash', 50, 50], ['wash2', '洗香香達人', '🛁', 'wash', 150, 100],
+  ['play1', '陪玩小葛格', '⚽', 'play', 50, 50], ['play2', '很會投啊你', '🏀', 'play', 150, 100],
+  ['time1', '初來乍到', '⏱️', 'playH', 1, 30], ['time2', '老友記', '⏳', 'playH', 10, 100], ['time3', '黏踢踢喔', '💞', 'playH', 50, 300],
+  ['day1', '一週相伴', '📅', 'days', 7, 50], ['day2', '一個月的約定', '🗓️', 'days', 30, 150], ['day3', '百日之交', '🎖️', 'days', 100, 500],
+  ['earn1', '小富翁', '🪙', 'earned', 1000, 50], ['earn2', '很有錢是吧？', '💰', 'earned', 10000, 200],
+  ['win1', '很勇', '⚔️', 'win', 20, 30], ['win2', '非常勇', '🗡️', 'win', 50, 60], ['win3', '百戰勇者', '🛡️', 'win', 100, 120], ['win4', '狂戰士', '🔥', 'win', 300, 300],
+  ['farm1', '小農夫', '🌱', 'harvest', 50, 50], ['farm2', '綠手指', '🌿', 'harvest', 200, 150],
+  ['fish1', '不太會釣魚的手', '🎣', 'catch', 30, 50], ['fish2', '釣魚低手', '🐟', 'catch', 100, 150], ['fish3', '釣魚大師', '🐉', 'star5', 1, 200], ['fishdex', '魚類博士', '📖', 'fishDex', 14, 300],
+  ['walk1', '很會走', '👟', 'steps', 100000, 100], ['walk2', '踏破鐵鞋的你', '🥾', 'steps', 500000, 300], ['fossil', '考古學家', '🦴', 'fossils', 6, 200],
+];
+const BADGE = Object.fromEntries(BADGES.map(([id, name, icon, key, need, coins]) => [id, { id, name, icon, key, need, coins }]));
+function statsOf(st, now = Date.now()) {
+  let S = st.stats; if (!S || typeof S !== 'object') S = st.stats = {};
+  if (!(S.first > 0)) S.first = now; S.play = S.play || 0; S.days = S.days || 0; S.streak = S.streak || 0; S.best = S.best || 0;
+  for (const k of ['earn', 'spend', 'cnt', 'today', 'wk']) if (!S[k] || typeof S[k] !== 'object') S[k] = {};
+  if (!S.seeded) { S.seeded = 1; const A = st.adv || {}; S.cnt.wash = S.cnt.wash || st.washes || 0; S.cnt.harvest = S.cnt.harvest || st.harvests || 0; S.cnt.win = S.cnt.win || A.wins || 0; S.cnt.loss = S.cnt.loss || A.losses || 0; S.cnt.battle = S.cnt.battle || (A.wins || 0) + (A.losses || 0); }   // 舊存檔：已經有記的次數先接上
+  for (const k of STAT_KEYS) S.cnt[k] = S.cnt[k] || 0; S.star5 = S.star5 || 0;
+  if (!st.badges || typeof st.badges !== 'object') st.badges = {};
+  return S;
+}
+const sumOf = o => Object.values(o || {}).reduce((a, b) => a + (+b || 0), 0);
+function statAdd(st, key, n = 1) { const S = statsOf(st); S.cnt[key] = (S.cnt[key] || 0) + n; }
+function statVal(st, key) {
+  const S = statsOf(st);
+  if (key === 'playH') return S.play / H; if (key === 'days') return S.days; if (key === 'earned') return sumOf(S.earn); if (key === 'star5') return S.star5;
+  if (key === 'steps') return (st.steps && st.steps.total) || 0; if (key === 'fossils') return Object.keys((st.loot && st.loot.fossils) || {}).length;
+  if (key === 'fishDex') return Object.keys((st.fish && st.fish.dex) || {}).filter(k => FISH[k]).length;
+  return S.cnt[key] || 0;
+}
+function checkBadges(st, now = Date.now()) {
+  statsOf(st, now); const got = [];
+  for (const b of BADGES.map(x => BADGE[x[0]])) if (!st.badges[b.id] && statVal(st, b.key) >= b.need) { st.badges[b.id] = now; st.coins += b.coins; st.stats.earn.badge = (st.stats.earn.badge || 0) + b.coins; got.push(b); }
+  return got;
+}
+const WEEK_KEYS = () => ['play', 'earned', 'spent', 'feed', 'wash', 'play_', 'win', 'catch', 'harvest', 'steps'];
+function weekSnap(st) { const S = statsOf(st); return { play: S.play, earned: sumOf(S.earn), spent: sumOf(S.spend), feed: S.cnt.feed, wash: S.cnt.wash, ball: S.cnt.play, win: S.cnt.win, catch: S.cnt.catch, harvest: S.cnt.harvest, steps: (st.steps && st.steps.total) || 0 }; }
+function weekKey(now) { const d = new Date(dayKey(now) + 'T00:00:00Z'), w = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - w); return d.toISOString().slice(0, 10); }   // 每週一開始
+/* 每秒呼叫：累計遊玩時間、登入天數、連續天數；換週時算出上週回顧 */
+function playTick(st, ms, now = Date.now()) {
+  const S = statsOf(st, now), day = dayKey(now); ms = Math.max(0, Math.min(ms, 5 * MIN));
+  S.play += ms; S.today = S.today.d === day ? S.today : { d: day, ms: 0 }; S.today.ms += ms;
+  let out = null;
+  if (S.lastDay !== day) { const y = dayKey(now - 24 * H); S.streak = S.lastDay === y ? S.streak + 1 : 1; S.best = Math.max(S.best, S.streak); S.days++; S.lastDay = day; }
+  const wk = weekKey(now);
+  if (!S.wk.key) S.wk = { key: wk, base: weekSnap(st) };
+  else if (S.wk.key !== wk) { const a = S.wk.base, b = weekSnap(st), d = {}; for (const k in b) d[k] = Math.max(0, b[k] - (a[k] || 0)); out = { week: S.wk.key, d }; S.recap = out; S.wk = { key: wk, base: b }; }
+  return out;
+}
+/* 自動記帳：包住會動到金幣的函式，依函式分類記「賺到」「花掉」；成功的動作順便計次 */
+const MONEY = { finishAdventure: 'adv', collectPiggy: 'piggy', claimDaily: 'daily', creditSteps: 'steps', sellFruit: 'sellFruit', sellFish: 'sellFish', sellRelic: 'sellRelic', landFish: 'fishChest', runSkills: 'skill', claimGoal: 'goal', finishBallGame: 'ball',
+  buyBait: 'fish', buyRod: 'fish', cookFish: 'fish', buySeed: 'item', buyItem: 'item', buyDecor: 'decor', expandFarm: 'farm', startTrain: 'train', buyEgg: 'egg', fosterOut: 'foster', buyFusionHouse: 'den', upgradeDen: 'den', buyLoveNest: 'den', battleBond: 'bond', breed: 'breed', buyPigCore: 'piggy' };
+const ACT_SPEND = { feed: 'food', wash: 'wash', play: 'toy' };
+function wrapStats(api) {
+  for (const name of new Set([...Object.keys(MONEY), 'act', 'plant', 'harvest', 'castLine', 'hatch', 'clearCore', 'pickBerries', 'pickApple', 'eatFish'])) {
+    const fn = api[name]; if (typeof fn !== 'function') continue;
+    api[name] = function (st, ...a) {
+      if (!st || typeof st !== 'object' || !('coins' in st)) return fn.call(this, st, ...a);
+      const c0 = st.coins, stg = st.stage, r = fn.call(this, st, ...a), d = st.coins - c0, S = statsOf(st);
+      if (d) { let cat = MONEY[name] || (name === 'act' ? ACT_SPEND[a[0]] : null) || 'other';
+        if (name === 'finishAdventure' && r && r.bossCoins) { S.earn.boss = (S.earn.boss || 0) + r.bossCoins; if (d > r.bossCoins) S.earn.adv = (S.earn.adv || 0) + d - r.bossCoins; }
+        else if (d > 0) S.earn[cat] = (S.earn[cat] || 0) + d; else S.spend[cat] = (S.spend[cat] || 0) - d; }
+      if (st.stage !== stg && stg && st.stage && STAGES.indexOf(st.stage) > STAGES.indexOf(stg)) S.cnt.evolve++;
+      const ok = r && (r.ok || (name === 'runSkills' && r));
+      if (ok) {
+        if (name === 'act' && ['feed', 'wash', 'play', 'sleep'].includes(a[0])) S.cnt[a[0]]++;
+        else if (name === 'plant') S.cnt.plant++; else if (name === 'harvest') S.cnt[r.rotten ? 'rot' : 'harvest']++;
+        else if (name === 'finishBallGame') S.cnt.play++; else if (name === 'castLine') S.cnt.cast++; else if (name === 'hatch') S.cnt.hatch++; else if (name === 'breed') S.cnt.breed++;
+        else if (name === 'pickBerries') S.cnt.berry += r.n || 0; else if (name === 'pickApple') S.cnt.apple++; else if (name === 'eatFish') S.cnt.feed++;
+        else if (name === 'landFish') { if (FISH[r.key]) { S.cnt.catch++; if (FISH[r.key].star >= 5) S.star5++; } else if (r.key === 'chest') S.cnt.chest++; else S.cnt.junk++; }
+      }
+      if (name === 'clearCore' && r) S.cnt.clean++;
+      if (name === 'landFish' && r && !r.ok) S.cnt.miss++;
+      if (name === 'finishAdventure' && r) { S.cnt.battle++; if (a[1] === 'win') { S.cnt.win++; if (foeFor(a[0]).boss) S.cnt.boss++; } else if (a[1] === 'loss') S.cnt.loss++; }
+      return r;
+    };
+  }
+  return api;
+}
+
 const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars, dayKey, hourIn, level, rng, makeGenome, CLASSIC_G, encodeGenome, decodeGenome, breedGenome,
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
   toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
-  trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
+  trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, selectRod, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
+Object.assign(API, { EARN_NAME, SPEND_NAME, BADGES, BADGE, statsOf, statAdd, statVal, checkBadges, playTick, weekKey, sumOf }); wrapStats(API);
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

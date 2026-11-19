@@ -132,7 +132,7 @@ async def main():
         ok('沒有特殊事件不能高階', (await st(p))['stage'] == 'adult')
         evname = await p.evaluate("PF.PC.ascendInfo(PF.state).task.text"); g = await p.evaluate("document.getElementById('growText').textContent"); ok('成年期顯示 🔔 專屬任務和終極素材進度', evname in g and '🔔' in g and '0/3' in g, g)
         # 日記
-        await p.click('#bCodex'); await p.click('#cxJournal'); await p.wait_for_timeout(300); txt = await p.inner_text('#sheet')
+        await p.click('#bCodex'); await p.click('#cxJournal'); await p.wait_for_timeout(300); await p.click('[data-jt=diary]'); await p.wait_for_timeout(300); txt = await p.inner_text('#sheet')
         ok('日記自動記錄孵化與進化', '孵化' in txt and '少年期' in txt and '成年期' in txt); await p.screenshot(path=f'{OUT}/08_journal.png'); await closeall(p)
         # ---------- 7. 零資源不卡死 ----------
         await p.evaluate("PF.debug.set({coins:0,inv:{food:0,seeds:0,candy:0,potion:1},hunger:20,sleeping:false})"); await p.wait_for_timeout(1200)
@@ -140,13 +140,18 @@ async def main():
         ok('零金幣零食物 → 採集得到食物', (await st(p))['inv']['food'] == 1)
         # ---------- 家園種植 ----------
         await p.evaluate("PF.debug.set({inv:{food:1,seeds:2,candy:0,potion:1}})")
-        await p.click('#bFarm'); await p.wait_for_timeout(300); await p.click('[data-pa="0"]'); await p.wait_for_timeout(300)
-        s = await st(p); ok('種下種子', s['inv']['seeds'] == 1 and s['plots'][0]['at'] > 0)
-        ok('成長中不能收成', await p.is_disabled('[data-pa="0"]')); await p.screenshot(path=f'{OUT}/09a_farm.png'); await closeall(p)
+        async def tap_plot(i):
+            b = await p.locator('#fmcv').bounding_box(); q = await p.evaluate(f"(()=>{{const L=fmLayout()[{i}];return [L.x,L.y-8*L.sc]}})()")
+            await p.mouse.click(b['x'] + q[0] / 128 * b['width'], b['y'] + q[1] / 112 * b['height']); await p.wait_for_timeout(300)
+        await p.click('#bFarm'); await p.wait_for_timeout(400); fz = await p.is_visible('#farmZone'); await tap_plot(0)
+        s = await st(p); ok('種田畫面：點空地種下種子', fz and s['inv']['seeds'] == 1 and s['plots'][0]['at'] > 0)
+        await tap_plot(0); s2 = await st(p); ok('成長中不能收成', s2['plots'][0]['at'] == s['plots'][0]['at'] and '成熟' in await p.inner_text('#fmMsg')); await p.screenshot(path=f'{OUT}/09a_farm.png'); await p.click('#fmHome'); await p.wait_for_timeout(300)
         await p.evaluate("(()=>{const s=PF.state;s.plots[0].at=Date.now()-2*3600000-1000;PF.debug.set({})})()"); await p.wait_for_timeout(600)
         await p.screenshot(path=f'{OUT}/09b_ripe_in_scene.png')
-        x0 = (await st(p))['xp']; await p.click('#bFarm'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/09c_farm_ripe.png'); await p.click('[data-pa="0"]'); await p.wait_for_timeout(300)
-        s = await st(p); ok('2 小時後收成：蔓越莓／藍莓／草莓 2～3 顆、XP +5、收成次數 1', sum(s['inv'].get(k, 0) for k in ('cranberry', 'blueberry', 'strawberry')) in (2, 3) and s['xp'] == x0 + 5 and s['harvests'] == 1, (s['inv'], s['xp'] - x0)); await closeall(p)
+        x0 = (await st(p))['xp']; await p.click('#bFarm'); await p.wait_for_timeout(400); await p.screenshot(path=f'{OUT}/09c_farm_ripe.png'); await tap_plot(0); await p.wait_for_timeout(500)
+        card = await p.is_visible('#gResult')
+        if card: await p.click('#gDone'); await p.wait_for_timeout(200)
+        s = await st(p); ok('2 小時後收成：蔓越莓／藍莓／草莓 2～3 顆、XP +5、收成次數 1、跳結算', card and sum(s['inv'].get(k, 0) for k in ('cranberry', 'blueberry', 'strawberry')) in (2, 3) and s['xp'] == x0 + 5 and s['harvests'] == 1, (s['inv'], s['xp'] - x0)); await p.click('#fmHome'); await p.wait_for_timeout(300); await closeall(p)
         # ---------- 每日小目標 ----------
         await p.click('#bGoals'); await p.wait_for_timeout(300); s = await st(p)
         ok('每日 3 個小目標', len(s['goals']['list']) == 3)
@@ -269,7 +274,7 @@ async def main():
         await p.click('#tClose'); await p.wait_for_timeout(300)
         await p.evaluate(f"PF.debug.set({{coins:200,bondRestUntil:Date.now()+3600000,energy:40}})")
         r = await p.evaluate("(()=>{const s=PF.state;const a=PF.PC.buyItem(s,'soup');const b=PF.PC.useSoup(s,Date.now());return [a.ok,b.ok,s.coins,s.bondRestUntil,Math.round(s.energy)]})()")
-        ok('雞湯 120 金幣、喝了不用休息、體力 +20', r[0] and r[1] and r[2] == 80 and r[3] == 0 and r[4] == 60, r)
+        ok('雞湯 120 金幣、喝了不用休息、體力 +20（火系 +30）', r[0] and r[1] and r[2] == 80 and r[3] == 0 and r[4] in (60, 70), r)   # 成年火系會加熱雞湯 +50%
         # ---------- 步數 ----------
         await p.goto(URL + '?steps=12345'); await p.wait_for_timeout(900); s = await st(p)
         ok('捷徑網址登記步數', s['steps']['total'] == 12345 and 'steps' not in p.url, (s['steps']['total'], p.url))

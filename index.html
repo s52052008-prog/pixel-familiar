@@ -75,7 +75,7 @@ img.uic{width:21px;height:21px;vertical-align:-5px;margin-right:5px;display:inli
 #battle .in{max-width:480px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 14px);display:flex;flex-direction:column;gap:8px}
 #mpSkill{grid-template-columns:repeat(3,1fr)!important}#mpSkill .back{grid-column:auto!important}#mpSkill .act{font-size:13px}
 #pickTag{text-align:center;font-weight:900;font-size:14px;color:#3a2210;background:#ffd86a;border:3px solid #2a170a;padding:4px;margin-bottom:6px}
-#bBanner{position:absolute;left:4%;right:4%;top:3%;text-align:center;font-weight:900;font-size:22px;line-height:1.25;color:#fff;padding:8px 6px;border:3px solid currentColor;background:#1a1008d8;text-shadow:0 2px 0 #000;pointer-events:none;animation:bpop .35s ease-out}#bBanner small{display:block;font-size:13px;color:#fff3d0;font-weight:700}@keyframes bpop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+#bBanner{position:absolute;left:4%;right:4%;top:36%;text-align:center;font-weight:900;font-size:22px;line-height:1.25;color:#fff;padding:8px 6px;border:3px solid currentColor;background:#1a1008d8;text-shadow:0 2px 0 #000;pointer-events:none;animation:bpop .35s ease-out}#bBanner small{display:block;font-size:13px;color:#fff3d0;font-weight:700}@keyframes bpop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
 #bcv{background-size:100% 100%;background-position:center;display:block;width:100%;aspect-ratio:128/112;image-rendering:pixelated;image-rendering:crisp-edges;border:3px solid var(--line);box-shadow:0 0 0 2px var(--hi)}
 .hp{background:var(--panel);border:2px solid var(--line);box-shadow:inset 0 0 0 2px var(--hi);padding:6px 9px;font-size:13px}
 .hp .t{display:flex;justify-content:space-between;font-weight:700}.hp .bar i{background:#6ad06a}.hp.foe .bar i{background:#e86a6a}
@@ -85,16 +85,28 @@ img.uic{width:21px;height:21px;vertical-align:-5px;margin-right:5px;display:inli
 #trainZone{position:fixed;inset:0;z-index:23;background:#1a1008;display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:calc(10px + env(safe-area-inset-top)) 8px calc(12px + env(safe-area-inset-bottom));touch-action:manipulation;-webkit-user-select:none;user-select:none}
 #trainZone.hidden{display:none}
 /* V1.83 池邊釣魚 */
+#farmZone{position:fixed;inset:0;z-index:19;background:repeating-linear-gradient(90deg,#2a1a0e 0 3px,#24160c 3px 41px);display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:calc(8px + env(safe-area-inset-top)) 8px calc(12px + env(safe-area-inset-bottom));touch-action:manipulation;-webkit-user-select:none;user-select:none}#farmZone.hidden{display:none}
+#farmZone .fin{width:100%;max-width:520px;color:#fff3d0;display:flex;flex-direction:column;gap:8px}#farmZone .fhd{display:flex;justify-content:space-between;align-items:center;font-size:20px;padding:0 4px}#fmInfo{font-size:15px;color:#e8d0a0;font-weight:700}
+#fmcv{display:block;width:100%;aspect-ratio:128/112;image-rendering:pixelated;border:3px solid var(--line);touch-action:none}#fmMsg{text-align:center;font-weight:800;font-size:17px;min-height:48px;color:#ffd86a;display:flex;align-items:center;justify-content:center;line-height:1.35;padding:0 6px}
+#farmZone .fctl{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:8px}#farmZone .fctl .btn{margin:0;padding:4px;min-width:0;width:100%}#farmZone .fsel4{grid-column:span 3;height:66px;font-size:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}#farmZone .fsel4.on{background:#ffe08a;box-shadow:inset 0 0 0 3px #e8a030;color:#3a2414}#farmZone .fsel4 img.mi{height:22px;width:auto}#farmZone .fs3{grid-column:span 4;height:64px;font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}#farmZone .fs3 img{width:22px;height:22px;image-rendering:pixelated}
 #fishZone{position:fixed;inset:0;z-index:19;background:repeating-linear-gradient(90deg,#2a1a0e 0 3px,#24160c 3px 41px);display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:calc(8px + env(safe-area-inset-top)) 8px calc(12px + env(safe-area-inset-bottom));touch-action:manipulation;-webkit-user-select:none;user-select:none}
 #fishZone.hidden{display:none}#fishZone .fin{width:100%;max-width:520px;color:#fff3d0;display:flex;flex-direction:column;gap:8px}
 #fishZone .fhd{display:flex;justify-content:space-between;align-items:center;font-size:20px;padding:0 4px}#fsInfo{font-size:15px;color:#e8d0a0;font-weight:700}
 #fscv{display:block;width:100%;aspect-ratio:128/112;image-rendering:pixelated;border:3px solid var(--line);touch-action:none}
 #fsMsg{text-align:center;font-weight:800;font-size:18px;min-height:52px;color:#ffd86a;display:flex;align-items:center;justify-content:center;line-height:1.35;padding:0 6px}
-#fishZone .fctl{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}#fishZone .fctl .btn{min-height:58px;font-size:17px;margin:0;padding:6px 4px}#fishZone .fctl small{display:block;font-size:13px;opacity:.85}
-#fishZone .fctl>.btn:not(#fsReel){grid-column:span 2;height:64px;min-height:64px}#fsReel{grid-column:span 6;min-height:110px!important;font-size:22px!important;display:none;touch-action:none}
-#fishZone .busy .fctl>.btn:not(#fsReel),#fishZone .reel .fctl>.btn:not(#fsReel),#fishZone .heavy .fctl>.btn{display:none}#fishZone .heavy .fctl{min-height:110px}#fsCast,#fsCast2{touch-action:none;-webkit-touch-callout:none}#fishZone .busy #fsReel,#fishZone .reel #fsReel{display:block}
+#fishZone .fctl{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:8px}#fishZone .fctl .btn{min-width:0;width:100%}#fishZone .fctl .fsel{grid-column:span 4;height:64px;font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}#fishZone .fctl .fsel.on{background:#ffe08a;box-shadow:inset 0 0 0 3px #e8a030;color:#3a2414}#fishZone .fctl .fsel img,#fishZone .fctl .fs4 img{width:22px;height:22px;image-rendering:pixelated}#fishZone .fctl .fs4{grid-column:span 3;height:58px;font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}#fsCast{grid-column:span 12;min-height:96px!important;font-size:22px!important}#fishZone .fctl .btn{min-height:58px;font-size:17px;margin:0;padding:6px 4px}#fishZone .fctl small{display:block;font-size:13px;opacity:.85}
+#fsReel{grid-column:span 12;min-height:110px!important;font-size:22px!important;display:none;touch-action:none}
+#fishZone .busy .fctl>.btn:not(#fsReel),#fishZone .reel .fctl>.btn:not(#fsReel),#fishZone .heavy .fctl>.btn{display:none}#fishZone .heavy .fctl{min-height:110px}#fsCast{touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}#fishZone .busy #fsReel,#fishZone .reel #fsReel{display:block}
 .fishrow{display:flex;align-items:center;gap:8px;padding:8px;margin:6px 0;background:#fff3dc;border:2px solid #b8854e;border-radius:6px}.fishrow canvas{width:auto!important;height:30px!important;image-rendering:pixelated}
 .fishrow{color:#3a2414}.fishrow .fn{flex:1;min-width:0}.fishrow .fn b{font-size:16px}.fishrow .small{color:#6a4a2a}.cxtabs{flex-wrap:nowrap!important}.cxtabs .btn{flex:1 1 0;min-width:0;padding:6px 2px;font-size:14px;white-space:nowrap}.fishrow .star{color:#e89a10}.fishrow .fb{display:flex;flex-direction:column;gap:4px}.fishrow .fb .btn{min-height:34px;padding:4px 8px;font-size:14px;margin:0}
+.zoomv{display:flex;justify-content:center;align-items:center;background:repeating-linear-gradient(45deg,#fff3dc 0 8px,#f6e6c8 8px 16px);border:3px solid #2a170a;border-radius:8px;padding:18px;margin-bottom:8px}.zoomv canvas{width:auto;height:180px;max-width:100%;image-rendering:pixelated}
+.dexi,.evorow .ev{cursor:pointer}
+.advpg{display:flex;align-items:center;gap:6px;margin:6px 0}.advnav{flex:0 0 52px;min-height:72px!important;font-size:24px!important;margin:0}.advhd{flex:1;position:relative;height:72px;border:3px solid #2a170a;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-shadow:0 2px 0 #000,0 0 4px #000}.advhd canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;z-index:0}.advhd b,.advhd span{position:relative;z-index:1}.advhd b{font-size:22px}.advhd span{color:#fff}
+.advgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.advt{appearance:none;font-family:inherit;text-align:left;background:#fff3dc;border:3px solid #2a170a;box-shadow:inset 0 -3px 0 #d8b080;border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:2px;color:#3a2414;min-height:96px;cursor:pointer}.advt b{font-size:16px}.advt .small{color:#6a4a2a}.advt span{color:#3a2414}.advt i{font-style:normal;font-size:12px;color:#8a6a4a;margin-top:auto}.advt.cur{background:#ffe08a;box-shadow:inset 0 0 0 3px #e8a030}.advt.boss{background:#ffd8d0}.advt.boss.cur{background:#ffc0a8}.advt:disabled{opacity:.4}
+.stgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.stc{background:#fff3dc;border:2px solid #b8854e;border-radius:6px;padding:6px 8px;color:#3a2414;display:flex;flex-direction:column}.stc span{font-size:13px;color:#7a5a3a}.stc b{font-size:17px}
+.sttoday{background:#ffe08a;border:3px solid #2a170a;border-radius:6px;padding:10px;text-align:center;font-size:18px;color:#3a2414;margin:6px 0}.sttoday b{font-size:22px}
+.stcols{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}.sth{margin:4px 0;font-weight:800}.stl{display:flex;justify-content:space-between;background:#fff3dc;border-bottom:1px solid #e0c090;padding:4px 6px;color:#3a2414;font-size:14px}
+.bdgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.bdg{background:#5a3a22;border:2px solid #2a170a;border-radius:6px;padding:8px 4px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;color:#e8d0a0}.bdg i{font-style:normal;font-size:26px;filter:grayscale(1);opacity:.6}.bdg.on{background:#fff3dc;color:#3a2414;border-color:#e8a030}.bdg.on i{filter:none;opacity:1}.bdg.on .small{color:#7a5a3a}.bdg .small{color:#c8b090}.bdg b{font-size:13px}.bdg .prog{width:90%}
 .skrow{color:#3a2414;background:#fff3dc;border:2px solid #b8854e;border-radius:6px;padding:8px 10px;margin:8px 0}.skg{margin:4px 0 0 6px;font-size:15px}.skg img.mi{height:18px;vertical-align:middle}#trainZone .tin{width:100%;max-width:460px;color:#fff3d0;display:flex;flex-direction:column;gap:6px;position:relative}
 #trainZone .thd{font-size:18px}#tGoal{color:#e8d0a0}#tHud{min-height:22px;font-weight:700}#tMsg{text-align:center;font-weight:700;min-height:22px;color:#ffd86a}
 #tcv{display:block;width:100%;aspect-ratio:128/112;image-rendering:pixelated;border:3px solid var(--line);touch-action:none}
@@ -300,7 +312,7 @@ h1{font-size:17px}.ver{font-size:9px}
 .hpgrp .hp .t{gap:6px}.hpgrp .hp .t span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hpgrp .hp .t span:last-child{flex:0 0 auto}
 .hpgrp .hp .bar{height:6px!important;margin-top:2px}.hpgrp .hp img.ci{width:12px;height:12px}
 .hp.tgt{box-shadow:inset 0 0 0 2px #ffd34a!important}
-#blog{flex:1 1 auto;min-height:56px;max-height:none!important;overflow:hidden;font-size:15px!important;line-height:1.45;padding:6px 10px!important}
+#blog{flex:1 1 auto;min-height:56px;max-height:none!important;overflow-y:auto;font-size:15px!important;line-height:1.45;padding:6px 10px!important;margin-top:6px;white-space:normal}#blog .bl{opacity:.55;padding:2px 0;border-bottom:1px dashed #d8c8a0}#blog .bl.now{opacity:1;color:#a8301c;font-size:16px}#blog .bl:last-child{border-bottom:0}
 .moves{position:relative;flex:0 0 auto}
 .moves .act{display:flex!important;flex-direction:row!important;flex-wrap:wrap;align-content:center;align-items:center;justify-content:center;column-gap:5px;min-height:68px!important;padding:5px 4px 7px!important;font-size:18px!important}
 .moves .act small{flex-basis:100%;text-align:center;font-size:13.5px!important;margin-top:2px}
@@ -328,6 +340,8 @@ h1{font-size:17px}.ver{font-size:9px}
 #arrPanel.room #yaMinus,#arrPanel.room #yaPlus{display:none}#arrPanel.room #yaFlip,#arrPanel.room #arrReset,#arrPanel.room #arrDone{grid-column:span 2}
 #arrPanel .btn:disabled{opacity:.4}
 body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode #app>.actions,body.arrMode #app>.toolbar,body.arrMode #homeTip{display:none!important}
+
+/* V1.84 組合拳方向鍵放大 */.tctl.pad{padding:2px 8px 10px!important}.tctl.pad .dpad{width:174px!important;height:174px!important}.tctl.pad .dpad::before{left:58px!important;width:58px!important;height:174px!important}.tctl.pad .dpad::after{top:58px!important;width:174px!important;height:58px!important}.tctl.pad .dpad .pk{width:58px!important;height:58px!important}.tctl.pad .dpad .pk svg{width:34px!important;height:34px!important}.tctl.pad .pkU{left:58px!important;top:0!important}.tctl.pad .pkD{left:58px!important;top:116px!important}.tctl.pad .pkL{left:0!important;top:58px!important}.tctl.pad .pkR{left:116px!important;top:58px!important}
 </style>
 </head>
 <body>
@@ -386,7 +400,6 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
    <div class="hp foe hidden" id="f2Box"><div class="t"><span id="f2Name"></span><span id="f2Hp"></span></div><div class="bar"><i id="f2Bar"></i></div></div></div>
   <div class="hpgrp bot"><div class="hp"><div class="t"><span id="mName"></span><span id="mHp"></span></div><div class="bar"><i id="mBar"></i></div></div>
    <div class="hp hidden" id="m2Box"><div class="t"><span id="m2Name"></span><span id="m2Hp"></span></div><div class="bar"><i id="m2Bar"></i></div></div></div></div></div>
- <div id="blog"></div>
  <button class="btn bond hidden" id="mvBond" data-mv="bond">💗 羈絆之力！買加油棒為牠打氣（10 金幣・連打螢幕）</button>
  <div class="moves" id="moves">
   <div id="pickTag" class="hidden"></div>
@@ -411,14 +424,20 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
    <button class="act back" data-mp="mpMain">↩ 返回</button>
   </div>
  </div>
+ <div id="blog"></div>
  <div id="bResult" class="hidden"><div class="rcard"><h2 id="rTitle"></h2><div id="rRows"></div><div id="rNote" class="small"></div><button class="btn pri" id="bDone">確定</button></div></div>
 </div></div>
 <div id="rpsZone" class="hidden"><div id="rpsMsg">敵人要攻擊了！猜拳躲開它！</div><div id="rpsBar"><i></i></div><div class="rpsbtns"><button data-rps="rock">✊<span>石頭</span></button><button data-rps="scissors">✌️<span>剪刀</span></button><button data-rps="paper">✋<span>布</span></button></div><div class="small">贏：完全躲開｜平手：傷害 ×0.8｜輸或沒選：傷害 ×1.2</div></div>
 <div id="evoBlock" class="hidden"></div>
 <div id="trainZone" class="hidden"><div class="tin"><div class="thd"><b id="tTitle"></b></div><div class="small" id="tGoal"></div><div id="tHud"></div><canvas id="tcv" width="128" height="112"></canvas><div id="tMsg"></div><div class="tctl" id="tCtl"></div>
  <div id="tResult" class="hidden"><div class="rcard"><h2 id="tRTitle"></h2><p id="tRBody"></p><div class="row"><button class="btn pri" id="tAgain">再練一次</button><button class="btn" id="tClose">回家</button></div></div></div></div></div>
+<div id="farmZone" class="hidden"><div class="fin"><div class="fhd"><b>🌱 種田</b><span id="fmInfo"></span></div><canvas id="fmcv" width="128" height="112"></canvas><div id="fmMsg"></div>
+ <div class="fctl"><button class="btn fsel4" id="fmS_normal"></button><button class="btn fsel4" id="fmS_good"></button><button class="btn fsel4" id="fmS_rare"></button><button class="btn fsel4" id="fmS_magic"></button>
+  <button class="btn fs3" id="fmShop"><img class="uic" src="sprites/ui/shop.png" alt="">買種子、擴建</button><button class="btn fs3" id="fmSell"><img class="uic" src="sprites/ui/coin.png" alt="">賣水果</button><button class="btn fs3" id="fmHome"><img class="uic" src="sprites/ui/house.png" alt="">回院子</button></div></div></div>
 <div id="fishZone" class="hidden"><div class="fin" id="fsFin"><div class="fhd"><b>🎣 池邊釣魚</b><span id="fsInfo"></span></div><canvas id="fscv" width="128" height="112"></canvas><div id="fsMsg"></div>
- <div class="fctl"><button class="btn pri" id="fsCast">🎣 拋竿</button><button class="btn" id="fsCast2">✨ 高級魚餌</button><button class="btn" id="fsShop">🛒 釣具店</button><button class="btn" id="fsBag">🧺 魚簍</button><button class="btn" id="fsDex">📖 圖鑑</button><button class="btn" id="fsHome">🏠 回院子</button><button class="btn pri" id="fsReel">等魚上鉤…</button></div></div></div>
+ <div class="fctl"><button class="btn fsel" id="fsB1"></button><button class="btn fsel" id="fsB2"></button><button class="btn fsel" id="fsRod"></button>
+  <button class="btn fs4" id="fsShop"><img class="uic" src="sprites/ui/shop.png" alt="">釣具店</button><button class="btn fs4" id="fsBag"><img class="uic" src="sprites/ui2/basket.png" alt="">魚簍</button><button class="btn fs4" id="fsDex"><img class="uic" src="sprites/ui/book.png" alt="">圖鑑</button><button class="btn fs4" id="fsHome"><img class="uic" src="sprites/ui/house.png" alt="">回院子</button>
+  <button class="btn pri" id="fsCast">🎣 按住蓄力，放開甩竿</button><button class="btn pri" id="fsReel">等魚上鉤…</button></div></div></div>
 <div id="tapZone" class="hidden"><div id="tapMsg"></div><div id="sticks"><canvas id="stickL" width="12" height="40"></canvas><span id="bang">BANG!</span><canvas id="stickR" width="12" height="40"></canvas></div><b id="tapN"></b><div class="small">點螢幕任何地方都算</div></div>
 <div id="modal" class="hidden" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
 <div id="toast" class="off"></div>
@@ -429,7 +448,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.83.1';
+const VERSION='1.84.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1172,7 +1191,7 @@ function drawRoomFront(now,ph){const P=s.decor.placed;
  if(lightOn(ph)){ctx.fillStyle='rgba(20,15,40,.18)';ctx.fillRect(0,0,W,H);   // 燈罩以外稍暗，扇形光才看得出來
   // 暖燈：從吊燈往下散開的扇形光
   const g=ctx.createLinearGradient(0,13,0,108);g.addColorStop(0,'rgba(255,214,130,.62)');g.addColorStop(.45,'rgba(255,196,110,.30)');g.addColorStop(1,'rgba(255,180,100,.10)');
-  ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(59,13);ctx.lineTo(68,13);ctx.lineTo(116,108);ctx.lineTo(11,108);ctx.closePath();ctx.fill();
+  ctx.fillStyle=g;ctx.save();for(const[w,al]of[[0,.5],[8,.3],[16,.2]]){ctx.globalAlpha=al;ctx.beginPath();ctx.moveTo(59-w*.1,13);ctx.lineTo(68+w*.1,13);ctx.lineTo(116+w,108);ctx.lineTo(11-w,108);ctx.closePath();ctx.fill()}ctx.restore();   /* V1.84 光錐邊緣做柔，不會看起來像一條金線 */
   const g2=ctx.createLinearGradient(0,13,0,108);g2.addColorStop(0,'rgba(255,236,170,.35)');g2.addColorStop(1,'rgba(255,220,150,0)');   // 中間更亮的光芯
   ctx.fillStyle=g2;ctx.beginPath();ctx.moveTo(61,13);ctx.lineTo(66,13);ctx.lineTo(92,108);ctx.lineTo(35,108);ctx.closePath();ctx.fill();
   const r=ctx.createRadialGradient(63.5,12,1,63.5,12,10);r.addColorStop(0,'rgba(255,246,200,.9)');r.addColorStop(1,'rgba(255,230,160,0)');ctx.fillStyle=r;ctx.fillRect(50,0,28,26)}
@@ -1321,7 +1340,7 @@ function drawWeather(now,dt,inRoom){if(rm()){return}const w=weather(),t=now/1000
   for(const L of WXS.leaves){L.x+=L.v*dt;L.ph+=dt*3;const y=Math.round(L.y+Math.sin(L.ph)*4);if(L.x>W+6){L.x=-8;L.y=20+Math.random()*70}ctx.fillStyle=L.c;ctx.fillRect(Math.round(L.x),y,2,1);ctx.fillRect(Math.round(L.x)+1,y+(Math.sin(L.ph*2)>0?1:-1),1,1)}
   ctx.fillStyle='rgba(255,255,255,.35)';for(let i=0;i<3;i++){const x=Math.round(((t*60+i*53)%(W+40))-20),y=30+i*22;ctx.fillRect(x,y,8,1);ctx.fillRect(x+10,y,3,1)}}
  else WXS.leaves.length=0;
- if(!inRoom){const ic=w==='clear'?'sun':w==='breeze'?'leaf':w==='rain'?'drop':'bolt',im=UIIMG[ic]||ICV[ic];if(im){ctx.fillStyle='rgba(20,12,6,.45)';ctx.fillRect(2,2,13,13);ctx.drawImage(im,0,0,im.width,im.height,3,3,11,11)}}}
+ if(!inRoom){const ic=w==='clear'?(phase()==='night'?'moon':'sun'):w==='breeze'?'leaf':w==='rain'?'drop':'bolt',im=UIIMG[ic]||ICV[ic];if(im){ctx.fillStyle='rgba(20,12,6,.45)';ctx.fillRect(2,2,13,13);ctx.drawImage(im,0,0,im.width,im.height,3,3,11,11)}}}
 /* ---------------- V1.76 院子的蘋果樹：每 3 小時長 1 顆，熟了會掉下來，點地上的蘋果免費撿；點樹可以搖下來 ---------------- */
 const TREE_POS0=[[96,45],[108,39],[115,49]],TREE_GND0=[[95,73],[104,74],[113,73]],TPOS=()=>TREE_POS0.map(([x,y])=>yP('tree2',x,y).map(Math.round)),TGND=()=>TREE_GND0.map(([x,y])=>{const[a,b]=yP('tree2',x,y);return[Math.round(a),Math.round(b)]}),TREE={next:performance.now()+20000,fall:[],shake:0};
 /* V1.83 遠處的蘋果：小一點、顏色暗一點，晚上更暗 */
@@ -1385,7 +1404,7 @@ function drawPig(now){if(!s.hatched||curView()!=='room')return;syncPig();
   if(Math.floor(now/300)%3===0)spawn('spark',1,{x:PIG.x+PIG.w/2,y:PIG.y,vy:-6,life:.6,spread:PIG.w})}
  FD('pig',PIG.x,PIG.w,()=>ctx.drawImage(pigCv,PIG.x,PIG.y));
  const n=Math.floor(s.piggy||0),full=n>=PC.piggyCap(s);if(n<1)return;
- const bob=rm()?0:Math.round(Math.sin(now/300)),ic=ICV.coin;const ns=String(n),cx=PIG.x+PIG.w-ic.width,nx=cx-ns.length*4-1;ctx.drawImage(ic,cx,PIG.y-ic.height-2+bob);pixNum(ns,nx,PIG.y-ic.height+1+bob,full?'#ffe066':'#ffffff');
+ const bob=rm()?0:Math.round(Math.sin(now/300)),ic=ICV.coin;const ns=String(n),bw=ic.width+ns.length*4+4,bx=Math.max(1,PIG.x-bw-1),by=PIG.y+2+bob;ctx.fillStyle='rgba(30,18,8,.72)';ctx.fillRect(bx,by-1,bw,ic.height+2);ctx.drawImage(ic,bx+1,by);pixNum(ns,bx+ic.width+3,by+3,full?'#ffe066':'#ffffff');   /* V1.84 存錢筒金幣數改到豬的左邊，加底色，不會被按鈕擋住 */
  if(full&&!rm()&&Math.floor(now/250)%2)spawn('spark',1,{x:PIG.x+8,y:PIG.y-8,vy:-8,life:.5,spread:10})}
 const overPig=(x,y)=>s.hatched&&curView()==='room'&&x>=PIG.x-3&&x<=PIG.x+PIG.w+3&&y>=PIG.y-14&&y<=PIG.y+PIG.h+3;
 function tapPig(){const r=PC.collectPiggy(s,Date.now());if(!r.ok){say(`${PC.pigLevel(s)} 級小豬撲滿還在存…（每小時約 ${PC.piggyRate(s).toFixed(1)} 枚，最多 ${PC.piggyCap(s)}）`,{log:false});sfx('tap');return}
@@ -1780,7 +1799,7 @@ function itemDexDialog(){PC.markSeen(s);const C=CONFIG,F=C.foods,SN=s.seen||{},R
  openModal('📖 圖鑑',`<div class="row cxtabs" style="margin-top:0"><button class="btn" id="cxPets">🐾 幻獸</button><button class="btn pri">🎒 物品</button><button class="btn" id="cxF2">🐟 魚類</button><button class="btn" id="cxJ2">📔 日記</button></div>
  <p class="small">已收集 <b>${got}</b> / ${tot}。黑色剪影是還沒拿到的，下面有取得線索。</p>${html}`);
  $('cxPets').onclick=codexDialog;$('cxJ2').onclick=journalDialog;$('cxF2').onclick=fishDexDialog;
- document.querySelectorAll('.dexi canvas').forEach(c=>{paintIcon(c,c.dataset.icon);if(c.dataset.sil==='1'){const x=c.getContext('2d');x.globalCompositeOperation='source-in';x.fillStyle='#14100c';x.fillRect(0,0,c.width,c.height)}})}
+ document.querySelectorAll('.dexi canvas').forEach(c=>{paintIcon(c,c.dataset.icon);if(c.dataset.sil==='1'){const x=c.getContext('2d');x.globalCompositeOperation='source-in';x.fillStyle='#14100c';x.fillRect(0,0,c.width,c.height)}});wireDexZoom(itemDexDialog)}
 function codexDialog(){   // V1.67 每個物種列出 5 種型態：還沒進化到的用黑色剪影、名字 ？？？，引導玩家把牠養大
  const dex=s.dex.slice().reverse(),ORD=['baby','juvenile','adolescent','adult','ascended'];
  const cards=dex.length?dex.map((e,di)=>{const route=e.route||genomeFromId(e.id).el||null,reach=ORD.indexOf(e.stage),cur=e.id===gidOf(s)&&s.hatched;
@@ -1796,9 +1815,15 @@ function codexDialog(){   // V1.67 每個物種列出 5 種型態：還沒進化
  <p>🏅 養過的屬性 <b>${PC.playedRoutes(s).length}</b> / 7：${PC.ROUTES.map(r=>PC.playedRoutes(s).includes(r)?ROUTE_ICON[r]:'❔').join(' ')}</p>${cards}`);
  $('cxJournal').onclick=journalDialog;$('cxItems').onclick=itemDexDialog;$('cxFish').onclick=fishDexDialog;
  document.querySelectorAll('.evorow canvas').forEach(c=>{const S=sheet(c.dataset.k),x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(S.cv,(S.idx.idle0??0)*CELL,0,CELL,CELL,0,0,48,48);
-  if(c.dataset.sil==='1'){x.globalCompositeOperation='source-in';x.fillStyle='#14100c';x.fillRect(0,0,48,48)}})}
-function journalDialog(){const J=s.journal.slice().reverse();
- openModal('📔 成長日記',J.length?J.map(j=>`<p><span class="small">${fmtTime(j.at)}</span>　${esc(j.t)}</p>`).join(''):'<p>日記還是空白的。孵化之後，重要的事都會自動記下來。</p>')}
+  if(c.dataset.sil==='1'){x.globalCompositeOperation='source-in';x.fillStyle='#14100c';x.fillRect(0,0,48,48)}});
+ document.querySelectorAll('.evorow .ev').forEach(ev=>ev.onclick=()=>{const c=ev.querySelector('canvas'),sil=c.dataset.sil==='1',f=formOf(c.dataset.k);sfx('tap');
+  zoomView(sil?'？？？':esc(f.name),cv=>{const S=sheet(c.dataset.k),x=cv.getContext('2d');cv.width=cv.height=48;x.imageSmoothingEnabled=false;x.drawImage(S.cv,(S.idx.idle0??0)*CELL,0,CELL,CELL,0,0,48,48);if(sil){x.globalCompositeOperation='source-in';x.fillStyle='#14100c';x.fillRect(0,0,48,48)}},
+   `<p>${ev.querySelector('.small').textContent}</p>${sil?'<p class="small">還沒養到這個型態，繼續照顧牠就會揭曉！</p>':''}`,codexDialog)})}
+/* V1.84 圖鑑：點一下放大看 */
+function zoomView(title,paint,html,back){openModal(title,`<div class="zoomv"><canvas id="zoomCv"></canvas></div>${html||''}`,[{t:'↩ 回圖鑑',fn:()=>{setTimeout(back,0)}}]);paint($('zoomCv'));sfx('tap')}
+function wireDexZoom(back){document.querySelectorAll('.dexi').forEach(el=>el.onclick=()=>{const c=el.querySelector('canvas'),ic=c.dataset.icon,sil=c.dataset.sil==='1',nm=el.querySelector('b').innerHTML,info=[...el.querySelectorAll('.small')].map(x=>x.innerHTML).join('<br>');
+ zoomView(nm,cv=>{const src=ICV[ic+'_b']||UIIMG[ic]||ICV[ic];if(!src)return;cv.width=src.width;cv.height=src.height;const x=cv.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(src,0,0);if(sil){x.globalCompositeOperation='source-in';x.fillStyle='#14100c';x.fillRect(0,0,cv.width,cv.height)}},`<p class="small" style="text-align:center">${info}</p>`,back)})}
+function journalDialog(){statsDialog()}
 
 /* ---------------- 存檔匯出／匯入 ---------------- */
 function checksum(t){let h=0;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))>>>0;return h.toString(36)}
@@ -1877,7 +1902,7 @@ function newPet(genes,from){store.set(BACKUP_KEY,JSON.stringify(s));
  const moved=PC.moveToDen(s),oldName=s.name;
  if(!moved&&s.relics&&s.relics.length)for(const k of [...s.relics])PC.unequipRelic(s,s,k);   // 沒搬進小窩：身上的寶物放回背包
  const keep={rev:s.rev,settings:s.settings,owner:s.owner,pair:s.pair,loveNest:s.loveNest,loveAt:s.loveAt,coins:s.coins,inv:s.inv,decor:s.decor,view:s.view,cores:s.cores,ball:s.ball,den:s.den,roster:s.roster,harvests:s.harvests,dex:s.dex,eggs:s.eggs,steps:s.steps,adv:s.adv,daily:s.daily,breedAt:s.breedAt,journal:s.journal,lastExport:s.lastExport,
-  piggy:s.piggy,pigCores:s.pigCores,pigBought:s.pigBought,eggBuys:s.eggBuys,foster:s.foster,fusionHouse:s.fusionHouse,goals:s.goals,goalLv:s.goalLv,matGot:s.matGot,events:s.events,relicGot:s.relicGot};   // 帳號共用的東西：小豬撲滿、任務、素材紀錄、買蛋次數
+  piggy:s.piggy,pigCores:s.pigCores,pigBought:s.pigBought,eggBuys:s.eggBuys,foster:s.foster,fusionHouse:s.fusionHouse,goals:s.goals,goalLv:s.goalLv,matGot:s.matGot,events:s.events,relicGot:s.relicGot,fish:s.fish,loot:s.loot,yard:s.yard,tree:s.tree,bush:s.bush,seen:s.seen,stats:s.stats,badges:s.badges,plots:s.plots,skillDay:s.skillDay};   /* V1.84 釣魚、寶物、院子佈置、紀錄、成就、田地也是帳號共用 */   // 帳號共用的東西：小豬撲滿、任務、素材紀錄、買蛋次數
  s=fresh();Object.assign(s,keep);if(genes){s.genes=genes;s.seed=null}else{const U=PC.unplayedRoutes(s),sd=PC.seedForEl(U[Math.floor(Math.random()*U.length)]);if(sd!==null)s.seed=sd}   // 新蛋：優先給還沒玩過的屬性
  lastBackup=Date.now();evo=null;evoQueue.length=0;cancelMode();petX=PET_X;save();renderUI();
  if(moved)setTimeout(()=>toast(`🪺 ${oldName} 搬進小窩休息了`,3500),400);
@@ -2051,7 +2076,7 @@ function shopDialog(tab,bagOnly=tab==='bag'){PC.claimDaily(s,Date.now());
    out.push({id,name:it.name,sub:own?(on?'使用中':'已擁有'):'🪙 '+it.price,dp:id,desc:`${SLOT_NAME[sl]}${DECOR_NOTE[id]?'<br>'+DECOR_NOTE[id]:''}<br>${own?'已擁有':'價格 🪙 '+it.price}`,
     btn:`<button class="btn ${!own||!on?'pri':''}" data-dz="${id}" ${(sl==='paper'&&on)?'disabled':''}>${!own?'購買':on?(sl==='paper'?'使用中':(sl==='bed'?'收起（右邊）':'收起')):(sl==='bed'?'擺在右邊':'擺上')}</button>${sl==='bed'&&own?`<button class="btn ${s.decor.placed.bed2===id?'':'pri'}" data-bed2="${id}">${s.decor.placed.bed2===id?'收起（左邊）':'擺在左邊'}</button>`:''}`})}}return out}
   const fr=k=>(s.inv.fresh&&s.inv.fresh[k])||0,out=[];
-  const foodEntry=(k,bag)=>{const F=C.foods[k];return{id:k,name:F.name,sub:bag?`×${s.inv[k]||0}${fr(k)?` ✨${fr(k)}`:''}`:`🪙${F.price}｜×${s.inv[k]||0}`,icon:ITEM_ICON[k],fresh:fr(k),desc:`${foodDesc(F)}<br>擁有 ${s.inv[k]||0}${fr(k)?`（✨自己種的 ${fr(k)}）`:''}`,
+  const foodEntry=(k,bag)=>{const F=C.foods[k];return{id:k,name:F.name,sub:bag?`×${s.inv[k]||0}${fr(k)?` ✨${fr(k)}`:''}`:`🪙${F.price}｜×${s.inv[k]||0}`,icon:ITEM_ICON[k]||F.icon,fresh:fr(k),desc:`${foodDesc(F)}<br>擁有 ${s.inv[k]||0}${fr(k)?`（✨自己種的 ${fr(k)}）`:''}`,
    btn:bag?`<button class="btn pri" data-feedk="${k}">🍽️ 拿去餵牠</button>`:F.power?'<p class="small">🔒 商店不賣：冒險打贏 10% 掉 1 顆、打贏小王／大王必掉 1 顆、★★★ 任務獎勵、優良種子 8%、稀有種子 30%</p>':`<button class="btn pri" data-bi="${k}">買 1 個（🪙 ${F.price}）</button>`}};
   const tools={seeds:()=>({id:'seeds',name:'種子',sub:`🪙${C.farm.seedPrice}｜×${s.inv.seeds}`,icon:'seed',desc:`種在田裡，${C.farm.growHours} 小時後長出蘋果或莓果<br>擁有 ${s.inv.seeds}`,btn:`<button class="btn pri" data-bi="seeds">買 1 個（🪙 ${C.farm.seedPrice}）</button>`}),
    candy:()=>({id:'candy',name:'星星糖',sub:`🪙${C.candy.price}｜×${s.inv.candy||0}`,icon:'candy',desc:`吃了<b>直接升 1 級</b>！（進化還是要等時間）<br>心情 +${C.candy.mood}、飽食 +${C.candy.hunger}<br>擁有 ${s.inv.candy||0}`,btn:`<button class="btn pri" data-bi="candy">買 1 個（🪙 ${C.candy.price}）</button><button class="btn" id="eatCandy" ${s.inv.candy?'':'disabled'}>給牠吃</button>`}),
@@ -2101,7 +2126,7 @@ function shopDialog(tab,bagOnly=tab==='bag'){PC.claimDaily(s,Date.now());
    document.querySelectorAll('[data-req]').forEach(b=>b.onclick=()=>{const[i,k]=b.dataset.req.split('|'),r=PC.equipRelic(s,pets[+i],k);toast(r.ok?'🪎 '+r.msg:'❌ '+r.msg);if(r.ok){sfx('level');save();renderUI()}render()});
    document.querySelectorAll('[data-run]').forEach(b=>b.onclick=()=>{const[i,k]=b.dataset.run.split('|'),r=PC.unequipRelic(s,pets[+i],k);toast(r.msg);sfx('tap');save();renderUI();render()});
    document.querySelectorAll('[data-rsell]').forEach(b=>b.onclick=()=>{const k=b.dataset.rsell,R=C.relics.items[k];confirmBox('💰 真的要賣掉嗎？',`確定要把「${R.name}」賣掉換 ${C.relics.sell} 金幣嗎？賣掉就拿不回來了。`,`確定賣掉（+${C.relics.sell}）`,()=>{const r=PC.sellRelic(s,k);toast(r.ok?'💰 '+r.msg:'❌ '+r.msg,3000);if(r.ok){sfx('level');save();renderUI()}shopDialog('bag')})})}
-  if($('goFarm'))$('goFarm').onclick=()=>{closeModal();farmDialog()};
+  if($('goFarm'))$('goFarm').onclick=()=>{closeModal();openFarm()};
   if($('buyPigCore'))$('buyPigCore').onclick=()=>{const r=PC.buyPigCore(s);toast(r.ok?'🐷 '+r.msg:'❌ '+r.msg,3500);if(r.ok){sfx('level');buzz(30);save();renderUI()}render()};
   if($('drinkSoup'))$('drinkSoup').onclick=()=>{const r=PC.useSoup(s,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}closeModal();playAnim('eat');sfx('eat');spawn('heart',4,{y:70,life:1.1});say(r.msg);save();renderUI()};
   if($('useHeart'))$('useHeart').onclick=()=>{const r=PC.awaken(s,Date.now());if(!r.ok){toast('❌ '+r.msg);return}closeModal();save();renderUI();flashUntil=performance.now()+700;sfx('evolve');buzz(40);playAnim('happy',1400);spawn('star',14,{y:66,vy:-30,jx:60,life:1.6,stagger:.05});say(r.msg)};
@@ -2115,7 +2140,7 @@ function shopDialog(tab,bagOnly=tab==='bag'){PC.claimDaily(s,Date.now());
 /* =========================================================
    ⚔️ 冒險：關卡制回合戰鬥
    ========================================================= */
-const EL_NAME={dragon:'🐲龍',fire:'🔥火',water:'💧水',leaf:'🌿森',earth:'🪨土',bird:'🐦鳥',elec:'⚡電',metal:'⚙️金',none:'⭐無'};
+const EL_NAME={dragon:'🐲龍',fire:'🔥火',water:'💧水',leaf:'🌿草',earth:'🪨岩',bird:'🐦飛行',elec:'⚡雷',metal:'⚙️鋼',none:'⭐無'};
 const ULT_NAME={fire:'烈焰風暴',water:'怒濤海嘯',leaf:'森羅萬象',earth:'地裂山崩',bird:'九天颶風',elec:'萬雷天降',metal:'千刃斬',none:'流星雨'};
 const SP_NAME={fire:'火球術',water:'泡泡砲',leaf:'飛葉刃',earth:'碎岩擊',bird:'旋風羽',elec:'雷光閃',metal:'鋼刃斬',none:'星星衝撞'},SP_ICON={fire:'fire',water:'bubble',leaf:'leaf',earth:'rock',bird:'feather',elec:'bolt',metal:'shard',none:'star'};
 const AREAS=['青草原','迷霧湖','火山口','古森林','大地峽谷','天空之巔','雷雲山','鋼鐵礦坑','星之塔'];
@@ -2131,14 +2156,20 @@ let B=null;const bparts=[];const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 /* V1.42 關卡清單的相剋提示：▲ 你剋牠、▼ 牠剋你 */
 function elemHint(f){const me={el:PC.ELEM[s.route]||'none'},a=PC.elemMult(me,f,true),b=Math.max(PC.elemMult(f,me,true),f.el2?PC.elemMult({el:f.el2},me,true):0);return a>1?' <b class="ehint up">▲你剋牠</b>':b>1?' <b class="ehint dn">▼牠剋你</b>':''}
 function buffText(p){const tb=PC.trainBonus(p),sx=CONFIG.stageX[p.stage]||1,pc=x=>Math.round(x*100);return`進化階段 ×${sx}　🤸閃避 +${pc(tb.dodge)}%　👊攻擊 +${pc(tb.attack)}%　🧘防禦 +${pc(tb.defense)}%${p.awake?'　🌟星耀 ×'+CONFIG.starHeart.statX:''}${p===s&&!s.awake&&PC.hasHeritage(s)?`　✨傳承之力：經驗 ×${CONFIG.heritage.xp}、訓練 ×${CONFIG.heritage.train}`:''}`}
-function advDialog(){PC.claimDaily(s,Date.now());tick();
- const why=PC.canAdventure(s,s.adv.stage);let list='';const top=s.adv.stage,A=CONFIG.adventure;
- for(let n=top;n>=1;n--){const f=foeFighter(n),ev=Object.keys(CONFIG.bossStages).find(k=>CONFIG.bossStages[k]===n);   // V1.67 打過的關卡全部列出來，可以回去刷
-  list+=`<button class="btn stagebtn ${n===top?'pri':''}" data-st="${n}"><span>${n>=CONFIG.tower.from?'🌌':''}${n%10===0?'👑 大王 ':n%5===0?'⭐ 小王 ':''}第 ${n} 關 · ${CONFIG.bosses[n]?CONFIG.bosses[n].mon:areaName(n)}${ev&&!s.events[ev]?' ✨':''}</span><span class="small" style="color:inherit">Lv.${f.level} ${EL_NAME[f.el]}${f.el2?'＋'+EL_NAME[f.el2]:''}${elemHint(f)}</span></button>`}
- openModal('⚔️ 冒險',`<p>體力 <b>${Math.round(s.energy)}</b>（出發要 ${A.minEnergy}）　戰績 ${s.adv.wins} 勝 ${s.adv.losses} 敗</p>
-<p class="small">清單上 <b class="ehint up">▲你剋牠</b>、<b class="ehint dn">▼牠剋你</b>。💪 ${buffText(s)}</p>
+/* V1.84 冒險：依地點分頁，左右切換（按鈕或滑動） */
+let ADV_PG=null;const AREA_BG=['meadow_1','water_1','rock_1','forest_1','canyon_1','sky_1','storm_1','mine_1','tower_2'];
+function advDialog(pg){PC.claimDaily(s,Date.now());tick();
+ const top=s.adv.stage,A=CONFIG.adventure,why=PC.canAdventure(s,top),last=Math.min(8,Math.floor((top-1)/5));if(pg==null)pg=ADV_PG!=null&&ADV_PG<=last?ADV_PG:last;pg=Math.max(0,Math.min(last,pg));ADV_PG=pg;
+ const from=pg*5+1,to=pg===8?Math.max(top,41):pg*5+5,ns=[];for(let n=from;n<=Math.min(to,Math.max(top,from));n++)ns.push(n);
+ const tiles=ns.map(n=>{const f=foeFighter(n),ev=Object.keys(CONFIG.bossStages).find(k=>CONFIG.bossStages[k]===n),lock=n>top,BS=CONFIG.bosses[n];
+  return`<button class="advt ${n===top?'cur':''} ${BS?'boss':''}" data-st="${n}" ${lock?'disabled':''}><b>${n%10===0?'👑 大王':n%5===0?'⭐ 小王':'第 '+(n>40?n-40:((n-1)%5)+1)+' 站'}</b><span>${BS?BS.mon:'野生幻獸'}${ev&&!s.events[ev]?' ✨':''}</span><span class="small">Lv.${f.level}　${EL_NAME[f.el]}${f.el2?'＋'+EL_NAME[f.el2]:''}</span>${elemHint(f)}<i>第 ${n} 關${n===top?'・最新':''}</i></button>`}).join('');
+ openModal('⚔️ 冒險',`<p>⚡ 體力 <b>${Math.round(s.energy)}</b>（出發要 ${A.minEnergy}）　戰績 ${s.adv.wins} 勝 ${s.adv.losses} 敗</p>
 ${why&&why!=='這一關還沒解鎖'?'<p class="err">'+why+'</p>':''}
-<div class="stagelist">${list}</div>`);
+<div class="advpg"><button class="btn advnav" id="advL" ${pg<=0?'disabled':''}>◀</button><div class="advhd"><canvas id="advBg" width="128" height="40"></canvas><b>${AREAS[pg]}</b><span class="small">${pg+1} / ${last+1}</span></div><button class="btn advnav" id="advR" ${pg>=last?'disabled':''}>▶</button></div>
+<div class="advgrid" id="advGrid">${tiles}</div><p class="small">💪 ${buffText(s)}　<b class="ehint up">▲你剋牠</b> <b class="ehint dn">▼牠剋你</b>　左右滑動可以換地點</p>`);
+ {const im=new Image();im.onload=()=>{const c=$('advBg');if(!c)return;const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(im,0,30,128,40,0,0,128,40)};im.src=`sprites/arena/${AREA_BG[pg]}.png`}
+ $('advL').onclick=()=>{sfx('tap');advDialog(pg-1)};$('advR').onclick=()=>{sfx('tap');advDialog(pg+1)};
+ {const g=$('advGrid');let x0=null;g.addEventListener('touchstart',e=>{x0=e.touches[0].clientX},{passive:true});g.addEventListener('touchend',e=>{if(x0==null)return;const d=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(d)>60){if(d<0&&pg<last)advDialog(pg+1);else if(d>0&&pg>0)advDialog(pg-1)}})}
  document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{const n=+b.dataset.st,w=PC.canAdventure(s,n);if(w){toast(w);return}closeModal();startBattle(n)})}
 /* 🪎 V1.52 寶物：戴上／卸下／賣掉／圖鑑 */
 function relicDialog(){const RL=CONFIG.relics,RI=RL.items,iv=s.inv.relics||{},pets=[s].concat(s.pair?[s.pair]:[]);
@@ -2159,12 +2190,12 @@ function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');retu
  const foe2=duo?makeFoe2(n):null;   // V1.79 兩隻一起上場 → 敵人也變兩隻（不再加血）
  const fx0=()=>({dx:0,dy:0,flash:0,faint:0,anim:null,t0:0});
  if(s.loot&&s.loot.amulet>0)me.amulet=true;   /* V1.83 帶一個小護身符 */
- B={n,full:r.full,arena:arenaFor(n,foe),bondUsed:false,ultUsed:false,me,me2,duo,foe,foe2,tgt:'foe',busy:false,over:false,fx:{me:fx0(),me2:fx0(),foe:fx0(),foe2:fx0()}};bparts.length=0;setArenaBg(n);
+ BLOG=[];$("blog").innerHTML="";B={n,full:r.full,arena:arenaFor(n,foe),bondUsed:false,ultUsed:false,me,me2,duo,foe,foe2,tgt:'foe',busy:false,over:false,fx:{me:fx0(),me2:fx0(),foe:fx0(),foe2:fx0()}};bparts.length=0;setArenaBg(n);
  {const U=CONFIG.bossUlt[n];if(U){foe.ult=Object.assign({},U,BULT_FX[U.key]);foe.ultState='ready';if(U.key==='rebirth')foe.revive=U.hp}}$('bBanner').classList.add('hidden');
  $('battle').classList.remove('hidden');$('bResult').classList.add('hidden');$('moves').classList.remove('hidden');showPanel('mpMain');
- unlockAudio();bgmPlay(foe.big?'big':foe.boss?'mini':'normal');   // V1.81 戰鬥音樂
+ unlockAudio();B.bgm=foe.big?'big':foe.boss?'mini':'normal';bgmPlay(B.bgm);   // V1.81 戰鬥音樂
  $('mvSp').textContent='✨ '+SP_NAME[me.el];blog(`📍 ${ARENA_NAME[arenaFor(n,foe)]}\n${foe.name} 出現了！（${foe.elTxt||EL_NAME[foe.el]} Lv.${foe.level}）${foe2?`\n${foe2.name} 也跳出來了！（${EL_NAME[foe2.el]} Lv.${foe2.level}）`:''}${duo?`\n🐾 ${me.name} 和 ${me2.name} 一起上場！點敵人可以選要打哪一隻`:s.pair?`\n（${s.pair.name} 體力不夠，留在家休息）`:''}`);bUI();sfx('play')}
-function blog(t){$('blog').textContent=t}
+let BLOG=[];function blog(t){if(!t)return;BLOG.push(String(t));if(BLOG.length>40)BLOG.shift();const el=$('blog');el.innerHTML=BLOG.map((x,i)=>`<div class="bl${i===BLOG.length-1?' now':''}">${esc(x)}</div>`).join('');el.scrollTop=el.scrollHeight}   /* V1.84 戰鬥播報：一行一行記下來 */
 /* ---------------- 戰鬥場地：依怪獸屬性決定 ---------------- */
 const ARENA_NAME={meadow:'🌼 草原',rock:'🌋 火山岩地',water:'🌊 水邊',forest:'🌲 森林深處',canyon:'🪨 大地峽谷',sky:'☁️ 天空之巔',storm:'⛈️ 雷雲山',mine:'⚙️ 鋼鐵礦坑',tower:'✨ 星之塔'};
 function arenaFor(n,foe){if(n>40)return'tower';const m={fire:'rock',water:'water',leaf:'forest',earth:'canyon',bird:'sky',elec:'storm',metal:'mine'};return m[foe.el]||(['meadow','water','rock','forest','canyon','sky','storm','mine'][Math.min(7,Math.floor((n-1)/5))])}
@@ -2291,7 +2322,7 @@ async function doMove(a,d,mv,side,boost=1){
  if(mv==='potion'||mv==='potion2'){const sup=mv==='potion2',h=Math.min(a.max-a.hp,Math.round(a.max*(sup?CONFIG.superPotion.heal:CONFIG.potion.heal)));a.hp+=h;s.inv[mv]--;save();blog(`${a.name} 喝下${sup?'超級藥水，HP 全滿':'回復藥水'}！HP +${h}`);A.anim='happy';A.t0=performance.now();sfx('level');spawn('heart',4,{x:BPOS[side][0],y:BPOS[side][1]-2,vy:-18,jx:20,life:1,spread:14},bparts);bUI();await sleep(1000);return}
  const sp=mv==='special'||mv==='bond'||mv==='ult';if(mv==='special')a.cd=3;if(sp&&a.el2&&a.el2!=='dragon'&&Math.random()<.5){const e=a.el;a.el=a.el2;a.el2=e}   // V1.53 雙屬性的王：屬性技隨機用其中一個屬性if(mv==='ult')boost*=CONFIG.ult.power;
  blog(mv==='bond'?`💗 ${a.name} 的羈絆之力爆發！`:mv==='ult'?`🌟 ${a.name} 的大絕招「${ULT_NAME[a.el]||'大絕招'}」！${a.charged?'（蓄力 ×1.5）':''}`:`${a.name} 使出${sp?'「'+SP_NAME[a.el]+'」':'衝撞'}！${a.charged?'（蓄力 ×1.5）':''}`);A.anim='jump';A.t0=performance.now();const dir=side.startsWith('foe')?-1:1;A.dx=10*dir;A.dy=-6*dir;sfx(sp?'evolve':'tap');await sleep(220);A.dx=0;A.dy=0;
- const{dmg,mult,crit,endured,revived,reflect,amulet}=PC.damage(a,d,sp,Math.random,boost);if(amulet&&s.loot){s.loot.amulet=Math.max(0,s.loot.amulet-1);save();setTimeout(()=>blog(`🧿 小護身符擋下一半的傷害，碎掉了…`),300)}D.flash=performance.now()+500;buzz(mv==='bond'||mv==='ult'?60:20);if(mv==='ult'){flashUntil=performance.now()+400}
+ const{dmg,mult,crit,endured,revived,reflect,amulet}=PC.damage(a,d,sp,Math.random,boost);if(crit&&!side.startsWith('foe'))PC.statAdd(s,'crit');if(amulet&&s.loot){s.loot.amulet=Math.max(0,s.loot.amulet-1);save();setTimeout(()=>blog(`🧿 小護身符擋下一半的傷害，碎掉了…`),300)}D.flash=performance.now()+500;buzz(mv==='bond'||mv==='ult'?60:20);if(mv==='ult'){flashUntil=performance.now()+400}
  const tx=BPOS[dside][0],ty=BPOS[dside][1];{const g=sp&&{fire:'burn',water:'splash',elec:'zap'}[a.el];if(g)B.anim={g,x:tx,y:ty+12,t0:performance.now()}}spawn(mv==='bond'?'heart':sp?SP_ICON[a.el]:'spark',mv==='bond'||mv==='ult'?12:sp?6:3,{x:tx,y:ty,vy:-20,jx:30,life:.8,spread:16},bparts);sfx(sp&&EL_SND[a.el]?EL_SND[a.el]:(crit||mv==='ult'||mv==='bond')?'punchBig':'punch');if(mv==='ult'||mv==='bond')setTimeout(()=>sfx('boom'),120);bUI();
  await sleep(450);blog(`${crit?'會心一擊！':''}造成 ${dmg} 點傷害${mult>1?'，效果絕佳！':mult<1?'，效果不太好…':''}`);await sleep(750);
  if(endured){blog(`💗 ${d.name} 想起和你的羈絆，撐住了！`);await sleep(1000)}
@@ -2376,7 +2407,8 @@ async function onMove(mv){if(!B||B.over||(mv!=='frozen'&&B.busy))return;unlockAu
   if(isFoe&&a.stun>0){a.stun=0;blog(`⚡ ${a.name} 全身麻痺，這回合動不了！`);B.fx[side].flash=performance.now()+600;bUI();await sleep(900);continue}
   if(isFoe&&(m==='tackle'||m==='special')&&!window.PF_NO_RPS){const r=await rpsRound();   // 敵人攻擊前猜拳
    const dz=r.result!=='win'&&Math.random()<(d.dodge||0)+(d.windT>0?CONFIG.counter.bird.dodge:0);   // V1.42 閃避訓練：猜拳沒贏也有機會閃開
-   if(r.result==='win'||dz){if(m==='special')a.cd=3;a.charged=false;blog(dz?`🤸 閃避訓練的成果！${d.name} 一個側身閃開了 ${a.name} 的攻擊！`:`${a.name} 使出${m==='special'?'「'+SP_NAME[a.el]+'」':'撞擊'}！但 ${d.name} 靈巧地躲開了！`);B.fx[sideOf(d)].anim='happy';B.fx[sideOf(d)].t0=performance.now();bUI();await sleep(900);continue}
+   if(r.result==='win'||dz){if(m==='special')a.cd=3;a.charged=false;blog(dz?`🤸 閃避訓練的成果！${d.name} 一個側身閃開了 ${a.name} 的攻擊！`:`${a.name} 使出${m==='special'?'「'+SP_NAME[a.el]+'」':'撞擊'}！但 ${d.name} 靈巧地躲開了！`);{const A=B.fx[side],D=B.fx[sideOf(d)],dir=side.startsWith('foe')?-1:1;A.anim='jump';A.t0=performance.now();sfx('tap');await sleep(160);A.dx=12*dir;A.dy=-6*dir;D.dx=-16*dir;D.dy=-4;sfx('wake');await sleep(120);spawn('star',3,{x:BPOS[sideOf(d)][0],y:BPOS[sideOf(d)][1]-4,vy:-12,life:.6,spread:10},bparts);await sleep(260);A.dx=0;A.dy=0;await sleep(220);D.dx=0;D.dy=0;D.anim='happy';D.t0=performance.now()}   /* V1.84 閃避過場：敵人衝過來、我方往旁邊一跳 */
+    bUI();await sleep(700);continue}
    await doMove(a,d,m,side,r.mult);if(d.hp<=0)B.fx[sideOf(d)].faint=performance.now();continue}
   await doMove(a,d,m,side,side==='me'?boost:1);if(d.hp<=0)B.fx[sideOf(d)].faint=performance.now();if(foesDead())break;
   if(!isFoe&&d.hp>0&&['tackle','special','bond','ult'].includes(m)&&a.stunChance&&Math.random()<a.stunChance){d.stun=1;blog(`⚡ 電流竄過！${d.name} 麻痺了，下一回合不能動！`);spawn('bolt',4,{x:94,y:44,vy:-10,jx:20,life:.8,spread:12},bparts);sfx('wake');bUI();await sleep(800)}}
@@ -2450,6 +2482,8 @@ function endBattle(win){B.over=true;bgmJingle(win===true);$('moves').classList.a
  $('rNote').innerHTML=notes.join('<br>');$('rRows').querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));
  setTimeout(async()=>{if(r.relic&&B&&B.over)await chestScene(r.chest||'bronze',r.relic);if(B&&B.over)$('bResult').classList.remove('hidden')},win?900:500);   // V1.75 有寶箱先開寶箱   // 先看一下勝負，再跳出結算
  save();renderUI();setTimeout(()=>afterChange(x0),0)}
+/* V1.84 戰鬥音樂看門狗：被切到背景、音效剛解鎖等情況停掉時，自動接回來 */
+setInterval(()=>{if(B&&!B.over&&B.bgm&&!BGM.timer&&s.settings.sound&&actx&&document.visibilityState==='visible'){try{if(actx.state==='suspended')actx.resume()}catch(_){}bgmPlay(B.bgm)}},1500);
 function closeBattle(){bgmStop();$('battle').classList.add('hidden');B=null;renderUI();if(s.hatched)say(s.mood>60?'冒險好好玩！':'有點累了…')}
 const bcv=$('bcv'),bctx=bcv.getContext('2d');bctx.imageSmoothingEnabled=false;
 /* V1.79 點敵人選要打哪一隻（兩隻敵人時） */
@@ -2675,8 +2709,10 @@ function updateWorld(now,dt){updatePair(now,dt);updateRally(now);
   if(b.x>W+6||b.x<-6)endBall()}}
 function ringAt(ms){const sc=BALL.score,ts=ms/1000,sp=1+sc*.12;return{x:RING.bx,y:RING.by+(sc>=2?Math.sin(ts*1.3*sp)*Math.min(14,4+sc*2):0)}}
 /* ---- 餵食 ---- */
-function placeApple(x,y){if(FEED.apple)return;const why=PC.canAct(s,'feed',Date.now());if(why){say(why);setMode(null);return}
- const k=FEED.kind||'food',FD=CONFIG.foods[k];PC.fixFresh(s);const fr=s.inv.fresh[k]||0,fresh=fr>0&&(s.inv[k]||0)<=fr;   // 先吃買來的；只剩自己種的才會吃到發光的
+/* V1.84 釣到的魚（烤過的）也是丟到畫面上給牠吃：kind＝'fx:魚的 key' */
+const feedDef=k=>k&&k.startsWith('fx:')?{name:'烤'+(PC.FISH[k.slice(3)]||{}).name,icon:ICV.grill_fish?'grill_fish':'fish',left:'bone'}:CONFIG.foods[k]||CONFIG.foods.food;
+function placeApple(x,y){if(FEED.kind&&FEED.kind.startsWith('fx:')&&!((PC.fishOf(s).cooked[FEED.kind.slice(3)]||0)>0)){FEED.kind='food';renderFoodBar()}if(FEED.apple)return;const why=PC.canAct(s,'feed',Date.now());if(why){say(why);setMode(null);return}
+ const k=FEED.kind||'food',FD=feedDef(k);PC.fixFresh(s);const fr=(s.inv.fresh&&s.inv.fresh[k])||0,fresh=fr>0&&(s.inv[k]||0)<=fr;   // 先吃買來的；只剩自己種的才會吃到發光的
  FEED.apple={x:clamp(x,8,120),y:Math.min(y,100),vy:0,st:'fall',k,fresh};sfx('tap');say(`牠看到${FD.name}了！`,{log:false})}
 /* 自己種的水果：發光＋閃閃星點，代表品質比較好 */
 function drawGlow(x,y,now){const g=ctx.createRadialGradient(x,y,1,x,y,10);const a=.45+.2*Math.sin(now/180);g.addColorStop(0,`rgba(255,240,150,${a})`);g.addColorStop(1,'rgba(255,220,120,0)');ctx.fillStyle=g;ctx.fillRect(x-11,y-11,22,22);
@@ -2685,16 +2721,16 @@ function drawGlow(x,y,now){const g=ctx.createRadialGradient(x,y,1,x,y,10);const 
 function renderFoodBar(){const bar=$('foodBar');if(mode!=='feed'){bar.classList.add('hidden');return}bar.classList.remove('hidden');
  const F=CONFIG.foods;if(!FEED.kind)FEED.kind=Object.keys(F).find(k=>(s.inv[k]||0)>0)||'food';
  PC.fixFresh(s);bar.innerHTML=Object.keys(F).filter(k=>!(F[k].power||F[k].farm)||(s.inv[k]||0)>0||(s.crave&&s.crave.kind===k)).map(k=>{const n=s.inv[k]||0,fav=s.route&&F[k].fav.includes(s.route),cv=s.crave&&s.crave.kind===k&&Date.now()<s.crave.until,fr=(s.inv.fresh&&s.inv.fresh[k])||0;return`<button class="food ${FEED.kind===k?'on':''} ${fr?'fresh':''} ${cv?'crave':''}" data-food="${k}">${cv?'<b class="cvtag">想吃！</b>':''}<canvas data-fi="${F[k].icon}" width="14" height="14"></canvas><span>${F[k].name}${fav?'❤️':''}</span><small>${n?'×'+n:F[k].farm?'要自己種':F[k].power?'買不到':'🪙'+F[k].price}${fr?` ✨${fr}`:''}</small></button>`}).join('');
- {const Fh=PC.fishOf(s),nf=Object.values(Fh.raw).reduce((a,b)=>a+b,0)+Object.values(Fh.cooked).reduce((a,b)=>a+b,0);if(nf)bar.insertAdjacentHTML('afterbegin',`<button class="food" id="feedFish"><canvas data-fi="${ICV.grill_fish?'grill_fish':'fish'}" width="14" height="14"></canvas><span>魚簍</span><small>×${nf}</small></button>`)}   /* V1.83.1 釣到的魚：只佔一格，點了再選 */
+ {const Fh=PC.fishOf(s),nf=Object.values(Fh.raw).reduce((a,b)=>a+b,0)+Object.values(Fh.cooked).reduce((a,b)=>a+b,0);const sel=FEED.kind&&FEED.kind.startsWith('fx:')?PC.FISH[FEED.kind.slice(3)]:null,nc=Object.values(Fh.cooked).reduce((a,b)=>a+b,0);if(nf)bar.insertAdjacentHTML('afterbegin',`<button class="food ${sel?'on':''}" id="feedFish"><canvas data-fi="${ICV.grill_fish?'grill_fish':'fish'}" width="14" height="14"></canvas><span>${sel?'烤'+sel.name:'魚簍'}</span><small>${sel?'×'+(Fh.cooked[FEED.kind.slice(3)]||0):'烤好 ×'+nc}</small></button>`)}   /* V1.83.1 釣到的魚：只佔一格，點了再選 */
  bar.querySelectorAll('canvas').forEach(c=>{const ic=ICV[c.dataset.fi];if(!ic)return;c.width=ic.width;c.height=ic.height;const x=c.getContext('2d');x.drawImage(ic,0,0)});
  if($('feedFish'))$('feedFish').onclick=e=>{e.stopPropagation();if(FEED.apple)return;sfx('tap');feedFishPick()};
  bar.querySelectorAll('[data-food]').forEach(b=>b.onclick=e=>{e.stopPropagation();if(FEED.apple)return;FEED.kind=b.dataset.food;renderFoodBar();sfx('tap')})}
-function finishFeed(){const A=FEED.apple,x0=s.xp,r=PC.act(s,'feed',Date.now(),A.k);handleTime(r.tm);
+function finishFeed(){const A=FEED.apple,x0=s.xp,fx=A.k&&A.k.startsWith('fx:'),r=fx?PC.eatFish(s,A.k.slice(3),Date.now()):PC.act(s,'feed',Date.now(),A.k);if(r.tm)handleTime(r.tm);if(fx&&r.ok){r.left='bone';const F=PC.fishOf(s);if(!(F.cooked[A.k.slice(3)]>0))FEED.kind='food'}
  if(r.ok){if(r.crave){spawn('heart',8,{x:petX+24,y:62,vy:-22,life:1.3,spread:16});spawn('star',4,{x:petX+24,y:60,life:.9,spread:14});sfx('level');renderUI()}if(r.left)PC.addCore(s,A.x,Date.now(),curView(),r.left);spawn('heart',r.fav?6:3,{x:petX+24,y:70,life:1.1,stagger:.25});say(r.msg+(r.xp?`　經驗 +${r.xp}`:''));$('log').textContent=r.msg+(r.left?`　記得把${r.left==='bone'?'骨頭':'果核'}清掉，不然會發臭喔！`:'')}
  else say(r.msg);
  FEED.apple=null;setMode(null);save();renderUI();afterChange(x0)}
 function drawApple(){const A=FEED.apple;if(!A)return;
- const FI=CONFIG.foods[A.k||'food'];if(A.fresh){const gx=A.st==='eat'?petX+24:A.x,gy=A.st==='eat'?PET_Y+35:A.y-5;drawGlow(gx,gy,performance.now())}
+ const FI=feedDef(A.k||'food');if(A.fresh){const gx=A.st==='eat'?petX+24:A.x,gy=A.st==='eat'?PET_Y+35:A.y-5;drawGlow(gx,gy,performance.now())}
  if(A.st==='eat'){const e=(performance.now()-A.t0)/1000;if(FI.icon==='apple'){const ic=ICV[e<.45?'apple':e<.9?'bite':'core'];ctx.drawImage(ic,Math.round(petX+24-ic.width/2),PET_Y+30)}
   else if(e<.9){const ic=ICV[FI.icon],w=e<.45?ic.width:Math.ceil(ic.width/2);ctx.drawImage(ic,0,0,w,ic.height,Math.round(petX+24-ic.width/2),PET_Y+30,w,ic.height)}else if(FI.left==='bone'){const ic=ICV.bone;ctx.drawImage(ic,Math.round(petX+24-ic.width/2),PET_Y+32)}}
  else{const ic=ICV[FI.icon];ctx.drawImage(ic,Math.round(A.x-ic.width/2),Math.round(A.y-ic.height+2))}}
@@ -2839,7 +2875,7 @@ document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()
 /* V1.55 遊戲畫面依剩下的高度縮放（整頁不用捲） */
 function fitStage(){const a=$('stagearea'),w=$('stagewrap');if(!a||!w)return;const r=a.getBoundingClientRect();if(!r.height)return;w.style.width=Math.floor(Math.min(r.width,(r.height-6)*128/112+6))+'px'}
 try{new ResizeObserver(fitStage).observe($('stagearea'))}catch(e){addEventListener('resize',fitStage)}fitStage();
-$('bAdv').onclick=advDialog;$('bFarm').onclick=farmDialog;$('bGoals').onclick=goalsDialog;$('bShop').onclick=()=>shopDialog('bag');$('coinBtn').onclick=()=>shopDialog('decor');
+$('bAdv').onclick=()=>advDialog();$('bFarm').onclick=()=>openFarm();$('bGoals').onclick=goalsDialog;$('bShop').onclick=()=>shopDialog('bag');$('coinBtn').onclick=()=>shopDialog('decor');
 $('viewBtn').onclick=()=>toggleView();$('denBtn').onclick=()=>denDialog();
 $('lightBtn').onclick=()=>{s.settings.light=s.settings.light===false;save();syncLightBtn(true);sfx('tap');say(s.settings.light?'💡 開燈了，暖暖的～':'關燈了，好暗喔…',{log:false})};
 /* 開燈按鈕：只在小窩裡、傍晚到晚上出現 */
@@ -3110,8 +3146,10 @@ const FZIMG=new Image();FZIMG.src='sprites/arena/pondside.png';
 let FZ=null;const fcv=$('fscv'),fctx=fcv.getContext('2d');fctx.imageSmoothingEnabled=false;
 const FTR={x:6,y:10,w:14,h:90};   // 拉條軌道
 const fsMsg=t=>{$('fsMsg').innerHTML=`<span>${t}</span>`};
-function fsInfo(){const F=PC.fishOf(s),R=PC.rodOf(s),now=Date.now();$('fsInfo').textContent=`${PC.SLOT_NAME[PC.fishSlot(now)]}・${PC.WEATHER_NAME[PC.weatherAt(now)]}・${R.name}`;
- $('fsCast').innerHTML=`🎣 按住蓄力 <small>魚餌 ×${F.bait}</small>`;$('fsCast2').innerHTML=`✨ 高級魚餌 <small>按住蓄力 ×${F.bait2}</small>`;$('fsCast2').disabled=F.bait2<1}
+function fsInfo(){const F=PC.fishOf(s),R=PC.rodOf(s),now=Date.now();$('fsInfo').textContent=`${PC.SLOT_NAME[PC.fishSlot(now)]}・${PC.WEATHER_NAME[PC.weatherAt(now)]}・⚡體力 ${Math.round(s.energy)}`;
+ if(F.sel==='premium'&&F.bait2<1)F.sel='normal';const pr=F.sel==='premium',I=n=>ICV[n]?MI(n):'';
+ $('fsB1').innerHTML=`${I('bait')||'🪱'}<span>魚餌 ×${F.bait}</span>`;$('fsB2').innerHTML=`${I('bait2')||'✨'}<span>高級魚餌 ×${F.bait2}</span>`;$('fsB1').classList.toggle('on',!pr);$('fsB2').classList.toggle('on',pr);
+ $('fsRod').innerHTML=`${I('rod_'+R.id)||'🎣'}<span>${R.name} ▾</span>`;$('fsCast').innerHTML=`🎣 按住蓄力，放開甩竿<br><small>拋一次用 1 個${pr?'高級魚餌':'魚餌'}、體力 −${CONFIG.fishing.energy}</small>`}
 function openFish(){if(!s.hatched){toast('先把蛋孵出來吧！');return}if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();unlockAudio();
  FZ={ph:'idle',t:0,fx:[],hold:false,c:null,res:null,qx:58,qy:66};$('fishZone').classList.remove('hidden');$('fsFin').className='fin';fsInfo();
  const P=PC.fishPool(s,Date.now()).filter(k=>PC.fishOf(s).dex[k]),N=PC.fishPool(s,Date.now()).length;
@@ -3119,7 +3157,7 @@ function openFish(){if(!s.hatched){toast('先把蛋孵出來吧！');return}if(m
  const loop=now=>{if(!FZ)return;const dt=Math.min(.05,(now-last)/1000);last=now;fsUpdate(dt,now);fsDraw(now);requestAnimationFrame(loop)};requestAnimationFrame(loop)}
 function closeFish(){if(FZ&&['wait','bite','reel','fly','heavy','charge'].includes(FZ.ph)&&!FZ.leave){FZ.leave=1;toast('還在釣魚喔，再按一次就回院子（這一竿會放掉）');setTimeout(()=>{if(FZ)FZ.leave=0},2500);return}FZ=null;$('fishZone').classList.add('hidden');save();renderUI()}
 /* 第一段：按住蓄力（力道來回擺），放開甩出去 */
-function fsCharge(premium){if(!FZ||!['idle','result'].includes(FZ.ph))return;const F=PC.fishOf(s);if((premium?F.bait2:F.bait)<1){fsMsg('❌ '+(premium?'沒有高級魚餌了':'沒有魚餌了（釣具店可以買，5 金幣一個）'));sfx('no');if(!premium)setTimeout(fishShop,350);return}
+function fsCharge(){if(!FZ||!['idle','result'].includes(FZ.ph))return;const F=PC.fishOf(s),premium=F.sel==='premium';if(s.energy<CONFIG.fishing.minEnergy){fsMsg(`😴 牠太累了（體力要 ${CONFIG.fishing.minEnergy} 以上），先休息一下吧`);sfx('no');return}if((premium?F.bait2:F.bait)<1){fsMsg('❌ '+(premium?'沒有高級魚餌了':'沒有魚餌了（釣具店可以買，5 金幣一個）'));sfx('no');if(!premium)setTimeout(fishShop,350);return}
  FZ.ph='charge';FZ.t=0;FZ.premium=premium;FZ.pw=0;FZ.res=null;fsMsg('力道條最滿的時候放開！');sfx('tap')}
 function fsRelease(){if(!FZ||FZ.ph!=='charge')return;const pw=FZ.pw,r=PC.castLine(s,Date.now(),Math.random,FZ.premium,pw);
  if(!r.ok){FZ.ph='idle';fsMsg('❌ '+r.msg);sfx('no');return}save();fsInfo();FZ.c=r;FZ.back=pw;FZ.qx=Math.round(74-32*pw);FZ.qy=Math.round(84-34*pw);FZ.ph='fly';FZ.t=0;
@@ -3154,10 +3192,10 @@ function fsLand(ok,why){const r=PC.landFish(s,FZ.c.key,ok);const x0=s.xp;save();
  fsMsg(r.msg+(r.xp?`　經驗 +${r.xp}`:''));sfx(r.first||(FZ.c.star||0)>=3?'level':'eat');buzz(30);for(let i=0;i<(r.first?10:5);i++)FZ.fx.push({x:FZ.qx,y:FZ.qy-10,vx:(Math.random()-.5)*50,vy:-30-Math.random()*25,t:0,life:.9});
  const k=FZ.c.key,f=PC.FISH[k],rows=[];
  if(f){const E=PC.fishFood(k,false);rows.push([k,f.name,'×1',`${'★'.repeat(f.star)}${r.first?'　🆕 新魚種':''}`]);if(r.xp)rows.push(['star','經驗',`+${r.xp}`,'']);
-  setTimeout(()=>resultCard(r.first?'🎉 釣到新魚種！':'🎣 釣到了！',rows,`生吃：飽食 +${E.hunger}、體力 +${E.energy}（烤過 ×${CONFIG.fishing.cookX}）<br>可以賣 🪙${f.price}，放在 🧺 魚簍${FZ&&FZ.c.zap?'<br>⚡ 雷系電魚，保證釣到！':''}`).then(()=>afterChange(x0)),450)}
+  setTimeout(()=>resultCard(r.first?'🎉 釣到新魚種！':'🎣 釣到了！',rows,`烤過才能吃：飽食 +${PC.fishFood(k,true).hunger}、體力 +${PC.fishFood(k,true).energy}<br>可以賣 🪙${f.price}，放在 🧺 魚簍${FZ&&FZ.c.zap?'<br>⚡ 雷系電魚，保證釣到！':''}`).then(()=>afterChange(x0)),450)}
  else{if(PC.JUNK[k])rows.push([k,PC.JUNK[k].name,'×1','雜物']);else if(r.coins)rows.push(['coin','小寶箱裡的金幣',`+${r.coins}`,'']);else rows.push(['seed2','小寶箱裡的優良種子','+1','']);
   setTimeout(()=>resultCard(PC.JUNK[k]?'😅 拉上來是雜物…':'🎁 拉上來一個小寶箱！',rows,PC.JUNK[k]?(PC.hasSkill(s,'metal')?'⚙️ 鋼系會幫你回收成廢鐵（一個賣 20）':`可以賣 🪙${PC.JUNK[k].price}；家裡有成年鋼系會幫你回收成廢鐵`):'').then(()=>afterChange(x0)),450)}}
-function fsFail(msg){const Z=FZ;Z.ph='result';Z.t=0;Z.res={fail:1};fsMsg(msg);$('fsFin').className='fin';sfx('no');buzz(40)}
+function fsFail(msg){PC.statAdd(s,'miss');const Z=FZ;Z.ph='result';Z.t=0;Z.res={fail:1};fsMsg(msg);$('fsFin').className='fin';sfx('no');buzz(40)}
 function fsUpdate(dt,now){const Z=FZ;Z.t+=dt;for(let i=Z.fx.length-1;i>=0;i--){const p=Z.fx[i];p.t+=dt;if(p.t>p.life){Z.fx.splice(i,1);continue}p.vy+=60*dt;p.x+=p.vx*dt;p.y+=p.vy*dt}
  if(Z.ph==='charge'){Z.pw=(1-Math.cos(Z.t*3.2))/2}
  else if(Z.ph==='fly'&&Z.t>.55){Z.ph='wait';Z.t=0;fsWaitPlan()}
@@ -3225,14 +3263,70 @@ fcv.addEventListener('pointerdown',e=>{e.preventDefault();try{fcv.setPointerCapt
 fcv.addEventListener('pointermove',e=>{if(FZ&&FZ.ph==='heavy')fsHeavyMove(...fsXY(e))});
 $('fsReel').addEventListener('pointerdown',e=>{e.preventDefault();fsTap(true)});
 for(const ev of['pointerup','pointercancel','pointerleave']){fcv.addEventListener(ev,()=>{if(FZ&&FZ.ph==='heavy'){FZ.hold=false;FZ.ang=null;return}fsTap(false)});$('fsReel').addEventListener(ev,()=>fsTap(false))}
-for(const[id,pr]of[['fsCast',false],['fsCast2',true]]){const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(_){}fsCharge(pr)});for(const ev of['pointerup','pointercancel'])b.addEventListener(ev,()=>fsRelease())}
+{const b=$('fsCast');b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(_){}fsCharge()});for(const ev of['pointerup','pointercancel'])b.addEventListener(ev,()=>fsRelease())}
+$('fsB1').onclick=()=>{PC.fishOf(s).sel='normal';sfx('tap');fsInfo();save()};$('fsB2').onclick=()=>{const F=PC.fishOf(s);if(F.bait2<1){toast('沒有高級魚餌，到釣具店買吧');return}F.sel='premium';sfx('tap');fsInfo();save()};
+$('fsRod').onclick=()=>{if(!FZ||!['idle','result'].includes(FZ.ph))return;sfx('tap');const F=PC.fishOf(s);
+ openModal('🎣 選魚竿',`<div class="sellrow">${PC.RODS.map(r=>{const own=F.rods.includes(r.id);return`<button class="selltile ${F.rod===r.id?'on':''}" data-rs="${r.id}" ${own?'':'disabled'}><canvas class="picon" data-icon="rod_${r.id}" data-s="3"></canvas><b>${r.name}</b><span>綠框 ${Math.round(r.bar*100)}%</span><i>${F.rod===r.id?'使用中':own?'換這支':'釣具店買'}</i></button>`}).join('')}</div>`);
+ document.querySelectorAll('#sheet canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));pixifyDom($('sheet'));
+ document.querySelectorAll('[data-rs]').forEach(b=>b.onclick=()=>{const r=PC.selectRod(s,b.dataset.rs);if(r.ok){toast(r.msg);save();fsInfo();closeModal()}})};
 $('fsHome').onclick=closeFish;$('fsShop').onclick=fishShop;$('fsDex').onclick=fishDexDialog;$('fsBag').onclick=fishBag;
+/* =========================================================
+   🌱 V1.84 種田畫面（跟釣魚一樣的全螢幕）
+   ========================================================= */
+const FMIMG=new Image();FMIMG.src='sprites/arena/farm_fp.png';
+let FMZ=null;const fmcv=$('fmcv'),fmctx=fmcv.getContext('2d');fmctx.imageSmoothingEnabled=false;
+const SEEDK=[['normal','seeds','seed','種子'],['good','seeds2','seed2','優良'],['rare','seeds3','seed3','稀有'],['magic','seeds4','seed4','神奇']];
+function fmLayout(){const n=s.plots.length,rows=Math.ceil(n/3),RY=[[96],[72,100],[56,78,104]][rows-1]||[56,78,104],RS=[[1.15],[.9,1.1],[.72,.88,1.05]][rows-1]||[.72,.88,1.05],out=[];
+ for(let i=0;i<n;i++){const r=Math.floor(i/3),c=i%3,inRow=Math.min(3,n-r*3),sc=RS[r],gap=40*sc,x=64+(c-(inRow-1)/2)*gap;out.push({x,y:RY[r],sc})}return out}
+function openFarm(){if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();unlockAudio();PC.claimDaily(s,Date.now());
+ FMZ={fx:[],sel:FMZ&&FMZ.sel||'normal'};$('farmZone').classList.remove('hidden');fmInfo();fmMsg('點空地種下選好的種子，成熟了點一下收成');sfx('tap');
+ const loop=now=>{if(!FMZ)return;fmDraw(now);requestAnimationFrame(loop)};requestAnimationFrame(loop)}
+function closeFarm(){FMZ=null;$('farmZone').classList.add('hidden');save();renderUI()}
+const fmMsg=t=>{$('fmMsg').innerHTML=`<span>${t}</span>`};
+function fmInfo(){const now=Date.now();$('fmInfo').textContent=`${PC.SLOT_NAME[PC.fishSlot(now)]}・${PC.WEATHER_NAME[PC.weatherAt(now)]}・🪙 ${s.coins}`;
+ if((s.inv[SEEDK.find(k=>k[0]===FMZ.sel)[1]]||0)<1){const f=SEEDK.find(k=>(s.inv[k[1]]||0)>0);if(f)FMZ.sel=f[0]}
+ for(const[k,inv,ic,nm]of SEEDK){const b=$('fmS_'+k);b.innerHTML=`${MI(ic,'🌱')}<span>${nm} ×${s.inv[inv]||0}</span>`;b.classList.toggle('on',FMZ.sel===k);b.disabled=(s.inv[inv]||0)<1&&k!=='normal'}}
+function fmTap(x,y){const L=fmLayout(),now=Date.now();for(let i=L.length-1;i>=0;i--){const p=L[i],w=24*p.sc,h=22*p.sc;if(x>=p.x-w/2-2&&x<=p.x+w/2+2&&y>=p.y-h-2&&y<=p.y+4){
+  PC.fixFresh(s);const q=PC.plotState(s,i,now),x0=s.xp;let r;
+  if(q.empty){const g=FMZ.sel==='magic'?'magic':FMZ.sel==='rare'?'mystery':FMZ.sel==='good';r=PC.plant(s,i,now,Math.random,g);if(r.ok){sfx('tap');for(let k=0;k<4;k++)FMZ.fx.push({x:p.x,y:p.y-4,vx:(Math.random()-.5)*30,vy:-20-Math.random()*15,t:now,col:'#8a5a30'})}}
+  else if(q.ripe||q.rotten){r=PC.harvest(s,i,now);if(r.ok){sfx(r.rotten?'no':'eat');buzz(20);if(!r.rotten){for(let k=0;k<8;k++)FMZ.fx.push({x:p.x,y:p.y-10*p.sc,vx:(Math.random()-.5)*50,vy:-30-Math.random()*25,t:now,col:'#ffe066'});
+    const rows=[[CONFIG.foods[r.kind].icon,CONFIG.foods[r.kind].name,`×${r.n}`,r.good?(r.magic?'✨神奇':r.myst?'🔮稀有':'🌟優良'):'']];if(r.bonus)rows.push([CONFIG.foods[r.bonus].icon,CONFIG.foods[r.bonus].name,`×${r.bonusN||1}`,'⚡能力水果']);if(r.xp)rows.push(['star','經驗',`+${r.xp}`,'']);
+    setTimeout(()=>resultCard('🌾 收成了！',rows,'自己種的水果可以吃，也可以在「💰 賣水果」賣掉').then(()=>afterChange(x0)),250)}}}
+  else{fmMsg(`🌱 ${CONFIG.foods[q.kind].name}還要 ${fmtLeft(q.left)} 才成熟`);sfx('tap');return}
+  if(r){fmMsg(r.ok?r.msg:'❌ '+r.msg);if(!r.ok){sfx('no');if(r.code==='noseed')setTimeout(farmShop,350)}save();renderUI();fmInfo()}return}}}
+function fmDraw(now){const c=fmctx,ph=phase(),nowMs=Date.now();c.clearRect(0,0,128,112);
+ if(FMIMG.complete&&FMIMG.naturalWidth)c.drawImage(FMIMG,0,0);else{c.fillStyle='#8a5a30';c.fillRect(0,0,128,112)}
+ if(ph==='night'||ph==='dusk'){c.fillStyle=ph==='night'?'rgba(20,24,70,.45)':'rgba(255,120,60,.18)';c.fillRect(0,0,128,112)}
+ const L=fmLayout();L.forEach((p,i)=>{const q=PC.plotState(s,i,nowMs),st=plotStage(q),SP=PLOT_SPR[st]||PLOT_SPR.empty;if(!SP)return;const k=28*p.sc/SP.width,w=Math.round(SP.width*k),h=Math.round(SP.height*k);
+  c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(p.x,p.y,13*p.sc,3*p.sc,0,0,Math.PI*2);c.fill();
+  c.save();c.imageSmoothingEnabled=false;c.drawImage(SP,Math.round(p.x-w/2),Math.round(p.y-h+2),w,h);c.restore();
+  {const g=s.plots[i].g;if(g&&!q.empty&&!q.rotten)seedGlow(c,g,p.x,p.y,w,h,now,i)}
+  if(st==='rot'&&ICV.fly){const a=now/300+i;c.drawImage(ICV.fly,Math.round(p.x+4*Math.cos(a)),Math.round(p.y-h+3*Math.sin(a*1.7)))}
+  if(!q.empty&&!q.ripe&&!q.rotten){const bw=Math.round(20*p.sc),bx=Math.round(p.x-bw/2),by=Math.round(p.y+3);c.fillStyle='rgba(20,12,6,.75)';c.fillRect(bx-1,by-1,bw+2,4);c.fillStyle='#7ae06a';c.fillRect(bx,by,Math.round(bw*q.progress),2)}
+  if(q.ripe&&!q.rotten&&Math.floor(now/500+i)%2){c.fillStyle='#fff6a0';c.fillRect(Math.round(p.x)-1,Math.round(p.y-h-2),3,1);c.fillRect(Math.round(p.x),Math.round(p.y-h-3),1,3)}
+  if(q.empty&&Math.floor(now/700+i)%3===0){c.fillStyle='rgba(255,255,255,.6)';c.font='bold 7px sans-serif';c.fillText('+',Math.round(p.x-2),Math.round(p.y-3))}});
+ const w=PC.weatherAt(nowMs);if(w==='rain'||w==='storm'){c.fillStyle='rgba(200,220,255,.55)';for(let i=0;i<(w==='storm'?40:22);i++){const x=(i*37+now/6)%132-2,y=(i*53+now/(w==='storm'?3:4))%112;c.fillRect(Math.round(x),Math.round(y),1,3)}}
+ for(let i=FMZ.fx.length-1;i>=0;i--){const p=FMZ.fx[i],t=(now-p.t)/1000;if(t>.9){FMZ.fx.splice(i,1);continue}c.globalAlpha=1-t/.9;c.fillStyle=p.col;c.fillRect(Math.round(p.x+p.vx*t),Math.round(p.y+p.vy*t+40*t*t),2,2);c.globalAlpha=1}}
+fmcv.addEventListener('pointerdown',e=>{e.preventDefault();const r=fmcv.getBoundingClientRect();fmTap((e.clientX-r.left)/r.width*128,(e.clientY-r.top)/r.height*112)});
+for(const[k]of SEEDK)$('fmS_'+k).onclick=()=>{FMZ.sel=k;sfx('tap');fmInfo()};
+$('fmShop').onclick=()=>{sfx('tap');farmShop()};$('fmSell').onclick=()=>{sfx('tap');farmSell()};$('fmHome').onclick=closeFarm;
+function farmShop(){const F=CONFIG.farm,ep=PC.expandPrice(s);
+ openModal('🛒 買種子、擴建',`<p>🪙 金幣 <b>${s.coins}</b></p><p class="small">普通 ${F.growBy[0]} 小時、🌟優良 ${F.growBy[1]} 小時、🔮稀有 ${F.growBy[2]} 小時、✨神奇 ${F.growBy[3]} 小時成熟${PC.hasSkill(s,'forest')?'（🌿草系幫忙，快 20%）':''}。稀有、神奇種子只能冒險打王拿到。</p>
+ <div class="sellrow"><button class="selltile" id="fsb1"><canvas class="picon" data-icon="seed" data-s="3"></canvas><b>種子</b><span>綜合莓果</span><i>🪙${F.seedPrice}</i></button><button class="selltile" id="fsb2"><canvas class="picon" data-icon="seed2" data-s="3"></canvas><b>優良種子</b><span>藍莓草莓多</span><i>🪙${CONFIG.goodSeed.price}</i></button><button class="selltile" id="fsb3" ${ep?'':'disabled'}><canvas class="picon" data-icon="seed" data-s="3"></canvas><b>擴建田地</b><span>${ep?`第 ${s.plots.length+1} 格`:`已滿 ${F.maxPlots} 格`}</span><i>${ep?'🪙'+ep:'—'}</i></button></div><div class="err" id="fsbErr"></div>`);
+ document.querySelectorAll('#sheet canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));pixifyDom($('sheet'));
+ const go=r=>{if(!r.ok){$('fsbErr').textContent='❌ '+r.msg;sfx('no');return}toast(r.msg);sfx('coin');save();renderUI();if(FMZ)fmInfo();farmShop()};
+ $('fsb1').onclick=()=>go(PC.buySeed(s));$('fsb2').onclick=()=>go(PC.buyItem(s,'seeds2'));$('fsb3').onclick=()=>go(PC.expandFarm(s))}
+function farmSell(){PC.fixFresh(s);const ks=PC.FRESH_KEYS.filter(k=>!['food','berry'].includes(k)||(s.inv.fresh[k]||0)>0);
+ openModal('💰 賣自己種的水果',`<p class="small">點一下賣 1 顆。只有自己種出來的才能賣。</p><div class="sellrow">${ks.map(k=>{const c=s.inv.fresh[k]||0;return`<button class="selltile" data-sell="${k}" ${c?'':'disabled'}><canvas class="picon" data-icon="${CONFIG.foods[k].icon}" data-s="3"></canvas><b>${CONFIG.foods[k].name}</b><span>×${c}</span><i>🪙${CONFIG.sellFruit[k]}</i></button>`}).join('')}</div><div class="err" id="fslErr"></div>`);
+ document.querySelectorAll('#sheet canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));pixifyDom($('sheet'));
+ document.querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>{const r=PC.sellFruit(s,b.dataset.sell);if(!r.ok){$('fslErr').textContent='❌ '+r.msg;return}toast(r.msg);sfx('coin');save();renderUI();if(FMZ)fmInfo();farmSell()})}
+
 /* 🛒 釣具店 */
 function fishShop(){const F=PC.fishOf(s),C=CONFIG.fishing,cur=PC.RODS.findIndex(r=>r.id===F.rod);
  const tile=(id,ic,nm,sub,price,dis)=>`<button class="selltile" data-fb="${id}" ${dis?'disabled':''}>${ic}<b>${nm}</b><span>${sub}</span><i>${price}</i></button>`,EI=(e,big)=>`<span style="font-size:${big||26}px;line-height:30px">${e}</span>`;
  openModal('🛒 釣具店',`<p>🪙 金幣 <b>${s.coins}</b>　魚餌 <b>${F.bait}</b>　高級魚餌 <b>${F.bait2}</b></p>
  <p class="sellh">🪱 魚餌 <span class="small">（拋一次竿用一個）</span></p><div class="sellrow">${tile('b1',ICV.bait?'<canvas class="picon" data-icon="bait" data-s="3"></canvas>':EI('🪱'),'魚餌','×1','🪙'+C.bait)}${tile('b10',ICV.bait?'<canvas class="picon" data-icon="bait" data-s="3"></canvas>':EI('🪱'),'魚餌','×10','🪙'+C.bait*10)}${tile('p1',ICV.bait2?'<canvas class="picon" data-icon="bait2" data-s="3"></canvas>':EI('✨'),'高級魚餌','稀有魚 ×2.5','🪙'+C.bait2)}</div>
- <p class="sellh">🎣 魚竿 <span class="small">（綠框越寬、越穩越好拉）</span></p><div class="sellrow">${PC.RODS.map((r,i)=>tile('r'+i,ICV['rod_'+r.id]?`<canvas class="picon" data-icon="rod_${r.id}" data-s="3"></canvas>`:EI('🎣'),r.name,`綠框 ${Math.round(r.bar*100)}%`,i<=cur?(i===cur?'使用中':'—'):'🪙'+r.price,i<=cur)).join('')}</div>
+ <p class="sellh">🎣 魚竿 <span class="small">（綠框越寬、越穩越好拉）</span></p><div class="sellrow">${PC.RODS.map((r,i)=>tile('r'+i,ICV['rod_'+r.id]?`<canvas class="picon" data-icon="rod_${r.id}" data-s="3"></canvas>`:EI('🎣'),r.name,`綠框 ${Math.round(r.bar*100)}%`,F.rods.includes(r.id)?'已擁有':'🪙'+r.price,F.rods.includes(r.id))).join('')}</div>
  <div class="err" id="fbErr"></div>`);
  document.querySelectorAll('#sheet canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));pixifyDom($('sheet'));
  document.querySelectorAll('[data-fb]').forEach(b=>b.onclick=()=>{const id=b.dataset.fb,r=id[0]==='r'?PC.buyRod(s,PC.RODS[+id.slice(1)].id):PC.buyBait(s,id==='p1'?'premium':'normal',id==='b10'?10:1);
@@ -3240,10 +3334,10 @@ function fishShop(){const F=PC.fishOf(s),C=CONFIG.fishing,cur=PC.RODS.findIndex(
 /* 🧺 魚簍：吃、烤、賣；雜物、寶物 */
 function fishBag(){const F=PC.fishOf(s),L=PC.lootOf(s),C=CONFIG.fishing,fire=PC.hasSkill(s,'flame');
  const keys=Object.keys(PC.FISH).filter(k=>(F.raw[k]||0)+(F.cooked[k]||0)>0);
- const rows=keys.map(k=>{const f=PC.FISH[k],a=F.raw[k]||0,b=F.cooked[k]||0,E=PC.fishFood(k,b>0);return`<div class="fishrow"><canvas class="picon" data-icon="${k}" data-s="3"></canvas><div class="fn"><b>${f.name}</b> <span class="star">${'★'.repeat(f.star)}</span><br><span class="small">生 ×${a}　烤 ×${b}　吃：飽食 +${E.hunger}、體力 +${E.energy}</span></div>
-  <div class="fb"><button class="btn pri" data-fe="${k}">吃${b?'烤魚':''}</button><button class="btn" data-fc="${k}" ${a?'':'disabled'}>🔥 烤${fire?'（免費）':` 🪙${C.cookCost}`}</button><button class="btn" data-fs="${k}">賣 🪙${f.price}</button></div></div>`}).join('');
+ const rows=keys.map(k=>{const f=PC.FISH[k],a=F.raw[k]||0,b=F.cooked[k]||0,E=PC.fishFood(k,true);return`<div class="fishrow"><canvas class="picon" data-icon="${k}" data-s="3"></canvas><div class="fn"><b>${f.name}</b> <span class="star">${'★'.repeat(f.star)}</span><br><span class="small">生 ×${a}　烤 ×${b}　烤好吃：飽食 +${E.hunger}、體力 +${E.energy}</span></div>
+  <div class="fb"><button class="btn pri" data-fe="${k}" ${b?'':'disabled'}>${b?'餵牠吃':'生的不能吃'}</button><button class="btn" data-fc="${k}" ${a?'':'disabled'}>🔥 烤${fire?'（免費）':` 🪙${C.cookCost}`}</button><button class="btn" data-fs="${k}">賣 🪙${f.price}</button></div></div>`}).join('');
  const goods=[...Object.keys(PC.JUNK).filter(k=>F.junk[k]>0).map(k=>[k,PC.JUNK[k].name,F.junk[k],PC.JUNK[k].price]),...['scrap','gem_ruby','gem_sapphire','gem_emerald'].filter(k=>L[k]>0).map(k=>[k,PC.GOODS[k].name,L[k],PC.GOODS[k].price])];
- openModal('🧺 魚簍',`<p class="small">烤過的魚飽食、體力 ×${C.cookX}。${fire?'有火系在，烤魚免費。':'柴火一次 '+C.cookCost+' 金幣；家裡有成年火系會自動幫你烤。'}</p>${rows||'<p class="small">還沒有魚，去池邊釣吧！</p>'}
+ openModal('🧺 魚簍',`<p class="small">幻獸只吃烤過的魚。${fire?'有火系在，烤魚免費。':'柴火一次 '+C.cookCost+' 金幣；家裡有成年火系會自動幫你烤。'}</p>${rows||'<p class="small">還沒有魚，去池邊釣吧！</p>'}
  ${goods.length?`<p class="sellh">💰 雜物、寶石 <span class="small">（點一下賣 1 個）</span></p><div class="sellrow">${goods.map(([k,nm,n,p])=>`<button class="selltile" data-fs="${k}"><canvas class="picon" data-icon="${k}" data-s="3"></canvas><b>${nm}</b><span>×${n}</span><i>🪙${p}</i></button>`).join('')}</div>`:''}
  ${L.amulet?`<p>${MI('amulet','🧿')} 小護身符 ×<b>${L.amulet}</b>　<span class="small">冒險時自動帶 1 個，擋一次攻擊（傷害減半）</span></p>`:''}<div class="err" id="fkErr"></div>`);
  document.querySelectorAll('#sheet canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));pixifyDom($('sheet'));
@@ -3253,10 +3347,10 @@ function fishBag(){const F=PC.fishOf(s),L=PC.lootOf(s),C=CONFIG.fishing,fire=PC.
  document.querySelectorAll('[data-fs]').forEach(b=>b.onclick=()=>done(PC.sellFish(s,b.dataset.fs),'coin'))}
 /* 餵食 → 魚簍：選一條魚直接餵（烤過的優先） */
 function feedFishPick(){const F=PC.fishOf(s),keys=Object.keys(PC.FISH).filter(k=>(F.raw[k]||0)+(F.cooked[k]||0)>0);
- openModal('🐟 餵哪一條魚？',`<div class="sellrow">${keys.map(k=>{const f=PC.FISH[k],b=F.cooked[k]||0,a=F.raw[k]||0,E=PC.fishFood(k,b>0);return`<button class="selltile" data-ff="${k}"><canvas class="picon" data-icon="${k}" data-s="3"></canvas><b>${b?'烤':''}${f.name}</b><span>${b?`烤 ×${b}`:''}${b&&a?'・':''}${a?`生 ×${a}`:''}</span><i>飽+${E.hunger}</i></button>`}).join('')}</div><p class="small">烤過的會先吃，效果 ×${CONFIG.fishing.cookX}。生魚可以到 🧺 魚簍烤。</p>`);
- document.querySelectorAll('#sheet canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));pixifyDom($('sheet'));
- document.querySelectorAll('[data-ff]').forEach(b=>b.onclick=()=>{const x0=s.xp,r=PC.eatFish(s,b.dataset.ff,Date.now());if(r.tm)handleTime(r.tm);closeModal();if(!r.ok){toast('❌ '+r.msg);return}
-  setMode(null);playAnim('eat');sfx('eat');spawn('heart',3,{x:petX+24,y:70,life:1.1,stagger:.25});say(r.msg+(r.xp?`　經驗 +${r.xp}`:''));save();renderUI();afterChange(x0)})}
+ openModal('🐟 要餵哪一條？',`<p class="small">幻獸只吃<b>烤過</b>的魚。選好之後點畫面，把魚丟給牠。生魚要先到 🧺 魚簍烤（${PC.hasSkill(s,'flame')?'有火系，免費':'柴火 '+CONFIG.fishing.cookCost+' 金幣'}）。</p><div class="sellrow">${keys.map(k=>{const f=PC.FISH[k],b=F.cooked[k]||0,a=F.raw[k]||0,E=PC.fishFood(k,true);return`<button class="selltile" data-ff="${k}" ${b?'':'disabled'}><canvas class="picon" data-icon="${k}" data-s="3"></canvas><b>烤${f.name}</b><span>${b?`烤好 ×${b}`:`生 ×${a}・要先烤`}</span><i>飽+${E.hunger}</i></button>`}).join('')}</div>
+ <div class="row"><button class="btn" id="ffBag">🧺 去魚簍烤魚</button></div>`);
+ document.querySelectorAll('#sheet canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));pixifyDom($('sheet'));$('ffBag').onclick=()=>{setMode(null);fishBag()};
+ document.querySelectorAll('[data-ff]').forEach(b=>b.onclick=()=>{FEED.kind='fx:'+b.dataset.ff;closeModal();renderFoodBar();sfx('tap');say(`選好烤${PC.FISH[b.dataset.ff].name}了，點畫面丟給牠吧！`,{log:false})})}
 /* 🐟 圖鑑：魚類、化石 */
 function fishDexDialog(){const F=PC.fishOf(s),L=PC.lootOf(s),K=CONFIG.skills;let got=0;
  const cells=Object.entries(PC.FISH).map(([k,f])=>{const ok=!!F.dex[k];if(ok)got++;const cond=[f.t?f.t.map(x=>PC.SLOT_NAME[x]).join('、'):'任何時段',f.w?f.w.map(x=>PC.WEATHER_NAME[x]).join('、'):'任何天氣'].join('・')+(f.rod?'・要黃金竿':'');
@@ -3266,7 +3360,7 @@ function fishDexDialog(){const F=PC.fishOf(s),L=PC.lootOf(s),K=CONFIG.skills;let
  <p class="small">魚類 <b>${got}</b> / ${Object.keys(PC.FISH).length}。不同時段、天氣會有不一樣的魚，黑色剪影下面寫著出現條件。</p><div class="dexgrid">${cells}</div>
  <h3 class="dexh">🦴 化石 ${nf} / 6</h3><p class="small">每收集一種，冒險掉寶率 +${Math.round(K.fossilLuck*100)}%；6 種全收齊再 +${Math.round(K.fossilAll*100)}%、得到稱號「考古學家」。目前加成 <b>+${Math.round(PC.fossilLuck(s)*100)}%</b>${nf>=6?'　🏅 考古學家':''}</p><div class="dexgrid">${fos}</div>`);
  $('cxP4').onclick=codexDialog;$('cxI4').onclick=itemDexDialog;$('cxJ4').onclick=journalDialog;
- document.querySelectorAll('.dexi canvas').forEach(c=>{paintIcon(c,c.dataset.icon);if(c.dataset.sil==='1'){const x=c.getContext('2d');x.globalCompositeOperation='source-in';x.fillStyle='#14100c';x.fillRect(0,0,c.width,c.height)}})}
+ document.querySelectorAll('.dexi canvas').forEach(c=>{paintIcon(c,c.dataset.icon);if(c.dataset.sil==='1'){const x=c.getContext('2d');x.globalCompositeOperation='source-in';x.fillStyle='#14100c';x.fillRect(0,0,c.width,c.height)}});wireDexZoom(fishDexDialog)}
 /* 🌟 每天的生活技能收穫 */
 let SKQ=null;
 function checkSkills(){if(window.PF_NO_SKILLS||!s||!s.hatched)return;const o=PC.runSkills(s,Date.now());if(o){SKQ=o;save();renderUI()}
@@ -3290,7 +3384,45 @@ function drawGen(now){if(!hasGen())return;const on=ICV.gen_on,off=ICV.gen_off;if
  ctx.save();ctx.translate(ax+dx,ay+dy);ctx.scale(f?-sc:sc,sc);ctx.drawImage(im,-Math.round(im.width/2),-im.height);ctx.restore();
  if(lit&&Math.random()<.03)spawn('bolt',1,{x:ax+dx,y:ay+dy-14*k,vy:-10,life:.4,spread:6})}
 
-window.PF={openFish:()=>openFish(),fishBag:()=>fishBag(),fishShop:()=>fishShop(),fishDex:()=>fishDexDialog(),checkSkills:()=>checkSkills(),get FZ(){return FZ},get state(){return s},startArrange:()=>startArrange(),startYardArrange:()=>startYardArrange(),get YA(){return YA},get ARR(){return ARR},arrItems:()=>arrItems(),headY:()=>petTopY(formKey(),0)+3,denDialog:()=>denDialog(),makePig:lv=>makePig(lv),startTraining:k=>startTraining(k),trainDialog:()=>trainDialog(),get TG(){return TG},PET_Y,toy:TOY,arena:makeArena,bUI:()=>bUI(),get mode(){return mode},get ball(){return BALL},get apple(){return FEED.apple},get petX(){return petX},PC,goDrink:()=>goDrink(),makeDecor:id=>makeDecor(id),playAnim:(...a)=>playAnim(...a),formKey:()=>formKey(),creditSteps,mateCode,decodeMate,encodeGenome,decodeGenome,startBattle,onMove,get B(){return B},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
+/* =========================================================
+   📊 V1.84 遊戲紀錄、成就、每週回顧
+   ========================================================= */
+const fmtDur=ms=>{const m=Math.floor(ms/60000),h=Math.floor(m/60);return h?`${h} 小時 ${m%60} 分`:`${m} 分鐘`};
+const fmtDate=t=>{const d=new Date(t);return`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`};
+let tickLast=Date.now(),tickN=0;
+setInterval(()=>{const now=Date.now(),dt=now-tickLast;tickLast=now;if(!s||document.visibilityState!=='visible')return;
+ const rc=PC.playTick(s,Math.min(dt,5000),now);tickN++;
+ if(tickN%5===0){const got=PC.checkBadges(s,now);if(got.length){save();renderUI();got.forEach((b,i)=>setTimeout(()=>{toast(`🏅 獲得成就「${b.name}」！金幣 +${b.coins}`,3500);sfx('level')},i*3600))}}
+ if(tickN%30===0)save();
+ if((rc||(s.stats&&s.stats.recap&&!s.stats.recap.seen))&&$('modal').classList.contains('hidden')&&!FZ&&!TG&&$('battle').classList.contains('hidden')&&!ARR.on&&!YA.on&&!window.PF_NO_SKILLS)weekRecap()},1000);
+document.addEventListener('visibilitychange',()=>{tickLast=Date.now();if(document.visibilityState==='hidden'&&s)save()});
+function weekRecap(){const R=s.stats&&s.stats.recap;if(!R)return;R.seen=true;save();const d=R.d,e=new Date(R.week+'T00:00:00Z');e.setUTCDate(e.getUTCDate()+6);const md=t=>`${t.getUTCMonth()+1}/${t.getUTCDate()}`;
+ const rows=[['⏱️','遊玩時間',fmtDur(d.play||0)],['🪙','賺到',`${fmtN(d.earned||0)} 金幣`],['💸','花掉',`${fmtN(d.spent||0)} 金幣`],['🍽️','餵食',`${d.feed||0} 次`],['🛁','洗澡',`${d.wash||0} 次`],['⚽','陪玩頂球',`${d.ball||0} 次`],['⚔️','冒險勝利',`${d.win||0} 場`],['🎣','釣到魚',`${d.catch||0} 條`],['🌾','收成',`${d.harvest||0} 次`],['👟','步數',`${fmtN(d.steps||0)} 步`]];
+ openModal(`📅 上週回顧（${md(new Date(R.week+'T00:00:00Z'))}～${md(e)}）`,`<p class="small">${esc(s.name||'牠')}和你一起度過的一週：</p><div class="stgrid">${rows.map(([i,n,v])=>`<div class="stc"><span>${i} ${n}</span><b>${v}</b></div>`).join('')}</div><p class="small">每週一會整理上一週的紀錄，可以截圖留念 📸</p>`,[{t:'好！',cls:'pri'}]);sfx('level')}
+function codexTabs(on){return`<div class="row cxtabs" style="margin-top:0"><button class="btn${on==='stats'?' pri':''}" data-jt="stats">📊 紀錄</button><button class="btn${on==='badges'?' pri':''}" data-jt="badges">🏅 成就</button><button class="btn${on==='diary'?' pri':''}" data-jt="diary">📔 日記</button></div>`}
+function wireJTabs(){document.querySelectorAll('[data-jt]').forEach(b=>b.onclick=()=>{sfx('tap');({stats:statsDialog,badges:badgeDialog,diary:diaryDialog})[b.dataset.jt]()})}
+function statsDialog(){const S=PC.statsOf(s),C=S.cnt,now=Date.now(),earn=PC.sumOf(S.earn),spend=PC.sumOf(S.spend),F=PC.fishOf(s),today=S.today&&S.today.d===PC.dayKey(now)?S.today.ms:0;
+ const list=(o,N)=>Object.entries(o).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="stl"><span>${N[k]||k}</span><b>${fmtN(v)}</b></div>`).join('')||'<p class="small">還沒有紀錄</p>';
+ const best=Object.keys(F.dex).filter(k=>PC.FISH[k]).sort((a,b)=>PC.FISH[b].star-PC.FISH[a].star)[0];
+ const sec=(h,cells)=>`<h3 class="dexh">${h}</h3><div class="stgrid">${cells.map(([n,v])=>`<div class="stc"><span>${n}</span><b>${v}</b></div>`).join('')}</div>`;
+ openModal('📔 日記',`${codexTabs('stats')}<div class="sttoday">今天玩了 <b>${fmtDur(today)}</b></div>
+ ${sec('⏱️ 時間',[['總遊玩時間',fmtDur(S.play)],['第一次玩',S.first?fmtDate(S.first):'—'],['玩了幾天',`${S.days} 天`],['連續登入',`${S.streak} 天（最長 ${S.best}）`]])}
+ <h3 class="dexh">🪙 金錢</h3><div class="stgrid"><div class="stc"><span>總共賺到</span><b>${fmtN(earn)}</b></div><div class="stc"><span>總共花掉</span><b>${fmtN(spend)}</b></div></div>
+ <div class="stcols"><div><p class="sth">💰 從哪裡賺</p>${list(S.earn,PC.EARN_NAME)}</div><div><p class="sth">🛒 花在哪裡</p>${list(S.spend,PC.SPEND_NAME)}</div></div>
+ ${sec('🐾 照顧',[['餵食',`${C.feed} 次`],['洗澡',`${C.wash} 次`],['陪玩頂球',`${C.play} 次`],['睡覺',`${C.sleep} 次`],['清大便、果核',`${C.clean} 次`]])}
+ ${sec('⚔️ 冒險',[['戰鬥',`${C.battle} 場`],['勝 / 敗',`${C.win} / ${C.loss}`],['打倒王',`${C.boss} 次`],['會心一擊',`${C.crit} 次`],['最遠關卡',`第 ${(s.adv&&s.adv.stage)||1} 關`]])}
+ ${sec('🌱 種田',[['種下',`${C.plant} 次`],['收成',`${C.harvest} 次`],['爛掉',`${C.rot} 次`],['摘野莓、撿蘋果',`${C.berry} / ${C.apple}`]])}
+ ${sec('🎣 釣魚',[['拋竿',`${C.cast} 次`],['釣到魚',`${C.catch} 條`],['跑掉、斷線',`${C.miss} 次`],['寶箱 / 雜物',`${C.chest} / ${C.junk}`],['魚類圖鑑',`${Object.keys(F.dex).filter(k=>PC.FISH[k]).length} / 14`],['最稀有的一條',best?`${'★'.repeat(PC.FISH[best].star)} ${PC.FISH[best].name}`:'—']])}
+ ${sec('🥚 幻獸',[['孵過',`${C.hatch} 隻`],['進化',`${C.evolve} 次`],['配對',`${C.breed} 次`],['圖鑑物種',`${s.dex.length} 種`]])}
+ ${sec('👟 步數',[['累計',`${fmtN((s.steps&&s.steps.total)||0)} 步`]])}
+ ${S.recap?'<div class="row"><button class="btn" id="stRecap">📅 看上週回顧</button></div>':''}<p class="small">統計從 V1.84 開始記錄；洗澡、收成、冒險勝敗、步數有接上以前的次數。</p>`);
+ wireJTabs();if($('stRecap'))$('stRecap').onclick=weekRecap}
+function badgeDialog(){const B=PC.BADGES.map(x=>PC.BADGE[x[0]]),got=B.filter(b=>s.badges&&s.badges[b.id]).length;
+ openModal('📔 日記',`${codexTabs('badges')}<p class="small">已獲得 <b>${got}</b> / ${B.length} 個成就，每拿到一個都有金幣獎勵。</p><div class="bdgrid">${B.map(b=>{const at=s.badges&&s.badges[b.id],v=Math.min(b.need,PC.statVal(s,b.key)),pct=Math.round(v/b.need*100);
+  return`<div class="bdg ${at?'on':''}"><i>${at?b.icon:'🔒'}</i><b>${b.name}</b><span class="small">${at?fmtDate(at)+' 獲得':`${Math.floor(v)} / ${b.need}`}</span>${at?'':`<div class="prog"><i style="width:${pct}%"></i></div>`}<span class="small">🪙 ${b.coins}</span></div>`}).join('')}</div>`);wireJTabs()}
+function diaryDialog(){const J=s.journal.slice().reverse();openModal('📔 日記',codexTabs('diary')+(J.length?J.map(j=>`<p><span class="small">${fmtTime(j.at)}</span>　${esc(j.t)}</p>`).join(''):'<p>日記還是空白的。孵化之後，重要的事都會自動記下來。</p>'));wireJTabs()}
+
+window.PF={openFarm:()=>openFarm(),get FMZ(){return FMZ},weekRecap:()=>weekRecap(),statsDialog:()=>statsDialog(),badgeDialog:()=>badgeDialog(),openFish:()=>openFish(),fishBag:()=>fishBag(),fishShop:()=>fishShop(),fishDex:()=>fishDexDialog(),checkSkills:()=>checkSkills(),get FZ(){return FZ},get state(){return s},startArrange:()=>startArrange(),startYardArrange:()=>startYardArrange(),get YA(){return YA},get ARR(){return ARR},arrItems:()=>arrItems(),headY:()=>petTopY(formKey(),0)+3,denDialog:()=>denDialog(),makePig:lv=>makePig(lv),startTraining:k=>startTraining(k),trainDialog:()=>trainDialog(),get TG(){return TG},PET_Y,toy:TOY,arena:makeArena,bUI:()=>bUI(),get mode(){return mode},get ball(){return BALL},get apple(){return FEED.apple},get petX(){return petX},PC,goDrink:()=>goDrink(),makeDecor:id=>makeDecor(id),playAnim:(...a)=>playAnim(...a),formKey:()=>formKey(),creditSteps,mateCode,decodeMate,encodeGenome,decodeGenome,startBattle,onMove,get B(){return B},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
  debug:{info(){return{busy:busyUntil-Date.now(),evo:!!evo,modal:!$('modal').classList.contains('hidden'),taps:s.eggTaps,h:s.hatched,battle:!!B}},skip(min){s.lastTick-=min*60000;tick();renderUI();save()},age(h){s.hatchedAt-=h*3600000;save();runStages();renderUI()},xp(n){const x0=s.xp;PC.addXP(s,n);save();renderUI();afterChange(x0)},set(o){Object.assign(s,o);renderUI();save()}}};
 try{init()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<div style="padding:12px;background:#a8394c;color:#fff">啟動錯誤：${esc(e.message)}</div>`);throw e}
 </script>
