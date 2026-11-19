@@ -91,7 +91,7 @@ async def main():
         ok('點果核清掉', len((await st(p))['cores']) == 0)
         await do_play(p); s = await st(p)
         ok('頂球一回合：心情 +15、體力 -10、記錄分數', round(s['mood']) == 65 and round(s['energy']) == 55 and s['ball']['goals'] >= 0, (round(s['mood']), round(s['energy']), s['ball']))
-        await p.wait_for_timeout(2800); ok('頂球結算視窗：顯示進球與經驗', '頂球結算' in await p.inner_text('#sheet') and '經驗' in await p.inner_text('#sheet'), (await p.inner_text('#sheet'))[:80]); await p.evaluate('closeModal()')
+        await p.wait_for_timeout(2800); ok('頂球結算卡：出現在中間、顯示進球與經驗', await p.is_visible('#gResult') and '頂球結算' in await p.inner_text('#gResult') and '經驗' in await p.inner_text('#gResult'), (await p.inner_text('#gResult'))[:80]); await p.click('#gDone')
         await p.click('[data-act=wash]'); await p.wait_for_timeout(300); await p.click('[data-act=wash]'); await p.wait_for_timeout(300)
         ok('再按一次可以取消', await p.evaluate("PF.mode") is None)
         c0 = (await st(p))['clean']; await do_wash(p); s = await st(p); ok('海綿刷 3 秒：清潔 +35', round(s['clean'] - c0) == 35, (c0, round(s['clean'])))

@@ -173,12 +173,13 @@ body.rm *{transition:none!important;animation:none!important}
 .sbtns{display:flex;flex-direction:column;gap:6px;margin-top:10px}.sbtns .btn{width:100%;min-width:0}
 .sdetail.fresh canvas{filter:drop-shadow(0 0 3px #fff3a0) drop-shadow(0 0 6px #ffd84a)}
 #bResult{position:fixed;inset:0;z-index:22;background:#0008;display:flex;align-items:center;justify-content:center;padding:16px}
-#bResult .rcard{width:100%;max-width:360px;background:repeating-linear-gradient(180deg,#7a4e2a 0 9px,#6e4524 9px 10px);border:4px solid #2a170a;box-shadow:inset 0 0 0 3px #e8c070,0 6px 0 #000a;padding:16px;animation:pop .3s steps(4)}
+#bResult .rcard,#gResult .rcard{width:100%;max-width:380px;max-height:calc(100dvh - 40px);overflow:auto;box-sizing:border-box;background:repeating-linear-gradient(180deg,#7a4e2a 0 9px,#6e4524 9px 10px);border:4px solid #2a170a;box-shadow:inset 0 0 0 3px #e8c070,0 6px 0 #000a;padding:16px;animation:pop .3s steps(4)}
 @keyframes pop{from{transform:scale(.6)}to{transform:scale(1)}}
-#bResult h2{margin:0 0 10px;text-align:center;font-size:20px;color:#ffe2a8}
-.rrow{display:flex;align-items:center;gap:10px;background:#2a170a66;border:2px solid #2a170a;padding:6px 10px;margin-bottom:6px}
-.rrow canvas{flex:0 0 auto}.rrow b{font-size:15px}.rrow i{margin-left:auto;font-style:normal;font-weight:900;font-size:18px;color:#ffe066}.rtag{font-size:11px;color:#ffd0a0}
-#rNote{margin:8px 0;color:#ffe2a8;line-height:1.5}#bResult .btn{width:100%;margin-top:6px;font-size:17px;padding:13px}
+#bResult h2,#gResult h2{margin:0 0 12px;text-align:center;font-size:24px;color:#ffe2a8;text-shadow:0 3px 0 #1a0e04;letter-spacing:1px}
+#gResult{position:fixed;inset:0;z-index:28;background:#0008;display:flex;align-items:center;justify-content:center;padding:16px}#gResult.hidden{display:none}
+.rrow{display:flex;align-items:center;gap:10px;background:#2a170a66;border:2px solid #2a170a;padding:5px 10px;margin-bottom:5px}
+.rrow canvas{flex:0 0 auto;max-height:34px!important;width:auto!important}.rrow b{font-size:17px;white-space:nowrap;color:#fff3d8;text-shadow:0 2px 0 #1a0e04}.rrow i{margin-left:auto;font-style:normal;font-weight:900;font-size:20px;color:#ffe066;text-shadow:0 2px 0 #1a0e04;white-space:nowrap}.rtag{font-size:13px;font-weight:800;color:#ffd0a0;text-shadow:0 1px 0 #1a0e04;flex:1 1 auto;min-width:0;line-height:1.3}
+#rNote,#gNote{margin:8px 0;color:#ffe2a8;line-height:1.5;font-size:14px;font-weight:700}#bResult .btn,#gResult .btn{width:100%;margin-top:6px;font-size:18px;padding:13px}
 .gstar{display:inline-block;font-size:11px;font-weight:900;padding:1px 6px;border:2px solid #2a170a;margin-bottom:3px}.gstar.t0{background:#9cd47a;color:#1a3a10}.gstar.t1{background:#ffd86a;color:#3a2210}.gstar.t2{background:#ff8a6a;color:#3a1008}
 
 img.mi{height:13px;width:auto;vertical-align:-2px;margin:0 2px 0 1px;image-rendering:pixelated;image-rendering:crisp-edges}
@@ -269,7 +270,25 @@ h1{font-size:17px}.ver{font-size:9px}
 .lvtab{width:100%;border-collapse:collapse;font-size:14px}.lvtab td{padding:5px 6px;border-bottom:1px solid #0002}.lvtab td:first-child{text-align:left}.lvtab td.up{color:#3a9a3a;font-weight:900;text-align:right}
 .xpplus{position:absolute;right:10px;top:-6px;color:#ffd34a;font-weight:900;font-size:13px;text-shadow:0 1px 0 #000;pointer-events:none;animation:xpUp 1.2s ease-out forwards}
 @keyframes xpUp{from{opacity:1;transform:translateY(4px)}to{opacity:0;transform:translateY(-16px)}}
-.hp.sub{margin-top:3px;padding-top:3px;padding-bottom:4px;font-size:12px}.hp.sub .bar{height:6px}.hp.tgt{box-shadow:0 0 0 2px #ffd34a inset}
+/* V1.80 戰鬥畫面固定一頁：血條疊在場景上（敵人左上、我方右下），粗細一樣 */
+#battle{overflow:hidden!important}
+#battle .in{height:100dvh;box-sizing:border-box;gap:6px!important;padding-top:calc(env(safe-area-inset-top) + 6px)!important;padding-bottom:calc(env(safe-area-inset-bottom) + 8px)!important}
+#arenaBox{flex:1 1 0;min-height:120px;display:flex;align-items:center;justify-content:center}
+#arenaIn{position:relative;width:100%}
+#arenaIn #bcv{width:100%;height:auto}
+.hpgrp{position:absolute;display:flex;flex-direction:column;gap:3px;width:58%;z-index:2;pointer-events:none}
+.hpgrp.top{left:6px;top:6px}.hpgrp.bot{right:6px;bottom:6px}
+.hpgrp .hp{background:rgba(42,23,10,.78)!important;border:2px solid #2a170a!important;box-shadow:inset 0 0 0 1px #e8c070!important;padding:3px 6px 4px!important;font-size:11.5px!important;color:#fff3d8}
+.hpgrp .hp .t{gap:6px}.hpgrp .hp .t span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hpgrp .hp .t span:last-child{flex:0 0 auto}
+.hpgrp .hp .bar{height:6px!important;margin-top:2px}.hpgrp .hp img.ci{width:12px;height:12px}
+.hp.tgt{box-shadow:inset 0 0 0 2px #ffd34a!important}
+#blog{flex:0 0 auto;min-height:0;max-height:64px;overflow:hidden;font-size:13px!important;padding:6px 10px!important}
+.moves{position:relative;flex:0 0 auto}
+.moves .act{display:flex!important;flex-direction:row!important;flex-wrap:wrap;align-items:center;justify-content:center;column-gap:4px;min-height:46px!important;padding:5px 4px 7px!important;font-size:15px!important}
+.moves .act small{flex-basis:100%;text-align:center;font-size:11.5px!important}
+.moves .act img.ci{width:18px!important;height:18px!important;margin:0}
+.mpanel .back{position:absolute;right:6px;top:-40px;width:auto!important;min-height:0!important;padding:5px 12px 7px!important;font-size:13px!important;z-index:3}
+#pickTag{padding:4px 8px!important;font-size:13px!important}
 </style>
 </head>
 <body>
@@ -321,11 +340,11 @@ h1{font-size:17px}.ver{font-size:9px}
  </nav>
 </div>
 <div id="battle" class="hidden"><div class="in">
- <div class="hp foe"><div class="t"><span id="fName"></span><span id="fHp"></span></div><div class="bar"><i id="fBar"></i></div></div>
- <div class="hp foe sub hidden" id="f2Box"><div class="t"><span id="f2Name"></span><span id="f2Hp"></span></div><div class="bar"><i id="f2Bar"></i></div></div>
- <div style="position:relative"><canvas id="bcv" width="128" height="112"></canvas><div id="bBanner" class="hidden"></div></div>
- <div class="hp"><div class="t"><span id="mName"></span><span id="mHp"></span></div><div class="bar"><i id="mBar"></i></div></div>
- <div class="hp sub hidden" id="m2Box"><div class="t"><span id="m2Name"></span><span id="m2Hp"></span></div><div class="bar"><i id="m2Bar"></i></div></div>
+ <div id="arenaBox"><div id="arenaIn"><canvas id="bcv" width="128" height="112"></canvas><div id="bBanner" class="hidden"></div>
+  <div class="hpgrp top"><div class="hp foe"><div class="t"><span id="fName"></span><span id="fHp"></span></div><div class="bar"><i id="fBar"></i></div></div>
+   <div class="hp foe hidden" id="f2Box"><div class="t"><span id="f2Name"></span><span id="f2Hp"></span></div><div class="bar"><i id="f2Bar"></i></div></div></div>
+  <div class="hpgrp bot"><div class="hp"><div class="t"><span id="mName"></span><span id="mHp"></span></div><div class="bar"><i id="mBar"></i></div></div>
+   <div class="hp hidden" id="m2Box"><div class="t"><span id="m2Name"></span><span id="m2Hp"></span></div><div class="bar"><i id="m2Bar"></i></div></div></div></div></div>
  <div id="blog"></div>
  <button class="btn bond hidden" id="mvBond" data-mv="bond">💗 羈絆之力！買加油棒為牠打氣（10 金幣・連打螢幕）</button>
  <div class="moves" id="moves">
@@ -367,7 +386,7 @@ h1{font-size:17px}.ver{font-size:9px}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.79.0';
+const VERSION='1.80.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -2090,7 +2109,9 @@ function makeArena(k){if(ARENA_CACHE[k])return ARENA_CACHE[k];const cv=document.
   pad(94,62,22,'#8a7ac8','#5a4a8a');pad(34,100,24,'#8a7ac8','#5a4a8a')}
  return ARENA_CACHE[k]=cv}
 /* ---------------- 戰鬥介面 ---------------- */
-function bUI(){setTimeout(()=>pixifyDom($('moves')),0);const{me,foe}=B,danger=dangerNow();
+function fitArena(){const bx=$('arenaBox');if(!bx||!bx.clientHeight)return;$('arenaIn').style.width=Math.floor(Math.min(bx.clientWidth,bx.clientHeight*128/112))+'px'}
+addEventListener('resize',()=>{if(B)fitArena()});
+function bUI(){setTimeout(()=>{pixifyDom($('moves'));fitArena()},0);const{me,foe}=B,danger=dangerNow();
  $('fName').innerHTML=`${esc(foe.name)}  Lv.${foe.level} ${elHTML(foe.elA||foe.el)}${foe.el2s?'＋'+elHTML(foe.el2s):''}${bossStat(foe)}`;$('fHp').textContent=`${foe.hp}/${foe.max}`;$('fBar').style.width=foe.hp/foe.max*100+'%';
  $('mName').innerHTML=`${esc(me.name)}  Lv.${me.level} ${elHTML(me.el)}${tier()?' '+'✦'.repeat(tier()):''}${me.charged?' ⚡蓄力中':''}${petStat(me)}${danger?'　⚠️ 危險！':''}`;$('mHp').textContent=`${me.hp}/${me.max}`;$('mBar').style.width=me.hp/me.max*100+'%';
  $('mBar').style.background=me.hp/me.max<.3?'#e86a6a':'';
@@ -2269,6 +2290,11 @@ function closedChest(kind){const G=kind==='gold',P=G?{o:'#3a1a08',l:'#ffe27a',m:
  for(const bx of[6,16]){f(P.b,bx,3,2,17);f(P.l,bx,3,1,17)}   // 金屬條
  f(P.o,10,7,4,6);f(P.k,11,8,2,4);f(P.o,11,10,2,1);f(P.o,11,11,1,1);   // 鎖
  return c}
+/* V1.80 通用結算卡（和戰鬥戰利品同一個樣式，出現在畫面中間） */
+function resultCard(title,rows,note){return new Promise(res=>{$('gTitle').textContent=title;
+ $('gRows').innerHTML=rows.map(([ic,nm,v,tag])=>`<div class="rrow"><canvas class="picon" data-icon="${ic}" data-s="3"></canvas><b>${nm}</b>${tag?`<span class="rtag">${tag}</span>`:''}<i>${v}</i></div>`).join('');
+ $('gNote').innerHTML=note||'';$('gRows').querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));pixifyDom($('gResult'));
+ $('gDone').onclick=()=>{sfx('tap');$('gResult').classList.add('hidden');res()};$('gResult').classList.remove('hidden')})}
 function chestScene(kind,relic){return new Promise(res=>{const z=$('chestScene'),R=CONFIG.relics.items[relic],open=UIIMG['chest_'+kind]||ICV['chest_'+kind]||DSPR['chest_'+kind],body=$('csBody');
  if(!R){res();return}
  const SC=6.5,bx=z.querySelector('.csBox'),paint=src=>{body.width=src.width;body.height=src.height;const x=body.getContext('2d');x.imageSmoothingEnabled=false;x.clearRect(0,0,src.width,src.height);x.drawImage(src,0,0);body.style.width=Math.round(src.width*SC)+'px';body.style.height=Math.round(src.height*SC)+'px';body.style.left=Math.round((168-src.width*SC)/2)+'px';bx.style.height=body.style.height};
@@ -2299,7 +2325,7 @@ function endBattle(win){B.over=true;$('moves').classList.add('hidden');$('mvBond
  if(r.seeds4)rows.push(['seed4','神奇種子','+1','✨ 種下去一定長出能力水果！']);
  if(r.ember)rows.push(['ember','經驗火種','+1','Boss 寶物！']);
 
- if(r.relic){const R=CONFIG.relics.items[r.relic];rows.push(['chest_'+r.chest,r.chest==='gold'?'金寶箱':'銅寶箱','打開！',`第 ${n} 關的王掉的`]);rows.push(['relic_'+r.relic,R.name,'+1',R.text])}
+ if(r.relic){const R=CONFIG.relics.items[r.relic];rows.push(['chest_'+r.chest,r.chest==='gold'?'金寶箱':'銅寶箱','打開！','王掉的寶箱']);rows.push(['relic_'+r.relic,R.name,'+1',R.text])}
  if(r.pigCore)rows.push(['pigshard','小豬撲滿核心碎片','+1',`小豬撲滿升到 ${r.pigCore} 級！`]);
  if(r.heart)rows.push(['star','星辰之心','+1','🌟 最終大王的寶物！']);if(r.shard)rows.push(['gem','星辰碎片','+1','可抵 1 個終極素材']);if(r.mat)rows.push(['mat_'+r.mat,CONFIG.materials[r.mat],'+1',`💎 終極素材 ${Math.min(r.matN,CONFIG.ascend.mats)}/${CONFIG.ascend.mats}`]);
  const notes=[];if(r.trial)notes.push(`🏅 通過${ROUTE_LABEL[r.trial]}的高階試煉！`);if(r.unlocked)notes.push(`🗺️ 發現新地點！解鎖第 ${r.unlocked} 關`);for(const e of r.events)if(e!=='place')notes.push(`✨ 發生了「${PC.EVENT_TEXT[e]}」事件！`);
@@ -2569,9 +2595,7 @@ function endBall(){const b=BALL.b;if(!b)return;BALL.b=null;
 function finishPlay(){if(mode!=='play')return;const x0=s.xp,sc=BALL.score,r=PC.finishBallGame(s,sc,Date.now());handleTime(r.tm);setMode(null);
  if(r.ok){playAnim(sc?'happy':'play');sfx(sc?'level':'play');say(`頂球結束：進 ${sc} 球${r.coins?`，得到 ${r.coins} 金幣`:''}${r.best?'　🏆 新紀錄！':''}`);
   if(r.popped){POP={x:petX+24,y:PET_Y+18,t0:performance.now()};setTimeout(()=>{sfx('no');buzz(30);say(`💥 球被玩壞，爆掉了！下次玩要花 ${CONFIG.ballCost} 金幣買新球`)},1200)}$('log').textContent=`頂球 ${sc} 球（最佳 ${s.ball.best} 球）${r.coins?`　🪙 +${r.coins}`:''}　${r.msg}${r.xp?'　經驗 +'+r.xp:''}`;
- {const gx=s.xp-x0;setTimeout(()=>{if(!$('modal').classList.contains('hidden'))return;openModal('🏀 頂球結算',`<div class="infobox"><p style="font-size:18px;text-align:center"><b>進了 ${sc} 球</b>${r.best?'　🏆 新紀錄！':''}</p>
-<p>⭐ 經驗 <b>+${gx}</b>${r.goalXp?`（進球 +${r.goalXp}${gx-r.goalXp>0?`、玩耍 +${gx-r.goalXp}`:''}）`:''}</p><p>🪙 金幣 <b>+${r.coins||0}</b>　<span class="small">（每進 ${CONFIG.ballGame.coinEvery} 球 1 金幣）</span></p>
-<p>😊 心情上升　<span class="small">最佳紀錄 ${s.ball.best} 球</span></p></div>`)},r.popped?2600:700)}}   /* V1.65 頂球結算 */
+ {const gx=s.xp-x0;setTimeout(()=>resultCard(`🏀 頂球結算`,[['ball','進球',`${sc} 球`,r.best?'🏆 新紀錄！':`最佳 ${s.ball.best} 球`],['star','經驗',`+${gx}`,r.goalXp?`進球 +${r.goalXp}${gx-r.goalXp>0?`、玩耍 +${gx-r.goalXp}`:''}`:''],['coin','金幣',`+${r.coins||0}`,`每進 ${CONFIG.ballGame.coinEvery} 球 1 金幣`],['heart','心情','上升','']],''),r.popped?2600:700)}}   /* V1.65 頂球結算 */
  else say(r.msg);save();renderUI();afterChange(x0)}
 /* 球爆掉的動畫：先鼓起來、再炸成碎片 */
 let POP=null;const DRINK={t0:0};
@@ -2929,5 +2953,6 @@ window.PF={get state(){return s},startArrange:()=>startArrange(),get ARR(){retur
 try{init()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<div style="padding:12px;background:#a8394c;color:#fff">啟動錯誤：${esc(e.message)}</div>`);throw e}
 </script>
 <div id="chestScene" class="hidden"><div class="csRays"></div><div class="csBox"><canvas id="csBody"></canvas></div><div class="csItem hidden"><canvas id="csRelic"></canvas></div><div class="csCard hidden"><b id="csName"></b><span id="csText"></span><small id="csFrom"></small></div><p id="csHint">寶箱在發光…點一下打開！</p></div>
+<div id="gResult" class="hidden"><div class="rcard"><h2 id="gTitle"></h2><div id="gRows"></div><div id="gNote"></div><button class="btn pri" id="gDone">確定</button></div></div>
 </body>
 </html>
