@@ -63,7 +63,8 @@ const CONFIG = {
   mysterySeed: { powerChance: .3, powerMin: 1, powerMax: 2 },   // （key 保留 mystery＝稀有種子）
   magicSeed: { min: 1, maxN: 2, miniDrop: .25 },   // V1.77 神奇種子：必定長出能力水果 1～2 顆；打贏大王必掉、小王 25%   // V1.73 稀有種子：只能冒險掉落（打王必掉），30% 長出能力水果
   powerDrop: { win: .1, seed: .08 },
-  appleTree: { growHours: 3, max: 3 },   // V1.76 院子的蘋果樹：每 3 小時長 1 顆（樹上＋地上最多 3 顆），熟了會掉下來，撿起來免費   // V1.73 能力水果商店不賣：冒險打贏 10% 掉 1 顆、打贏王必掉 1 顆；稀有種子打贏 8%、打王必掉        // 優良種子：收成多 1 顆，比較容易長出藍莓、草莓
+  appleTree: { growHours: 3, max: 3 },
+  chargeMult: 1.5,   // V1.82 蓄力後下一擊 ×1.5（原本 ×2 太強）   // V1.76 院子的蘋果樹：每 3 小時長 1 顆（樹上＋地上最多 3 顆），熟了會掉下來，撿起來免費   // V1.73 能力水果商店不賣：冒險打贏 10% 掉 1 顆、打贏王必掉 1 顆；稀有種子打贏 8%、打王必掉        // 優良種子：收成多 1 顆，比較容易長出藍莓、草莓
   seedOdds: { normal: [['cranberry', .55], ['blueberry', .3], ['strawberry', .15]], good: [['cranberry', .3], ['blueberry', .4], ['strawberry', .3]], rare: [['cranberry', .2], ['blueberry', .3], ['strawberry', .5]] },   // V1.41 種子都是綜合：蔓越莓／藍莓／草莓
   train: { cost: 20, energy: -15, hunger: -10, clean: -8, minEnergy: 15, base: 10, perLv: 4,   // V1.41 訓練場：每次 20 金幣（器材＋場地費），達成目標才拿到經驗＝10＋等級×4
     kinds: { dodge: { name: '閃避訓練：躲避球', skill: 'dodge' }, rush: { name: '攻擊訓練：沙包連打', skill: 'attack' }, combo: { name: '攻擊訓練：組合拳', skill: 'attack' }, flash: { name: '攻擊訓練：靈光一閃', skill: 'attack' }, zen: { name: '防禦訓練：瀑布打坐', skill: 'defense' } } },
@@ -347,6 +348,7 @@ function sanitize(o, now = Date.now()) {
   r.awake = o.awake === true && r.stage === 'ascended';
   r.washes = int(o.washes, 0, 0, 1e7); r.earthWins = int(o.earthWins, 0, 0, 1e7);
   r.tree = o.tree && typeof o.tree === 'object' ? { n: int(o.tree.n, 0, 0, CONFIG.appleTree.max), ground: int(o.tree.ground, 0, 0, CONFIG.appleTree.max), at: num(o.tree.at, now, 0, now) } : { n: 0, ground: 0, at: now };
+  r.yard = {}; if (o.yard && typeof o.yard === 'object') for (const k of ['den', 'nest', 'tree1', 'tree2', 'bush', 'path', 'pond', 'plots']) { const v = o.yard[k]; if (Array.isArray(v) && v.length === 3 && v.every(Number.isFinite)) r.yard[k] = [Math.max(-130, Math.min(130, Math.round(v[0]))), Math.max(-80, Math.min(80, Math.round(v[1]))), Math.max(.5, Math.min(1.8, Math.round(v[2] * 10) / 10))]; }   // V1.82 院子佈置：位移與大小
   r.seen = {}; if (o.seen && typeof o.seen === 'object') for (const k in o.seen) if (/^[a-zA-Z0-9_]{1,30}$/.test(k) && o.seen[k]) r.seen[k] = 1;   // V1.74 圖鑑：拿到過的東西
   r.crave = o.crave && typeof o.crave === 'object' ? { kind: CONFIG.foods[o.crave.kind] ? o.crave.kind : null, until: num(o.crave.until, 0, 0, now + 24 * H) } : null;   // 想吃的水果（含冷卻）也要存
   r.matGot = {}; if (o.matGot && typeof o.matGot === 'object') for (const k of ROUTES) if (Array.isArray(o.matGot[k])) r.matGot[k] = o.matGot[k].filter(n => [10, 20, 30, 40].includes(n)).slice(0, 4);
@@ -724,7 +726,7 @@ function elemMult(a, d, special) { if (!special || !a.el || a.el === 'none' || a
   return Math.round(one(d.el) * one(d.el2) * 1000) / 1000; }
 /* 預估傷害（不含隨機與會心一擊）：用來顯示「這一擊強不強」、判斷是不是快撐不住了 */
 function expectDamage(a, d, special, boost = 1) {
-  const pow = special ? (a.el === 'none' ? 1.15 : 1.3) : 1, ch = a.charged ? 2 : 1;
+  const pow = special ? (a.el === 'none' ? 1.15 : 1.3) : 1, ch = a.charged ? CONFIG.chargeMult : 1;
   let dmg = Math.max(1, Math.round(a.atk * pow * (a.atk / (a.atk + d.def)) * 1.6 * elemMult(a, d, special) * ch * boost));
   if (d.guard) dmg = Math.max(1, Math.round(dmg * .5)); return dmg;
 }
@@ -743,7 +745,7 @@ function bondBoost(taps) {
   return P[P.length - 1][1];
 }
 function damage(a, d, special, r = Math.random, boost = 1) {
-  const pow = (special ? (a.el === 'none' ? 1.15 : 1.3) * (1 + (a.spUp || 0)) : 1) * (a.charged ? 2 : 1) * boost; a.charged = false;
+  const pow = (special ? (a.el === 'none' ? 1.15 : 1.3) * (1 + (a.spUp || 0)) : 1) * (a.charged ? CONFIG.chargeMult : 1) * boost; a.charged = false;
   const mult = elemMult(a, d, special);
   let dmg = Math.max(1, Math.round(a.atk * pow * (a.atk / (a.atk + d.def)) * 1.6 * mult * (.85 + r() * .3)));
   if (d.guard) { dmg = Math.max(1, Math.round(dmg * .5)); d.guard = false; }
