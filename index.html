@@ -242,6 +242,7 @@ h1{font-size:17px}.ver{font-size:9px}
 .tctl.pad .pkA:active{box-shadow:0 1px 0 #6e1210,inset 0 -2px 4px rgba(0,0,0,.2)}.tctl.pad .pkB:active{box-shadow:0 1px 0 #6e4a04,inset 0 -2px 4px rgba(0,0,0,.2)}
 .rpsbtns img.ci{width:40px;height:40px;display:block;margin:0 auto 2px}
 #moves img.ci,#mvBond img.ci{width:18px;height:18px;vertical-align:-4px}
+.food{position:relative}.food.crave{box-shadow:0 0 0 2px #ff7aa8,0 0 8px #ff7aa8}.cvtag{position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#ff5a8a;color:#fff;font-size:10px;padding:0 4px;border-radius:6px;white-space:nowrap;z-index:1}
 </style>
 </head>
 <body>
@@ -337,7 +338,7 @@ h1{font-size:17px}.ver{font-size:9px}
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.70.0';
+const VERSION='1.71.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -353,7 +354,7 @@ const store={ok:true,mem:{},
  del(k){try{localStorage.removeItem(k)}catch(e){}delete this.mem[k]}};
 
 /* ---------------- 規則核心（game-core.js，可單獨做單元測試） ---------------- */
-const PC=window.PFCore;if(window.PF_NO_TRAITS)PC.CONFIG.traitsOn=false;if(window.PF_NO_WEATHER)PC.CONFIG.weatherOn=false;   // 測試用：關掉屬性特性，數值才固定
+const PC=window.PFCore;if(window.PF_NO_TRAITS)PC.CONFIG.traitsOn=false;if(window.PF_NO_WEATHER)PC.CONFIG.weatherOn=false;if(window.PF_NO_CRAVE)PC.CONFIG.crave.fruits=['__none','__none2'];   // 測試用：關掉屬性特性，數值才固定
 const {CONFIG,ROUTES,makeGenome,CLASSIC_G,encodeGenome,decodeGenome,G_SIDE,gidOf,genomeFromId,formCode,fresh,sanitize}=PC;
 const FORMS={egg:{name:'神秘的蛋',stage:0}};
 const STAGE_NAME={egg:'蛋',baby:'嬰兒期',juvenile:'幼年期',adolescent:'少年期',adult:'成年期',ascended:'高階'};
@@ -1149,15 +1150,16 @@ function drawStatusFx(now,S,fi,PX,LIFT,key){const top=petTopY(key,LIFT),cx=PX+24
   ctx.strokeStyle='rgba(150,170,60,.8)';ctx.lineWidth=1;for(let k=0;k<2;k++){const ox=cx+(k?14:-16),oy=top+14-((t*8+k*5)%10);ctx.beginPath();for(let j=0;j<6;j++){const yy=oy-j,xx=ox+(j%2?1:-1)*(still?0:1);j?ctx.lineTo(xx+.5,yy):ctx.moveTo(xx+.5,yy)}ctx.stroke()}
   if(s.clean<15&&!still)for(let k=0;k<2;k++){const a=t*3+k*3;ctx.drawImage(ICV.fly,Math.round(cx+14*Math.cos(a)-2),Math.round(top+12+6*Math.sin(a*1.6)))}}
  let bx=cx+12,by=top-12;   // 頭頂右上：泡泡位置
- if(s.hunger<25&&!s.sleeping){const bob=still?0:Math.round(Math.sin(t*3));ctx.fillStyle='#ffffff';ctx.strokeStyle='#273753';ctx.lineWidth=1;
+ const cvK=s.crave&&CONFIG.foods[s.crave.kind]&&Date.now()<s.crave.until?s.crave.kind:null,showCrave=!!cvK&&!s.sleeping&&!mode&&(s.hunger<25||(s.hunger<70&&(t%14)<6));   // V1.71 頭上冒出想吃的水果
+ if(showCrave||(s.hunger<25&&!s.sleeping)){const bob=still?0:Math.round(Math.sin(t*3));ctx.fillStyle='#ffffff';ctx.strokeStyle='#273753';ctx.lineWidth=1;
   // 圓圓的想像泡泡＋兩顆小泡泡（像🫧），半透明亮面
   const ex=bx+6.5,ey=by+5.5+bob;ctx.fillStyle='rgba(255,255,255,.92)';ctx.beginPath();ctx.ellipse(ex,ey,9,7.5,0,0,7);ctx.fill();ctx.stroke();
   ctx.fillStyle='rgba(200,235,255,.9)';ctx.fillRect(Math.round(ex-6),Math.round(ey-5),2,1);ctx.fillRect(Math.round(ex-7),Math.round(ey-4),1,2);   // 泡泡反光
   ctx.fillStyle='rgba(255,255,255,.92)';for(const[r,dx,dy]of[[2.2,-7,9],[1.3,-10,12]]){ctx.beginPath();ctx.ellipse(ex+dx,ey+dy,r,r,0,0,7);ctx.fill();ctx.stroke()}
-  const ic=ICV[Math.floor(t/1.2)%2?'meat':'apple'];if(ic)ctx.drawImage(ic,Math.round(ex-ic.width/2),Math.round(ey-ic.height/2));
-  if(Math.floor(t*2)%2&&!still){ctx.fillStyle='#fff3c0';ctx.fillRect(cx-14,top+28,2,1);ctx.fillRect(cx-15,top+30,2,1);ctx.fillRect(cx+12,top+28,2,1);ctx.fillRect(cx+13,top+30,2,1)}   // 肚子咕嚕
+  const ic=cvK?ICV[CONFIG.foods[cvK].icon]:ICV[Math.floor(t/1.2)%2?'meat':'apple'];if(ic)ctx.drawImage(ic,Math.round(ex-ic.width/2),Math.round(ey-ic.height/2));
+  if(s.hunger<25&&Math.floor(t*2)%2&&!still){ctx.fillStyle='#fff3c0';ctx.fillRect(cx-14,top+28,2,1);ctx.fillRect(cx-15,top+30,2,1);ctx.fillRect(cx+12,top+28,2,1);ctx.fillRect(cx+13,top+30,2,1)}   // 肚子咕嚕
   bx-=26}
- if(s.mood<25&&!s.sleeping){const ox=s.hunger<25?cx-14:cx-8,oy=top-14,dr=still?0:Math.round(Math.sin(t*1.5));
+ if(s.mood<25&&!s.sleeping){const ox=(showCrave||s.hunger<25)?cx-14:cx-8,oy=top-14,dr=still?0:Math.round(Math.sin(t*1.5));
   ctx.fillStyle='#6a7488';ctx.fillRect(ox+dr,oy+2,16,5);ctx.fillRect(ox+3+dr,oy,9,3);ctx.fillStyle='#8a94a8';ctx.fillRect(ox+4+dr,oy+1,6,2);
   ctx.fillStyle='#7ab8f0';for(let k=0;k<3;k++){const yy=oy+8+((t*20+k*4)%9);ctx.fillRect(ox+3+k*5+dr,Math.round(yy),1,2)}}
  if(s.energy<15&&!s.sleeping){const yy=top+6+(still?0:(t*6)%4);ctx.fillStyle='#8fd0f0';ctx.fillRect(cx-13,Math.round(yy),2,3);ctx.fillRect(cx-12,Math.round(yy)-1,1,1);ctx.fillStyle='#e8f8ff';ctx.fillRect(cx-13,Math.round(yy),1,1)}
@@ -1290,7 +1292,7 @@ const msgQ=[];let msgTimer=0,nextChat=Date.now()+9000;
 function say(t,{log=true,q=false}={}){if(log)$('log').textContent=t;if(!q)msgQ.length=0;msgQ.push(t);if(msgQ.length>3)msgQ.shift();if(!q||!msgTimer){clearTimeout(msgTimer);nextMsg()}nextChat=Date.now()+12000}
 function nextMsg(){const t=msgQ.shift();if(t===undefined){msgTimer=0;$('bubble').classList.add('off');return}const b=$('bubble');b.textContent=t;b.classList.remove('off');msgTimer=setTimeout(nextMsg,Math.max(1700,t.length*120))}
 function chatter(){if(s.hatched&&s.cores.some(c=>PC.isRotten(c))&&Math.random()<.6)return s.cores.some(c=>c.k==='poop')?'好臭喔…💩 幫我清一下嘛':'好臭喔…有果蠅🪰 幫我清掉果核嘛';if(!s.hatched){return['裡面好像有東西在動…','輕輕點蛋看看？'][Math.floor(Math.random()*2)]}
- if(s.sleeping)return'Zzz…';if(s.hunger<25)return'肚子咕嚕咕嚕…';if(s.clean<25)return'身上黏黏的…';if(s.energy<20)return'好睏喔…';if(s.mood<30)return'陪我玩嘛…';
+ if(s.sleeping)return'Zzz…';if(s.crave&&CONFIG.foods[s.crave.kind]&&s.hunger<70&&Math.random()<.5)return`好想吃${CONFIG.foods[s.crave.kind].name}喔～`;if(s.hunger<25)return'肚子咕嚕咕嚕…';if(s.clean<25)return'身上黏黏的…';if(s.energy<20)return'好睏喔…';if(s.mood<30)return'陪我玩嘛…';
  const ph=phase();return ph==='night'?['星星好漂亮✨','晚上好安靜～','月亮出來了'][Math.floor(Math.random()*3)]:['今天天氣真好！','嗯哼～♪',`${ownerName()}，摸摸我嘛！`,'我會長得很大喔！',`${s.name}在這裡！`,...(s.pair?[`${s.pair.name}，來玩嘛～`]:[])][Math.floor(Math.random()*(s.pair?6:5))]}
 let toastT=0;function toast(t,ms=2600){const el=$('toast');el.textContent=t;pixifyDom(el);el.classList.remove('off');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.add('off'),ms)}
 
@@ -1543,7 +1545,7 @@ function renameDialog(first){
 function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',pixify(`
 <p><b>目標：</b>照顧幻獸，陪牠慢慢長大。沒有死亡、離線不扣親密度、不需要每天簽到。</p>
 <ul>
-<li>🍎 <b>餵食</b>：按「餵食」後點畫面放蘋果，牠會走過去吃掉。吃完會留下果核，<b>要點一下清掉</b>，放超過 10 分鐘會發臭長果蠅，讓心情一直變差。用 1 個食物（沒有就花 ${C.feed.price} 金幣買），飽食 +${C.feed.hunger}、經驗 +${C.feed.xp}。吃飽時不能餵。</li>
+<li>🍎 <b>餵食</b>：按「餵食」後點畫面放蘋果，牠會走過去吃掉。吃完會留下果核，<b>要點一下清掉</b>，放超過 10 分鐘會發臭長果蠅，讓心情一直變差。用 1 個食物（沒有就花 ${C.feed.price} 金幣買），飽食 +${C.feed.hunger}、經驗 +${C.feed.xp}。吃飽時不能餵。<br>💭 <b>想吃的水果</b>：牠頭上會冒出泡泡，裡面是現在最想吃的水果（每 3 小時換一次）。剛好餵到 → 飽食、心情、體力、親密度、經驗都加更多，然後會換想吃別的。</li>
 <li>⭐ <b>等級</b>：最高 Lv.30（練滿）。需要經驗＝7.5×(等級−1)²。已經有一隻「星耀覺醒」的夥伴後，其他幻獸會得到 <b>✨傳承之力</b>：經驗 ×3、訓練成果 ×2，第二隻會快很多。</li><li>🥚 <b>迎接新的蛋</b>：第 1 顆 300 金幣、第 2 顆 700、之後每顆 1000（配對、愛的小窩生的蛋不用錢）。</li><li>🐷 <b>小豬撲滿</b>：在小窩（室內）右邊牆上的木架，會幫你存錢，每小時 1＋等級×0.35 枚（最多算到 Lv.30；金系 ×1.5；第二隻一起出來再加牠的一半）。心情 30 以上才會存、睡覺時減半，點小豬就能領。小豬撲滿有 1～6 級：第 15、20、25、30 關的王各掉一個「核心碎片」（+1 級），商店道具有唯一的「小豬撲滿核心」1000 元（+1 級）。等級越高越大隻、存得越快越多（×1／1.25／1.5／1.8／2.2／3，最多存 12～24 小時），6 級最肥、會發光。</li><li>🎾 <b>玩耍（頂球）</b>：按「玩耍」後點畫面開始，球會一顆一顆掉下來。要在球快碰到頭的那一刻點畫面跳起來頂（可以一直點），時機越準越會進；完美時機還會預判移動中的籃框。有 3 條命，漏接 3 次就結束，每連進 5 球補 1 條命。進越多球，籃框會開始上下、左右移動，球也掉得越快、越斜。每進 3 球得 1 金幣（最多 10）。體力 ${C.play.minEnergy} 以上，心情 +${C.play.mood}、體力 −10、經驗 +${C.play.xp}（每 30 分鐘最多 3 次有經驗）。</li>
 <li>🫧 <b>洗澡</b>：按「洗澡」後用手指拿海綿 🧽 在牠身上來回刷 3 秒。清潔 +${C.wash.clean}、經驗 +${C.wash.xp}，想洗就洗（髒了才能洗）。</li>
 <li>👆 <b>摸摸</b>：隨時都能摸；每 30 分鐘第一次：親密度 +2、心情 +3。</li>
@@ -1829,7 +1831,7 @@ function decorPreview(id){if(id.startsWith('paper_')){const c=document.createEle
 const SHOP_SEL={};
 function shopDialog(tab,bagOnly=tab==='bag'){PC.claimDaily(s,Date.now());
  const D=CONFIG.decor,C=CONFIG;
- const foodDesc=F=>`飽食 +${F.hunger}${F.mood?`、心情 +${F.mood}`:''}${F.energy?`、體力 +${F.energy}`:''}<br>${F.power?`⚡ 能力水果：${ROUTE_ICON[F.fav[0]]}${ROUTE_LABEL[F.fav[0]]}吃了心情 +10、體力 +${C.powerBonus.energy+F.energy}、經驗 +${C.powerBonus.xp+C.favBonus.xp+F.xp}`:!F.fav.length?'大家都能吃':F.fav.length>=7?'❤️ 大家都愛吃（心情 +10、經驗 +5）':'❤️ 愛吃：'+F.fav.map(r=>ROUTE_ICON[r]+ROUTE_LABEL[r]).join('、')}`;
+ const foodDesc=F=>`飽食 +${F.hunger}${F.mood?`、心情 +${F.mood}`:''}${F.energy?`、體力 +${F.energy}`:''}<br>${C.crave.fruits.includes(Object.keys(C.foods).find(k=>C.foods[k]===F))?`💭 剛好是牠頭上泡泡想吃的：飽食 +${C.crave.bonus.hunger}、心情 +${C.crave.bonus.mood}、體力 +${C.crave.bonus.energy}、親密度 +${C.crave.bonus.bond}、經驗 +${C.crave.bonus.xp}${F.power?`（能力水果再加體力 +${C.powerBonus.energy}、經驗 +${C.powerBonus.xp}）`:''}`:!F.fav.length?'大家都能吃':F.fav.length>=7?'❤️ 大家都愛吃（心情 +10、經驗 +5）':'❤️ 愛吃：'+F.fav.map(r=>ROUTE_ICON[r]+ROUTE_LABEL[r]).join('、')}`;
  const DECOR_NOTE={toilet_pot:'牠會自己上廁所，不會再亂大便',lamp_candle:'晚上房間比較亮',lamp_moon:'晚上房間比較亮',bed_round:'睡覺的地方',bed_straw:'睡覺的地方',bed_cloud:'睡覺的地方',toy_ball:'院子和房間裡可以玩的皮球（兩隻都會追、會踢）；球爆掉時買它就換新球'};
  for(const b of['bed_round','bed_straw','bed_cloud'])DECOR_NOTE[b]='睡覺的地方。床可以擺兩張（左邊、右邊），兩隻一起出來時各睡一張';
  // 每一項：id、名稱、清單小字、圖（家具 dp／圖示 icon）、說明、按鈕
@@ -1847,7 +1849,7 @@ function shopDialog(tab,bagOnly=tab==='bag'){PC.claimDaily(s,Date.now());
    potion2:()=>({id:'potion2',name:'超級藥水',sub:`🪙${C.superPotion.price}｜×${s.inv.potion2||0}`,icon:'potion2',desc:`戰鬥中<b>回復全部 HP</b>（戰鬥時點「🎒 背包」使用）<br>擁有 ${s.inv.potion2||0}`,btn:`<button class="btn pri" data-bi="potion2">買 1 個（🪙 ${C.superPotion.price}）</button>`}),
    soup:()=>{const rest=(s.bondRestUntil||0)>Date.now(),S=C.soup;return{id:'soup',name:'神秘婆婆熬製雞湯',sub:`🪙${S.price}｜×${s.inv.soup||0}`,icon:'soup',desc:`神秘婆婆用祕方熬了一整晚的雞湯。<br>⭐ <b>重點：發動羈絆之力後要休息 ${C.bond.restHours} 小時，喝了馬上解除，可以立刻再去冒險！</b><br>另外飽食 +${S.hunger}、心情 +${S.mood}、體力 +${S.energy}<br>${rest?`⏳ 現在還要休息 ${Math.ceil((s.bondRestUntil-Date.now())/60000)} 分鐘`:''}<br>擁有 ${s.inv.soup||0}`,btn:`<button class="btn pri" data-bi="soup">買 1 碗（🪙 ${S.price}）</button><button class="btn" id="drinkSoup" ${s.inv.soup?'':'disabled'}>給牠喝</button>`}}};
   if(tab==='food')for(const k of Object.keys(C.foods).filter(k=>!C.foods[k].power&&!C.foods[k].farm))out.push(foodEntry(k));
-  else if(tab==='power')for(const k of Object.keys(C.foods).filter(k=>C.foods[k].power))out.push(Object.assign(foodEntry(k),{sub:`${ROUTE_ICON[C.foods[k].fav[0]]}🪙${C.foods[k].price}｜×${s.inv[k]||0}`}));
+  else if(tab==='power')for(const k of Object.keys(C.foods).filter(k=>C.foods[k].power))out.push(Object.assign(foodEntry(k),{sub:`🪙${C.foods[k].price}｜×${s.inv[k]||0}`}));
   else if(tab==='tools'){for(const k in tools)out.push(tools[k]())}
   else{   // 🎒 背包：自己有的東西
    const own=Object.keys(C.foods).filter(k=>(s.inv[k]||0)>0),isFruit=k=>!!(C.foods[k].power||C.foods[k].farm),F1=own.filter(k=>!isFruit(k)),F2=own.filter(isFruit);if(F1.length){out.push({head:'🍽️ 食物'});for(const k of F1)out.push(foodEntry(k,true))}if(F2.length){out.push({head:'🍓 水果'});for(const k of F2)out.push(foodEntry(k,true))}
@@ -2398,11 +2400,11 @@ function drawGlow(x,y,now){const g=ctx.createRadialGradient(x,y,1,x,y,10);const 
 /* 選食物（餵食模式時畫面下方出現） */
 function renderFoodBar(){const bar=$('foodBar');if(mode!=='feed'){bar.classList.add('hidden');return}bar.classList.remove('hidden');
  const F=CONFIG.foods;if(!FEED.kind)FEED.kind=Object.keys(F).find(k=>(s.inv[k]||0)>0)||'food';
- PC.fixFresh(s);bar.innerHTML=Object.keys(F).filter(k=>!(F[k].power||F[k].farm)||(s.inv[k]||0)>0).map(k=>{const n=s.inv[k]||0,fav=s.route&&F[k].fav.includes(s.route),fr=(s.inv.fresh&&s.inv.fresh[k])||0;return`<button class="food ${FEED.kind===k?'on':''} ${fr?'fresh':''}" data-food="${k}"><canvas data-fi="${F[k].icon}" width="14" height="14"></canvas><span>${F[k].name}${fav?'❤️':''}</span><small>${n?'×'+n:'🪙'+F[k].price}${fr?` ✨${fr}`:''}</small></button>`}).join('');
+ PC.fixFresh(s);bar.innerHTML=Object.keys(F).filter(k=>!(F[k].power||F[k].farm)||(s.inv[k]||0)>0||(s.crave&&s.crave.kind===k)).map(k=>{const n=s.inv[k]||0,fav=s.route&&F[k].fav.includes(s.route),cv=s.crave&&s.crave.kind===k&&Date.now()<s.crave.until,fr=(s.inv.fresh&&s.inv.fresh[k])||0;return`<button class="food ${FEED.kind===k?'on':''} ${fr?'fresh':''} ${cv?'crave':''}" data-food="${k}">${cv?'<b class="cvtag">想吃！</b>':''}<canvas data-fi="${F[k].icon}" width="14" height="14"></canvas><span>${F[k].name}${fav?'❤️':''}</span><small>${n?'×'+n:'🪙'+F[k].price}${fr?` ✨${fr}`:''}</small></button>`}).join('');
  bar.querySelectorAll('canvas').forEach(c=>{const ic=ICV[c.dataset.fi];c.width=ic.width;c.height=ic.height;const x=c.getContext('2d');x.drawImage(ic,0,0)});
  bar.querySelectorAll('[data-food]').forEach(b=>b.onclick=e=>{e.stopPropagation();if(FEED.apple)return;FEED.kind=b.dataset.food;renderFoodBar();sfx('tap')})}
 function finishFeed(){const A=FEED.apple,x0=s.xp,r=PC.act(s,'feed',Date.now(),A.k);handleTime(r.tm);
- if(r.ok){if(r.left)PC.addCore(s,A.x,Date.now(),curView(),r.left);spawn('heart',r.fav?6:3,{x:petX+24,y:70,life:1.1,stagger:.25});say(r.msg+(r.xp?`　經驗 +${r.xp}`:''));$('log').textContent=r.msg+(r.left?`　記得把${r.left==='bone'?'骨頭':'果核'}清掉，不然會發臭喔！`:'')}
+ if(r.ok){if(r.crave){spawn('heart',8,{x:petX+24,y:62,vy:-22,life:1.3,spread:16});spawn('star',4,{x:petX+24,y:60,life:.9,spread:14});sfx('level');renderUI()}if(r.left)PC.addCore(s,A.x,Date.now(),curView(),r.left);spawn('heart',r.fav?6:3,{x:petX+24,y:70,life:1.1,stagger:.25});say(r.msg+(r.xp?`　經驗 +${r.xp}`:''));$('log').textContent=r.msg+(r.left?`　記得把${r.left==='bone'?'骨頭':'果核'}清掉，不然會發臭喔！`:'')}
  else say(r.msg);
  FEED.apple=null;setMode(null);save();renderUI();afterChange(x0)}
 function drawApple(){const A=FEED.apple;if(!A)return;

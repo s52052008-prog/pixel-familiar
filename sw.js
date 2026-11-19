@@ -1,6 +1,6 @@
 // 幻獸日記 Service Worker — 離線快取
 // 更新遊戲時，請把 VERSION 改成新版本號，iPhone 才會換成新檔案。
-const VERSION = 'pf-1.70.0';
+const VERSION = 'pf-1.71.0';
 const CORE = ['./', './index.html', './game-core.js'];
 const EXTRA = ['./manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png',
   ...['flame','tide','forest','earth','bird','elec','metal'].flatMap(el => [0,1,2,3,4].flatMap(n => ['open','closed'].map(e => `./sprites/${el}_${n}_${e}.png`))),

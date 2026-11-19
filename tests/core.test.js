@@ -6,7 +6,7 @@ const H = 3600000, MIN = 60000;
 let pass = 0, fail = 0;
 function t(name, fn) { try { fn(); pass++; console.log('PASS ' + name); } catch (e) { fail++; console.log('FAIL ' + name + ' — ' + e.message); } }
 const T0 = Date.parse('2026-11-16T02:00:00Z');           // 台北 10:00
-function hatched(now = T0) { const s = C.fresh(now); C.hatch(s, now); s.name = '測試'; s.route = null; return s; }   // 屬性特性另外測：預設不帶屬性，數值才固定
+function hatched(now = T0) { const s = C.fresh(now); C.hatch(s, now); s.name = '測試'; s.route = null; s.crave = { kind: 'none', until: 1e15 }; return s; }   // 屬性特性另外測：預設不帶屬性，數值才固定
 C.CONFIG.weatherOn = false;   // 天氣另外測
 const nonNeg = s => ['hunger', 'mood', 'clean', 'energy', 'bond'].every(k => s[k] >= 0 && s[k] <= 100) && s.coins >= 0 && s.xp >= 0 && s.inv.food >= 0 && s.inv.seeds >= 0;
 
@@ -217,7 +217,14 @@ t('種植：長出蔓越莓／藍莓／草莓；成熟 6 小時內是好品質�
   let r = C.harvest(s, 0, T0 + 2 * H + 5 * H, () => 0); assert.equal(r.kind, 'blueberry'); assert.equal(r.n, 2); assert.equal(s.inv.fresh.blueberry, 2);
   C.plant(s, 1, T0, () => 0); r = C.harvest(s, 1, T0 + 2 * H + 7 * H, () => 0); assert.ok(r.over); assert.equal(s.inv.cranberry, 2); assert.equal(s.inv.fresh.cranberry, 0);
   C.plant(s, 2, T0, () => 0); assert.ok(C.plotState(s, 2, T0 + 27 * H).rotten); r = C.harvest(s, 2, T0 + 27 * H); assert.ok(r.rotten); assert.equal(s.inv.cranberry, 2); assert.ok(C.plotState(s, 2, T0 + 27 * H).empty); });
-t('能力水果：給對的屬性吃，體力 +10、經驗 +15 額外加成', () => { const s = hatched(); s.route = 'elec'; s.hunger = 10; s.energy = 20; s.coins = 99; const r = C.act(s, 'feed', T0, 'banana'); assert.ok(r.ok && r.fav && r.power); assert.equal(s.energy, 40); assert.equal(s.xp, 25); const w = hatched(); w.route = 'tide'; w.hunger = 10; w.coins = 99; assert.ok(!C.act(w, 'feed', T0, 'banana').power); });
+t('V1.71 想吃的水果：餵到頭上泡泡那種 → 飽食、心情、體力、親密度、經驗都多加，然後換想吃別的', () => {
+  const s = hatched(); s.hunger = 10; s.mood = 40; s.energy = 20; s.bond = 10; s.coins = 99; s.crave = { kind: 'banana', until: T0 + H };
+  const r = C.act(s, 'feed', T0, 'banana'); assert.ok(r.ok && r.crave && r.power);
+  assert.equal(s.hunger, 10 + 15 + 10); assert.equal(s.mood, 40 + 5 + 15); assert.equal(s.energy, 20 + 10 + 10 + 10); assert.equal(s.bond, 13); assert.equal(s.xp, 5 + 15 + 10);
+  assert.ok(s.crave.kind !== 'banana' && s.crave.until > T0);
+  const w = hatched(); w.hunger = 10; w.coins = 99; w.crave = { kind: 'melon', until: T0 + H }; const r2 = C.act(w, 'feed', T0, 'banana'); assert.ok(!r2.crave && !r2.power); assert.equal(w.crave.kind, 'melon');
+  const z = hatched(); z.crave = { kind: 'nut', until: T0 }; C.applyTime(z, T0 + 1000); assert.ok(z.crave.kind !== 'nut' && C.CONFIG.crave.fruits.includes(z.crave.kind));
+});
 t('太久沒餵：餓到 0 再過 12 小時就離家出走；走 1 萬步找回來', () => { const s = hatched(); s.hunger = 40; C.applyTime(s, T0 + 9 * H); assert.equal(s.hunger, 4); assert.equal(s.runaway, null);
   C.applyTime(s, T0 + 10 * H + 11 * H); assert.equal(s.hunger, 0); assert.equal(s.runaway, null); const r = C.applyTime(s, T0 + 10 * H + 12 * H); assert.ok(s.runaway); assert.ok(r.events.includes('runaway'));
   assert.equal(C.act(s, 'feed', T0 + 23 * H).code, 'runaway'); assert.ok(C.canAdventure(s, 1, T0 + 23 * H)); s.bond = 50;

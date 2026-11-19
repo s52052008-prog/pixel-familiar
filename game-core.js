@@ -136,13 +136,13 @@ const CONFIG = {
     berry: { name: '莓果', icon: 'berry', hunger: 10, mood: 10, energy: 0,  xp: 3, price: 10, left: null,   fav: [] },
     fish:  { name: '烤魚', icon: 'fish',  hunger: 20, mood: 0,  energy: 20, xp: 5, price: 20, left: 'bone', fav: ['tide', 'metal', 'forest'] },
     meat:  { name: '肉排', icon: 'meat',  hunger: 20, mood: 0,  energy: 20, xp: 5, price: 20, left: 'bone', fav: ['flame', 'elec', 'bird'] },
-    dragon:  { name: '火龍果', icon: 'dragon',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, fav: ['flame'] },
-    melonw:  { name: '西瓜',   icon: 'melonw',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, fav: ['tide'] },
-    melon:   { name: '哈密瓜', icon: 'melon',   power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, fav: ['forest'] },
-    potato:  { name: '地瓜',   icon: 'potato',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, fav: ['earth'] },
-    nut:     { name: '堅果',   icon: 'nut',     power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, fav: ['bird'] },
-    coconut: { name: '椰子',   icon: 'coconut', power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, fav: ['metal'] },
-    banana:  { name: '香蕉',   icon: 'banana',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, fav: ['elec'] },
+    dragon:  { name: '火龍果', icon: 'dragon',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, el: 'flame', fav: [] },
+    melonw:  { name: '西瓜',   icon: 'melonw',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, el: 'tide', fav: [] },
+    melon:   { name: '哈密瓜', icon: 'melon',   power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, el: 'forest', fav: [] },
+    potato:  { name: '地瓜',   icon: 'potato',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, el: 'earth', fav: [] },
+    nut:     { name: '堅果',   icon: 'nut',     power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, el: 'bird', fav: [] },
+    coconut: { name: '椰子',   icon: 'coconut', power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, el: 'metal', fav: [] },
+    banana:  { name: '香蕉',   icon: 'banana',  power: true, hunger: 15, mood: 5, energy: 10, xp: 5, price: 30, left: null, el: 'elec', fav: [] },
     cranberry:  { name: '蔓越莓', icon: 'cranberry',  farm: true, hunger: 10, mood: 5,  energy: 5, xp: 3, price: 15, left: null, fav: [] },   // V1.41 家園種出來的（商店不賣）
     blueberry:  { name: '藍莓',   icon: 'blueberry',  farm: true, hunger: 12, mood: 8,  energy: 5, xp: 4, price: 20, left: null, fav: [] },
     strawberry: { name: '草莓',   icon: 'strawberry', farm: true, hunger: 12, mood: 12, energy: 8, xp: 5, price: 30, left: null, fav: [] },
@@ -166,7 +166,10 @@ const CONFIG = {
   },      // 自己種出來的水果可以賣
   ember: { mood: 10, energy: 20, xp: 20, bossDrop: .5 },   // 經驗火種：打贏 Boss 有機會得到
   favBonus: { mood: 10, xp: 5 },
-  powerBonus: { energy: 10, xp: 15 },     // 能力水果給對的屬性吃：再加體力 +10、經驗 +15
+  powerBonus: { energy: 10, xp: 15 },
+  // V1.71 想吃的水果：每 3 小時隨機換一種（一半機率挑背包裡有的），頭上會冒泡泡；剛好餵到 → 飽食、心情、體力、親密度、經驗都加更多
+  crave: { fruits: ['food', 'berry', 'dragon', 'melonw', 'melon', 'potato', 'nut', 'coconut', 'banana', 'cranberry', 'blueberry', 'strawberry'], hours: 3, ownedChance: .5,
+    bonus: { hunger: 10, mood: 15, energy: 10, bond: 3, xp: 10 } },     // 剛好餵到想吃的；能力水果另外再加 powerBonus
   /* 進化到高階必備的素材：打贏該屬性區域的 Boss 掉落（第一次必掉，之後 35%） */
   materials: { flame: '火種源', tide: '波賽頓水晶', forest: '精靈石', earth: '地核項鍊', bird: '彩色羽毛', metal: '古代金幣', elec: 'X元素電池' },
   matDrop: .35
@@ -384,7 +387,14 @@ function weatherAt(t = Date.now()) {
   let acc = 0; for (const [k, p] of W.odds) { acc += p; if (r < acc) return k; } return 'clear';
 }
 function weatherFx(st, now) { if (!CONFIG.weatherOn) return null; const F = CONFIG.weather.fx[weatherAt(now)]; return F ? F[st.view === 'room' ? 'in' : 'out'] || null : null; }
+function pickCrave(st, now = Date.now(), rnd = Math.random) {
+  const C = CONFIG.crave, cur = st.crave && st.crave.kind, all = C.fruits.filter(k => k !== cur), own = all.filter(k => (st.inv[k] || 0) > 0);
+  const pool = own.length && rnd() < C.ownedChance ? own : all;
+  st.crave = { kind: pool[Math.floor(rnd() * pool.length) % pool.length], until: now + C.hours * H }; return st.crave;
+}
+function ensureCrave(st, now = Date.now()) { if (st.hatched && (!st.crave || now >= st.crave.until)) pickCrave(st, now); return st.crave; }
 function applyTime(st, now = Date.now()) {
+  ensureCrave(st, now);
   if (now < st.lastTick) { st.clockWarn = now; return { warn: 'back', hours: 0, events: [] }; }   // 時間倒退：不回溯，記錄警告
   const hours = (now - st.lastTick) / H, eff = Math.min(hours, CONFIG.offlineCapHours);
   const last = st.lastTick; st.lastTick = now;
@@ -486,11 +496,12 @@ function act(st, a, now = Date.now(), opt) {
     if ((st.inv[kind] || 0) > 0) { st.inv[kind]--; paid = `用掉 1 個${FD.name}`; }
     else if (st.coins >= FD.price) { st.coins -= FD.price; paid = `花 ${FD.price} 金幣買${FD.name}`; }
     else return { ok: false, code: 'nofood', msg: `沒有${FD.name}也沒有金幣了…可以去「採集」或種田`, tm };
-    const fav = !!(st.route && FD.fav.includes(st.route)), B = CONFIG.favBonus;
-    st.hunger = clamp(st.hunger + FD.hunger * (trait(st).feed || 1)); st.mood = clamp(st.mood + FD.mood + (fav ? B.mood : 0)); const PB = fav && FD.power ? CONFIG.powerBonus : null;
-    if (FD.energy || freshEat || PB) st.energy = clamp(st.energy + (FD.energy || 0) + (freshEat ? CONFIG.freshBonus.energy : 0) + (PB ? PB.energy : 0)); fixFresh(st);
+    const fav = !!(st.route && FD.fav.includes(st.route)), B = CONFIG.favBonus, crave = !!(st.crave && st.crave.kind === kind && now < st.crave.until), CB = crave ? CONFIG.crave.bonus : null;
+    st.hunger = clamp(st.hunger + FD.hunger * (trait(st).feed || 1) + (CB ? CB.hunger : 0)); st.mood = clamp(st.mood + FD.mood + (fav ? B.mood : 0) + (CB ? CB.mood : 0)); const PB = crave && FD.power ? CONFIG.powerBonus : null;
+    if (FD.energy || freshEat || PB || CB) st.energy = clamp(st.energy + (FD.energy || 0) + (freshEat ? CONFIG.freshBonus.energy : 0) + (PB ? PB.energy : 0) + (CB ? CB.energy : 0)); fixFresh(st);
+    if (CB) { st.bond = clamp(st.bond + CB.bond); pickCrave(st, now); }
     st.path.tide += CONFIG.feed.tide; track(st, 'feed', now); st.digest.push(now + CONFIG.poop.delayMin * MIN);
-    return { ok: true, anim: 'eat', sfx: 'eat', kind, left: FD.left, fav, xp: addXP(st, FD.xp + (fav ? B.xp : 0) + (PB ? PB.xp : 0)), power: !!PB, fresh: freshEat, msg: (freshEat ? '✨自己種的' : '') + (fav ? `最愛的${FD.name}！超好吃！` : `好吃的${FD.name}！`) + (freshEat ? `體力多 +${CONFIG.freshBonus.energy}` : '') + `（${paid}）`, tm };
+    return { ok: true, anim: 'eat', sfx: 'eat', kind, left: FD.left, fav: fav || crave, crave, xp: addXP(st, FD.xp + (fav ? B.xp : 0) + (PB ? PB.xp : 0) + (CB ? CB.xp : 0)), power: !!PB, fresh: freshEat, msg: (freshEat ? '✨自己種的' : '') + (crave ? `就是想吃${FD.name}！幸福～💕（親密度 +${CB.bond}）` : fav ? `最愛的${FD.name}！超好吃！` : `好吃的${FD.name}！`) + (freshEat ? `體力多 +${CONFIG.freshBonus.energy}` : '') + `（${paid}）`, tm };
   }
   if (a === 'play') {
     const C = CONFIG.play;
@@ -1050,7 +1061,7 @@ function claimGoal(st, idx, now = Date.now(), r = Math.random) {
   st.coins += rw.coins; got.push(`金幣 +${rw.coins}`);
   if (rw.seeds) { st.inv.seeds += rw.seeds; got.push(`種子 +${rw.seeds}`); }
   if (rw.bonus) {   // ★★★ 額外寶物：自己屬性的能力水果、回復藥水或星星糖
-    const own = Object.keys(CONFIG.foods).find(k => CONFIG.foods[k].power && CONFIG.foods[k].fav[0] === st.route), x = r();
+    const own = Object.keys(CONFIG.foods).find(k => CONFIG.foods[k].power && CONFIG.foods[k].el === st.route), x = r();
     const k = x < .45 && own ? own : x < .75 ? 'potion' : 'candy'; st.inv[k] = (st.inv[k] || 0) + 1;
     got.push(`${k === 'potion' ? '回復藥水' : k === 'candy' ? '星星糖' : CONFIG.foods[k].name} +1`);
   }
@@ -1099,6 +1110,6 @@ const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, S
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
   toNextLv, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
-  trainBonus, buffFighter, useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
+  trainBonus, buffFighter, useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
