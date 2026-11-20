@@ -178,7 +178,7 @@ ol.howto{padding-left:22px;margin:6px 0}ol.howto li{margin:4px 0}code{background
 .small{font-size:12px;color:var(--muted)}
 .foodbar{display:flex;gap:4px;margin:6px 0 0;overflow-x:auto}.foodbar .food{flex:1 0 60px;display:flex;flex-direction:column;align-items:center;gap:2px;background:#1c2a46;border:2px solid var(--line);color:#fff;padding:5px 2px;font-size:12px;font-weight:700;min-height:44px}.foodbar .food.on{background:#ffd86a;color:#273753;border-color:#fff3a6}.foodbar canvas{height:24px;width:auto;image-rendering:pixelated}.foodbar small{font-size:11px;opacity:.85}
 #toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 12px);transform:translateX(-50%);background:#fff3d5;color:#273753;border:3px solid #273753;box-shadow:3px 3px 0 #0008;padding:8px 14px;font-size:14px;font-weight:700;z-index:30;max-width:90%;text-align:center;transition:opacity .3s}
-#toast{pointer-events:none}#toast.off{opacity:0}
+#toast{pointer-events:none;z-index:99999!important;font-size:17px!important;padding:12px 18px!important;border:4px solid #2a170a!important;background:linear-gradient(#fff8dc,#ffe9a8)!important;color:#3a200a!important;box-shadow:0 0 0 3px #f0c868,0 6px 0 #0009,0 0 24px 6px rgba(255,210,90,.45)!important;border-radius:10px;line-height:1.45;max-width:92%!important;top:calc(env(safe-area-inset-top) + 10px)!important}#toast.off{opacity:0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 body.rm *{transition:none!important;animation:none!important}
 
@@ -257,11 +257,19 @@ h1{font-size:17px}.ver{font-size:9px}
 /* V1.58 寵物資訊收進「資訊」按鈕；餵食選單蓋在資訊欄上面，遊戲畫面不會被壓小 */
 #infoSlot{position:relative;padding:5px 8px 6px}#infoSlot .pairbar{margin-top:4px;background:rgba(30,16,6,.35)}
 .scrop{overflow:hidden;position:relative}
+#log{display:none!important}body.gdOn #msgSlot{position:relative;z-index:42}
+body.guiding .panel{display:none!important}#app{gap:4px!important}.toolbar.five .tool{padding:4px 1px 5px!important}
+#msgSlot{flex:0 0 auto;height:40px;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 10px;background:linear-gradient(#fff8dc,#f6e2a8);color:#3a200a;border:3px solid #2a170a;box-shadow:inset 0 -3px 0 #c8a050,0 0 0 2px #c8913a;border-radius:8px;font-size:15px;font-weight:800;line-height:1.25;overflow:hidden;transition:filter .4s,opacity .4s}
+#msgSlot #msgTxt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#msgSlot.old{filter:saturate(.4) brightness(.85);opacity:.75}#msgSlot.pop{animation:msgPop .45s ease-out}@keyframes msgPop{0%{transform:scale(.96);box-shadow:inset 0 -3px 0 #c8a050,0 0 0 2px #fff,0 0 18px 6px #ffd040}100%{transform:none}}
 #guideBar{display:flex;align-items:center;gap:8px;background:linear-gradient(#fff4c8,#f0d890);color:#4a2a10;border:3px solid #2a170a;box-shadow:inset 0 -3px 0 #c8a050,0 0 0 2px #f0c868;border-radius:8px;padding:6px 8px;animation:gdIn .4s ease-out}
 #guideBar.hidden{display:none}#gdTxt{flex:1;min-width:0;font-weight:800;font-size:15px;line-height:1.35}#gdTxt small{display:block;font-weight:600;font-size:13px;color:#6a4a2a}#gdTxt .gn{display:inline-block;background:#4a2a10;color:#ffe9a8;border-radius:8px;padding:0 6px;font-size:12px;margin-right:4px}
 #gdSkip{flex:0 0 auto;background:none;border:0;color:#8a6a4a;font-size:12px;text-decoration:underline;min-width:44px;min-height:44px;padding:0}
 @keyframes gdIn{from{transform:translateY(-6px);opacity:0}}
-.gpoint{position:relative;box-shadow:0 0 0 3px #ffe066,0 0 12px 4px #ffd040!important;z-index:2}.gpoint::after{content:'👆';position:absolute;left:50%;bottom:-20px;font-size:24px;transform:translateX(-50%);animation:gdHand 1s ease-in-out infinite;pointer-events:none;filter:drop-shadow(0 2px 0 #0008);z-index:5}
+#gdShade{position:fixed;inset:0;background:rgba(5,3,10,.72);z-index:40}#gdShade.hidden{display:none}
+body.gdOn #guideBar{position:relative;z-index:42}body.gdOn .gpoint{z-index:42!important}
+.gpoint{animation:gdGlow 1s ease-in-out infinite!important}@keyframes gdGlow{0%,100%{box-shadow:0 0 0 4px #fff27a,0 0 18px 8px #ffd040}50%{box-shadow:0 0 0 6px #fff,0 0 30px 14px #ffe066}}
+.gpoint{position:relative;box-shadow:0 0 0 3px #ffe066,0 0 12px 4px #ffd040!important;z-index:2}.gpoint::after{content:'👆';position:absolute;left:50%;bottom:-30px;font-size:40px;transform:translateX(-50%);animation:gdHand 1s ease-in-out infinite;pointer-events:none;filter:drop-shadow(0 2px 0 #0008);z-index:5}
 @keyframes gdHand{50%{transform:translate(-50%,-7px)}}
 body.scrollm #app{height:auto!important;min-height:100dvh!important;overflow:visible!important}body.scrollm .stagearea{flex:none!important}body.scrollm #scene{touch-action:none}
 #denBtn{font-size:12px;padding:4px 9px}
@@ -399,6 +407,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
  </header>
  <div id="saveWarn" class="tip warn hidden">⚠️ 目前無法寫入存檔（可能開啟了「私密瀏覽」）。請改用一般分頁，或到「存檔」匯出存檔碼保存。</div>
  <div id="homeTip" class="tip hidden">📲 想玩得像 App：Safari「分享」⬆️→「加入主畫面」（存檔和 Safari 版分開，可用「存檔」搬移）<button id="homeTipX" aria-label="關閉">✕</button></div>
+ <div id="msgSlot" role="status" aria-live="polite"><span id="msgTxt">💬 訊息會顯示在這裡</span></div>
  <div class="stagearea" id="stagearea"><div class="stagewrap" id="stagewrap">
   <div id="evoCap" class="hidden"></div>
   <div class="scrop" id="scrop"><canvas id="scene" width="128" height="112" role="button" tabindex="0" aria-label="遊戲畫面，點擊幻獸互動"></canvas></div>
@@ -416,7 +425,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
   <div id="pairBar" class="pairbar hidden"></div>
   <div id="foodBar" class="foodbar hidden"></div>
  </div>
- <div id="guideBar" class="hidden"><div id="gdTxt"></div><button id="gdSkip" type="button">跳過</button></div>
+ <div id="gdShade" class="hidden"></div><div id="guideBar" class="hidden"><div id="gdTxt"></div><button id="gdSkip" type="button">跳過</button></div>
  <section class="panel">
   <div class="xph"><span><img class="uic" src="sprites/ui/star.png" alt="">成長經驗 <small id="lvNeed" style="color:#ffe2a8;font-weight:700"></small></span><span id="xptext"></span></div>
   <div class="xpbar"><i id="xpbar"></i></div>
@@ -499,7 +508,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.86.4';
+const VERSION='1.86.5';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -992,7 +1001,7 @@ function paintIcon(cv,name){const src=UIIMG[name]||ICV[name];if(!src)return;cons
 /* 摸摸時的台詞：看狀態、時間、步數、屬性、親密度，隨機挑一句 */
 const ROUTE_TALK={flame:['身體暖呼呼的 🔥','想烤棉花糖給你吃～','我的尾巴火火今天很旺喔！'],tide:['想去池塘玩水～💧','下雨天最喜歡了！','咕嚕咕嚕…吐泡泡～'],forest:['曬太陽好舒服 🌿','我聞到花香了～','幫我澆澆水好不好？'],
  bird:['好想飛高高！🪽','風好舒服喔～','我剛剛看到一隻小鳥跟我打招呼！'],earth:['腳踏實地最安心 🪨','我今天也很穩喔！','一起去散步吧，走越多越強壯！'],metal:['亮晶晶的金幣最棒了 ✨','我今天有存錢喔！','叮叮噹噹～'],elec:['充滿電了 ⚡','滋滋～被我電到了嗎？','我跑得超快喔！']};
-function petTalk(){const O=ownerName(),L=[`${O}～`,`最喜歡${O}了！`,`${O}，摸摸頭～`,'嘿嘿～','嗯？叫我嗎？','好癢喔哈哈哈！','（轉一圈）','摸摸頭～最喜歡了',`${O}你回來啦！`,`${O}，今天也一起加油喔！`,'咕嚕咕嚕～',`${s.name}在這裡！`,'再摸一下嘛～','（歪頭）'];
+function petTalk(){const O=ownerName(),L=[`${O}～`,`最喜歡${O}了！`,`${O}，摸摸頭～`,'嘿嘿～','嗯？叫我嗎？','好癢喔哈哈哈！','（轉一圈）','摸摸頭～最喜歡了',`${O}你回來啦！`,`${O}，今天也一起加油喔！`,'咕嚕咕嚕～',`${s.name}在這裡！`,'再摸一下嘛～','（歪頭）','手好溫暖喔～','（瞇眼睛）好舒服…','你今天好香喔！','我今天很乖喔，有沒有獎勵？','（翻肚子）這裡也要摸！',`${O}是世界上最好的主人！`,'剛剛我做了一個夢，夢到好多蘋果！','我們來比賽誰先眨眼！','（尾巴搖搖）','嘿！你摸到我的癢癢點了！','我長大了要保護你！','再摸十下我就告訴你一個祕密…','（假裝睡著）呼…呼…','今天也要一起冒險嗎？','你的手機好好玩，我住在裡面耶！','（打噴嚏）哈啾！','我剛剛有偷偷練習頂球喔！','可以幫我抓抓背嗎？'];
  const h=new Date().getHours(),d=new Date(),dk=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,st=(s.steps&&s.steps.days&&s.steps.days[dk])||0;
  const P=[];   // 狀況台詞比較優先
  if(s.hunger<35)P.push('肚子好餓…可以吃東西嗎？','我聞到蘋果的味道了…');if(s.clean<35)P.push('身上有點臭臭的…想洗澡','好癢…背上好像有泥巴');
@@ -1509,12 +1518,17 @@ function startLoop(){if(!rafOn){rafOn=true;requestAnimationFrame(loop)}}
    對話泡泡與訊息
    ========================================================= */
 const msgQ=[];let msgTimer=0,nextChat=Date.now()+9000;
-function say(t,{log=true,q=false}={}){if(log)$('log').textContent=t;if(!q)msgQ.length=0;msgQ.push(t);if(msgQ.length>3)msgQ.shift();if(!q||!msgTimer){clearTimeout(msgTimer);nextMsg()}nextChat=Date.now()+12000}
+function say(t,{log=true,q=false}={}){if(log){$('log').textContent=t;slotMsg('💬 '+t)}if(!q)msgQ.length=0;msgQ.push(t);if(msgQ.length>3)msgQ.shift();if(!q||!msgTimer){clearTimeout(msgTimer);nextMsg()}nextChat=Date.now()+12000}
 function nextMsg(){const t=msgQ.shift();if(t===undefined){msgTimer=0;$('bubble').classList.add('off');return}const b=$('bubble');b.textContent=t;b.classList.remove('off');msgTimer=setTimeout(nextMsg,Math.max(1700,t.length*120))}
 function chatter(){if(s.hatched&&s.cores.some(c=>PC.isRotten(c))&&Math.random()<.6)return s.cores.some(c=>c.k==='poop')?'好臭喔…💩 幫我清一下嘛':'好臭喔…有果蠅🪰 幫我清掉果核嘛';if(!s.hatched){return['裡面好像有東西在動…','輕輕點蛋看看？'][Math.floor(Math.random()*2)]}
  if(s.sleeping)return'Zzz…';if(s.crave&&CONFIG.foods[s.crave.kind]&&s.hunger<70&&Math.random()<.5)return`好想吃${CONFIG.foods[s.crave.kind].name}喔～`;if(s.hunger<25)return'肚子咕嚕咕嚕…';if(s.clean<25)return'身上黏黏的…';if(s.energy<20)return'好睏喔…';if(s.mood<30)return'陪我玩嘛…';
  const ph=phase();return ph==='night'?['星星好漂亮✨','晚上好安靜～','月亮出來了'][Math.floor(Math.random()*3)]:['今天天氣真好！','嗯哼～♪',`${ownerName()}，摸摸我嘛！`,'我會長得很大喔！',`${s.name}在這裡！`,...(s.pair?[`${s.pair.name}，來玩嘛～`]:[])][Math.floor(Math.random()*(s.pair?6:5))]}
-let toastT=0;function toast(t,ms=2600){const el=$('toast');el.textContent=t;pixifyDom(el);el.classList.remove('off');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.add('off'),ms)}
+let toastT=0,msgT=0;
+/* V1.86.5 訊息：主畫面有專用的訊息欄；開著視窗、戰鬥、釣魚、種田時才浮在最上層 */
+function homeVisible(){return $('modal').classList.contains('hidden')&&!B&&!document.body.classList.contains('arrMode')&&!['farmZone','fishZone','trainZone','battle'].some(id=>$(id)&&!$(id).classList.contains('hidden'))}
+function slotMsg(t,ms=3500){const m=$('msgTxt'),slot=$('msgSlot');if(!m)return false;m.textContent=t;pixifyDom(m);slot.classList.remove('old');slot.classList.remove('pop');void slot.offsetWidth;slot.classList.add('pop');clearTimeout(msgT);msgT=setTimeout(()=>slot.classList.add('old'),Math.max(ms,3500));return true}
+function toast(t,ms=2600){const m=slotMsg(t,ms);
+ const el=$('toast');clearTimeout(toastT);if(m&&homeVisible()){el.classList.add('off');return}el.textContent=t;pixifyDom(el);el.classList.remove('off');toastT=setTimeout(()=>el.classList.add('off'),ms)}
 
 /* ---------------- 音效（8-bit 方波；可在選單關閉） ---------------- */
 let actx=null;
@@ -1807,14 +1821,14 @@ function quizDone(ans){QLOCK=false;const R2=quizResult(ans),P=PERSONA[R2.top],sd
  thumb($('qEgg'),formKey(),'egg00');sfx('level')}
 /* 主人名字：幻獸會用這個名字叫你 */
 function ownerDialog(first){
- openModal(first?'👋 歡迎來到幻獸日記！':'👤 主人名字',`<p>${first?'在遇見你的幻獸之前…':''}主人，請問要怎麼稱呼你？</p><input type="text" id="ownIn" maxlength="24" autocomplete="off" enterkeyhint="done" placeholder="例如：冠宏"><p class="small">最多 12 個字。幻獸會用這個名字叫你，之後可以在「⚙️ 選單」修改。</p><div class="err" id="ownErr"></div>`,
+ openModal(first?'👋 歡迎來到幻獸日記！':'👤 主人名字',`<p>${first?'在遇見你的幻獸之前…':''}主人，請問要怎麼稱呼你？</p><input type="text" id="ownIn" maxlength="24" autocomplete="off" enterkeyhint="done" placeholder="例如：黃仁勳"><p class="small">最多 12 個字。幻獸會用這個名字叫你，之後可以在「⚙️ 選單」修改。</p><div class="err" id="ownErr"></div>`,
   [...(first?[]:[{t:'取消'}]),{t:'就這樣叫我',cls:'pri',fn:()=>{const n=chars($('ownIn').value.replace(/[<>&"]/g,'').trim()).slice(0,12).join('');if(!n){$('ownErr').textContent='名字不能是空白喔';return false}
    s.owner=n;save();renderUI();say(s.hatched?`${n}！我記住了～`:`${n}，蛋好像動了一下！`,{log:false});if(first&&!s.hatched&&s.eggTaps===0)setTimeout(()=>quizIntro(true),300);return true}}]);
  const inp=$('ownIn');inp.value=s.owner||'';inp.addEventListener('keydown',e=>{if(e.key==='Enter')document.querySelector('#mbtns .pri').click()});if(first)setTimeout(()=>inp.focus(),200)}
 function renameDialog(first){
  if(!s.hatched){say('先把蛋孵出來吧！');return}
  openModal(first?'🐣 為牠取個名字吧！':'✏️ 改名字',`<p class="small">最多 10 個字，可用中文、英文或 emoji。</p><input type="text" id="nameIn" maxlength="20" autocomplete="off" enterkeyhint="done"><div class="err" id="nameErr"></div>`,
-  [{t:first?'就叫小露':'取消'},{t:'確定',cls:'pri',fn:()=>{const n=chars($('nameIn').value.trim()).slice(0,10).join('');if(!n){$('nameErr').textContent='名字不能是空白喔';return false}
+  [{t:first?`就叫${esc(s.name)}`:'取消'},{t:'確定',cls:'pri',fn:()=>{const n=chars($('nameIn').value.trim()).slice(0,10).join('');if(!n){$('nameErr').textContent='名字不能是空白喔';return false}
    s.name=n;const de=s.dex.find(x=>x.id===gidOf(s));if(de)de.petName=n;save();renderUI();say(`我是「${n}」！請多指教～`);return true}}]);
  const inp=$('nameIn');inp.value=s.name;inp.addEventListener('keydown',e=>{if(e.key==='Enter')document.querySelector('#mbtns .pri').click()})}
 
@@ -3098,12 +3112,15 @@ document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()
 /* V1.55 遊戲畫面依剩下的高度縮放（整頁不用捲） */
 /* V1.86 主畫面填滿寬度：高度不夠時，上下各切掉一點點（最多 15%，大多切下面的草地），點擊位置照樣對得準 */
 /* ================= V1.86.4 新手手冊 ================= */
-function renderGuide(){const bar=$('guideBar');if(!bar)return;if(window.PF_NO_GUIDE){bar.classList.add('hidden');return}
+function renderGuide(){const bar=$('guideBar');if(!bar)return;if(window.PF_NO_GUIDE){bar.classList.add('hidden');document.body.classList.remove('guiding');$('gdShade').classList.add('hidden');document.body.classList.remove('gdOn');return}
  let S=PC.guideStep(s);if(S&&S.k==='hatch'&&s.hatched){guideHit('hatch');S=PC.guideStep(s)}
  document.querySelectorAll('.gpoint').forEach(b=>b.classList.remove('gpoint'));
- if(!S||B){bar.classList.add('hidden');return}const n=CONFIG.guide.length,i=s.guide.i;
+ if(!S||B){bar.classList.add('hidden');document.body.classList.remove('guiding');$('gdShade').classList.add('hidden');document.body.classList.remove('gdOn');document.querySelectorAll('.gpoint').forEach(b=>b.classList.remove('gpoint'));return}const n=CONFIG.guide.length,i=s.guide.i;
  const k=S.k+i;if(bar.dataset.k!==k){bar.dataset.k=k;$('gdTxt').innerHTML=`<span class="gn">📖 新手 ${i+1}/${n}</span>${S.icon} ${S.t}<small>${S.d}</small>`}
- bar.classList.remove('hidden');if(S.btn&&!mode){const b=document.querySelector(S.btn);if(b)b.classList.add('gpoint')}}
+ bar.classList.remove('hidden');document.body.classList.add('guiding');let tgt=null;const busy=mode||B||!$('modal').classList.contains('hidden')||['farmZone','fishZone','trainZone'].some(id=>$(id)&&!$(id).classList.contains('hidden'))||evo||s.runaway;
+ if(S.btn&&!busy){tgt=document.querySelector(S.btn);if(tgt)tgt.classList.add('gpoint')}
+ const on=!!tgt;document.body.classList.toggle('gdOn',on);$('gdShade').classList.toggle('hidden',!on);if(on&&!GD_SCROLLED){GD_SCROLLED=true;try{tgt.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}}if(!on)GD_SCROLLED=false}
+let GD_SCROLLED=false;
 function guideHit(k){if(window.PF_NO_GUIDE)return;const r=PC.guideDo(s,k,Date.now());if(!r)return;save();const S=r.step,inv=Object.entries(S.inv||{}).map(([x,v])=>`${ITEM_NAME_ZH(x)}×${v}`).join('、');
  setTimeout(()=>{toast(`📖 完成「${S.t}」！🪙 +${S.coins}${inv?'、'+inv:''}`,4000);sfx('level');spawn('star',10,{x:64,y:40,vy:-22,jx:40,life:1.2,spread:20,stagger:.05});
   if(r.done)setTimeout(()=>{openModal('🎉 新手手冊全部完成！',`<p>你已經會照顧、種田、釣魚、訓練和冒險了！</p><p class="small">接下來可以：讓幻獸長大進化、挑戰魔王、配對生蛋、收集圖鑑。每天回來看看「任務」，有每日獎勵。</p>`,[{t:'開始冒險吧！',fn:()=>{}}])},1200);renderUI()},600)}
@@ -3113,17 +3130,18 @@ const TIPS={farm:['🌱 種田','<p>在空田上點一下，種下種子；過�
  train:['💪 訓練','<p>用小遊戲幫幻獸練<b>攻擊、防禦、閃避</b>，練得越多等級越高，冒險會更好打。</p><p class="small">每天可以練的次數有限，會花一點體力。</p>'],
  adv:['⚔️ 冒險','<p>一關一關往前打，打贏拿<b>金幣、經驗、種子</b>。每 5 關有小王，10 關有大王。</p><p>敵人攻擊時會猜拳，猜贏就能閃開。血少了記得<b>防禦</b>或喝藥水。</p><p class="small">打不過就先去訓練、升級再來！</p>']};
 function firstTip(k,go){if(window.PF_NO_GUIDE||(s.tipsSeen||{})[k])return false;(s.tipsSeen||(s.tipsSeen={}))[k]=1;save();const T=TIPS[k];openModal(T[0],T[1],[{t:'知道了，開始！',fn:()=>setTimeout(go,50)}]);return true}
+$('gdShade').onclick=()=>{toast('👆 先按發光的那顆按鈕；老手可以按「跳過」',2500);sfx('no')};
 $('gdSkip').onclick=()=>confirmBox('📖 跳過新手手冊？','跳過後就不會再出現引導，可以到「選單 → 📖 新手手冊」打開。','跳過',()=>{s.guide.off=true;save();renderUI()});
 function guideListDialog(){const G=s.guide,L=CONFIG.guide;openModal('📖 新手手冊',`<p class="small">一步一步帶你玩一遍，每完成一步都有獎勵。</p>${L.map((S,j)=>`<div class="dm"><b>${j<G.i?'✅':j===G.i?'👉':'⬜'} ${S.icon} ${S.t}</b><span class="small">🪙 ${S.coins}${S.inv?'＋'+Object.entries(S.inv).map(([x,v])=>ITEM_NAME_ZH(x)+'×'+v).join('、'):''}</span></div>`).join('')}`,
  G.i>=L.length?[]:[{t:G.off?'📖 打開引導':'🙈 先不要引導',fn:()=>{G.off=!G.off;save();renderUI()}}])}
 /* V1.86.3 螢幕比較矮（例如 Safari 有網址列）：改成可以往下捲，遊戲畫面維持滿版大小 */
 let SCROLLM=false;
 function fitStage(){const a=$('stagearea'),w=$('stagewrap'),c=$('scrop'),cv0=$('scene');if(!a||!w||!c)return;
- {const W=a.getBoundingClientRect().width,fr0=w.offsetWidth-w.clientWidth||14,need=Math.ceil((W-12-fr0)*112/128*(1-.15)+fr0+14);
+ {const W=a.getBoundingClientRect().width,fr0=w.offsetWidth-w.clientWidth||14,need=Math.ceil((W-12-fr0)*112/128+fr0+14);   /* V1.86.5 主畫面固定完整大小，不切；放不下就往下捲 */
   if(SCROLLM){const app=$('app'),other=app.scrollHeight-a.getBoundingClientRect().height;if(innerHeight-other>=need+4){SCROLLM=false;document.body.classList.remove('scrollm');a.style.height=''}else if(a.style.height!==need+'px')a.style.height=need+'px'}
   else{const h0=a.getBoundingClientRect().height;if(h0&&h0<need-2&&!document.body.classList.contains('arrMode')){SCROLLM=true;document.body.classList.add('scrollm');a.style.height=need+'px'}}}
  const r=a.getBoundingClientRect();if(!r.height)return;
- const fr=w.offsetWidth-w.clientWidth||14,mg=12,iw=r.width-mg-fr,full=iw*112/128,ah=r.height-fr-14,MAXC=.15;
+ const fr=w.offsetWidth-w.clientWidth||14,mg=12,iw=r.width-mg-fr,full=iw*112/128,ah=r.height-fr-14,MAXC=0;
  const fw=Math.floor(r.width-mg)+'px';if(ah>=full){w.style.width=fw;c.style.height='';cv0.style.marginTop='';return}
  if(full-ah<=full*MAXC){w.style.width=fw;c.style.height=Math.floor(ah)+'px';cv0.style.marginTop=-Math.round((full-ah)*.3)+'px';return}
  const h=ah/(1-MAXC),wd=h*128/112;w.style.width=Math.floor(wd+fr)+'px';c.style.height=Math.floor(ah)+'px';cv0.style.marginTop=-Math.round((h-ah)*.3)+'px'}
