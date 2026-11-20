@@ -65,7 +65,7 @@ const CONFIG = {
   powerDrop: { win: .1, seed: .08 },
   appleTree: { growHours: 3, max: 3 },
   berryBush: { growHours: 3, max: 4 },   // V1.83 院子的野莓叢：每 3 小時長 1 顆，最多 4 顆
-  fishing: { bait: 5, bait2: 20, premiumX: 2.5, weight: [40, 20, 8, 3, 1], junk: { j_boot: 8, j_can: 8, chest: 5 }, energy: 4, minEnergy: 10, zapPerDay: 3, tideBar: .04, xp: 3, eatHunger: 10, eatEnergy: 5, eatStep: 5, cookX: 2, cookCost: 5 },   // V1.83 釣魚
+  fishing: { bait: 5, bait2: 20, premiumX: 2.5, weight: [40, 20, 8, 3, 1], junk: { j_boot: 8, j_can: 8, chest: 5 }, energy: 4, minEnergy: 4, zapPerDay: 3, tideBar: .04, xp: 3, eatHunger: 10, eatEnergy: 5, eatStep: 5, cookX: 2, cookCost: 5 },   // V1.83 釣魚
   skills: { fossilLuck: .02, fossilAll: .05, digMin: 10, digMax: 30, gemChance: .25, fossilChance: .15, fossilDup: 30, birdPower: .15, powerMin: 20, powerMax: 50, amuletChance: .6, grow: 1.2, soupX: 1.5 },   // V1.83 生活技能（成年才有）
   chargeMult: 1.5,   // V1.82 蓄力後下一擊 ×1.5（原本 ×2 太強）   // V1.76 院子的蘋果樹：每 3 小時長 1 顆（樹上＋地上最多 3 顆），熟了會掉下來，撿起來免費   // V1.73 能力水果商店不賣：冒險打贏 10% 掉 1 顆、打贏王必掉 1 顆；稀有種子打贏 8%、打王必掉        // 優良種子：收成多 1 顆，比較容易長出藍莓、草莓
   seedOdds: { normal: [['cranberry', .55], ['blueberry', .3], ['strawberry', .15]], good: [['cranberry', .3], ['blueberry', .4], ['strawberry', .3]], rare: [['cranberry', .2], ['blueberry', .3], ['strawberry', .5]] },   // V1.41 種子都是綜合：蔓越莓／藍莓／草莓
@@ -172,7 +172,7 @@ const CONFIG = {
     metal:  { good: '戰鬥常拿到 1.5 倍金幣', bad: '容易分心，經驗只吸收 7 成', coinChance: .6, coinX: 1.5, xp: .7 },
     elec:   { good: '攻擊有機會讓對手麻痺一回合', bad: '一直在發電，體力恢復慢', stun: .25, energyUp: .8 }
   },      // 自己種出來的水果可以賣
-  ember: { mood: 10, energy: 20, xp: 20, bossDrop: .5 },   // 經驗火種：打贏 Boss 有機會得到
+  ember: { stage: 10, share: .7, oldCoins: 50 },   // V1.85 經驗火種：只有一個，第一次打倒第 10 關大王拿到；給一隻幻獸帶著，牠沒上場也分到 70% 經驗
   favBonus: { mood: 10, xp: 5 },
   powerBonus: { energy: 10, xp: 15 },
   // V1.71 想吃的水果：每 3 小時隨機換一種（一半機率挑背包裡有的），頭上會冒泡泡；剛好餵到 → 飽食、心情、體力、親密度、經驗都加更多
@@ -361,6 +361,9 @@ function sanitize(o, now = Date.now()) {
       today: S.today && typeof S.today.d === 'string' ? { d: S.today.d.slice(0, 10), ms: n0(S.today.ms) } : {}, wk: S.wk && typeof S.wk.key === 'string' ? { key: S.wk.key.slice(0, 10), base: obj(S.wk.base) } : {}, recap: S.recap && typeof S.recap.week === 'string' ? { week: S.recap.week.slice(0, 10), d: obj(S.recap.d), seen: !!S.recap.seen } : null };
     if (!r.stats.first) delete r.stats.first;
     r.badges = {}; if (o.badges && typeof o.badges === 'object') for (const k in o.badges) if (BADGE[k]) r.badges[k] = num(o.badges[k], now, 0, now); }
+  { const T = o.trainLv && typeof o.trainLv === 'object' ? o.trainLv : {}; r.trainLv = {}; for (const k of ['zen', 'flash', 'rush', 'combo', 'dodge', 'ball']) if (T[k]) r.trainLv[k] = int(T[k], 0, 0, 10); }   // V1.85 訓練階段
+  r.emberOwned = !!o.emberOwned || (r.adv && r.adv.stage > CONFIG.ember.stage); r.emberOn = Number.isFinite(+o.emberOn) && o.emberOn !== null && o.emberOn !== '' ? +o.emberOn : null;
+  if (r.inv.ember > 0) { r.emberOwned = true; r.coins += r.inv.ember * CONFIG.ember.oldCoins; r.emberRefund = (r.emberRefund || 0) + r.inv.ember; r.inv.ember = 0; }   // 舊的經驗火種：保留一個，多的換成金幣
   r.skillDay = typeof o.skillDay === 'string' ? o.skillDay.slice(0, 10) : '';
   r.yard = {}; if (o.yard && typeof o.yard === 'object') for (const k of ['den', 'nest', 'tree1', 'tree2', 'bush', 'path', 'pond', 'plots', 'gen', 'fire']) { const v = o.yard[k]; if (Array.isArray(v) && (v.length === 3 || v.length === 4) && v.every(Number.isFinite)) r.yard[k] = [Math.max(-130, Math.min(130, Math.round(v[0]))), Math.max(-80, Math.min(80, Math.round(v[1]))), Math.max(.5, Math.min(1.8, Math.round(v[2] * 10) / 10)), v[3] ? 1 : 0]; }   // V1.82 院子佈置：位移與大小
   r.seen = {}; if (o.seen && typeof o.seen === 'object') for (const k in o.seen) if (/^[a-zA-Z0-9_]{1,30}$/.test(k) && o.seen[k]) r.seen[k] = 1;   // V1.74 圖鑑：拿到過的東西
@@ -792,7 +795,7 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
     if (full) { const T = trait(st); out.xp = addXP(st, xp); out.coins = A.coinsMin + Math.floor(r() * (A.coinsMax - A.coinsMin + 1)); if (T.coinX && r() < T.coinChance) { out.coins = Math.round(out.coins * T.coinX); out.coinBonus = true; } st.coins += out.coins;
       if (T.seedChance && r() < T.seedChance) { st.inv.seeds++; out.bonusSeed = 1; } if (T.berryChance && r() < T.berryChance) { const b = 1 + Math.floor(r() * 2); st.inv.berry = (st.inv.berry || 0) + b; out.berry = b; } st.inv.seeds += A.seeds; out.seeds = A.seeds; st.path.flame += A.flame + CONFIG.battleWin.flame;
       { const fb = foeFor(n); if (fb.boss) { const bc = fb.big ? CONFIG.bossCoins.big : CONFIG.bossCoins.mini; st.coins += bc; out.coins += bc; out.bossCoins = bc; } }
-      if (foeFor(n).boss && r() < CONFIG.ember.bossDrop) { st.inv.ember = (st.inv.ember || 0) + 1; out.ember = 1; } }
+      if (n === CONFIG.ember.stage && !st.emberOwned) { st.emberOwned = true; out.ember = 1; journal(st, now, '打倒大王，得到了「經驗火種」！'); } }
     else out.xp = addXP(st, Math.round(xp * A.overCapXpRate));
     const LK = fossilLuck(st);   // V1.83 化石：掉寶率加成
     if (r() < A.dropFood + LK) { st.inv.food++; out.food = 1; }
@@ -886,7 +889,7 @@ function selectRod(st, id) { const F = fishOf(st), R = RODS.find(r => r.id === i
 /* power：蓄力甩竿的力道 0～1，甩越遠越容易釣到好魚 */
 function castLine(st, now = Date.now(), r = Math.random, premium = false, power = .5) {
   const F = fishOf(st), C = CONFIG.fishing, key = premium ? 'bait2' : 'bait';
-  if (st.hatched && st.energy < C.minEnergy) return { ok: false, code: 'tired', msg: `牠太累了（體力要 ${C.minEnergy} 以上），先休息一下吧` };
+  if (st.hatched && st.energy < C.minEnergy) return { ok: false, code: 'tired', msg: `牠太累了（拋一次要 ${C.minEnergy} 體力），先休息一下吧` };
   if (F[key] < 1) return { ok: false, code: 'nobait', msg: premium ? '沒有高級魚餌了' : '沒有魚餌了（釣具店可以買，5 金幣一個）' };
   F[key]--; if (st.hatched) st.energy = clamp(st.energy - C.energy);   // V1.84 拋一次竿花一點體力
   const pool = fishPool(st, now), list = [];
@@ -1089,6 +1092,28 @@ function expandFarm(st) {
 }
 const expandPrice = st => st.plots.length >= CONFIG.farm.maxPlots ? null : CONFIG.farm.expand[st.plots.length - CONFIG.farm.plots];
 /* 經驗火種：心情 +10、體力 +20、經驗 +20 */
+/* V1.85 經驗火種：給一隻幻獸帶著（用 seed 認牠）；牠沒上場，戰鬥贏了也分到 70% 經驗 */
+function allPets(st) { const L = []; if (st.hatched) L.push({ ref: 'cur', p: st }); if (st.pair) L.push({ ref: 'pair', p: st.pair }); (st.roster || []).forEach((p, i) => L.push({ ref: 'r' + i, p })); return L; }
+function giveEmber(st, seed) { if (!st.emberOwned) return { ok: false, msg: '還沒有經驗火種（第一次打倒第 10 關大王會得到）' }; const t = allPets(st).find(x => x.p.seed === seed); if (!t) return { ok: false, msg: '找不到這隻' }; st.emberOn = seed; return { ok: true, msg: `🔥 經驗火種交給 ${t.p.name} 帶著了` }; }
+function emberShare(st, xp, inBattle) {   // inBattle：這場有上場的幻獸 seed 清單
+  if (!st.emberOwned || st.emberOn == null || !(xp > 0)) return null; const t = allPets(st).find(x => x.p.seed === st.emberOn); if (!t || inBattle.includes(t.p.seed)) return null;
+  const n = Math.round(xp * CONFIG.ember.share); if (t.ref === 'cur') addXP(st, n); else { t.p.xp += n; } return { name: t.p.name, xp: n };
+}
+/* V1.85 出戰隊伍：選主角（lead）和一起上場的夥伴（partner，可以沒有）；用調換位置的方式，主角變成「現在照顧的」、夥伴變成「在外面陪你的」 */
+function setTeam(st, leadRef, partnerRef, now = Date.now()) {
+  if (leadRef === partnerRef) partnerRef = null; applyTime(st, now); if (st.runaway) return { ok: false, msg: '牠離家出走了，先把牠找回來吧' };
+  const all = allPets(st).map(x => ({ ref: x.ref, p: x.ref === 'cur' ? snapshotPet(st) : x.p })), lead = all.find(x => x.ref === leadRef), part = partnerRef ? all.find(x => x.ref === partnerRef) : null;
+  if (!lead) return { ok: false, msg: '找不到這隻' };
+  const rest = all.filter(x => x !== lead && x !== part).map(x => x.p), sl = st.sleeping;
+  if (lead.ref !== 'cur') { Object.assign(st, JSON.parse(JSON.stringify(lead.p))); st.sleeping = false; st.lastTick = now; } else st.sleeping = sl;
+  st.pair = part ? JSON.parse(JSON.stringify(part.p)) : null; st.roster = rest.map(p => JSON.parse(JSON.stringify(p)));
+  return { ok: true, msg: part ? `${st.name} 和 ${st.pair.name} 一起出發！` : `${st.name} 出發！` };
+}
+/* V1.85 訓練階段：每練成一次升一階，最多 10 階；1–3 普通、4–6 有點難、7–9 困難、10 最困難 */
+const TRAIN_TIER = ['普通', '有點難', '困難', '最困難'];
+const trainLvOf = (st, k) => Math.min(10, ((st.trainLv || {})[k] || 0) + 1);
+const trainTier = lv => lv >= 10 ? 3 : lv >= 7 ? 2 : lv >= 4 ? 1 : 0;
+function trainLvUp(st, k) { const T = st.trainLv || (st.trainLv = {}); T[k] = Math.min(9, (T[k] || 0) + 1); return trainLvOf(st, k); }
 function useEmber(st, now = Date.now()) {
   const tm = applyTime(st, now);
   if (!st.hatched) return { ok: false, msg: '先把蛋孵出來吧！', tm };
@@ -1137,8 +1162,8 @@ function finishBallGame(st, score, now = Date.now()) {
 }
 
 /* ---------------- 小窩：升級、讓多隻寵物住進來 ---------------- */
-const PET_FIELDS = ['relics', 'fosterPaid', 'trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
-function snapshotPet(st) { const p = {}; for (const k of PET_FIELDS) p[k] = JSON.parse(JSON.stringify(st[k])); p.sleeping = false; return p; }
+const PET_FIELDS = ['trainLv', 'relics', 'fosterPaid', 'trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
+function snapshotPet(st) { const p = {}; for (const k of PET_FIELDS) if (st[k] !== undefined) p[k] = JSON.parse(JSON.stringify(st[k])); p.sleeping = false; return p; }
 function sanitizePet(p, now = Date.now()) { const r = sanitize(Object.assign({ v: 6 }, p, { roster: [], dex: [], pair: null }), now); return snapshotPet(r); }
 /* V1.45 神秘老爺爺的家：寄養不想養的幻獸（不佔小窩、數值不會變），每隻付一次錢 */
 function fosterOut(st, i, now = Date.now()) {
@@ -1405,7 +1430,7 @@ const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, S
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
   toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
-  trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, selectRod, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
+  trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, selectRod, allPets, giveEmber, emberShare, setTeam, TRAIN_TIER, trainLvOf, trainTier, trainLvUp, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 Object.assign(API, { EARN_NAME, SPEND_NAME, BADGES, BADGE, statsOf, statAdd, statVal, checkBadges, playTick, weekKey, sumOf }); wrapStats(API);
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

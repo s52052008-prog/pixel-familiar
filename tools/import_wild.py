@@ -34,22 +34,21 @@ def cells(path):
     for r0 in range(0, len(rows) - 1, 2):
         pair = []
         for (y0, y1) in rows[r0:r0 + 2]:
+            # V1.85：先把整列的色塊標號，再依「重心落在哪一格」分給每隻怪；翅膀、尾巴超出格線也不會被切成一直線
+            band = np.zeros_like(m); band[y0:y1] = m[y0:y1]; lab, n = ndimage.label(band)
+            sz = ndimage.sum(band, lab, range(1, n + 1)); cen = ndimage.center_of_mass(band, lab, range(1, n + 1))
+            col_of = [min(7, max(0, int(cx / (W / 8)))) for (cy, cx) in cen]
             row = []
             for c in range(8):
-                x0, x1 = int(W * c / 8), int(W * (c + 1) / 8)
-                sub = np.zeros_like(m); sub[y0:y1, x0:x1] = m[y0:y1, x0:x1]
-                lab, n = ndimage.label(sub)
-                if n > 1:   # 只留主體＋附近的小東西（泡泡、火花），去掉鄰居被切到的碎片
-                    sz = ndimage.sum(sub, lab, range(1, n + 1)); big = int(np.argmax(sz)) + 1
-                    by, bx = np.nonzero(lab == big); keep = [big]
-                    for i in range(1, n + 1):
-                        if i == big or sz[i - 1] < 30: continue
-                        ys, xs = np.nonzero(lab == i)
-                        if xs.min() <= x0 + 1 or xs.max() >= x1 - 2: continue
-                        if xs.min() < bx.min() - 40 or xs.max() > bx.max() + 40 or ys.min() < by.min() - 40: continue
-                        keep.append(i)
-                    sub = np.isin(lab, keep)
-                row.append(sub)
+                ids = [i + 1 for i in range(n) if col_of[i] == c]
+                if not ids: row.append(np.zeros_like(m)); continue
+                big = max(ids, key=lambda i: sz[i - 1]); by, bx = np.nonzero(lab == big); keep = [big]
+                for i in ids:
+                    if i == big or sz[i - 1] < 30: continue
+                    ys, xs = np.nonzero(lab == i)
+                    if xs.min() < bx.min() - 40 or xs.max() > bx.max() + 40 or ys.min() < by.min() - 40: continue
+                    keep.append(i)
+                row.append(np.isin(lab, keep))
             pair.append(row)
         for c in range(8): out.append((a, pair[0][c], pair[1][c]))
     return out
@@ -79,7 +78,7 @@ def main():
             atlas[0:CELL, i * CELL:(i + 1) * CELL] = imgs[0]; atlas[CELL:, i * CELL:(i + 1) * CELL] = imgs[1]
         Image.fromarray(atlas, "RGBA").quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE).save(os.path.join(ROOT, "sprites", f"wild_{key}.png"), optimize=True)   # 256 色：檔案小很多
         print(key, len(mons), 'monsters')
-    pv = Image.open(os.path.join(ROOT, 'sprites', 'wild_n.png'))
+    pv = Image.open(os.path.join(ROOT, 'sprites', 'wild_n.png')).convert('RGBA')
     sc = 3; cols = 16; n = pv.width // CELL; out = Image.new('RGBA', (cols * CELL * sc, ((n + cols - 1) // cols) * CELL * 2 * sc), (60, 90, 60, 255))
     for i in range(n):
         out.alpha_composite(pv.crop((i * CELL, 0, (i + 1) * CELL, CELL * 2)).resize((CELL * sc, CELL * 2 * sc), Image.NEAREST), ((i % cols) * CELL * sc, (i // cols) * CELL * 2 * sc))
