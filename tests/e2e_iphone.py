@@ -366,7 +366,7 @@ async def main():
         await ctx8.close()
         # ---------- V1.55 一頁式、背包 ----------
         ctxB, b = await newpage(br, I13); await hatch(b)
-        ok('V1.55 主畫面一頁放得下（不用往下捲）', await b.evaluate("document.documentElement.scrollHeight<=innerHeight+1"), await b.evaluate("[document.documentElement.scrollHeight,innerHeight]"))
+        ok('主畫面：放得下就不捲；螢幕太矮就改成可往下捲、遊戲畫面維持大尺寸', await b.evaluate("document.documentElement.scrollHeight<=innerHeight+1||(document.body.classList.contains('scrollm')&&document.getElementById('stagewrap').offsetWidth>=innerWidth*.85)"), await b.evaluate("[document.documentElement.scrollHeight,innerHeight,document.getElementById('stagewrap').offsetWidth]"))
         await b.evaluate("(()=>{const s=PF.state;s.inv.relics={iceScale:1};s.inv.melon=1;PF.debug.set({})})()")
         await b.click('#bShop'); await b.wait_for_timeout(300)
         heads = await b.evaluate("[...document.querySelectorAll('#shopBody .shead')].map(e=>e.textContent)")

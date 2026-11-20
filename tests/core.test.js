@@ -528,5 +528,12 @@ t('V1.86.2 蛋要等一陣子、小窩滿了去老爺爺家、找回告別的幻
   const s2 = hatched(); s2.stage = 'adult'; s2.route = 'flame'; s2.name = '金細細'; const gid = C.gidOf(s2); s2.dex = [{ id: gid, route: 'flame', stage: 'adult', petName: '金細細', at: T0 }];
   s2.seed = 99999; s2.genes = undefined; assert.equal(C.lostPets(s2).length, 1); const q = C.recallLost(s2, gid, T0 + 5); assert.ok(q.ok, q.msg); assert.equal(s2.foster[0].name, '金細細'); assert.equal(s2.foster[0].stage, 'adult'); assert.equal(C.gidOf(s2.foster[0]), gid); assert.equal(C.lostPets(s2).length, 0);
 });
+t('V1.86.3 從老爺爺家直接換出來、圖鑑顯示在哪裡', () => {
+  const s = hatched(); s.stage = 'adult'; s.route = 'flame'; s.name = '火哥'; const idA = C.gidOf(s);
+  const q = JSON.parse(JSON.stringify(s)); q.seed = 4321; q.name = '金細細'; q.route = 'metal'; s.foster = [C.sanitizePet(q, T0)]; const idB = C.gidOf(s.foster[0]);
+  assert.equal(C.whereIs(s, idB), 'foster'); s.lastTick = T0; const r = C.fosterSwap(s, 0, T0 + 1); assert.ok(r.ok, r.msg); assert.equal(s.name, '金細細');
+  assert.equal(s.foster.length, 1); assert.equal(s.foster[0].name, '火哥'); assert.equal(C.whereIs(s, idA), 'foster'); assert.equal(C.whereIs(s, idB), 'cur');
+  s.den.level = 3; const r2 = C.fosterSwap(s, 0, T0 + 2); assert.ok(r2.ok); assert.equal(s.name, '火哥'); assert.equal(s.roster[0].name, '金細細'); assert.equal(C.whereIs(s, idB), 'den'); assert.equal(C.whereIs(s, 'g:1'), 'gone');
+});
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

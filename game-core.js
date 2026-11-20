@@ -1225,6 +1225,23 @@ function moveToDen(st) { if (!st.hatched || petCount(st) >= denCap(st)) return f
 /* V1.86.2 孵新蛋時：小窩有位子就搬進小窩；滿了就免費去神秘老爺爺家住，不會再告別 */
 function moveOut(st, now = Date.now()) { if (!st.hatched) return null; if (moveToDen(st)) return 'den'; const p = snapshotPet(st); p.fosterPaid = true; (st.foster || (st.foster = [])).push(p); journal(st, now, `${st.name} 去神秘老爺爺家住了（小窩滿了）`); return 'foster'; }
 const eggReady = (e, now = Date.now()) => !(e.ready > now);
+/* V1.86.3 從老爺爺家直接換出來陪你：現在照顧的那隻搬進小窩（滿了就換去老爺爺家，免費） */
+function fosterSwap(st, j, now = Date.now()) {
+  const L = st.foster || [], p = L[j]; if (!p) return { ok: false, msg: '老爺爺家沒有這隻' }; if (inNest(st, now)) return { ok: false, msg: `${st.name} 在愛的小窩裡，等牠出來再換` };
+  applyTime(st, now); L.splice(j, 1); const old = st.name; let where = null;
+  if (st.hatched) { const o = snapshotPet(st); o.fosterPaid = true; if (petCount(st) - 1 < denCap(st) - 0 && st.roster.length + 1 + (st.pair ? 1 : 0) < denCap(st)) { st.roster.push(o); where = 'den'; } else { L.push(o); where = 'foster'; } }
+  Object.assign(st, JSON.parse(JSON.stringify(p))); st.sleeping = false; st.lastTick = now; st.eggTaps = 0;
+  journal(st, now, `把 ${st.name} 從神秘老爺爺家接回來陪你`);
+  return { ok: true, msg: `${st.name} 回來陪你了！${where === 'den' ? `${old} 搬進小窩休息` : where === 'foster' ? `${old} 去老爺爺家住（免費，隨時能接回）` : ''}` };
+}
+/* 圖鑑：這隻現在在哪裡 */
+function whereIs(st, id, now = Date.now()) {
+  if (st.hatched && gidOf(st) === id) return inNest(st, now) ? 'nest' : 'cur';
+  if (st.pair && gidOf(st.pair) === id) return inNest(st.pair, now) ? 'nest' : 'pair';
+  if (st.roster.some(p => gidOf(p) === id)) return st.roster.some(p => gidOf(p) === id && inNest(p, now)) ? 'nest' : 'den';
+  if ((st.foster || []).some(p => gidOf(p) === id)) return 'foster';
+  return 'gone';
+}
 /* V1.86.2 找回以前告別的幻獸：照圖鑑的紀錄請老爺爺找回來（經驗回到那個階段的起點） */
 function ownedIds(st) { const L = []; if (st.hatched) L.push(gidOf(st)); if (st.pair) L.push(gidOf(st.pair)); for (const p of st.roster) L.push(gidOf(p)); for (const p of st.foster || []) L.push(gidOf(p)); return new Set(L); }
 function lostPets(st) { const own = ownedIds(st); return (st.dex || []).filter(e => e.id && !own.has(e.id) && e.stage && !['egg', 'baby'].includes(e.stage) && e.petName); }
@@ -1491,7 +1508,7 @@ const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, S
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
-  toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, inNest, loveTick, moveOut, eggReady, lostPets, recallLost, ownedIds, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, fosterSwap, whereIs, inNest, loveTick, moveOut, eggReady, lostPets, recallLost, ownedIds, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, selectRod, allPets, giveEmber, emberShare, setTeam, TRAIN_TIER, trainLvOf, trainTier, trainLvUp, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 Object.assign(API, { EARN_NAME, SPEND_NAME, BADGES, BADGE, statsOf, statAdd, statVal, checkBadges, playTick, weekKey, sumOf }); wrapStats(API);
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;

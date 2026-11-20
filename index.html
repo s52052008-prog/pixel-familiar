@@ -257,6 +257,7 @@ h1{font-size:17px}.ver{font-size:9px}
 /* V1.58 寵物資訊收進「資訊」按鈕；餵食選單蓋在資訊欄上面，遊戲畫面不會被壓小 */
 #infoSlot{position:relative;padding:5px 8px 6px}#infoSlot .pairbar{margin-top:4px;background:rgba(30,16,6,.35)}
 .scrop{overflow:hidden;position:relative}
+body.scrollm #app{height:auto!important;min-height:100dvh!important;overflow:visible!important}body.scrollm .stagearea{flex:none!important}body.scrollm #scene{touch-action:none}
 #denBtn{font-size:12px;padding:4px 9px}
 .stagewrap{border-color:#c8913a!important;box-shadow:0 0 0 3px #2a170a,inset 0 0 0 2px #5a3510,0 0 0 5px #f0c868,0 0 0 8px #2a170a,0 8px 0 6px #0009!important}.stagewrap::before,.stagewrap::after{background:#fff0b0!important;box-shadow:inset -2px -2px 0 #b8852a,0 0 0 2px #2a170a!important}
 #wxChip{position:absolute;left:6px;top:6px;z-index:3;display:flex;align-items:center;gap:4px;background:rgba(20,12,6,.6);color:#fff3d8;font-size:12px;font-weight:800;padding:2px 9px 2px 4px;border-radius:12px;border:2px solid rgba(255,230,170,.35);pointer-events:none}#wxChip img{width:20px;height:20px;image-rendering:pixelated}
@@ -333,6 +334,7 @@ header{padding-top:10px}
 #arenaBox{flex:0 0 auto;min-height:0;display:flex;align-items:flex-start;justify-content:center}
 #arenaIn{position:relative;width:100%}
 #arenaIn #bcv{width:100%;height:auto}
+.dmem{margin-top:6px;display:flex;flex-direction:column;gap:4px}.dm{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;background:rgba(0,0,0,.15);border-radius:6px;padding:4px 8px}.dm .btn{min-height:36px;padding:4px 10px;font-size:12px;margin-left:auto}
 .abl{display:flex;flex-direction:column;gap:6px;margin-top:6px}.ablr{display:flex;gap:8px;align-items:flex-start;background:rgba(255,255,255,.05);border-radius:8px;padding:6px}.ablr img{width:36px;height:36px;object-fit:contain;image-rendering:pixelated;flex:none}
 .ablr b{display:block}.ablr p{margin:2px 0 0;font-size:.92em}.ablr .btip{color:#ffe08a}.ablr.lk{opacity:.45;filter:grayscale(1)}.abtn{margin-top:6px}
 .bdc{border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px;margin:8px 0}.bdc.un canvas{filter:brightness(0)}.bdh{display:flex;gap:8px;align-items:center}.bdh canvas{width:56px;height:56px;image-rendering:pixelated;background:rgba(0,0,0,.2);border-radius:8px}.bdh b{display:block;font-size:1.1em}.bdh .small{display:block}
@@ -483,7 +485,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.86.2';
+const VERSION='1.86.3';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1849,15 +1851,19 @@ function itemDexDialog(){PC.markSeen(s);const C=CONFIG,F=C.foods,SN=s.seen||{},R
  $('cxPets').onclick=codexDialog;$('cxJ2').onclick=journalDialog;$('cxF2').onclick=fishDexDialog;$('cxB2').onclick=bossDexDialog;
  document.querySelectorAll('.dexi canvas').forEach(c=>{paintIcon(c,c.dataset.icon);if(c.dataset.sil==='1'){const x=c.getContext('2d');x.globalCompositeOperation='source-in';x.fillStyle='#14100c';x.fillRect(0,0,c.width,c.height)}});wireDexZoom(itemDexDialog)}
 function codexDialog(){   // V1.67 每個物種列出 5 種型態：還沒進化到的用黑色剪影、名字 ？？？，引導玩家把牠養大
- const dex=s.dex.slice().reverse(),ORD=['baby','juvenile','adolescent','adult','ascended'];const lostIds=new Set(PC.lostPets(s).map(x=>x.id));
- const cards=dex.length?dex.map((e,di)=>{const route=e.route||genomeFromId(e.id).el||null,reach=ORD.indexOf(e.stage),cur=e.id===gidOf(s)&&s.hatched;
+ const ORD=['baby','juvenile','adolescent','adult','ascended'];const lostIds=new Set(PC.lostPets(s).map(x=>x.id));
+ /* V1.86.3 同一種（同屬性、同名字的一家）只列一張卡，下面列出每一隻現在在哪裡 */
+ const WH={cur:'🏠 現在的夥伴',pair:'🐾 在外面陪你',den:'🪺 在小窩休息',foster:'🏡 在老爺爺家',nest:'💕 在愛的小窩',gone:'💭 已經告別'},grp=new Map();
+ for(const e of s.dex.slice().reverse()){const route=e.route||genomeFromId(e.id).el||null,key=(route||'?')+'|'+formOf(petKey(e.id,formCode('baby',route))).name;if(!grp.has(key))grp.set(key,[]);grp.get(key).push(e)}
+ const dex=[...grp.values()].map(L=>{const best=L.slice().sort((a,b)=>ORD.indexOf(b.stage)-ORD.indexOf(a.stage))[0];return Object.assign({},best,{members:L})});
+ const cards=dex.length?dex.map((e,di)=>{const route=e.route||genomeFromId(e.id).el||null,reach=ORD.indexOf(e.stage),cur=e.members.some(m=>m.id===gidOf(s)&&s.hatched);
   const k0=petKey(e.id,formCode(e.stage,e.route)),F=formOf(k0),G=F.genome;
   const row=ORD.map((st,si)=>{const k=petKey(e.id,formCode(st,route)),seen=si<=reach,f=formOf(k);
    return`${si?'<span class="arw">▶</span>':''}<div class="ev ${seen?'':'un'}"><canvas data-k="${k}" data-sil="${seen?0:1}" width="48" height="48"></canvas><b>${seen?esc(f.name):'？？？'}</b><span class="small">${STAGE_NAME[st]}</span></div>`}).join('');
   const next=ORD[reach+1],tip=next?`下一階段：${STAGE_NAME[next]}${cur?'（繼續照顧牠就會進化！）':''}`:'🏆 已經長到最高階段了！';
-  return`<div class="eggrow" style="display:block"><b>${route?ROUTE_ICON[route]+' ':''}${esc(F.name)}</b> <span class="small">${F.classic?'經典種':STARS[G.rarity]+' '+RARITY[G.rarity]}｜${cur?'🏠 現在的夥伴：':'回憶：'}${esc(e.petName||'')}</span><div class="evorow">${row}</div><div class="small" style="margin-top:4px">${tip}</div>${lostIds.has(e.id)?`<button class="btn pri abtn" data-recall="${e.id}">🏡 請老爺爺找回來</button>`:''}${route?`<button class="btn abtn" data-ab="${route}" data-st="${e.stage}" data-nm="${esc(e.petName||F.name)}">${SKI(EL_OF[route]+'_badge')} 看能力資料</button>`:''}</div>`}).join('')
+  return`<div class="eggrow" style="display:block"><b>${route?ROUTE_ICON[route]+' ':''}${esc(F.name)}</b> <div class="evorow">${row}</div><div class="small" style="margin-top:4px">${tip}</div><div class="dmem">${e.members.map(m=>{const mf=formOf(petKey(m.id,formCode(m.stage,m.route||route))),mg=mf.genome,w=PC.whereIs(s,m.id);return`<div class="dm"><b>${esc(m.petName||'')}</b> <span class="small">${mf.classic?'經典種':STARS[mg.rarity]}・${STAGE_NAME[m.stage]}・${WH[w]}</span>${lostIds.has(m.id)?`<button class="btn pri" data-recall="${m.id}">🏡 請老爺爺找回來</button>`:''}</div>`}).join('')}</div>${route?`<button class="btn abtn" data-ab="${route}" data-st="${e.stage}" data-nm="${esc(e.petName||F.name)}">${SKI(EL_OF[route]+'_badge')} 看能力資料</button>`:''}</div>`}).join('')
   :'<p class="small">還沒有任何物種。孵化第一顆蛋吧！</p>';
- const n=s.dex.length,full=s.dex.filter(e=>e.stage==='ascended').length;
+ const n=dex.length,full=dex.filter(e=>e.stage==='ascended').length;
  openModal('📖 圖鑑',`<div class="row cxtabs" style="margin-top:0"><button class="btn pri">🐾 幻獸</button><button class="btn" id="cxItems">🎒 物品</button><button class="btn" id="cxFish">🐟 魚類</button><button class="btn" id="cxBoss">👹 魔王</button><button class="btn" id="cxJournal">📔 日記</button></div>
  <p class="small">已發現 <b>${n}</b> 種、養到最高階段 <b>${full}</b> 種。黑色剪影是還沒見過的型態，把幻獸養大就會揭曉！</p>
  <p>🏅 養過的屬性 <b>${PC.playedRoutes(s).length}</b> / 7：${PC.ROUTES.map(r=>PC.playedRoutes(s).includes(r)?ROUTE_ICON[r]:'❔').join(' ')}</p>${cards}`);
@@ -1965,13 +1971,14 @@ function denDialog(){const D=CONFIG.den,L=s.den.level,cur=D[L-1],next=D[L],cap=P
 ${prow}${rows||(s.pair?'':'<p class="small">小窩裡還沒有其他夥伴。</p>')}
 <p style="margin-top:12px"><b>🏡 神秘老爺爺的家</b>（寄養 ${(s.foster||[]).length} 隻）</p>
 <p class="small">暫時不想養的幻獸可以寄養在這裡：不佔小窩的位置、數值不會變。每隻第一次寄養付 ${CONFIG.foster.price} 金幣，之後隨時接回、再寄都免費。</p>
-${(s.foster||[]).map((p,j)=>`<div class="eggrow"><canvas data-fr="${j}" width="48" height="48"></canvas><div style="flex:1"><b>${esc(p.name)}${sexMark(p)}</b><div class="small">${STAGE_NAME[p.stage]}・Lv.${PC.level(p.xp)}・在老爺爺家</div></div><button class="btn pri" data-fb="${j}" style="min-width:84px;flex:0 0 auto">接回小窩</button></div>`).join('')||'<p class="small">老爺爺家現在沒有寄養的幻獸。</p>'}
+${(s.foster||[]).map((p,j)=>`<div class="eggrow"><canvas data-fr="${j}" width="48" height="48"></canvas><div style="flex:1"><b>${esc(p.name)}${sexMark(p)}</b><div class="small">${STAGE_NAME[p.stage]}・Lv.${PC.level(p.xp)}・在老爺爺家</div></div><div style="display:flex;flex-direction:column;gap:4px;flex:0 0 auto"><button class="btn pri" data-fsw="${j}" style="min-width:84px">換牠出來陪你</button><button class="btn" data-fb="${j}" style="min-width:84px">接回小窩</button></div></div>`).join('')||'<p class="small">老爺爺家現在沒有寄養的幻獸。</p>'}
 <div class="row"><button class="btn pri" id="dIn">🏠 進入小窩</button><button class="btn" id="dArr">🪑 佈置房間</button><button class="btn" id="dYard">🌳 佈置院子</button>${next?`<button class="btn" id="dUp">⬆️ 升級成「${next.name}」（${next.cost} 金幣）</button>`:''}</div>
 <div class="err" id="dErr"></div>`);
  document.querySelectorAll('[data-r]').forEach(c=>{const p=s.roster[+c.dataset.r];thumb(c,petKey(gidOf(p),formCode(p.stage,p.route)),'sleep0')});
  document.querySelectorAll('[data-fr]').forEach(c=>{const p=s.foster[+c.dataset.fr];thumb(c,petKey(gidOf(p),formCode(p.stage,p.route)),'happy1')});
  document.querySelectorAll('[data-fo]').forEach(b=>b.onclick=()=>{const p=s.roster[+b.dataset.fo],go=()=>{const r=PC.fosterOut(s,+b.dataset.fo,Date.now());toast(r.ok?'🏡 '+r.msg:'❌ '+r.msg,3000);if(r.ok){sfx('tap');save();renderUI()}denDialog()};
   if(p.fosterPaid)go();else confirmBox('🏡 寄養到神秘老爺爺家？',`把「${esc(p.name)}」寄養要 ${CONFIG.foster.price} 金幣（只付這一次，之後隨時接回、再寄都免費）。`,`付 ${CONFIG.foster.price} 寄養`,go)});
+ document.querySelectorAll('[data-fsw]').forEach(b=>b.onclick=()=>{const r=PC.fosterSwap(s,+b.dataset.fsw,Date.now());toast(r.ok?'🎉 '+r.msg:'❌ '+r.msg,4500);if(r.ok){sfx('level');petX=PET_X;evo=null;cancelMode();save();renderUI();closeModal()}else denDialog()});
  document.querySelectorAll('[data-fb]').forEach(b=>b.onclick=()=>{const r=PC.fosterBack(s,+b.dataset.fb,Date.now());toast(r.ok?'🎉 '+r.msg:'❌ '+r.msg,3000);if(r.ok){sfx('level');save();renderUI()}denDialog()});
  if($('dPair'))thumb($('dPair'),pairKey(),'happy1');
  if($('dIn2'))$('dIn2').onclick=()=>{const r=PC.sendIn(s,Date.now());toast(r.msg);if(r.ok){save();renderUI();denDialog()}};
@@ -3061,12 +3068,18 @@ document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()
 ['rpsZone','moves','mvBond'].forEach(id=>pixifyDom($(id)));   // V1.70 戰鬥按鈕、猜拳也換成像素圖示
 /* V1.55 遊戲畫面依剩下的高度縮放（整頁不用捲） */
 /* V1.86 主畫面填滿寬度：高度不夠時，上下各切掉一點點（最多 15%，大多切下面的草地），點擊位置照樣對得準 */
-function fitStage(){const a=$('stagearea'),w=$('stagewrap'),c=$('scrop'),cv0=$('scene');if(!a||!w||!c)return;const r=a.getBoundingClientRect();if(!r.height)return;
+/* V1.86.3 螢幕比較矮（例如 Safari 有網址列）：改成可以往下捲，遊戲畫面維持滿版大小 */
+let SCROLLM=false;
+function fitStage(){const a=$('stagearea'),w=$('stagewrap'),c=$('scrop'),cv0=$('scene');if(!a||!w||!c)return;
+ {const W=a.getBoundingClientRect().width,fr0=w.offsetWidth-w.clientWidth||14,need=Math.ceil((W-12-fr0)*112/128*(1-.15)+fr0+14);
+  if(SCROLLM){const app=$('app'),other=app.scrollHeight-a.getBoundingClientRect().height;if(innerHeight-other>=need+4){SCROLLM=false;document.body.classList.remove('scrollm');a.style.height=''}else if(a.style.height!==need+'px')a.style.height=need+'px'}
+  else{const h0=a.getBoundingClientRect().height;if(h0&&h0<need-2&&!document.body.classList.contains('arrMode')){SCROLLM=true;document.body.classList.add('scrollm');a.style.height=need+'px'}}}
+ const r=a.getBoundingClientRect();if(!r.height)return;
  const fr=w.offsetWidth-w.clientWidth||14,mg=12,iw=r.width-mg-fr,full=iw*112/128,ah=r.height-fr-14,MAXC=.15;
  const fw=Math.floor(r.width-mg)+'px';if(ah>=full){w.style.width=fw;c.style.height='';cv0.style.marginTop='';return}
  if(full-ah<=full*MAXC){w.style.width=fw;c.style.height=Math.floor(ah)+'px';cv0.style.marginTop=-Math.round((full-ah)*.3)+'px';return}
  const h=ah/(1-MAXC),wd=h*128/112;w.style.width=Math.floor(wd+fr)+'px';c.style.height=Math.floor(ah)+'px';cv0.style.marginTop=-Math.round((h-ah)*.3)+'px'}
-try{new ResizeObserver(fitStage).observe($('stagearea'))}catch(e){addEventListener('resize',fitStage)}fitStage();
+try{new ResizeObserver(fitStage).observe($('stagearea'))}catch(e){}addEventListener('resize',fitStage);fitStage();
 $('bAdv').onclick=()=>advDialog();$('bFarm').onclick=()=>openFarm();$('bGoals').onclick=goalsDialog;$('bShop').onclick=()=>shopDialog('bag');$('coinBtn').onclick=()=>shopDialog('decor');
 $('viewBtn').onclick=()=>toggleView();$('navL').onclick=$('navR').onclick=()=>{if(modeBusy()){toast('先完成現在的互動吧');return}toggleView();sfx('tap')};$('npEdit').onclick=()=>renameDialog(false);$('denBtn').onclick=()=>denDialog();
 $('lightBtn').onclick=()=>{s.settings.light=s.settings.light===false;save();syncLightBtn(true);sfx('tap');say(s.settings.light?'💡 開燈了，暖暖的～':'關燈了，好暗喔…',{log:false})};
