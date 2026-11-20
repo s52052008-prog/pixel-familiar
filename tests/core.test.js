@@ -84,7 +84,7 @@ t('每日保底：同一天只能領一次，時間倒退不能重領', () => {
 t('冒險：不限次數，每次都是全額獎勵', () => {
   const s = hatched(); C.claimDaily(s, T0); const res = [];
   for (let i = 0; i < 7; i++) { s.energy = 100; const st = C.startAdventure(s, 1, T0); res.push(C.finishAdventure(s, 1, 'win', st.full, T0, () => .99)); }
-  assert.equal(res[4].coins, 30); assert.equal(res[4].seeds, 1); assert.equal(res[6].coins, 30); assert.ok(res[6].xp > 5);
+  assert.equal(res[4].coins, 39); assert.equal(res[4].seeds, 1); assert.equal(res[6].coins, 39); assert.ok(res[6].xp > 5);
 });
 t('冒險：體力不足不能出發；失敗只給 XP +3', () => { const s = hatched(); s.energy = 19; assert.ok(!C.startAdventure(s, 1, T0).ok); s.energy = 50; C.startAdventure(s, 1, T0); const xp0 = s.xp; const r = C.finishAdventure(s, 1, 'loss', true, T0); assert.equal(s.xp - xp0, 3); assert.equal(r.coins, 0); assert.equal(s.energy, 30); });
 t('首次打通新關卡＝探索發現（森林 +2、XP +10）；第 15 關觸發火山遺跡', () => {
@@ -218,7 +218,7 @@ t('火系攻擊高、心情掉得快；水系防禦高、容易餓', () => { con
   const s = hatched(); s.route = 'flame'; s.mood = 80; C.applyTime(s, T0 + H); assert.equal(s.mood, 75.5); const t2 = hatched(); t2.route = 'tide'; t2.hunger = 80; C.applyTime(t2, T0 + H); assert.equal(t2.hunger, 74); });
 t('森系體力恢復快但容易髒；鳥系、電系體力恢復慢', () => { const e = r => { const s = hatched(); s.route = r; s.energy = 20; s.clean = 80; C.applyTime(s, T0 + H); return s; }; assert.equal(e('forest').energy, 30.4); assert.equal(e('forest').clean, 77); assert.equal(e('bird').energy, 25.6); assert.equal(e('elec').energy, 26.4); });
 t('鳥系食量小：同樣食物飽比較多', () => { const s = hatched(); s.route = 'bird'; s.hunger = 50; s.inv.food = 1; C.act(s, 'feed', T0); assert.equal(s.hunger, 63); });
-t('金系經驗只吸收 7 成，戰鬥常拿 1.5 倍金幣；土系撿莓果、鳥系撿種子', () => { const s = hatched(); s.route = 'metal'; s.energy = 100; let st = C.startAdventure(s, 1, T0); let o = C.finishAdventure(s, 1, 'win', st.full, T0, () => 0); assert.equal(o.coins, 30); assert.ok(o.coinBonus); assert.equal(o.xp, Math.round(25 * .7));
+t('金系經驗只吸收 7 成，戰鬥常拿 1.5 倍金幣；土系撿莓果、鳥系撿種子', () => { const s = hatched(); s.route = 'metal'; s.energy = 100; let st = C.startAdventure(s, 1, T0); let o = C.finishAdventure(s, 1, 'win', st.full, T0, () => 0); assert.equal(o.coins, 39); assert.ok(o.coinBonus); assert.equal(o.xp, Math.round(Math.round(25 * 1.3) * .7));
   const e = hatched(); e.route = 'earth'; e.energy = 100; st = C.startAdventure(e, 1, T0); o = C.finishAdventure(e, 1, 'win', st.full, T0, () => 0); assert.equal(o.berry, 1);
   const b = hatched(); b.route = 'bird'; b.energy = 100; st = C.startAdventure(b, 1, T0); o = C.finishAdventure(b, 1, 'win', st.full, T0, () => 0); assert.equal(o.bonusSeed, 1); assert.equal(b.inv.seeds, 4); });
 t('電系攻擊有機會麻痺對手', () => { assert.equal(C.mkFighter('a', 'k', 5, 'elec', 0, 80, 0).stunChance, .25); assert.equal(C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0).stunChance, 0); });
@@ -505,6 +505,19 @@ t('V1.84 遊戲紀錄：自動記帳（來源／去向）、計次、遊玩時�
   s.stats.cnt.feed = 100; const got = C.checkBadges(s, T0); assert.ok(got.some(b => b.id === 'feed1' && b.name === '很會餵的人')); assert.ok(!C.checkBadges(s, T0).length);
   const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 9 * 24 * H); assert.equal(r.stats.cnt.feed, 100); assert.ok(r.badges.feed1); assert.equal(r.stats.earn.sellFish, 35);
   const w = hatched(); delete w.stats; w.washes = 7; assert.equal(C.statsOf(w).cnt.wash, 7);
+});
+t('V1.86 戰鬥天賦、魔王天賦、萬靈藥、魔王圖鑑', () => {
+  assert.equal(C.talLv('juvenile'), 0); assert.equal(C.talLv('adolescent'), 1); assert.equal(C.talLv('ascended'), 2);
+  const a = C.mkFighter('a', 'k', 10, 'flame', 0, 80, 0), d = C.mkFighter('d', 'k', 10, 'earth', 0, 80, 0); C.talentOn(d, 'earth', 2); assert.equal(d.critRes, 1);
+  a.critUp = 1; const r0 = () => .5; const hit = C.damage(a, d, false, r0); const d2 = C.mkFighter('d', 'k', 10, 'earth', 0, 80, 0); const hit2 = C.damage(a, d2, false, r0); assert.ok(hit.crit && hit2.crit && hit.dmg < hit2.dmg);
+  const g = C.mkFighter('g', 'k', 10, 'forest', 0, 80, 0); C.talentOn(g, 'leaf', 2); g.hp = 1; const s1 = C.damage(a, g, false, r0); assert.ok(s1.sprouted && g.hp === 1); const s2 = C.damage(a, g, false, r0); assert.ok(!s2.sprouted && g.hp === 0);
+  const boss = C.foeFighter(5, 10); assert.deepEqual(boss.bt, ['shell']); assert.ok(boss.boss && !boss.big); C.bossTalOn(boss); const w = C.foeFighter(5, 10);
+  const sp1 = C.damage(a, boss, true, r0).dmg, sp2 = C.damage(a, w, true, r0).dmg; assert.ok(sp1 < sp2 * .5);
+  assert.ok(C.foeFighter(10, 10).big); assert.deepEqual(C.foeFighter(3, 10).bt, []);
+  const s = hatched(); s.coins = 100; assert.ok(C.buyItem(s, 'elixir').ok); assert.equal(s.inv.elixir, 1);
+  C.bossSeen(s, 5, 'seen', T0); C.bossSeen(s, 5, 'loss', T0); C.bossSeen(s, 10, 'win', T0); C.bossSeen(s, 3, 'win', T0);
+  const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 1000); assert.deepEqual(r.bossDex[5], { s: 1, l: 1, w: 0, at: 0 }); assert.equal(r.bossDex[10].w, 1); assert.equal(r.bossDex[3], undefined); assert.equal(r.inv.elixir, 1);
+  const e = hatched(); const c0 = e.coins, eb = C.eliteBonus(e, { coins: 40, xp: 20 }); assert.equal(eb.coins, 20); assert.equal(e.coins, c0 + 20);
 });
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

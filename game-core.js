@@ -56,7 +56,23 @@ const CONFIG = {
   weather: { slotHours: 3, odds: [['clear', .5], ['breeze', .25], ['rain', .17], ['storm', .08]], offlineCap: 3,
     fx: { breeze: { out: { mood: 1 } }, rain: { out: { mood: -2, clean: -3 } }, storm: { out: { mood: -5, clean: -4, energy: -2 }, in: { mood: -1 } } } },          // 果核：10 分鐘沒清會發臭長果蠅，每顆每小時心情 −4
   poop: { delayMin: 40, rotMin: 3 },                      // 每吃一次，40 分鐘後大便；大便 3 分鐘沒清就發臭
-  potion: { price: 40, heal: .5, drop: .15 },             // 回復藥水：回復 50% 最大 HP（V1.40：20 → 40 金幣）
+  potion: { price: 40, heal: .5, drop: .15 },
+  elixir: { price: 60 },                                   // V1.86 萬靈藥：戰鬥中解除點燃、凍傷、混亂、死亡宣告、冰凍
+  /* V1.86 戰鬥天賦：少年期是弱化版（w）、成年期以後是完整版（f） */
+  talents: {
+    fire:  { name: '灼燒',     w: { chance: .2, turns: 2 }, f: { chance: .35, turns: 4 } },
+    water: { name: '潮汐',     w: { chance: .35, heal: .05 }, f: { every: 2, heal: .08 } },
+    leaf:  { name: '生生不息', w: { chance: .5 }, f: { chance: 1, regen: .15, turns: 2 } },
+    earth: { name: '堅石之軀', w: { crit: .5 }, f: { crit: 1, ult: .35 } },
+    bird:  { name: '乘風',     w: { first: .5 }, f: { first: 1, peck: .5 } },
+    elec:  { name: '蓄電',     w: { need: 4, mult: 1.3 }, f: { need: 3, mult: 1.6 } },
+    metal: { name: '越打越硬', w: { per: .05, max: 3 }, f: { per: .06, max: 5 } } },
+  /* V1.86 魔王天賦（第幾關 → 天賦） */
+  bossTal: { 5: ['shell'], 10: ['lava', 'ignite'], 15: ['bone'], 20: ['ghost', 'chant'], 25: ['reap'], 30: ['wing', 'firewind'], 35: ['scale'], 40: ['chill', 'icetide'] },
+  bt: { shell: .7, lava: .06, ignite: .5, bone: { per: .08, max: 5, reflect: .5 }, ghost: .3, chant: { mult: 2, chance: .35, cd: 3 }, reap: { up: .8, drain: .3 },
+    wing: .4, firewind: { dodge: 1 / 3, peck: .6 }, scale: { hits: 3, turns: 2, atk: 1.3, burn: .06 }, chill: { per: .06, max: .4 }, icetide: { every: 2, heal: .06 } },
+  status: { burn: .04, frost: .04, para: { turns: 2, chance: .7 } },   // 點燃、凍傷：每回合掉最大 HP 的一點點，打完才會好（萬靈藥、火焰護盾可解）
+  elite: { chance: .12, from: 3, hp: 1.3, atk: 1.1, reward: .5 },   // V1.86 精英野怪：偶爾出現，帶少年版天賦，打贏多一半獎勵             // 回復藥水：回復 50% 最大 HP（V1.40：20 → 40 金幣）
   superPotion: { price: 100, heal: 1 },                   // V1.40 超級藥水：戰鬥中回復全部 HP
   soup: { price: 120, hunger: 10, mood: 20, energy: 20 },   // V1.41 神秘婆婆熬製雞湯：飽食 +10、心情 +20、體力 +20，還會消除羈絆之力後的 2 小時休息
   goodSeed: { price: 8, fruitMin: 3, fruitMax: 4, powerChance: .08 },   // V1.73 優良種子 8% 多長 1 顆能力水果
@@ -67,7 +83,8 @@ const CONFIG = {
   berryBush: { growHours: 3, max: 4 },   // V1.83 院子的野莓叢：每 3 小時長 1 顆，最多 4 顆
   fishing: { bait: 5, bait2: 20, premiumX: 2.5, weight: [40, 20, 8, 3, 1], junk: { j_boot: 8, j_can: 8, chest: 5 }, energy: 4, minEnergy: 4, zapPerDay: 3, tideBar: .04, xp: 3, eatHunger: 10, eatEnergy: 5, eatStep: 5, cookX: 2, cookCost: 5 },   // V1.83 釣魚
   skills: { fossilLuck: .02, fossilAll: .05, digMin: 10, digMax: 30, gemChance: .25, fossilChance: .15, fossilDup: 30, birdPower: .15, powerMin: 20, powerMax: 50, amuletChance: .6, grow: 1.2, soupX: 1.5 },   // V1.83 生活技能（成年才有）
-  chargeMult: 1.5,   // V1.82 蓄力後下一擊 ×1.5（原本 ×2 太強）   // V1.76 院子的蘋果樹：每 3 小時長 1 顆（樹上＋地上最多 3 顆），熟了會掉下來，撿起來免費   // V1.73 能力水果商店不賣：冒險打贏 10% 掉 1 顆、打贏王必掉 1 顆；稀有種子打贏 8%、打王必掉        // 優良種子：收成多 1 顆，比較容易長出藍莓、草莓
+  chargeMult: 1.5,
+  battleLen: { me: 2, wild: 1.7, mini: 2.1, big: 2.5, reward: 1.3, enrage: 1.2, aiHeal: .15 },   // V1.86 戰鬥耐打一點：雙方血量放大；王打到一半會狂暴   // V1.82 蓄力後下一擊 ×1.5（原本 ×2 太強）   // V1.76 院子的蘋果樹：每 3 小時長 1 顆（樹上＋地上最多 3 顆），熟了會掉下來，撿起來免費   // V1.73 能力水果商店不賣：冒險打贏 10% 掉 1 顆、打贏王必掉 1 顆；稀有種子打贏 8%、打王必掉        // 優良種子：收成多 1 顆，比較容易長出藍莓、草莓
   seedOdds: { normal: [['cranberry', .55], ['blueberry', .3], ['strawberry', .15]], good: [['cranberry', .3], ['blueberry', .4], ['strawberry', .3]], rare: [['cranberry', .2], ['blueberry', .3], ['strawberry', .5]] },   // V1.41 種子都是綜合：蔓越莓／藍莓／草莓
   train: { cost: 20, energy: -15, hunger: -10, clean: -8, minEnergy: 15, base: 10, perLv: 4,   // V1.41 訓練場：每次 20 金幣（器材＋場地費），達成目標才拿到經驗＝10＋等級×4
     kinds: { dodge: { name: '閃避訓練：躲避球', skill: 'dodge' }, rush: { name: '攻擊訓練：沙包連打', skill: 'attack' }, combo: { name: '攻擊訓練：組合拳', skill: 'attack' }, flash: { name: '攻擊訓練：靈光一閃', skill: 'attack' }, zen: { name: '防禦訓練：瀑布打坐', skill: 'defense' } } },
@@ -81,23 +98,23 @@ const CONFIG = {
     35: { mon: '赤龍', route: 'flame', route2: 'dragon', relic: 'dragonFang' }, 40: { mon: '冰龍', route: 'tide', route2: 'dragon', relic: 'iceScale' } },   // V1.53 王有雙屬性；龍＝全抗性
   // V1.54 王的專屬絕招：血量第一次掉到一半以下時，先預告一回合、下一回合施放（火鳳的浴火重生是倒下時觸發）
   bossUlt: { 5: { key: 'moss', name: '苔蘚再生', turns: 3, heal: .1, tip: '接下來 3 回合牠每回合會回血，趁現在全力攻擊！' },
-    10: { key: 'charge', name: '熔岩衝鋒', mult: 2.2, tip: '下一回合會撞出 2.2 倍傷害——快按「🛡️ 防禦」！' },
+    10: { key: 'charge', name: '熔岩衝鋒', mult: 2.2, tip: '下一回合會撞出超痛的一擊，而且一定點燃——快按「🛡️ 防禦」！', burn: true },
     15: { key: 'wall', name: '骸骨鐵壁', turns: 2, cut: .5, reflect: .3, tip: '2 回合內打牠只有一半傷害，還會反彈 30%——先防禦或喝藥水！' },
     20: { key: 'curse', name: '混亂詛咒', turns: 2, miss: .4, tip: '被詛咒的 2 回合內攻擊有 40% 會打空——可以先蓄力或防禦拖過去' },
-    25: { key: 'doom', name: '死亡宣告', turns: 3, pct: .4, tip: '倒數 3 回合後受到最大血量 40% 的傷害——快打倒牠，或先補血！' },
+    25: { key: 'doom', name: '死亡宣告', turns: 3, left: .01, tip: '倒數 3 回合後會被打到只剩一絲血——結束後馬上補血，不然靈魂收割會很痛！' },
     30: { key: 'rebirth', name: '浴火重生', hp: .3, tip: '火鳳倒下一次會用 30% 血量復活，要打倒兩次！' },
-    35: { key: 'breath', name: '龍炎吐息', hits: 2, mult: 1.5, tip: '連續兩回合 1.5 倍噴火、猜拳也閃不掉——先喝藥水把血補高！' },
+    35: { key: 'breath', name: '龍炎吐息', hits: 2, mult: 1.5, tip: '連續兩回合噴火，兩隻都會被燒到、猜拳也閃不掉——先喝藥水把血補高！', aoe: true },
     40: { key: 'zero', name: '絕對零度', mult: 1.7, tip: '會被冰凍 1 回合，接著吃 1.7 倍冰爆——先把血補高！' } },
   bossBuff: { hp: 1.05, atk: 1.05, skip: [10, 40] },
   // V1.55 屬性反擊技：成年期以後解鎖，每隻每場一次，會比敵人先出手
   counter: { stages: ['adult', 'ascended'],
-    fire:  { name: '烈焰護盾', icon: '🔥', text: '燒掉兩隻身上的詛咒、死亡宣告和冰凍，下一次受到的傷害減半' },
+    fire:  { name: '火焰護盾', icon: '🔥', text: '燒掉兩隻身上的點燃、凍傷、混亂、死亡宣告和冰凍，下一次受到的傷害減半' },
     water: { name: '治癒之泉', icon: '💧', text: '兩隻都回復 30% HP', heal: .3 },
     leaf:  { name: '森林守護', icon: '🌿', text: '兩隻接下來 3 回合，每回合回復 10% HP', turns: 3, heal: .1 },
     earth: { name: '大地壁壘', icon: '🪨', text: '這一回合兩隻受到的傷害只剩 30%', cut: .7 },
-    bird:  { name: '疾風步',   icon: '🌪️', text: '兩隻接下來 2 回合閃避 +50%（猜拳輸了也可能閃開）', turns: 2, dodge: .5 },
-    elec:  { name: '雷電麻痺', icon: '⚡', text: '敵人麻痺 1 回合（王的絕招也會被打斷、延後）' },
-    metal: { name: '鋼鐵反擊', icon: '⚙️', text: '下一次被攻擊時，把 60% 的傷害反彈回去', reflect: .6 },
+    bird:  { name: '疾之風',   icon: '🌪️', text: '兩隻接下來 2 回合閃避 +50%（猜拳輸了也可能閃開）', turns: 2, dodge: .5 },
+    elec:  { name: '雷電麻痺', icon: '⚡', text: '敵人麻痺 2 回合，很容易動不了，王的絕招也會被打斷、延後' },
+    metal: { name: '荊棘鐵甲', icon: '⚙️', text: '下一次被攻擊時，把 60% 的傷害反彈回去', reflect: .6 },
     none:  { name: '星光守護', icon: '⭐', text: '回復 20% HP，下一次受到的傷害減半', heal: .2 } },
   combo: { mult: 1.6 },   // 羈絆合擊：兩隻一起衝上去，各打一次 1.6 倍   // V1.55 其他六隻王再強一點
   relics: { repeatDrop: .1, sell: 999, slots: 2, items: {
@@ -324,7 +341,7 @@ function sanitize(o, now = Date.now()) {
   r.care.petLastRewardAt = num(c.petLastRewardAt, 0, 0, now); r.care.bathLastAt = num(c.bathLastAt, 0, 0, now); r.care.gatherAt = num(c.gatherAt, 0, 0, now);
   r.care.playXpAt = Array.isArray(c.playXpAt) ? c.playXpAt.map(Number).filter(t => Number.isFinite(t) && t <= now && now - t < CONFIG.play.xpWindowMin * MIN).slice(-10) : [];
   const iv = o.inv && typeof o.inv === 'object' ? o.inv : {};
-  r.inv.food = int(iv.food, CONFIG.start.food, 0, 9999); r.inv.seeds = int(iv.seeds, CONFIG.start.seeds, 0, 9999); r.inv.candy = int(iv.candy, 0, 0, 9999); r.inv.potion = int(iv.potion, 1, 0, 9999); r.inv.seeds2 = int(iv.seeds2, 0, 0, 9999); r.inv.seeds3 = int(iv.seeds3, 0, 0, 9999); r.inv.seeds4 = int(iv.seeds4, 0, 0, 9999); r.inv.potion2 = int(iv.potion2, 0, 0, 9999); r.inv.soup = int(iv.soup, 0, 0, 9999);
+  r.inv.food = int(iv.food, CONFIG.start.food, 0, 9999); r.inv.seeds = int(iv.seeds, CONFIG.start.seeds, 0, 9999); r.inv.candy = int(iv.candy, 0, 0, 9999); r.inv.potion = int(iv.potion, 1, 0, 9999); r.inv.seeds2 = int(iv.seeds2, 0, 0, 9999); r.inv.seeds3 = int(iv.seeds3, 0, 0, 9999); r.inv.seeds4 = int(iv.seeds4, 0, 0, 9999); r.inv.potion2 = int(iv.potion2, 0, 0, 9999); r.inv.elixir = int(iv.elixir, 0, 0, 9999); r.inv.soup = int(iv.soup, 0, 0, 9999);
   for (const k of [...Object.keys(CONFIG.foods).filter(k => k !== 'food'), 'ember', 'shards', 'hearts']) r.inv[k] = int(iv[k], 0, 0, 9999);
   const mt = iv.mats && typeof iv.mats === 'object' ? iv.mats : {}; r.inv.mats = {}; for (const el of ROUTES) r.inv.mats[el] = int(mt[el], 0, 0, 99);
   const fr = iv.fresh && typeof iv.fresh === 'object' ? iv.fresh : {}; r.inv.fresh = {}; for (const k of FRESH_KEYS) r.inv.fresh[k] = Math.min(int(fr[k], 0, 0, 9999), r.inv[k] || 0);   // 自己種的、還沒賣的水果數
@@ -364,6 +381,7 @@ function sanitize(o, now = Date.now()) {
   { const T = o.trainLv && typeof o.trainLv === 'object' ? o.trainLv : {}; r.trainLv = {}; for (const k of ['zen', 'flash', 'rush', 'combo', 'dodge', 'ball']) if (T[k]) r.trainLv[k] = int(T[k], 0, 0, 10); }   // V1.85 訓練階段
   r.emberOwned = !!o.emberOwned || (r.adv && r.adv.stage > CONFIG.ember.stage); r.emberOn = Number.isFinite(+o.emberOn) && o.emberOn !== null && o.emberOn !== '' ? +o.emberOn : null;
   if (r.inv.ember > 0) { r.emberOwned = true; r.coins += r.inv.ember * CONFIG.ember.oldCoins; r.emberRefund = (r.emberRefund || 0) + r.inv.ember; r.inv.ember = 0; }   // 舊的經驗火種：保留一個，多的換成金幣
+  r.bossDex = {}; if (o.bossDex && typeof o.bossDex === 'object') for (const k in CONFIG.bosses) { const v = o.bossDex[k]; if (v && typeof v === 'object') r.bossDex[k] = { s: v.s ? 1 : 0, l: v.l ? 1 : 0, w: v.w ? 1 : 0, at: num(v.at, 0, 0, now) }; }   // V1.86 魔王圖鑑：遇過／輸過／打贏
   r.skillDay = typeof o.skillDay === 'string' ? o.skillDay.slice(0, 10) : '';
   r.yard = {}; if (o.yard && typeof o.yard === 'object') for (const k of ['den', 'nest', 'tree1', 'tree2', 'bush', 'path', 'pond', 'plots', 'gen', 'fire']) { const v = o.yard[k]; if (Array.isArray(v) && (v.length === 3 || v.length === 4) && v.every(Number.isFinite)) r.yard[k] = [Math.max(-130, Math.min(130, Math.round(v[0]))), Math.max(-80, Math.min(80, Math.round(v[1]))), Math.max(.5, Math.min(1.8, Math.round(v[2] * 10) / 10)), v[3] ? 1 : 0]; }   // V1.82 院子佈置：位移與大小
   r.seen = {}; if (o.seen && typeof o.seen === 'object') for (const k in o.seen) if (/^[a-zA-Z0-9_]{1,30}$/.test(k) && o.seen[k]) r.seen[k] = 1;   // V1.74 圖鑑：拿到過的東西
@@ -424,7 +442,7 @@ function pickCrave(st, now = Date.now(), rnd = Math.random) {
 }
 function markSeen(st) {   // V1.74 背包裡有過的東西記進圖鑑
   const S = st.seen || (st.seen = {}), iv = st.inv || {};
-  for (const k of [...Object.keys(CONFIG.foods), 'seeds', 'seeds2', 'seeds3', 'seeds4', 'candy', 'potion', 'potion2', 'soup', 'ember', 'shards', 'hearts']) if ((iv[k] || 0) > 0) S[k] = 1;
+  for (const k of [...Object.keys(CONFIG.foods), 'seeds', 'seeds2', 'seeds3', 'seeds4', 'candy', 'potion', 'potion2', 'elixir', 'soup', 'ember', 'shards', 'hearts']) if ((iv[k] || 0) > 0) S[k] = 1;
   for (const el of ROUTES) if (((iv.mats || {})[el] || 0) > 0) S['mat_' + el] = 1;
   for (const k in (iv.relics || {})) if (iv.relics[k] > 0) S['rl_' + k] = 1;
   for (const k of (st.relics || [])) S['rl_' + k] = 1;
@@ -724,7 +742,7 @@ function mkFighter(name, key, lvl, route, tierN, mood, bond) {
 function foeFighter(n, myLvl, name = '野生怪', key = 'k') {
   const f = foeFor(n, myLvl), H0 = CONFIG.foeHp, T = CONFIG.tower, ft = mkFighter(name, key, f.level, f.route, 0, 80, 0), tw = n >= T.from;
   ft.max = ft.hp = Math.round(ft.max * (f.big ? H0.big : f.boss ? H0.mini : H0.normal) * (tw ? T.hp : 1)); if (tw) ft.atk *= T.atk; ft.tower = tw; if (f.route2) ft.el2 = f.route2 === 'dragon' ? 'dragon' : ELEM[f.route2];
-  { const BB = CONFIG.bossBuff; if (CONFIG.bosses[n] && !BB.skip.includes(n)) { ft.max = ft.hp = Math.round(ft.max * BB.hp); ft.atk *= BB.atk; } } return ft;
+  { const BB = CONFIG.bossBuff; if (CONFIG.bosses[n] && !BB.skip.includes(n)) { ft.max = ft.hp = Math.round(ft.max * BB.hp); ft.atk *= BB.atk; } } ft.bt = (CONFIG.bossTal[n] || []).slice(); ft.boss = !!f.boss; ft.big = !!f.big; return ft;
 }
 const hasHeritage = st => !!(st.awake || (st.pair && st.pair.awake) || (st.roster || []).some(p => p.awake));
 /* V1.42 我方加成：進化階段、訓練成果、星耀覺醒 */
@@ -737,6 +755,16 @@ function buffFighter(f, p) {
     if (R.crit) f.critUp = (f.critUp || 0) + R.crit; if (R.cut) f.dmgCut = (f.dmgCut || 0) + R.cut; if (R.regen) f.regen = (f.regen || 0) + R.regen; if (R.revive) f.revive = R.revive; if (R.sp) f.spUp = (f.spUp || 0) + R.sp; if (R.dodge) f.dodge = (f.dodge || 0) + R.dodge; }
   return f;
 }
+/* V1.86 戰鬥天賦等級：少年期 1（弱化版）、成年期以後 2（完整版） */
+const talLv = stage => stage === 'adolescent' ? 1 : stage === 'adult' || stage === 'ascended' ? 2 : 0;
+function talentOn(f, el, lv) {   // 把天賦掛到戰鬥角色身上（被動的數值；會觸發的在畫面那邊處理）
+  if (!f || !lv || !CONFIG.talents[el]) return f; const T = CONFIG.talents[el][lv === 2 ? 'f' : 'w']; f.tal = el; f.talLv = lv;
+  if (el === 'earth') { f.critRes = T.crit; f.ultRes = T.ult || 0; } if (el === 'leaf') f.sprout = T.chance; return f;
+}
+function bossTalOn(f) { const K = CONFIG.bt; for (const t of f.bt || []) { if (t === 'shell') f.spCut = K.shell; if (t === 'reap') f.reap = K.reap.up; } return f; }
+/* V1.86 魔王圖鑑紀錄 */
+function bossSeen(st, n, what, now = Date.now()) { if (!CONFIG.bosses[n]) return; const D = st.bossDex || (st.bossDex = {}), e = D[n] || (D[n] = { s: 0, l: 0, w: 0, at: 0 }); e.s = 1; if (what === 'loss') e.l = 1; if (what === 'win') { if (!e.w) e.at = now; e.w = 1; } }
+function eliteBonus(st, r) { const E = CONFIG.elite, c = Math.ceil((r.coins || 0) * E.reward), x = st.hatched ? addXP(st, Math.round((r.xp || 0) * E.reward)) : 0; st.coins += c; return { coins: c, xp: x }; }
 /* 冒險區域（每 5 關一區）主要出現的屬性 */
 const AREA_ROUTE = [null, 'tide', 'flame', 'forest', 'earth', 'bird', 'elec', 'metal', null];
 function foeFor(n, myLvl = 1) {
@@ -774,25 +802,29 @@ function damage(a, d, special, r = Math.random, boost = 1) {
   const pow = (special ? (a.el === 'none' ? 1.15 : 1.3) * (1 + (a.spUp || 0)) : 1) * (a.charged ? CONFIG.chargeMult : 1) * boost; a.charged = false;
   const mult = elemMult(a, d, special);
   let dmg = Math.max(1, Math.round(a.atk * pow * (a.atk / (a.atk + d.def)) * 1.6 * mult * (.85 + r() * .3)));
+  if (a.reap) dmg = Math.round(dmg * (1 + a.reap * (1 - d.hp / d.max)));   // V1.86 靈魂收割：你的血越少打越痛
+  if (special && d.spCut) dmg = Math.max(1, Math.round(dmg * (1 - d.spCut)));   // 苔石鎧甲：屬性攻擊打不痛
+  if (d.stiffCut) dmg = Math.max(1, Math.round(dmg * (1 - d.stiffCut)));   // 越打越硬／不死骨架
   if (d.guard) { dmg = Math.max(1, Math.round(dmg * .5)); d.guard = false; }
   if (d.dmgCut) dmg = Math.max(1, Math.round(dmg * (1 - d.dmgCut)));
   if (d.roundCut) dmg = Math.max(1, Math.round(dmg * (1 - d.roundCut)));   // 大地壁壘（這一回合）
   if (d.halfNext) { dmg = Math.max(1, Math.round(dmg * .5)); d.halfNext = false; }   // 烈焰護盾／星光守護
   let reflect = 0; if (d.counterRefl) { reflect += Math.max(1, Math.round(dmg * d.counterRefl)); d.counterRefl = 0; } if (d.wallT > 0) { dmg = Math.max(1, Math.round(dmg * (1 - (d.wallCut || .5)))); reflect += Math.max(1, Math.round(dmg * (d.wallReflect || .3))); }   // V1.54 骸骨鐵壁
-  const crit = r() < .08 + (a.critUp || 0); if (crit) dmg = Math.round(dmg * 1.5);
+  const crit = r() < .08 + (a.critUp || 0); if (crit) dmg = Math.round(dmg * (1 + .5 * (1 - (d.critRes || 0))));   // 堅石之軀：抗暴擊
   let amulet = false; if (d.amulet) { dmg = Math.max(1, Math.round(dmg * .5)); d.amulet = false; amulet = true; }   // V1.83 小護身符：擋一次，傷害減半
-  let endured = false;
-  if (dmg >= d.hp && d.endure) { dmg = d.hp - 1; d.endure = false; endured = true; }
+  let endured = false, sprouted = false;
+  if (dmg >= d.hp && d.sprout && !d.sproutUsed) { d.sproutUsed = true; if (r() < d.sprout) { dmg = d.hp - 1; sprouted = true; } }   // V1.86 生生不息
+  if (!sprouted && dmg >= d.hp && d.endure) { dmg = d.hp - 1; d.endure = false; endured = true; }
   let revived = false; if (dmg >= d.hp && d.revive) { d.hp = Math.max(1, Math.round(d.max * d.revive)); d.revive = 0; revived = true; } else d.hp = Math.max(0, d.hp - dmg);   // V1.52 不死鳥羽毛
-  return { dmg, mult, crit, endured, revived, reflect, amulet };
+  return { dmg, mult, crit, endured, revived, reflect, amulet, sprouted };
 }
 function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random) {
   const A = CONFIG.adventure, out = { xp: 0, coins: 0, food: 0, seeds: 0, unlocked: 0, events: [] };
   if (result === 'win' || result === 'loss') st.mood = clamp(st.mood + (result === 'win' ? A.winMood : A.lossMood));
   if (result === 'win') {
     st.adv.wins++; track(st, 'win', now);
-    const xp = A.xp + CONFIG.battleWin.xp;
-    if (full) { const T = trait(st); out.xp = addXP(st, xp); out.coins = A.coinsMin + Math.floor(r() * (A.coinsMax - A.coinsMin + 1)); if (T.coinX && r() < T.coinChance) { out.coins = Math.round(out.coins * T.coinX); out.coinBonus = true; } st.coins += out.coins;
+    const xp = Math.round((A.xp + CONFIG.battleWin.xp) * CONFIG.battleLen.reward);   // V1.86 戰鬥變長，經驗金幣也多一點
+    if (full) { const T = trait(st); out.xp = addXP(st, xp); out.coins = Math.round((A.coinsMin + Math.floor(r() * (A.coinsMax - A.coinsMin + 1))) * CONFIG.battleLen.reward); if (T.coinX && r() < T.coinChance) { out.coins = Math.round(out.coins * T.coinX); out.coinBonus = true; } st.coins += out.coins;
       if (T.seedChance && r() < T.seedChance) { st.inv.seeds++; out.bonusSeed = 1; } if (T.berryChance && r() < T.berryChance) { const b = 1 + Math.floor(r() * 2); st.inv.berry = (st.inv.berry || 0) + b; out.berry = b; } st.inv.seeds += A.seeds; out.seeds = A.seeds; st.path.flame += A.flame + CONFIG.battleWin.flame;
       { const fb = foeFor(n); if (fb.boss) { const bc = fb.big ? CONFIG.bossCoins.big : CONFIG.bossCoins.mini; st.coins += bc; out.coins += bc; out.bossCoins = bc; } }
       if (n === CONFIG.ember.stage && !st.emberOwned) { st.emberOwned = true; out.ember = 1; journal(st, now, '打倒大王，得到了「經驗火種」！'); } }
@@ -851,7 +883,7 @@ const GOODS = {
 const FOSSILS = { fo_trilobite: '三葉蟲化石', fo_ammonite: '菊石', fo_tooth: '恐龍牙化石', fo_feather: '羽毛化石', fo_fish: '魚化石', fo_amber: '琥珀' };
 const RODS = [{ id: 'bamboo', name: '破爛釣竿', price: 0, bar: .20, steady: 0 }, { id: 'carbon', name: '碳纖竿', price: 300, bar: .30, steady: .5 }, { id: 'gold', name: '黃金釣竿', price: 1200, bar: .40, steady: .8 }];   // V1.84 綠框 20／30／40%
 const SKILL = {
-  flame: { name: '小廚師', icon: '🔥' }, tide: { name: '捕魚', icon: '💧' }, forest: { name: '催熟', icon: '🌿' }, earth: { name: '挖寶', icon: '🪨' },
+  flame: { name: '小當家', icon: '🔥' }, tide: { name: '捕魚', icon: '💧' }, forest: { name: '催熟', icon: '🌿' }, earth: { name: '挖寶', icon: '🪨' },
   bird: { name: '採集', icon: '🐦' }, elec: { name: '發電', icon: '⚡' }, metal: { name: '回收', icon: '⚙️' },
 };
 function fishSlot(now = Date.now()) { const h = hourIn(now); return h >= 5 && h < 10 ? 'morning' : h < 17 && h >= 10 ? 'day' : h >= 17 && h < 19 ? 'dusk' : 'night'; }
@@ -1027,12 +1059,12 @@ function placeBed2(st, id) {
   st.decor.placed.bed2 = id; return { ok: true, msg: `左邊也擺上「${it.name}」，兩隻都有床睡了！` };
 }
 function buyItem(st, kind) {
-  const price = CONFIG.foods[kind] ? CONFIG.foods[kind].price : kind === 'seeds' ? CONFIG.farm.seedPrice : kind === 'seeds2' ? CONFIG.goodSeed.price : kind === 'candy' ? CONFIG.candy.price : kind === 'potion' ? CONFIG.potion.price : kind === 'potion2' ? CONFIG.superPotion.price : kind === 'soup' ? CONFIG.soup.price : 0;
+  const price = CONFIG.foods[kind] ? CONFIG.foods[kind].price : kind === 'seeds' ? CONFIG.farm.seedPrice : kind === 'seeds2' ? CONFIG.goodSeed.price : kind === 'candy' ? CONFIG.candy.price : kind === 'potion' ? CONFIG.potion.price : kind === 'potion2' ? CONFIG.superPotion.price : kind === 'elixir' ? CONFIG.elixir.price : kind === 'soup' ? CONFIG.soup.price : 0;
   if (!price || (CONFIG.foods[kind] && (CONFIG.foods[kind].power || CONFIG.foods[kind].farm))) return { ok: false, msg: '這個商店沒有賣' };
   if (st.coins < price) return { ok: false, msg: `金幣不足（需要 ${price}）` };
   st.coins -= price; st.inv[kind] = (st.inv[kind] || 0) + 1; return { ok: true, msg: `買了 1 個${ITEM_NAME[kind] || CONFIG.foods[kind].name}（−${price} 金幣）` };
 }
-const ITEM_NAME = { food: '食物', seeds: '種子', seeds2: '優良種子', seeds3: '稀有種子', seeds4: '神奇種子', candy: '星星糖', potion: '回復藥水', potion2: '超級藥水', soup: '神秘婆婆熬製雞湯' };
+const ITEM_NAME = { food: '食物', seeds: '種子', seeds2: '優良種子', seeds3: '稀有種子', seeds4: '神奇種子', candy: '星星糖', potion: '回復藥水', potion2: '超級藥水', elixir: '萬靈藥', soup: '神秘婆婆熬製雞湯' };
 /* V1.40 神秘婆婆熬製雞湯：消除羈絆之力後的休息時間 */
 function useSoup(st, now = Date.now()) {
   const tm = applyTime(st, now);
@@ -1429,7 +1461,7 @@ const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, S
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
-  toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, selectRod, allPets, giveEmber, emberShare, setTeam, TRAIN_TIER, trainLvOf, trainTier, trainLvUp, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 Object.assign(API, { EARN_NAME, SPEND_NAME, BADGES, BADGE, statsOf, statAdd, statVal, checkBadges, playTick, weekKey, sumOf }); wrapStats(API);
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
