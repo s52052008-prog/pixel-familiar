@@ -257,6 +257,7 @@ h1{font-size:17px}.ver{font-size:9px}
 /* V1.58 寵物資訊收進「資訊」按鈕；餵食選單蓋在資訊欄上面，遊戲畫面不會被壓小 */
 #infoSlot{position:relative;padding:5px 8px 6px}#infoSlot .pairbar{margin-top:4px;background:rgba(30,16,6,.35)}
 .scrop{overflow:hidden;position:relative}
+#denBtn{font-size:12px;padding:4px 9px}
 .stagewrap{border-color:#c8913a!important;box-shadow:0 0 0 3px #2a170a,inset 0 0 0 2px #5a3510,0 0 0 5px #f0c868,0 0 0 8px #2a170a,0 8px 0 6px #0009!important}.stagewrap::before,.stagewrap::after{background:#fff0b0!important;box-shadow:inset -2px -2px 0 #b8852a,0 0 0 2px #2a170a!important}
 #wxChip{position:absolute;left:6px;top:6px;z-index:3;display:flex;align-items:center;gap:4px;background:rgba(20,12,6,.6);color:#fff3d8;font-size:12px;font-weight:800;padding:2px 9px 2px 4px;border-radius:12px;border:2px solid rgba(255,230,170,.35);pointer-events:none}#wxChip img{width:20px;height:20px;image-rendering:pixelated}
 .snav{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:44px;height:48px;padding:0;border:0;background:none;min-width:0;display:flex;align-items:center}.snav span{display:flex;align-items:center;justify-content:center;width:24px;height:44px;border:2px solid #2a170a;background:#f0c868;color:#5a3510;font-size:12px;font-weight:900;border-radius:6px;box-shadow:inset 0 -3px 0 #b8852a;opacity:.92}.snav.l{left:-40px;justify-content:flex-end}.snav.r{right:-40px;justify-content:flex-start}.snav:active{transform:translateY(-50%) scale(.92)}
@@ -482,7 +483,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.86.1';
+const VERSION='1.86.2';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1058,7 +1059,7 @@ function makeBg(ph,lvl=1){
   pcx.fillStyle='#3a8a3a';pcx.fillRect(22,5,4,2);pcx.fillStyle='#ff9ac0';pcx.fillRect(23,4,2,1);c.drawImage(pc,0,0,34,14,POND.x-14,POND.y-5,28,10)}   // 往後放：小一點、靠近地平線
 });
  const OBJ=[['tree1',()=>tree(58,66,.62,false,11)],['tree2',()=>tree(104,67,.9,false,29)],['bush',()=>{const BS=s&&s.hatched&&PC.bushBerries(s,Date.now())>0?DSPR.bush_berry:DSPR.bush_berry0;if(BS){c.drawImage(BS,116-Math.round(BS.width/2),72-BS.height);return}bush(116,68,7,4)}],['den',()=>drawDen(c,lvl,night||dusk)]];
- if(s&&s.loveNest)OBJ.push(['nest',()=>{ const NS=DSPR.nest_home;if(NS){c.drawImage(night||dusk?(DEN_DARK.nest||(DEN_DARK.nest=litNight(NS,'nest_home'))):NS,74-Math.round(NS.width/2),69-NS.height);return} if(s&&s.loveNest){   // 愛的小窩：粉紅小屋＋愛心屋頂
+ if(s&&s.loveNest)OBJ.push(['nest',()=>{ const NS=DSPR.nest_home;if(NS){const LV=LOVE.in||(s.loveEgg&&!s.loveEgg.away&&s.loveEgg.end>Date.now()),wob=LV?Math.round(Math.sin(performance.now()/90)*1.2):0;if(LV&&Math.random()<(LOVE.in?.08:.015))spawn('heart',1,{x:74+(Math.random()-.5)*14,y:52,vy:-16,jx:8,life:1.4,spread:4});c.drawImage(night||dusk?(DEN_DARK.nest||(DEN_DARK.nest=litNight(NS,'nest_home'))):NS,74+wob-Math.round(NS.width/2),69-NS.height);return} if(s&&s.loveNest){   // 愛的小窩：粉紅小屋＋愛心屋頂
   const g=grid(20,18),R2=(x,y,w,h,col)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)px(g,x+i,y+j,col)};
   for(let y=0;y<7;y++)for(let x=-y-1;x<=y+1;x++)px(g,10+x,1+y,y===6?'#c84a72':(x+y)%3===0?'#ff8ab0':'#f06a98');   // 屋頂
   R2(4,8,13,8,night?'#c8a0b0':'#ffe0ea');R2(4,8,13,1,night?'#a88090':'#ffc4d6');R2(8,10,5,6,'#8a4a5a');R2(9,11,3,5,'#5a2a3a');   // 牆、門
@@ -1274,12 +1275,12 @@ function draw(now){
    {const g=s.plots[i].g;if(g&&!q.empty&&!q.rotten)seedGlow(ctx,g,cx,cy,w,h,now,i)}   // V1.82 優良金、稀有紫、神奇彩虹
    if(st==='rot'&&!rm()){const a=now/300+i;ctx.drawImage(ICV.fly,Math.round(cx+3*Math.cos(a)),Math.round(y+2+2*Math.sin(a*1.7)))}}}
  if(mode==='play')drawRing();
- const hideP=(ARR.on||YA.on)&&!evo;   /* V1.83 佈置時把寵物藏起來 */
- if(!hideP)drawPair(now);
+ const hideP=(ARR.on||YA.on||LOVE.in)&&!evo,nestMe=s.hatched&&PC.inNest(s)&&!LOVE.walk;   /* V1.83 佈置時把寵物藏起來 */
+ if(!hideP&&!(s.pair&&PC.inNest(s.pair)&&!LOVE.walk))drawPair(now);
  const key=formKey(),S=sheet(key);let fname=currentFrame(now),fi=S.idx[fname]??0;
  const fr=FRAMES[fname]||{};const lift=-(fr.dy||0),PX=Math.round(petX),LIFT=(S.lift&&S.lift[fi])||0;   // LIFT：手繪造型跳太高時，超出格子的那段高度
- const gone=(!!s.runaway&&!evo)||hideP;   // 離家出走中：畫面上沒有幻獸
- if(gone&&!hideP)drawRunaway(now);
+ const gone=(!!s.runaway&&!evo)||hideP||nestMe;   // 離家出走中：畫面上沒有幻獸
+ if(gone&&!hideP&&!nestMe)drawRunaway(now);
  else{ctx.fillStyle='rgba(20,60,30,.28)';const sw=Math.max(10,(key.startsWith('egg')?22:26)-lift);ctx.fillRect(PX+24-sw/2,PET_Y+44,sw,2);ctx.fillRect(PX+24-sw/2+2,PET_Y+43,sw-4,1)}
  if(gone){}else if(evo){const e=(now-evo.t0)/1000;
   if(e<2.6){const per=Math.max(.06,.32-e*.11);const useNew=Math.floor(e/per)%2===1;const SS=sheet(useNew?evo.to:evo.from);
@@ -1611,7 +1612,7 @@ function nextEvo(){
   setTimeout(()=>{$('evoCap').classList.add('hidden');$('evoBlock').classList.add('hidden');$('bubble').style.visibility='';nextEvo()},rm()?800:2600)}}}
 function gatherOffer(){confirmBox('🌿 去採集？','沒有食物、金幣也不夠時，可以免費採集果子（每 2 分鐘一次），不會卡關。','採集',()=>{const g=PC.gather(s,Date.now());toast(g.msg);save();renderUI()})}
 function act(a){
- if(!s.hatched||evo)return;unlockAudio();
+ if(!s.hatched||evo)return;unlockAudio();if(nestBusy())return;
  if(a==='sleep'){if(Date.now()<busyUntil||modeBusy()||petTarget!==null)return;cancelMode();
   if(!s.sleeping&&curView()!=='room'){toast('🪺 外面不能睡覺，帶牠回小窩睡囉',2500);s.view='room';petX=PET_X;save();renderUI();setTimeout(()=>act('sleep'),700);return}
   const goSleep=()=>{const x0=s.xp,r=PC.act(s,'sleep',Date.now());handleTime(r.tm);if(!r.ok){say(r.msg);return}
@@ -1693,7 +1694,7 @@ function renderUI(){if(s&&s.inv)PC.markSeen(s);
  {const T=s.hatched&&PC.traitOf(s.route);$('traitText').innerHTML=T&&T.good?`<span class="chip good"><img class="mi" src="sprites/ui2/shield.png" alt="">${esc(T.good)}</span><span class="chip bad"><img class="mi" src="sprites/ui2/warn.png" alt="">${esc(T.bad)}</span>`:''}
  $('stageText').innerHTML=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome&&F.genome.el?' · 會孵出'+ROUTE_LABEL[F.genome.el]+'的新物種':''}`:[s.route?rIcon(s.route)+ROUTE_LABEL[s.route]:'',STAGE_NAME[s.stage],F.name+rar,`第 ${dayCount()} 天`].filter(Boolean).map(x=>`<span class="chip">${x}</span>`).join('');$('bondRow').innerHTML=s.hatched?bondRowHTML():'';
  $('growText').textContent=s.runaway?`😢 ${s.name}離家出走了！到「👟 步數」登記走路，找牠回來：${(s.runaway.got||0).toLocaleString()} / ${CONFIG.runaway.steps.toLocaleString()} 步`
-  :s.starveSince?`⚠️ 餓壞了！再 ${Math.max(0,Math.ceil((s.starveSince+CONFIG.runaway.starveHours*3600000-Date.now())/3600000))} 小時不餵，牠就會離家出走！`:'';$('growText').classList.toggle('hidden',!$('growText').textContent);
+  :PC.inNest(s)?`💕 ${esc(s.name)} ${s.loveEgg&&s.loveEgg.away?'去朋友家的愛的小窩':'在愛的小窩裡'}，還要 ${fmtLeft(s.nestUntil-Date.now())}（可到「🪺 小窩」換別隻出來陪你）`:s.starveSince?`⚠️ 餓壞了！再 ${Math.max(0,Math.ceil((s.starveSince+CONFIG.runaway.starveHours*3600000-Date.now())/3600000))} 小時不餵，牠就會離家出走！`:'';$('growText').classList.toggle('hidden',!$('growText').textContent);
  {const al=$('alertLine'),t=!s.hatched?$('stageText').textContent:(s.runaway||s.starveSince)?$('growText').textContent:'';al.textContent='';al.classList.add('hidden')}   // V1.58 重要提示（孵蛋、離家出走）還是直接顯示
  $('stepInfo').innerHTML=`${MI('apple','🍎')}${s.inv.food} · ${MI('seed','🌱')}${s.inv.seeds}${s.inv.seeds2?' · '+MI('seed2','🌟')+s.inv.seeds2:''}${s.inv.candy?' · '+MI('candy','🍬')+s.inv.candy:''}${s.inv.potion?' · '+MI('potion','🧪')+s.inv.potion:''}${s.inv.potion2?' · '+MI('potion2','💖')+s.inv.potion2:''}${s.inv.soup?' · '+MI('soup','🍲')+s.inv.soup:''} · ${MI('shoe','👟')}${fmtN(s.steps.days[PC.dayKey(Date.now())]||0)} 步 · ${MI_UI('swords')}冒險 ${s.daily.adv}${s.eggs.length?' · 🧺 蛋 '+s.eggs.length:''}${s.hatched?` · ${MI('pig1','🐷')}${Math.floor(s.piggy||0)}/${PC.piggyCap(s)}`:''}`;
  for(const[k]of STATS){const v=s.hatched?s[k]:0;$('sv-'+k).textContent=s.hatched?Math.round(v)+'%':'--';$('sb-'+k).style.width=v+'%';$('st-'+k).classList.toggle('low',s.hatched&&v<20)}
@@ -1704,7 +1705,7 @@ function renderUI(){if(s&&s.inv)PC.markSeen(s);
  xpAnim();
  $('xptext').textContent=!s.hatched?'—':q?(s.xp>=goal?`${s.xp} XP（${STAGE_NAME[q.next]} XP 已達標 ✓）`:`${s.xp} / ${goal} XP（${STAGE_NAME[q.next]}）`):`${s.xp} XP`;
  document.body.classList.toggle('rm',rm());
- $('viewBtn').classList.toggle('hidden',!s.hatched||s.view!=='room');$('viewBtn').textContent='🌳 出門';$('denBtn').classList.toggle('hidden',!s.hatched||s.view!=='room');   // 進窩改成點兩下建築物
+ $('viewBtn').classList.toggle('hidden',!s.hatched||s.view!=='room');$('viewBtn').textContent='🌳 出門';$('denBtn').classList.toggle('hidden',!s.hatched||(s.view!=='room'&&(!!mode||$('stagewrap').offsetWidth<240)));{const sl=Math.max(0,PC.denCap(s)-1-(s.pair?1:0)),t=sl?`🪺 小窩 ${(s.roster||[]).length}/${sl}`:'🪺 小窩';if($('denBtn').textContent!==t)$('denBtn').textContent=t}   // 進窩改成點兩下建築物
  $('goalDot').classList.toggle('hidden',!(s.goals.list||[]).some(g=>!g.claimed&&g.n>=g.need));
  {const need=s.hatched&&!s.sleeping?STATS.map(([k])=>[k,s[k]]).filter(([,v])=>v<35).sort((a,b)=>a[1]-b[1])[0]:null,A={hunger:'feed',mood:'play',clean:'wash',energy:'sleep'};document.querySelectorAll('[data-act]').forEach(b=>b.classList.toggle('need',!!need&&b.dataset.act===A[need[0]]))}   /* V1.86 最需要照顧的那一項會發光 */
  wxChip();$('navL').classList.toggle('hidden',!s.hatched);$('navR').classList.toggle('hidden',!s.hatched)}
@@ -1848,13 +1849,13 @@ function itemDexDialog(){PC.markSeen(s);const C=CONFIG,F=C.foods,SN=s.seen||{},R
  $('cxPets').onclick=codexDialog;$('cxJ2').onclick=journalDialog;$('cxF2').onclick=fishDexDialog;$('cxB2').onclick=bossDexDialog;
  document.querySelectorAll('.dexi canvas').forEach(c=>{paintIcon(c,c.dataset.icon);if(c.dataset.sil==='1'){const x=c.getContext('2d');x.globalCompositeOperation='source-in';x.fillStyle='#14100c';x.fillRect(0,0,c.width,c.height)}});wireDexZoom(itemDexDialog)}
 function codexDialog(){   // V1.67 每個物種列出 5 種型態：還沒進化到的用黑色剪影、名字 ？？？，引導玩家把牠養大
- const dex=s.dex.slice().reverse(),ORD=['baby','juvenile','adolescent','adult','ascended'];
+ const dex=s.dex.slice().reverse(),ORD=['baby','juvenile','adolescent','adult','ascended'];const lostIds=new Set(PC.lostPets(s).map(x=>x.id));
  const cards=dex.length?dex.map((e,di)=>{const route=e.route||genomeFromId(e.id).el||null,reach=ORD.indexOf(e.stage),cur=e.id===gidOf(s)&&s.hatched;
   const k0=petKey(e.id,formCode(e.stage,e.route)),F=formOf(k0),G=F.genome;
   const row=ORD.map((st,si)=>{const k=petKey(e.id,formCode(st,route)),seen=si<=reach,f=formOf(k);
    return`${si?'<span class="arw">▶</span>':''}<div class="ev ${seen?'':'un'}"><canvas data-k="${k}" data-sil="${seen?0:1}" width="48" height="48"></canvas><b>${seen?esc(f.name):'？？？'}</b><span class="small">${STAGE_NAME[st]}</span></div>`}).join('');
   const next=ORD[reach+1],tip=next?`下一階段：${STAGE_NAME[next]}${cur?'（繼續照顧牠就會進化！）':''}`:'🏆 已經長到最高階段了！';
-  return`<div class="eggrow" style="display:block"><b>${route?ROUTE_ICON[route]+' ':''}${esc(F.name)}</b> <span class="small">${F.classic?'經典種':STARS[G.rarity]+' '+RARITY[G.rarity]}｜${cur?'🏠 現在的夥伴：':'回憶：'}${esc(e.petName||'')}</span><div class="evorow">${row}</div><div class="small" style="margin-top:4px">${tip}</div>${route?`<button class="btn abtn" data-ab="${route}" data-st="${e.stage}" data-nm="${esc(e.petName||F.name)}">${SKI(EL_OF[route]+'_badge')} 看能力資料</button>`:''}</div>`}).join('')
+  return`<div class="eggrow" style="display:block"><b>${route?ROUTE_ICON[route]+' ':''}${esc(F.name)}</b> <span class="small">${F.classic?'經典種':STARS[G.rarity]+' '+RARITY[G.rarity]}｜${cur?'🏠 現在的夥伴：':'回憶：'}${esc(e.petName||'')}</span><div class="evorow">${row}</div><div class="small" style="margin-top:4px">${tip}</div>${lostIds.has(e.id)?`<button class="btn pri abtn" data-recall="${e.id}">🏡 請老爺爺找回來</button>`:''}${route?`<button class="btn abtn" data-ab="${route}" data-st="${e.stage}" data-nm="${esc(e.petName||F.name)}">${SKI(EL_OF[route]+'_badge')} 看能力資料</button>`:''}</div>`}).join('')
   :'<p class="small">還沒有任何物種。孵化第一顆蛋吧！</p>';
  const n=s.dex.length,full=s.dex.filter(e=>e.stage==='ascended').length;
  openModal('📖 圖鑑',`<div class="row cxtabs" style="margin-top:0"><button class="btn pri">🐾 幻獸</button><button class="btn" id="cxItems">🎒 物品</button><button class="btn" id="cxFish">🐟 魚類</button><button class="btn" id="cxBoss">👹 魔王</button><button class="btn" id="cxJournal">📔 日記</button></div>
@@ -1863,6 +1864,7 @@ function codexDialog(){   // V1.67 每個物種列出 5 種型態：還沒進化
  $('cxJournal').onclick=journalDialog;$('cxItems').onclick=itemDexDialog;$('cxFish').onclick=fishDexDialog;$('cxBoss').onclick=bossDexDialog;
  document.querySelectorAll('.evorow canvas').forEach(c=>{const S=sheet(c.dataset.k),x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(S.cv,(S.idx.idle0??0)*CELL,0,CELL,CELL,0,0,48,48);
   if(c.dataset.sil==='1'){x.globalCompositeOperation='source-in';x.fillStyle='#14100c';x.fillRect(0,0,48,48)}});
+ document.querySelectorAll('[data-recall]').forEach(b=>b.onclick=()=>{const nm=(s.dex.find(x=>x.id===b.dataset.recall)||{}).petName||'牠';confirmBox('🏡 請老爺爺找回來？',`<p>神秘老爺爺會把「${esc(nm)}」找回來，先住在老爺爺家，到「🪺 小窩」就能接回來。</p><p class="small">長大的樣子、屬性、名字都會回來；經驗會回到現在這個階段的起點，親密度從頭培養。</p>`,'找回來',()=>{const r=PC.recallLost(s,b.dataset.recall,Date.now());toast(r.ok?r.msg:'❌ '+r.msg,5000);if(r.ok){sfx('level');save();renderUI();codexDialog()}})});
  document.querySelectorAll('[data-ab]').forEach(b=>b.onclick=()=>abilityDialog(b.dataset.ab,b.dataset.st,b.dataset.nm,codexDialog));
  document.querySelectorAll('.evorow .ev').forEach(ev=>ev.onclick=()=>{const c=ev.querySelector('canvas'),sil=c.dataset.sil==='1',f=formOf(c.dataset.k);sfx('tap');
   zoomView(sil?'？？？':esc(f.name),cv=>{const S=sheet(c.dataset.k),x=cv.getContext('2d');cv.width=cv.height=48;x.imageSmoothingEnabled=false;x.drawImage(S.cv,(S.idx.idle0??0)*CELL,0,CELL,CELL,0,0,48,48);if(sil){x.globalCompositeOperation='source-in';x.fillStyle='#14100c';x.fillRect(0,0,48,48)}},
@@ -1979,13 +1981,12 @@ ${(s.foster||[]).map((p,j)=>`<div class="eggrow"><canvas data-fr="${j}" width="4
  document.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{if(modeBusy())return;cancelMode();const r=PC.swapPet(s,+b.dataset.sw,Date.now());toast(r.msg);if(r.ok){petX=PET_X;save();renderUI();closeModal();playAnim('happy');say(`${s.name}：我來了！`)}})}
 /* 換新的蛋：保留玩家層級的資料（金幣、物品、圖鑑、蛋籃、步數、冒險、每日紀錄、日記、設定） */
 function newPet(genes,from){store.set(BACKUP_KEY,JSON.stringify(s));
- const moved=PC.moveToDen(s),oldName=s.name;
- if(!moved&&s.relics&&s.relics.length)for(const k of [...s.relics])PC.unequipRelic(s,s,k);   // 沒搬進小窩：身上的寶物放回背包
+ const moved=PC.moveOut(s),oldName=s.name;   /* V1.86.2 小窩滿了就去老爺爺家，不會再告別 */
  const keep={rev:s.rev,settings:s.settings,owner:s.owner,pair:s.pair,loveNest:s.loveNest,loveAt:s.loveAt,coins:s.coins,inv:s.inv,decor:s.decor,view:s.view,cores:s.cores,ball:s.ball,den:s.den,roster:s.roster,harvests:s.harvests,dex:s.dex,eggs:s.eggs,steps:s.steps,adv:s.adv,daily:s.daily,breedAt:s.breedAt,journal:s.journal,lastExport:s.lastExport,
   piggy:s.piggy,pigCores:s.pigCores,pigBought:s.pigBought,eggBuys:s.eggBuys,foster:s.foster,fusionHouse:s.fusionHouse,goals:s.goals,goalLv:s.goalLv,matGot:s.matGot,events:s.events,relicGot:s.relicGot,fish:s.fish,loot:s.loot,yard:s.yard,tree:s.tree,bush:s.bush,seen:s.seen,stats:s.stats,badges:s.badges,plots:s.plots,skillDay:s.skillDay};   /* V1.84 釣魚、寶物、院子佈置、紀錄、成就、田地也是帳號共用 */   // 帳號共用的東西：小豬撲滿、任務、素材紀錄、買蛋次數
  s=fresh();Object.assign(s,keep);if(genes){s.genes=genes;s.seed=null}else{const U=PC.unplayedRoutes(s),sd=PC.seedForEl(U[Math.floor(Math.random()*U.length)]);if(sd!==null)s.seed=sd}   // 新蛋：優先給還沒玩過的屬性
  lastBackup=Date.now();evo=null;evoQueue.length=0;cancelMode();petX=PET_X;save();renderUI();
- if(moved)setTimeout(()=>toast(`🪺 ${oldName} 搬進小窩休息了`,3500),400);
+ if(moved)setTimeout(()=>toast(moved==='den'?`🪺 ${oldName} 搬進小窩休息了，隨時可以換回來`:`🏡 小窩滿了，${oldName} 先去神秘老爺爺家住，隨時可以接回來`,4500),400);
  say(from?'配對寶寶的蛋來了！':'一顆新的蛋來了！');setTimeout(()=>say('會孵出什麼呢？輕點看看！',{q:true}),100)}
 function spriteDialog(){
  openModal('🎞️ Sprite Sheet（實際遊戲用）',`<p class="small">以下是遊戲執行時由程式產生的逐格像素圖（每格 48×48 px，放大 2 倍顯示）。角色動畫就是逐格切換這些畫格。</p><div class="sprites" id="spr"></div>`);
@@ -2059,14 +2060,23 @@ function bindLove(){
  if($('lnBuy'))$('lnBuy').onclick=()=>{const r=PC.buyLoveNest(s);if(!r.ok){$('lnErr').textContent='❌ '+r.msg;return}PC.journal(s,Date.now(),'蓋了一間愛的小窩 💕');save();bgKey='';renderUI();sfx('level');toast('💕 '+r.msg+'（在院子裡）',3500);mateDialog()};
  document.querySelectorAll('[data-lv]').forEach(c=>{const ref=c.dataset.lv,p=ref==='pair'?s.pair:s.roster[+ref];if(p)thumb(c,petKey(gidOf(p),formCode(p.stage,p.route)),'happy1')});
  document.querySelectorAll('[data-love]').forEach(b=>b.onclick=()=>{const ref=b.dataset.love==='pair'?'pair':+b.dataset.love,r=PC.love(s,ref,Date.now());if(!r.ok){$('lnErr').textContent='❌ '+r.msg;return}
-  save();renderUI();closeModal();if(s.view!=='yard'){s.view='yard';save();renderUI()}sfx('evolve');spawn('heart',12,{x:74,y:56,vy:-20,jx:30,life:1.6,spread:20,stagger:.1});
-  say(`💕 ${s.name} 和 ${r.partner} 走進愛的小窩…`);setTimeout(()=>{sfx('hatch');toast(`🥚 得到一顆蛋${r.G.rarity===3?'（閃著金光！）':r.G.rarity===2?'（有點特別）':''}！放在蛋籃裡`,4000);say('有新的蛋了！💕')},2200)})}
+  save();renderUI();closeModal();if(s.view!=='yard'){s.view='yard';petX=PET_X;save();renderUI()}loveScene(r)})}
+/* V1.86.2 兩隻一起走進愛的小窩：小窩搖一搖、冒愛心，出來後蛋要再等幾小時才會放進蛋籃 */
+const LOVE={in:false,walk:false,t0:0};
+/* V1.86.2 兩隻走進愛的小窩，住一天才出來；這段時間可以從小窩換別隻出來陪你 */
+function loveScene(r){cancelMode();const NX=74-24;LOVE.walk=true;say(`💕 ${s.name} 和 ${r.partner} 一起走向愛的小窩…`);
+ if(s.pair&&r.partner===s.pair.name)pairWalk(NX+6,()=>{});walkTo(NX,()=>{LOVE.walk=false;LOVE.in=true;LOVE.t0=performance.now();sfx('evolve');spawn('heart',10,{x:74,y:50,vy:-20,jx:30,life:1.6,spread:20,stagger:.1});
+  setTimeout(()=>{LOVE.in=false;petX=PET_X;PAIR.x=84},2500);
+  toast(`💕 ${s.name} 和 ${r.partner} 住進愛的小窩了！一天後會帶著蛋出來。這段時間可以到「🪺 小窩」換別隻出來陪你`,6000);renderUI()})}
+function nestBusy(){if(!s.hatched||!PC.inNest(s))return false;const L=s.loveEgg;toast(`💕 ${s.name} ${L&&L.away?'去朋友家的愛的小窩了':'在愛的小窩裡'}，還要 ${fmtLeft(s.nestUntil-Date.now())}。可以到「🪺 小窩」換別隻出來陪你`,4500);return true}
+function eggNotice(){if(s.loveNote){const t=s.loveNote;s.loveNote='';save();toast('💕 '+t,6000);sfx('hatch');renderUI();return}const now=Date.now();const e=(s.eggs||[]).find(x=>x.ready&&x.ready<=now&&!x.told);if(!e)return;e.told=1;save();toast('🥚 愛的小窩裡的蛋送進蛋籃了！到「💞 配對」→ 蛋籃 就能孵',5000);sfx('hatch')}
+setInterval(()=>{try{if(s){PC.applyTime(s,Date.now());eggNotice()}}catch(_){}},30000);setTimeout(()=>{try{eggNotice()}catch(_){}},2500);
 function mateDialog(){
  const ready=isAdult(),wait=Math.max(0,s.breedAt+CONFIG.breed.cooldownH*3600000-Date.now());
  openModal('💞 配對',`
 <p class="small">兩隻<b>成年期以上、一公一母</b>的幻獸可以配對，生出<b>混合雙方基因</b>的蛋（有機率突變或更稀有）。蛋會放進「蛋籃」，你可以決定什麼時候孵。</p>
 ${loveHTML()}
-<p style="margin-top:12px"><b>💌 跟朋友的幻獸配對</b></p>
+<p style="margin-top:12px"><b>💌 跟朋友的幻獸配對</b></p><p class="small">公的會去母的那邊住一天，生完蛋才回來。<b>雙方都貼上對方的配對碼</b>，就會各拿到一顆蛋；自己養的兩隻進愛的小窩則是生一顆蛋。蛋拿到後要再暖 ${CONFIG.breed.eggHours} 小時才能孵。</p>
 <p><b>① 把你的配對碼傳給朋友</b></p>
 ${ready?`<div class="row" style="margin-top:4px"><button class="btn pri" id="mCopy">複製我的配對碼</button>${!inFrame&&navigator.share?'<button class="btn" id="mShare">用 LINE 等分享</button>':''}</div>`:'<p class="small" style="color:#ff9aa8">你的幻獸要長到成年期才能配對。</p>'}
 <p style="margin-top:12px"><b>② 貼上朋友的配對碼</b></p>
@@ -2087,13 +2097,13 @@ ${ready?`<div class="row" style="margin-top:4px"><button class="btn pri" id="mCo
   thumb($('mT1'),formKey());thumb($('mT2'),fk);
   $('mConfirm').onclick=()=>{const r=PC.breed(s,f,Date.now());if(!r.ok){$('mErr').textContent='❌ '+r.msg;return}
    save();renderUI();closeModal();playAnim('happy');spawn('heart',8,{y:70,vy:-30,jx:50,life:1.6});sfx('hatch');
-   toast(`🥚 得到一顆蛋${r.G.rarity===3?'（閃著金光！）':r.G.rarity===2?'（有點特別）':''}！在蛋籃裡`,3500);say('有新的蛋了！💕')}}}
+   toast(r.host?`💕 配對成功！公的 ${f.name} 會來家裡的愛的小窩，陪 ${s.name} 住一天，生完蛋才回去`:`💕 配對成功！公的 ${s.name} 要去母的 ${f.name} 家住一天，生完蛋才回來`,6500);renderUI()}}}
 function basketDialog(){
- openModal('🧺 蛋籃',s.eggs.length?`<p class="small">孵化其中一顆蛋時，目前的夥伴會告別（留在圖鑑），由新蛋開始。</p>${s.eggs.map((e,i)=>`<div class="eggrow"><canvas data-i="${i}" width="48" height="48"></canvas><div style="flex:1"><b>${esc(formOf(eggKey(e.id)).name)}</b><div class="small">來自：${esc(e.from)}<br>${fmtTime(e.at)}</div></div><button class="btn pri" data-hatch="${i}" style="min-width:64px;flex:0 0 auto">孵這顆</button></div>`).join('')}`
-  :'<p>蛋籃是空的。到「💞 配對」跟朋友的幻獸配對，就會得到蛋。</p>');
+ const now=Date.now(),LE=s.loveEgg?`<p class="small">💕 ${esc(s.loveEgg.names)} ${s.loveEgg.away?'在朋友家的愛的小窩':'在愛的小窩裡'}，還要 ${fmtLeft(s.loveEgg.end-now)} 才會帶著蛋回來。</p>`:'';openModal('🧺 蛋籃',LE+(s.eggs.length?`<p class="small">孵其中一顆蛋時，目前照顧的幻獸會<b>搬進小窩</b>（小窩滿了就去<b>神秘老爺爺家</b>住），隨時都能換回來。</p>${s.eggs.map((e,i)=>{const ok=PC.eggReady(e,now);return`<div class="eggrow"><canvas data-i="${i}" width="48" height="48"></canvas><div style="flex:1"><b>${esc(formOf(eggKey(e.id)).name)}</b><div class="small">來自：${esc(e.from)}<br>${ok?fmtTime(e.at):`🥚 蛋還在暖暖中，再 ${fmtLeft(e.ready-now)} 才能孵`}</div></div>${ok?`<button class="btn pri" data-hatch="${i}" style="min-width:64px;flex:0 0 auto">孵這顆</button>`:'<button class="btn" disabled style="min-width:64px;flex:0 0 auto">暖蛋中</button>'}</div>`}).join('')}`
+  :'<p>蛋籃是空的。到「💞 配對」跟朋友的幻獸配對，就會得到蛋。</p>'));
  document.querySelectorAll('.eggrow canvas[data-i]').forEach(c=>thumb(c,eggKey(s.eggs[+c.dataset.i].id),'egg00'));
  document.querySelectorAll('[data-hatch]').forEach(b=>b.onclick=()=>{const i=+b.dataset.hatch,e=s.eggs[i];
-  confirmBox('🥚 孵這顆蛋？',`${!s.hatched?'目前的蛋會被換掉':PC.petCount(s)<PC.denCap(s)?'「'+esc(s.name)+'」會搬進小窩休息':'小窩滿了，「'+esc(s.name)+'」會告別（留在圖鑑）'}，改由這顆蛋開始。`,'孵這顆',()=>{s.eggs.splice(i,1);newPet(e.id.slice(2),e.from)})})}
+  confirmBox('🥚 孵這顆蛋？',`${!s.hatched?'目前的蛋會被換掉，改由這顆蛋開始。':PC.petCount(s)<PC.denCap(s)?`<p style="font-size:1.15em"><b>「${esc(s.name)}」會搬進小窩休息</b></p><p class="small">隨時可以到「🪺 小窩」換回來。</p>`:`<p style="font-size:1.15em;color:#ffb070"><b>小窩滿了！「${esc(s.name)}」會先去神秘老爺爺家住</b></p><p class="small">免費寄住，隨時可以到「🪺 小窩」→ 神秘老爺爺的家 接回來。</p>`}`,'孵這顆',()=>{s.eggs.splice(i,1);newPet(e.id.slice(2),e.from)})})}
 
 /* =========================================================
    🌱 家園種植
@@ -2282,7 +2292,7 @@ function relicDialog(){const RL=CONFIG.relics,RI=RL.items,iv=s.inv.relics||{},pe
  document.querySelectorAll('[data-eq]').forEach(b=>b.onclick=()=>{const[i,k]=b.dataset.eq.split('|'),r=PC.equipRelic(s,P(i),k);if(!r.ok){$('rlErr').textContent='❌ '+r.msg;return}sfx('level');toast('🪎 '+r.msg);save();relicDialog()});
  document.querySelectorAll('[data-un]').forEach(b=>b.onclick=()=>{const[i,k]=b.dataset.un.split('|'),r=PC.unequipRelic(s,P(i),k);toast(r.msg);sfx('tap');save();relicDialog()});
  document.querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>{const k=b.dataset.sell,R=RI[k];confirmBox('💰 真的要賣掉嗎？',`確定要把「${R.icon} ${R.name}」賣掉換 ${RL.sell} 金幣嗎？賣掉就拿不回來了（只能再打王碰運氣）。`,`確定賣掉（+${RL.sell}）`,()=>{const r=PC.sellRelic(s,k);toast(r.ok?'💰 '+r.msg:'❌ '+r.msg,3000);if(r.ok){sfx('level');save();renderUI()}relicDialog()})})}
-function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();petX=PET_X;const r=PC.startAdventure(s,n,Date.now());if(!r.ok){toast(r.msg);return}save();renderUI();
+function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');return}if(nestBusy())return;cancelMode();petX=PET_X;const r=PC.startAdventure(s,n,Date.now());if(!r.ok){toast(r.msg);return}save();renderUI();
  const me=PC.mkFighter(s.name,formKey(),lvl(),s.route,tier(),s.mood,s.bond),foe=foeFighter(n);
  PC.buffFighter(me,s);me.aura=auraOf(s);me.stage=s.stage;   // V1.42：進化階段、訓練成果、星耀覺醒
  const duo=PC.pairAdventureCost(s),P=s.pair,me2=duo?PC.buffFighter(PC.mkFighter(P.name,pairKey(),PC.level(P.xp),P.route,tier(),P.mood,P.bond),P):null;if(me2){me2.aura=auraOf(P);me2.stage=P.stage}   // 第二隻有體力就一起上場
@@ -3121,7 +3131,7 @@ ${why?`<p class="err">${why}</p>`:''}
 <h3 class="thead">👊 攻擊（成功 ${L.attack} 次）</h3>${card('rush')}${card('combo')}${card('flash')}
 <h3 class="thead">🧘 防禦（成功 ${L.defense} 次）</h3>${card('zen')}`);
  document.querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>{const w=PC.canTrain(s);if(w){toast(w);sfx('no');return}closeModal();startTraining(b.dataset.tk)})}
-function startTraining(kind){if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();unlockAudio();
+function startTraining(kind){if(modeBusy()){toast('先完成現在的互動吧');return}if(nestBusy())return;cancelMode();unlockAudio();
  const r=PC.startTrain(s,kind,Date.now());handleTime(r.tm);if(!r.ok){toast('❌ '+r.msg);return}save();renderUI();
  TG={kind,t:0,phase:'count',cd:3,x0:s.xp,S:sheet(formKey()),fx:[],shake:0,flash:0};TRAIN_INIT[kind](TG);
  $('trainZone').classList.remove('hidden');$('tResult').classList.add('hidden');$('tTitle').textContent=TRAIN_INFO[kind].icon+' '+TRAIN_INFO[kind].title;$('tGoal').textContent=TRAIN_INFO[kind].goal;
@@ -3335,7 +3345,7 @@ function fsInfo(){const F=PC.fishOf(s),R=PC.rodOf(s),now=Date.now();$('fsInfo').
  if(F.sel==='premium'&&F.bait2<1)F.sel='normal';const pr=F.sel==='premium',I=n=>ICV[n]?MI(n):'';
  $('fsB1').innerHTML=`${I('bait')||'🪱'}<span>魚餌 ×${F.bait}</span>`;$('fsB2').innerHTML=`${I('bait2')||'✨'}<span>高級魚餌 ×${F.bait2}</span>`;$('fsB1').classList.toggle('on',!pr);$('fsB2').classList.toggle('on',pr);
  $('fsRod').innerHTML=`${I('rod_'+R.id)||'🎣'}<span>${R.name} ▾</span>`;$('fsCast').innerHTML=`🎣 按住蓄力，放開甩竿<br><small>拋一次用 1 個${pr?'高級魚餌':'魚餌'}、體力 −${CONFIG.fishing.energy}</small>`}
-function openFish(){if(!s.hatched){toast('先把蛋孵出來吧！');return}if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();unlockAudio();
+function openFish(){if(!s.hatched){toast('先把蛋孵出來吧！');return}if(nestBusy())return;if(modeBusy()){toast('先完成現在的互動吧');return}cancelMode();unlockAudio();
  FZ={ph:'idle',t:0,fx:[],hold:false,c:null,res:null,qx:58,qy:66};$('fishZone').classList.remove('hidden');$('fsFin').className='fin';fsInfo();
  const P=PC.fishPool(s,Date.now()).filter(k=>PC.fishOf(s).dex[k]),N=PC.fishPool(s,Date.now()).length;
  fsMsg(`按住拋竿蓄力，放開甩出去，甩越遠越容易釣到好魚。現在有 <b>${N}</b> 種魚${P.length<N?`（${N-P.length} 種沒釣過）`:''}`);sfx('tap');let last=performance.now();

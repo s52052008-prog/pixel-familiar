@@ -286,7 +286,9 @@ async def main():
         await p.click('#bMate'); await p.fill('#mIn', fcode_m); await p.click('#mGo'); await p.wait_for_timeout(300); ok('跟朋友配對也要一公一母', '一公一母' in await p.inner_text('#mErr'), await p.inner_text('#mErr'))
         await p.fill('#mIn', fcode); await p.click('#mGo'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/12_mate.png')
         await p.click('#mConfirm'); await p.wait_for_timeout(500); s = await st(p)
-        ok('配對得到蛋、扣 20 金幣', len(s['eggs']) == 1 and s['coins'] == 80)
+        ok('配對：牠去愛的小窩住一天、扣 20 金幣', bool(s.get('loveEgg')) and len(s['eggs']) == 0 and s['coins'] == 80)
+        await p.evaluate("(()=>{const s=PF.state,t=Date.now()-1;s.loveEgg.end=t;s.nestUntil=t;PF.PC.applyTime(s,Date.now())})()"); await p.wait_for_timeout(200); s = await st(p)
+        ok('住滿一天：回來帶著蛋（還要暖 6 小時）', len(s['eggs']) == 1 and not s.get('loveEgg') and s['eggs'][0]['ready'] > s['eggs'][0]['at'])
         await p.click('#bMate'); await p.fill('#mIn', fcode); await p.click('#mGo'); await p.wait_for_timeout(200)
         ok('配對冷卻 6 小時', '⏳' in await p.inner_text('#mErr')); await closeall(p)
         # ---------- 小窩 ----------

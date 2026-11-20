@@ -109,8 +109,8 @@ t('配對：需要成年期、冷卻 6 小時、花 20 金幣', () => {
   const s = hatched(); s.sex = 'm'; const f = { G: C.makeGenome(5), name: '阿花', adult: true, sex: 'f' };
   assert.ok(!C.breed(s, f, T0).ok); s.stage = 'adult'; s.route = 'tide'; s.mood = 90;
   assert.ok(!C.breed(s, Object.assign({}, f, { sex: 'm' }), T0).ok); assert.ok(!C.breed(s, Object.assign({}, f, { sex: undefined }), T0).ok);
-  const r = C.breed(s, f, T0); assert.ok(r.ok); assert.equal(s.coins, 30); assert.equal(s.eggs.length, 1);
-  assert.ok(!C.breed(s, f, T0 + 5 * H).ok); assert.ok(C.breed(s, f, T0 + 6 * H).ok);
+  const r = C.breed(s, f, T0); assert.ok(r.ok); assert.equal(s.coins, 30); assert.ok(s.loveEgg && s.eggs.length === 0);
+  assert.ok(!C.breed(s, f, T0 + 5 * H).ok); assert.match(C.canBreed(s, f, T0 + 6 * H), /還在/); s.lastTick = T0; C.applyTime(s, T0 + 25 * H); assert.equal(s.eggs.length, 1); assert.ok(C.breed(s, f, T0 + 25 * H).ok);
 });
 
 // 9. 版本升級與損毀資料
@@ -347,7 +347,7 @@ t('舊存檔：以前打過的屬性事件（水系除外）算通過試煉', ()
 t('存檔：pair、主人名字、性別、愛的小窩都會保留', () => { const s = hatched(); s.owner = '冠宏<b>'; s.pair = C.snapshotPet(Object.assign(hatched(), { name: '小火' })); s.loveNest = true; const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(r.owner, '冠宏b'); assert.equal(r.pair.name, '小火'); assert.ok(['m', 'f'].includes(r.sex)); assert.ok(['m', 'f'].includes(r.pair.sex)); assert.equal(r.loveNest, true); });
 t('愛的小窩：要買、要成年、要一公一母，生出一顆蛋', () => { const s = hatched(); s.stage = 'adult'; s.sex = 'm'; s.mood = 80; s.coins = 500; const p = C.snapshotPet(Object.assign(hatched(), { name: '小花', stage: 'adult', sex: 'f' })); s.pair = p;
   assert.match(C.canLove(s, 'pair', T0), /愛的小窩/); assert.ok(C.buyLoveNest(s).ok); assert.equal(s.coins, 200); s.pair.sex = 'm'; assert.match(C.canLove(s, 'pair', T0), /一公一母/); s.pair.sex = 'f';
-  s.pair.stage = 'teen'; assert.match(C.canLove(s, 'pair', T0), /成年/); s.pair.stage = 'adult'; s.lastTick = T0; const r = C.love(s, 'pair', T0); assert.ok(r.ok, r.msg); assert.equal(s.eggs.length, 1); assert.match(C.canLove(s, 'pair', T0 + 1000), /分鐘/); assert.equal(C.lovePartners(s).length, 1); });
+  s.pair.stage = 'teen'; assert.match(C.canLove(s, 'pair', T0), /成年/); s.pair.stage = 'adult'; s.lastTick = T0; const r = C.love(s, 'pair', T0); assert.ok(r.ok, r.msg); assert.ok(s.loveEgg && C.inNest(s.pair, T0 + 1) && C.inNest(s, T0 + 1)); assert.match(C.canLove(s, 'pair', T0 + 1000), /分鐘/); assert.equal(C.lovePartners(s).length, 1); });
 t('存錢筒：等級越高存越快、最多 12 小時、心情低不存、可以領', () => { const s = hatched(); s.xp = 800; s.mood = 90; s.route = 'tide'; s.lastTick = T0; const r = C.piggyRate(s); assert.ok(Math.abs(r - (2 + 0.5 * C.level(800))) < 1e-9);
   C.applyTime(s, T0 + 2 * 3600e3); assert.ok(Math.abs(s.piggy - r * 2) < .01, s.piggy); C.applyTime(s, T0 + 40 * 3600e3); assert.ok(s.piggy <= C.piggyCap(s) + 1e-9);
   const c0 = s.coins, got = C.collectPiggy(s, T0 + 40 * 3600e3); assert.ok(got.ok); assert.equal(s.coins, c0 + got.n); assert.ok(s.piggy < 1);
@@ -518,6 +518,15 @@ t('V1.86 戰鬥天賦、魔王天賦、萬靈藥、魔王圖鑑', () => {
   C.bossSeen(s, 5, 'seen', T0); C.bossSeen(s, 5, 'loss', T0); C.bossSeen(s, 10, 'win', T0); C.bossSeen(s, 3, 'win', T0);
   const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 1000); assert.deepEqual(r.bossDex[5], { s: 1, l: 1, w: 0, at: 0 }); assert.equal(r.bossDex[10].w, 1); assert.equal(r.bossDex[3], undefined); assert.equal(r.inv.elixir, 1);
   const e = hatched(); const c0 = e.coins, eb = C.eliteBonus(e, { coins: 40, xp: 20 }); assert.equal(eb.coins, 20); assert.equal(e.coins, c0 + 20);
+});
+t('V1.86.2 蛋要等一陣子、小窩滿了去老爺爺家、找回告別的幻獸', () => {
+  const s = hatched(); s.stage = 'adult'; s.route = 'tide'; s.mood = 90; s.coins = 100; const f = { name: 'F', adult: true, sex: s.sex === 'm' ? 'f' : 'm', G: C.makeGenome(5) };
+  s.lastTick = T0; const r = C.breed(s, f, T0); assert.ok(r.ok); assert.equal(s.eggs.length, 0); assert.ok(C.inNest(s, T0 + H)); const h0 = s.hunger;
+  C.applyTime(s, T0 + 12 * H); assert.equal(s.hunger, h0); assert.equal(s.eggs.length, 0); const k = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 12 * H); assert.equal(k.loveEgg.end, T0 + 24 * H); assert.equal(k.nestUntil, T0 + 24 * H);
+  C.applyTime(s, T0 + 25 * H); assert.equal(s.eggs.length, 1); assert.ok(!C.inNest(s, T0 + 25 * H)); assert.ok(s.loveNote); assert.ok(!C.eggReady(s.eggs[0], T0 + 29 * H)); assert.ok(C.eggReady(s.eggs[0], T0 + 30 * H)); assert.ok(s.hunger < h0);
+  const n0 = s.name, id0 = C.gidOf(s); s.den.level = 1; assert.equal(C.moveOut(s, T0), 'foster'); assert.equal(s.foster[0].name, n0); assert.ok(s.foster[0].fosterPaid);
+  const s2 = hatched(); s2.stage = 'adult'; s2.route = 'flame'; s2.name = '金細細'; const gid = C.gidOf(s2); s2.dex = [{ id: gid, route: 'flame', stage: 'adult', petName: '金細細', at: T0 }];
+  s2.seed = 99999; s2.genes = undefined; assert.equal(C.lostPets(s2).length, 1); const q = C.recallLost(s2, gid, T0 + 5); assert.ok(q.ok, q.msg); assert.equal(s2.foster[0].name, '金細細'); assert.equal(s2.foster[0].stage, 'adult'); assert.equal(C.gidOf(s2.foster[0]), gid); assert.equal(C.lostPets(s2).length, 0);
 });
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);
