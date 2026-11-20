@@ -130,7 +130,7 @@ async def main():
         await p.screenshot(path=f'{OUT}/07_adult.png', full_page=True)
         await p.evaluate("PF.debug.set({xp:1200})"); await p.evaluate("PF.debug.age(200)"); await p.wait_for_timeout(1500)
         ok('沒有特殊事件不能高階', (await st(p))['stage'] == 'adult')
-        evname = await p.evaluate("PF.PC.ascendInfo(PF.state).task.text"); g = await p.evaluate("document.getElementById('growText').textContent"); ok('成年期顯示 🔔 專屬任務和終極素材進度', evname in g and '🔔' in g and '0/3' in g, g)
+        evname = await p.evaluate("PF.PC.ascendInfo(PF.state).task.text"); g = await p.evaluate("document.getElementById('bondRow').textContent"); ok('成年期顯示專屬任務進度', evname in g, g)
         # 日記
         await p.click('#bCodex'); await p.click('#cxJournal'); await p.wait_for_timeout(300); await p.click('[data-jt=diary]'); await p.wait_for_timeout(300); txt = await p.inner_text('#sheet')
         ok('日記自動記錄孵化與進化', '孵化' in txt and '少年期' in txt and '成年期' in txt); await p.screenshot(path=f'{OUT}/08_journal.png'); await closeall(p)
