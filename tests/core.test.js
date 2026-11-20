@@ -535,5 +535,10 @@ t('V1.86.3 從老爺爺家直接換出來、圖鑑顯示在哪裡', () => {
   assert.equal(s.foster.length, 1); assert.equal(s.foster[0].name, '火哥'); assert.equal(C.whereIs(s, idA), 'foster'); assert.equal(C.whereIs(s, idB), 'cur');
   s.den.level = 3; const r2 = C.fosterSwap(s, 0, T0 + 2); assert.ok(r2.ok); assert.equal(s.name, '火哥'); assert.equal(s.roster[0].name, '金細細'); assert.equal(C.whereIs(s, idB), 'den'); assert.equal(C.whereIs(s, 'g:1'), 'gone');
 });
+t('V1.86.4 新手手冊', () => {
+  const s = C.fresh(T0); assert.equal(C.guideStep(s).k, 'hatch'); assert.equal(C.guideDo(s, 'feed', T0), null); const c0 = s.coins;
+  const r = C.guideDo(s, 'hatch', T0); assert.equal(r.n, 1); assert.equal(s.coins, c0 + 50); assert.equal(C.guideStep(s).k, 'feed'); const f0 = s.inv.food || 0; C.guideDo(s, 'feed', T0); assert.equal(s.inv.food, f0 + 3);
+  const k = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 1); assert.equal(k.guide.i, 2); s.guide.off = true; assert.equal(C.guideStep(s), null);
+});
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

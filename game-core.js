@@ -57,7 +57,18 @@ const CONFIG = {
     fx: { breeze: { out: { mood: 1 } }, rain: { out: { mood: -2, clean: -3 } }, storm: { out: { mood: -5, clean: -4, energy: -2 }, in: { mood: -1 } } } },          // 果核：10 分鐘沒清會發臭長果蠅，每顆每小時心情 −4
   poop: { delayMin: 40, rotMin: 3 },                      // 每吃一次，40 分鐘後大便；大便 3 分鐘沒清就發臭
   potion: { price: 40, heal: .5, drop: .15 },
-  elixir: { price: 60 },                                   // V1.86 萬靈藥：戰鬥中解除點燃、凍傷、混亂、死亡宣告、冰凍
+  elixir: { price: 60 },
+  /* V1.86.4 新手手冊：一步一步帶玩家玩一遍，每完成一步給獎勵 */
+  guide: [
+    { k: 'hatch', icon: '🥚', t: '孵出你的幻獸', d: '一直點畫面上的蛋，把牠孵出來！', btn: null, coins: 50 },
+    { k: 'feed', icon: '🍎', t: '餵牠吃東西', d: '按「餵食」，把食物拖到畫面上，牠會自己走過去吃', btn: '[data-act=feed]', coins: 60, inv: { food: 3 } },
+    { k: 'play', icon: '⚽', t: '陪牠玩頂球', d: '按「玩耍」，球掉下來時點一下，讓牠把球頂進籃框', btn: '[data-act=play]', coins: 60 },
+    { k: 'wash', icon: '🧼', t: '幫牠洗澡', d: '按「洗澡」，用手指在牠身上來回搓一搓', btn: '[data-act=wash]', coins: 60 },
+    { k: 'plant', icon: '🌱', t: '去種田', d: '按「種田」，在空田上種下一顆種子，過幾小時就能收成', btn: '#bFarm', coins: 100, inv: { seeds: 3 } },
+    { k: 'fish', icon: '🎣', t: '去釣魚', d: '按「釣魚」，按住蓄力拋竿，魚咬鉤時把牠拉上來', btn: '#bFish', coins: 100 },
+    { k: 'train', icon: '💪', t: '做一次訓練', d: '按「訓練」，選一個項目練一練，牠會變得更強', btn: '#bTrain', coins: 120 },
+    { k: 'adv', icon: '⚔️', t: '去冒險打贏一場', d: '按「冒險」，挑第 1 關，用衝撞、防禦打倒野怪', btn: '#bAdv', coins: 150, inv: { potion: 2 } },
+    { k: 'dex', icon: '📖', t: '打開圖鑑看看', d: '按「圖鑑」，看看你養過的幻獸、魔王和能力資料', btn: '#bCodex', coins: 200, inv: { potion2: 1 } } ],                                   // V1.86 萬靈藥：戰鬥中解除點燃、凍傷、混亂、死亡宣告、冰凍
   /* V1.86 戰鬥天賦：少年期是弱化版（w）、成年期以後是完整版（f） */
   talents: {
     fire:  { name: '灼燒',     w: { chance: .2, turns: 2 }, f: { chance: .35, turns: 4 } },
@@ -381,6 +392,7 @@ function sanitize(o, now = Date.now()) {
   { const T = o.trainLv && typeof o.trainLv === 'object' ? o.trainLv : {}; r.trainLv = {}; for (const k of ['zen', 'flash', 'rush', 'combo', 'dodge', 'ball']) if (T[k]) r.trainLv[k] = int(T[k], 0, 0, 10); }   // V1.85 訓練階段
   r.emberOwned = !!o.emberOwned || (r.adv && r.adv.stage > CONFIG.ember.stage); r.emberOn = Number.isFinite(+o.emberOn) && o.emberOn !== null && o.emberOn !== '' ? +o.emberOn : null;
   if (r.inv.ember > 0) { r.emberOwned = true; r.coins += r.inv.ember * CONFIG.ember.oldCoins; r.emberRefund = (r.emberRefund || 0) + r.inv.ember; r.inv.ember = 0; }   // 舊的經驗火種：保留一個，多的換成金幣
+  r.guide = { i: int(o.guide && o.guide.i, 0, 0, 99), off: !!(o.guide && o.guide.off) }; r.tipsSeen = {}; if (o.tipsSeen && typeof o.tipsSeen === 'object') for (const k of ['farm', 'fish', 'train', 'adv']) if (o.tipsSeen[k]) r.tipsSeen[k] = 1;
   r.bossDex = {}; if (o.bossDex && typeof o.bossDex === 'object') for (const k in CONFIG.bosses) { const v = o.bossDex[k]; if (v && typeof v === 'object') r.bossDex[k] = { s: v.s ? 1 : 0, l: v.l ? 1 : 0, w: v.w ? 1 : 0, at: num(v.at, 0, 0, now) }; }   // V1.86 魔王圖鑑：遇過／輸過／打贏
   r.skillDay = typeof o.skillDay === 'string' ? o.skillDay.slice(0, 10) : '';
   r.yard = {}; if (o.yard && typeof o.yard === 'object') for (const k of ['den', 'nest', 'tree1', 'tree2', 'bush', 'path', 'pond', 'plots', 'gen', 'fire']) { const v = o.yard[k]; if (Array.isArray(v) && (v.length === 3 || v.length === 4) && v.every(Number.isFinite)) r.yard[k] = [Math.max(-130, Math.min(130, Math.round(v[0]))), Math.max(-80, Math.min(80, Math.round(v[1]))), Math.max(.5, Math.min(1.8, Math.round(v[2] * 10) / 10)), v[3] ? 1 : 0]; }   // V1.82 院子佈置：位移與大小
@@ -1225,6 +1237,12 @@ function moveToDen(st) { if (!st.hatched || petCount(st) >= denCap(st)) return f
 /* V1.86.2 孵新蛋時：小窩有位子就搬進小窩；滿了就免費去神秘老爺爺家住，不會再告別 */
 function moveOut(st, now = Date.now()) { if (!st.hatched) return null; if (moveToDen(st)) return 'den'; const p = snapshotPet(st); p.fosterPaid = true; (st.foster || (st.foster = [])).push(p); journal(st, now, `${st.name} 去神秘老爺爺家住了（小窩滿了）`); return 'foster'; }
 const eggReady = (e, now = Date.now()) => !(e.ready > now);
+/* V1.86.4 新手手冊：做到目前這一步，就給獎勵、換下一步 */
+function guideStep(st) { const G = st.guide || (st.guide = { i: 0, off: false }); if (G.off) return null; return CONFIG.guide[G.i] || null; }
+function guideDo(st, k, now = Date.now()) {
+  const S = guideStep(st); if (!S || S.k !== k) return null; st.coins += S.coins; for (const x in S.inv || {}) st.inv[x] = (st.inv[x] || 0) + S.inv[x];
+  st.guide.i++; journal(st, now, `新手手冊：完成「${S.t}」`); return { step: S, n: st.guide.i, total: CONFIG.guide.length, done: st.guide.i >= CONFIG.guide.length };
+}
 /* V1.86.3 從老爺爺家直接換出來陪你：現在照顧的那隻搬進小窩（滿了就換去老爺爺家，免費） */
 function fosterSwap(st, j, now = Date.now()) {
   const L = st.foster || [], p = L[j]; if (!p) return { ok: false, msg: '老爺爺家沒有這隻' }; if (inNest(st, now)) return { ok: false, msg: `${st.name} 在愛的小窩裡，等牠出來再換` };
@@ -1508,7 +1526,7 @@ const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, S
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
-  toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, fosterSwap, whereIs, inNest, loveTick, moveOut, eggReady, lostPets, recallLost, ownedIds, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, guideStep, guideDo, fosterSwap, whereIs, inNest, loveTick, moveOut, eggReady, lostPets, recallLost, ownedIds, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, selectRod, allPets, giveEmber, emberShare, setTeam, TRAIN_TIER, trainLvOf, trainTier, trainLvUp, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 Object.assign(API, { EARN_NAME, SPEND_NAME, BADGES, BADGE, statsOf, statAdd, statVal, checkBadges, playTick, weekKey, sumOf }); wrapStats(API);
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
