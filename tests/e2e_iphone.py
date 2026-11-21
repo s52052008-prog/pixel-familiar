@@ -149,9 +149,8 @@ async def main():
         await p.evaluate("(()=>{const s=PF.state;s.plots[0].at=Date.now()-2*3600000-1000;PF.debug.set({})})()"); await p.wait_for_timeout(600)
         await p.screenshot(path=f'{OUT}/09b_ripe_in_scene.png')
         x0 = (await st(p))['xp']; await p.click('#bFarm'); await p.wait_for_timeout(400); await p.screenshot(path=f'{OUT}/09c_farm_ripe.png'); await tap_plot(0); await p.wait_for_timeout(500)
-        card = await p.is_visible('#gResult')
-        if card: await p.click('#gDone'); await p.wait_for_timeout(200)
-        s = await st(p); ok('2 小時後收成：蔓越莓／藍莓／草莓 2～3 顆、XP +5、收成次數 1、跳結算', card and sum(s['inv'].get(k, 0) for k in ('cranberry', 'blueberry', 'strawberry')) in (2, 3) and s['xp'] == x0 + 5 and s['harvests'] == 1, (s['inv'], s['xp'] - x0)); await p.click('#fmHome'); await p.wait_for_timeout(300); await closeall(p)
+        card = (not await p.is_visible('#gResult')) and '收成' in (await p.evaluate("document.getElementById('fmMsg').textContent"))   # V1.86.6 收成不跳視窗，訊息顯示在種田畫面
+        s = await st(p); ok('2 小時後收成：蔓越莓／藍莓／草莓 2～3 顆、XP +5、收成次數 1、不用點視窗', card and sum(s['inv'].get(k, 0) for k in ('cranberry', 'blueberry', 'strawberry')) in (2, 3) and s['xp'] == x0 + 5 and s['harvests'] == 1, (s['inv'], s['xp'] - x0)); await p.click('#fmHome'); await p.wait_for_timeout(300); await closeall(p)
         # ---------- 每日小目標 ----------
         await p.click('#bGoals'); await p.wait_for_timeout(300); s = await st(p)
         ok('每日 3 個小目標', len(s['goals']['list']) == 3)

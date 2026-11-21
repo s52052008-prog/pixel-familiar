@@ -187,7 +187,7 @@ t('果核：10 分鐘內清掉沒事；發臭後每小時心情 −4（每顆）
 t('果核：最多 8 顆、存檔往返保留', () => { const s = hatched(); for (let i = 0; i < 11; i++) C.addCore(s, i * 10, T0); assert.equal(s.cores.length, 8); const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(r.cores.length, 8); });
 t('canAct 只檢查不改變狀態', () => { const s = hatched(); s.hunger = 50; const before = JSON.stringify(s); assert.equal(C.canAct(s, 'feed', T0), null); assert.equal(JSON.stringify(s), before); s.hunger = 99; assert.ok(C.canAct(s, 'feed', T0)); });
 // V1.19：難度與食物
-t('多種食物：魚是水系愛吃的（心情 +10、經驗 +5），體力 +20，吃完留下魚骨', () => { const s = hatched(); s.route = 'tide'; s.hunger = 30; s.mood = 50; s.energy = 50; s.inv.fish = 1; const r = C.act(s, 'feed', T0, 'fish'); assert.ok(r.ok && r.fav); assert.equal(r.left, 'bone'); assert.equal(s.inv.fish, 0); assert.equal(s.hunger, 50); assert.equal(s.mood, 60); assert.equal(s.energy, 70); assert.equal(s.xp, 10); });
+t('多種食物：魚是水系愛吃的（心情 +10、經驗 +5），體力 +20，吃完留下魚骨', () => { const s = hatched(); s.route = 'tide'; s.hunger = 30; s.mood = 50; s.energy = 50; s.inv.fish = 1; const r = C.act(s, 'feed', T0, 'fish'); assert.ok(r.ok && r.fav); assert.equal(r.left, 'fbone'); assert.equal(s.inv.fish, 0); assert.equal(s.hunger, 50); assert.equal(s.mood, 60); assert.equal(s.energy, 70); assert.equal(s.xp, 10); });
 t('火系不愛吃魚、愛吃肉排；蛋糕大家都愛', () => { const s = hatched(); s.route = 'flame'; s.hunger = 10; s.coins = 999; assert.ok(!C.act(s, 'feed', T0, 'fish').fav); assert.ok(C.act(s, 'feed', T0, 'meat').fav); assert.ok(C.act(s, 'feed', T0, 'cake').fav); });
 t('只有自己種的水果能賣 15 元；田從 3 格擴建到 9 格（90／150／300／500／700／999）', () => { const s = hatched(); s.coins = 0; assert.ok(!C.sellFruit(s, 'food').ok); C.plant(s, 0, T0, () => 0); C.harvest(s, 0, T0 + 2 * H, () => 0); assert.ok(C.sellFruit(s, 'cranberry').ok); assert.ok(C.sellFruit(s, 'cranberry').ok); assert.equal(s.coins, 30); assert.ok(!C.sellFruit(s, 'cranberry').ok); s.coins = 2739; for (const p of [90, 150, 300, 500, 700, 999]) { assert.equal(C.expandPrice(s), p); assert.ok(C.expandFarm(s).ok); } assert.equal(s.plots.length, 9); assert.equal(s.coins, 0); assert.ok(!C.expandFarm(s).ok); const r = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.equal(r.plots.length, 9); });
 t('V1.85 經驗火種：第一次打倒第 10 關大王拿到、只有一個；交給一隻帶著，沒上場也分 70% 經驗；舊的火種換金幣', () => {
@@ -539,6 +539,10 @@ t('V1.86.4 新手手冊', () => {
   const s = C.fresh(T0); assert.equal(C.guideStep(s).k, 'hatch'); assert.equal(C.guideDo(s, 'feed', T0), null); const c0 = s.coins;
   const r = C.guideDo(s, 'hatch', T0); assert.equal(r.n, 1); assert.equal(s.coins, c0 + 50); assert.equal(C.guideStep(s).k, 'feed'); const f0 = s.inv.food || 0; C.guideDo(s, 'feed', T0); assert.equal(s.inv.food, f0 + 3);
   const k = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 1); assert.equal(k.guide.i, 2); s.guide.off = true; assert.equal(C.guideStep(s), null);
+});
+t('V1.86.6 肉骨頭、魚骨存檔後還是骨頭', () => {
+  const s = hatched(); C.addCore(s, 30, T0, 'yard', 'bone'); C.addCore(s, 50, T0, 'yard', 'fbone'); const k = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 1);
+  assert.deepEqual(k.cores.map(c => c.k), ['bone', 'fbone']); assert.equal(C.clearCore(k, 1, T0 + 2).kind, 'fbone');
 });
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

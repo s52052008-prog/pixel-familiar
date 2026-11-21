@@ -170,15 +170,15 @@ const CONFIG = {
   foods: {   // 食物：key＝背包欄位；left＝吃剩的東西（會發臭）；fav＝愛吃的屬性（心情 +10、經驗 +5）。V1.21 依玩家設定
     food:  { name: '蘋果', icon: 'apple', hunger: 10, mood: 0,  energy: 5,  xp: 3, price: 10, left: 'core', fav: [] },
     berry: { name: '莓果', icon: 'berry', hunger: 10, mood: 10, energy: 0,  xp: 3, price: 10, left: null,   fav: [] },
-    fish:  { name: '烤魚', icon: 'fish',  hunger: 20, mood: 0,  energy: 20, xp: 5, price: 20, left: 'bone', fav: ['tide', 'metal', 'forest'] },
+    fish:  { name: '烤魚', icon: 'fish',  hunger: 20, mood: 0,  energy: 20, xp: 5, price: 20, left: 'fbone', fav: ['tide', 'metal', 'forest'] },
     meat:  { name: '肉排', icon: 'meat',  hunger: 20, mood: 0,  energy: 20, xp: 5, price: 20, left: 'bone', fav: ['flame', 'elec', 'bird'] },
-    dragon:  { name: '火龍果', icon: 'dragon',  power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: null, el: 'flame', fav: [] },
-    melonw:  { name: '西瓜',   icon: 'melonw',  power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: null, el: 'tide', fav: [] },
-    melon:   { name: '哈密瓜', icon: 'melon',   power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: null, el: 'forest', fav: [] },
-    potato:  { name: '地瓜',   icon: 'potato',  power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: null, el: 'earth', fav: [] },
-    nut:     { name: '堅果',   icon: 'nut',     power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: null, el: 'bird', fav: [] },
-    coconut: { name: '椰子',   icon: 'coconut', power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: null, el: 'metal', fav: [] },
-    banana:  { name: '香蕉',   icon: 'banana',  power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: null, el: 'elec', fav: [] },
+    dragon:  { name: '火龍果', icon: 'dragon',  power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: 'dragon', el: 'flame', fav: [] },
+    melonw:  { name: '西瓜',   icon: 'melonw',  power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: 'melonw', el: 'tide', fav: [] },
+    melon:   { name: '哈密瓜', icon: 'melon',   power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: 'melon', el: 'forest', fav: [] },
+    potato:  { name: '地瓜',   icon: 'potato',  power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: 'potato', el: 'earth', fav: [] },
+    nut:     { name: '堅果',   icon: 'nut',     power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: 'nut', el: 'bird', fav: [] },
+    coconut: { name: '椰子',   icon: 'coconut', power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: 'coconut', el: 'metal', fav: [] },
+    banana:  { name: '香蕉',   icon: 'banana',  power: true, hunger: 10, mood: 10, energy: 10, xp: 10, price: 30, left: 'banana', el: 'elec', fav: [] },
     cranberry:  { name: '蔓越莓', icon: 'cranberry',  farm: true, hunger: 10, mood: 5,  energy: 5, xp: 3, price: 15, left: null, fav: [] },   // V1.41 家園種出來的（商店不賣）
     blueberry:  { name: '藍莓',   icon: 'blueberry',  farm: true, hunger: 12, mood: 8,  energy: 5, xp: 4, price: 20, left: null, fav: [] },
     strawberry: { name: '草莓',   icon: 'strawberry', farm: true, hunger: 12, mood: 12, energy: 8, xp: 5, price: 30, left: null, fav: [] },
@@ -368,7 +368,7 @@ function sanitize(o, now = Date.now()) {
   r.view = o.view === 'room' ? 'room' : 'yard';
   r.digest = Array.isArray(o.digest) ? o.digest.map(Number).filter(Number.isFinite).slice(0, 10) : [];
   r.toiletUses = int(o.toiletUses, 0, 0, 1e7); r.starveSince = num(o.starveSince, 0, 0, 9e15); r.runaway = o.runaway && typeof o.runaway === 'object' ? { at: num(o.runaway.at, 0, 0, 9e15), got: int(o.runaway.got, 0, 0, 1e7) } : null; r.bondRestUntil = num(o.bondRestUntil, 0, 0, 9e15); r.ballUses = int(o.ballUses, 0, 0, CONFIG.ballLife - 1); r.ballBroken = o.ballBroken === true;
-  r.cores = Array.isArray(o.cores) ? o.cores.filter(c => c && typeof c === 'object').slice(-CONFIG.core.max).map(c => ({ x: num(c.x, 64, 4, 124), at: num(c.at, now, 0, 9e15), v: c.v === 'room' ? 'room' : 'yard', k: c.k === 'poop' ? 'poop' : 'core' })) : [];
+  r.cores = Array.isArray(o.cores) ? o.cores.filter(c => c && typeof c === 'object').slice(-CONFIG.core.max).map(c => ({ x: num(c.x, 64, 4, 124), at: num(c.at, now, 0, 9e15), v: c.v === 'room' ? 'room' : 'yard', k: CORE_KINDS.includes(c.k) ? c.k : 'core' })) : [];   // V1.86.6 肉骨頭、魚骨存檔後不會變成果核
   const bl = o.ball && typeof o.ball === 'object' ? o.ball : {}; r.ball = { best: int(bl.best, 0, 0, 99), goals: int(bl.goals, 0, 0, 1e7) };
   r.den = { level: int(o.den && o.den.level, 1, 1, CONFIG.den.length) };
   r.roster = Array.isArray(o.roster) ? o.roster.filter(p => p && typeof p === 'object' && p.hatched).slice(0, CONFIG.den.length - 1).map(p => sanitizePet(p, now)) : [];
@@ -973,7 +973,7 @@ function eatFish(st, key, now = Date.now()) {
   if (st.hunger >= CONFIG.full) return { ok: false, msg: '牠已經吃飽了', tm };
   F[cooked ? 'cooked' : 'raw'][key]--; const E = fishFood(key, cooked);
   st.hunger = clamp(st.hunger + E.hunger); st.energy = clamp(st.energy + E.energy); const xp = addXP(st, 2 + f.star);
-  return { ok: true, tm, cooked, xp, msg: `${cooked ? '烤' : '生'}${f.name}好好吃！飽食 +${E.hunger}、體力 +${E.energy}` };
+  return { ok: true, tm, cooked, xp, left: 'fbone', msg: `${cooked ? '烤' : '生'}${f.name}好好吃！飽食 +${E.hunger}、體力 +${E.energy}` };
 }
 function cookFish(st, key) {
   const F = fishOf(st), f = FISH[key]; if (!f || !(F.raw[key] > 0)) return { ok: false, msg: '沒有生魚可以烤' };
@@ -1196,7 +1196,10 @@ function canAct(st, a, now = Date.now()) {
   return null;
 }
 const rotMin = c => c.k === 'poop' ? CONFIG.poop.rotMin : CONFIG.core.rotMin;
-function addCore(st, x, now = Date.now(), v = 'yard', k = 'core') { st.cores.push({ x: clamp(x, 4, 124), at: now, v: v === 'room' ? 'room' : 'yard', k: ['poop', 'bone'].includes(k) ? k : 'core' }); while (st.cores.length > CONFIG.core.max) st.cores.shift(); }
+/* V1.86.6 吃完留下的東西：果核、肉骨頭、魚骨、各種果皮果殼 */
+const CORE_KINDS = ['core', 'poop', 'bone', 'fbone', 'banana', 'melonw', 'melon', 'dragon', 'coconut', 'nut', 'potato'];
+const LEFT_NAME = { core: '果核', poop: '大便', bone: '肉骨頭', fbone: '魚骨', banana: '香蕉皮', melonw: '西瓜皮', melon: '哈密瓜皮', dragon: '火龍果皮', coconut: '椰子殼', nut: '堅果殼', potato: '地瓜皮' };
+function addCore(st, x, now = Date.now(), v = 'yard', k = 'core') { st.cores.push({ x: clamp(x, 4, 124), at: now, v: v === 'room' ? 'room' : 'yard', k: CORE_KINDS.includes(k) ? k : 'core' }); while (st.cores.length > CONFIG.core.max) st.cores.shift(); }
 const isRotten = (c, now = Date.now()) => now - c.at >= rotMin(c) * MIN;
 function clearCore(st, i, now = Date.now()) { const c = st.cores[i]; if (!c) return null; applyTime(st, now); const k = st.cores.indexOf(c); if (k >= 0) st.cores.splice(k, 1); st.cleanups++; if (st.hatched) st.path.metal += 1; return { rotten: isRotten(c, now), kind: c.k }; }
 
@@ -1528,7 +1531,7 @@ const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, S
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
-  toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, PET_NAMES, guideStep, guideDo, fosterSwap, whereIs, inNest, loveTick, moveOut, eggReady, lostPets, recallLost, ownedIds, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, PET_NAMES, CORE_KINDS, LEFT_NAME, guideStep, guideDo, fosterSwap, whereIs, inNest, loveTick, moveOut, eggReady, lostPets, recallLost, ownedIds, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, selectRod, allPets, giveEmber, emberShare, setTeam, TRAIN_TIER, trainLvOf, trainTier, trainLvUp, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 Object.assign(API, { EARN_NAME, SPEND_NAME, BADGES, BADGE, statsOf, statAdd, statVal, checkBadges, playTick, weekKey, sumOf }); wrapStats(API);
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;

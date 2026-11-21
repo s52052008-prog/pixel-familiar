@@ -16,13 +16,20 @@ SHEETS = {
                   'b_bonearmor', 'b_bonewall', 'b_ghost', 'b_chant', 'b_confuse',
                   'b_reap', 'b_doom', 'b_flamewing', 'b_firewind', 'b_rebirth',
                   'b_scale', 'b_breath', 'b_chill', 'b_icetide', 'b_zero']),
+  'peels': (4, 2, ['peel_banana', 'peel_melonw', 'peel_melon', 'peel_dragon', 'peel_coconut', 'peel_nut', 'peel_potato', 'peel_fbone']),
   'common': (6, 3, ['m_tackle', 'm_charge', 'm_guard', 'm_potion', 'm_potion2', 'm_combo',
                     'm_bond', 's_burn', 's_para', 's_frozen', 's_frost', 's_charged',
                     's_stiff', 's_rage', 's_drain', 's_elite', 't_boss', 'm_elixir']),
 }
 SIZE = 32
+ONLY = None
 os.makedirs('sprites/sk', exist_ok=True)
+import sys as _s
+ONLY = _s.argv[1] if len(_s.argv) > 1 else None
 for sheet, (C, R, NAMES) in SHEETS.items():
+    if ONLY and sheet != ONLY: continue
+    size = 14 if sheet == 'peels' else SIZE
+    outdir = 'sprites/items' if sheet == 'peels' else 'sprites/sk'
     A4 = np.asarray(Image.open(f'art/src/sk/{sheet}.png').convert('RGBA')); a = A4[..., :3]
     m = A4[..., 3] > 140
     H, W = m.shape
@@ -36,8 +43,8 @@ for sheet, (C, R, NAMES) in SHEETS.items():
         ys = np.where(sub.any(1))[0]; xs = np.where(sub.any(0))[0]
         bx0, by0, bx1, by1 = x0 + xs.min(), y0 + ys.min(), x0 + xs.max() + 1, y0 + ys.max() + 1
         mm = np.zeros_like(m); mm[y0:y1, x0:x1] = sub
-        k = SIZE / max(bx1 - bx0, by1 - by0); tw, th = max(1, round((bx1 - bx0) * k)), max(1, round((by1 - by0) * k))
+        k = size / max(bx1 - bx0, by1 - by0); tw, th = max(1, round((bx1 - bx0) * k)), max(1, round((by1 - by0) * k))
         im = downsample(a, mm, (bx0, by0, bx1, by1), tw, th, 0, 0)[:th, :tw]
-        (im,), _ = quantize([im], 24)
-        Image.fromarray(im).save(f'sprites/sk/{nm}.png')
+        (im,), _ = quantize([im], 16 if sheet == 'peels' else 24)
+        Image.fromarray(im).save(f'{outdir}/{nm}.png')
     print(sheet, len(NAMES))
