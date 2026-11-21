@@ -321,7 +321,7 @@ function fresh(now = Date.now()) {
     adv: { stage: 1, wins: 0, losses: 0 },
     dex: [], eggs: [], breedAt: 0, journal: [],
     created: now, hatchedAt: 0, lastTick: now, updated: now, clockWarn: 0, lastExport: 0,
-    settings: { sound: true, reducedMotion: false, light: true } };
+    settings: { sound: true, reducedMotion: false, light: true, music: true } };
 }
 const OLD_ROUTE = { ember: 'flame', mist: 'tide', sylvan: 'forest' };
 function sanitize(o, now = Date.now()) {
@@ -446,7 +446,7 @@ function sanitize(o, now = Date.now()) {
   r.lastTick = num(o.lastTick !== undefined ? o.lastTick : o.updated, now, 0, 9e15);   // 未來時間保留，交由 applyTime 判斷倒退
   r.updated = num(o.updated, now, 0, 9e15); r.clockWarn = num(o.clockWarn, 0, 0, 9e15); r.lastExport = num(o.lastExport, 0, 0, 9e15);
   const sg = o.settings && typeof o.settings === 'object' ? o.settings : {};
-  r.settings = { sound: (sg.sound !== undefined ? sg.sound : o.sound) !== false, reducedMotion: sg.reducedMotion === true, light: sg.light !== false };
+  r.settings = { sound: (sg.sound !== undefined ? sg.sound : o.sound) !== false, reducedMotion: sg.reducedMotion === true, light: sg.light !== false, music: sg.music !== false };
   if (r.hatched) { const id = gidOf(r); let e = r.dex.find(x => x.id === id); if (!e) { e = { id, route: null, stage: r.stage, petName: r.name, at: r.hatchedAt || now }; r.dex.push(e); } e.route = r.route; e.stage = r.stage; e.petName = r.name; }
   return r;
 }
