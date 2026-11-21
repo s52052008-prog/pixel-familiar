@@ -10,7 +10,7 @@ const MAX_ITEMS = 40, KEEP_DAYS = 30;
 const GIFT_OK = { food: 10, seeds: 10, candy: 5, potion: 5, fish: 5, cake: 3, coins: 500 };   // 可以送的東西、一次最多幾個
 const DAILY = [['food', 2], ['seeds', 2], ['candy', 1], ['coins', 30], ['potion', 1]];   // 每日免費小禮物（隨機一種）
 const GNAME = { food: '🍎 蘋果', seeds: '🌱 種子', candy: '🍬 糖果', potion: '🧪 回復藥水', fish: '🐟 魚', cake: '🍰 蛋糕', coins: '🪙 金幣' };
-const LIMIT = { pet: 1, water: 1, msg: 5, gift: 3, daily: 1, mate: 3, mateBack: 3 };   // 每天對同一個朋友最多幾次
+const LIMIT = { pet: 1, water: 1, msg: 5, gift: 3, daily: 1, mate: 3, mateBack: 3, duel: 3 };   // 每天對同一個朋友最多幾次
 
 const enc = new TextEncoder();
 const b64u = buf => { let s = ''; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
@@ -77,6 +77,7 @@ export class Store extends DurableObject {
       CREATE TABLE IF NOT EXISTS board(n INTEGER PRIMARY KEY AUTOINCREMENT, t TEXT, f TEXT, text TEXT, at INTEGER);
       CREATE TABLE IF NOT EXISTS lim(k TEXT PRIMARY KEY, v INTEGER);
       CREATE INDEX IF NOT EXISTS inbox_t ON inbox(t); CREATE INDEX IF NOT EXISTS board_t ON board(t);`);
+    for (const c of ['pts INTEGER DEFAULT 1000', 'w INTEGER DEFAULT 0', 'l INTEGER DEFAULT 0']) { try { this.sql.exec('ALTER TABLE users ADD COLUMN ' + c); } catch (_) {} }   // 第二批：對戰積分
   }
   one(q, ...a) { const r = this.sql.exec(q, ...a).toArray(); return r[0] || null; }
   all(q, ...a) { return this.sql.exec(q, ...a).toArray(); }
@@ -97,7 +98,7 @@ export class Store extends DurableObject {
   bump(k, max) { const r = this.one('SELECT v FROM lim WHERE k=?', k), v = r ? r.v : 0; if (v >= max) return false; this.sql.exec('INSERT INTO lim(k,v) VALUES(?,1) ON CONFLICT(k) DO UPDATE SET v=v+1', k); return true; }
   befriend(a, b) { const t = Date.now(); this.sql.exec('INSERT OR IGNORE INTO friends(a,b,at) VALUES(?,?,?)', a, b, t); this.sql.exec('INSERT OR IGNORE INTO friends(a,b,at) VALUES(?,?,?)', b, a, t); this.sql.exec('DELETE FROM reqs WHERE (f=? AND t=?) OR (f=? AND t=?)', a, b, b, a); }
   mail(t, f, kind, data) { this.sql.exec('INSERT INTO inbox(t,f,kind,data,at) VALUES(?,?,?,?,?)', t, f, kind, JSON.stringify(data || {}), Date.now()); }
-  pub(u) { let card = {}; try { card = JSON.parse(u.card || '{}'); } catch (_) {} return { code: u.code, name: u.name || '朋友', card, seen: u.seen }; }
+  pub(u) { let card = {}; try { card = JSON.parse(u.card || '{}'); } catch (_) {} return { code: u.code, name: u.name || '朋友', card, seen: u.seen, pts: u.pts ?? 1000, w: u.w || 0, l: u.l || 0 }; }
 
   async fetch(req) {
     const url = new URL(req.url), P = url.pathname;
@@ -129,7 +130,7 @@ export class Store extends DurableObject {
       const inbox = this.all('SELECT i.n, i.kind, i.data, i.at, u.code, u.name FROM inbox i LEFT JOIN users u ON u.id=i.f WHERE i.t=? ORDER BY i.n LIMIT 50', b.id).map(r => ({ ...r, data: JSON.parse(r.data || '{}') }));
       if (inbox.length) this.sql.exec('DELETE FROM inbox WHERE t=? AND n<=?', b.id, inbox[inbox.length - 1].n);
       const board = this.all('SELECT b.text, b.at, u.name, u.code FROM board b LEFT JOIN users u ON u.id=b.f WHERE b.t=? ORDER BY b.n DESC LIMIT 30', b.id);
-      return json(req, { ok: true, code: me.code, friends, reqs, sent, inbox, board });
+      return json(req, { ok: true, code: me.code, me: this.pub(this.user(b.id)), friends, reqs, sent, inbox, board });
     }
     const other = this.byCode(b.code);
     if (!other) return json(req, { ok: false, msg: '找不到這個好友碼，請再確認一次' });
@@ -152,6 +153,16 @@ export class Store extends DurableObject {
       const board = this.all('SELECT b.text, b.at, u.name FROM board b LEFT JOIN users u ON u.id=b.f WHERE b.t=? ORDER BY b.n DESC LIMIT 20', other.id);
       const day = twDay(now), used = {}; for (const k of Object.keys(LIMIT)) { const r = this.one('SELECT v FROM lim WHERE k=?', `${k}:${b.id}:${other.id}:${day}`); used[k] = r ? r.v : 0; }
       return json(req, { ok: true, ...this.pub(other), board, used, limit: LIMIT });
+    }
+    if (P === '/duel') {   // 對戰結果：積分（像西洋棋那樣，打贏比自己強的拿比較多）
+      const day = twDay(now); if (!this.bump(`duel:${b.id}:${other.id}:${day}`, LIMIT.duel)) return json(req, { ok: false, msg: '今天跟這位朋友的對戰次數用完了，明天再來吧' });
+      const win = b.win === true, A = me.pts ?? 1000, Bp = other.pts ?? 1000, E = 1 / (1 + Math.pow(10, (Bp - A) / 400)), d = Math.max(1, Math.round(32 * ((win ? 1 : 0) - E) * (win ? 1 : -1)));
+      const dA = win ? d : -d, dB = -dA, nA = Math.max(0, A + dA), nB = Math.max(0, Bp + dB);
+      this.sql.exec(`UPDATE users SET pts=?, ${win ? 'w=w+1' : 'l=l+1'} WHERE id=?`, nA, b.id); this.sql.exec(`UPDATE users SET pts=?, ${win ? 'l=l+1' : 'w=w+1'} WHERE id=?`, nB, other.id);
+      const mp = str(b.pet, 16) || '牠', op = this.petName(other);
+      this.mail(other.id, b.id, 'duel', { won: !win, d: nB - Bp, pts: nB, pet: mp });
+      await this.notify(other, win ? `⚔️ ${myName} 的 ${mp} 打贏了你的 ${op}…積分 ${nB - Bp}` : `🛡️ ${myName} 的 ${mp} 來挑戰，你的 ${op} 守住了！積分 +${nB - Bp}`, 'duel');
+      return json(req, { ok: true, pts: nA, d: nA - A, them: nB });
     }
     if (P === '/act') {
       const kind = String(b.kind), lim = LIMIT[kind]; if (!lim) return json(req, { ok: false, msg: 'bad kind' }, 400);
