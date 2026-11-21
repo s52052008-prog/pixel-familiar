@@ -388,12 +388,17 @@ header{padding-top:10px}
 #arrPanel.room #yaMinus,#arrPanel.room #yaPlus{display:none}#arrPanel.room #yaFlip,#arrPanel.room #arrReset,#arrPanel.room #arrDone{grid-column:span 2}
 #arrPanel .btn:disabled{opacity:.4}
 body.arrMode .snav{display:none}
+#vsCard{flex:0 0 auto;background:#3a2414;border:3px solid #2a170a;box-shadow:0 0 0 2px #b8854e;border-radius:6px;padding:10px;margin:0 6px 4px;display:flex;flex-direction:column;gap:8px;color:#fff3d8}
+#vsCard .lgTop{display:flex;gap:10px;align-items:center}#vsCv{width:64px;height:64px;image-rendering:pixelated;background:#5a3a20;border:2px solid #2a170a;border-radius:6px}#vsName{font-size:18px}#vsSub{font-size:13px;color:#f0d8a8}
+.vsBtns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}#vsCard .btn{margin:0;min-height:46px;font-size:16px;padding:4px}#vsCard .btn:disabled{opacity:.45}
+.frow{display:flex;gap:8px;align-items:center;background:#4a2e18;border:2px solid #2a170a;border-radius:6px;padding:6px;margin:6px 0}.frow canvas{width:48px;height:48px;image-rendering:pixelated;flex:0 0 auto}.frow .fi{flex:1;min-width:0}.frow .btn{margin:0;flex:0 0 auto;padding:6px 10px}
+.fcode{font-size:24px;letter-spacing:3px;color:#ffe066;font-family:monospace}.gift-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.gift-grid .btn{margin:0;font-size:15px}
 #lgCard{flex:0 0 auto;background:#3a2414;border:3px solid #2a170a;box-shadow:0 0 0 2px #b8854e;border-radius:6px;padding:10px;margin:0 6px 4px;display:flex;flex-direction:column;gap:10px;color:#fff3d8}
 #lgCard .lgTop{display:flex;gap:10px;align-items:center}#lgCv{width:72px;height:72px;image-rendering:pixelated;background:#5a3a20;border:2px solid #2a170a;border-radius:6px;flex:0 0 auto}
 #lgCard .lgInfo{flex:1;min-width:0}#lgName{font-size:19px}#lgSub{font-size:14px;color:#f0d8a8;margin:2px 0 6px}
 #lgBars{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:4px 6px;align-items:center;font-size:13px}#lgBars i{display:block;height:8px;background:#1a0e06;border-radius:3px;overflow:hidden}#lgBars i b{display:block;height:100%;background:#6fcf5a}
 #lgCard .lgx{align-self:flex-start;background:none;border:0;color:#fff3d8;font-size:22px;padding:2px 6px}#lgCard .row{display:grid;grid-template-columns:1fr 1.4fr;gap:8px}#lgCard .btn{min-height:50px;font-size:17px;margin:0}
-body.lgMode #infoSlot,body.lgMode #app>.panel,body.lgMode #stats,body.lgMode #homeTip{display:none!important}
+body.visitMode #lightBtn,body.visitMode #denBtn,body.visitMode #viewBtn,body.visitMode #infoSlot,body.visitMode #app>.panel,body.visitMode #stats,body.visitMode #homeTip,body.visitMode .actions,body.visitMode .toolbar,body.visitMode #navL,body.visitMode #navR,body.lgMode #infoSlot,body.lgMode #app>.panel,body.lgMode #stats,body.lgMode #homeTip{display:none!important}
 #arrTray{display:none;gap:6px;overflow-x:auto;padding:4px 2px 6px;-webkit-overflow-scrolling:touch;background:rgba(0,0,0,.25);border-radius:6px;min-height:84px}#arrPanel.room #arrTray{display:flex}
 .trt{flex:0 0 auto;width:66px;display:flex;flex-direction:column;align-items:center;gap:2px;background:#5a3a20;border:2px solid #2a170a;border-radius:6px;padding:4px 2px;color:#fff3d8;font-size:11px;line-height:1.2;text-align:center;touch-action:none;user-select:none;-webkit-user-select:none}
 .trt canvas{width:44px;height:40px;image-rendering:pixelated;object-fit:contain;pointer-events:none}.trt.on{background:#8a6a2a;border-color:#ffe066;box-shadow:0 0 0 2px #ffe06688}.trt.on::after{content:'已擺上';font-size:10px;color:#ffe066}
@@ -431,6 +436,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
  <div id="arrPanel" class="hidden"><div id="arrHint"></div><div id="arrTray"></div><div class="row">
   <button class="btn ya" id="yaMinus">－ 縮小</button><button class="btn ya" id="yaPlus">＋ 放大</button><button class="btn ya" id="yaFlip">↔ 鏡像</button>
   <button class="btn" id="arrReset">↺ 恢復</button><button class="btn pri" id="arrDone">✅ 完成</button></div></div>
+ <div id="vsCard" class="hidden"><div class="lgTop"><canvas id="vsCv" width="48" height="48"></canvas><div class="lgInfo"><b id="vsName"></b><div id="vsSub"></div></div></div><div class="vsBtns"><button class="btn" id="vsPet">✋ 摸摸</button><button class="btn" id="vsWater">💧 澆水</button><button class="btn" id="vsGift">🎁 送禮</button><button class="btn" id="vsMsg">💌 留言</button><button class="btn" id="vsBoard">📜 留言板</button><button class="btn" id="vsMate">💞 配對</button></div><button class="btn pri" id="vsHome">🏠 回家</button></div>
  <div id="lgCard" class="hidden"><div class="lgTop"><canvas id="lgCv" width="48" height="48"></canvas><div class="lgInfo"><b id="lgName"></b><div id="lgSub"></div><div id="lgBars"></div></div><button class="lgx" id="lgClose" aria-label="關閉">✕</button></div><div class="row"><button class="btn" id="lgPet">✋ 摸摸牠</button><button class="btn pri" id="lgSwap">🔁 換牠出來陪你</button></div></div>
  <div id="infoSlot" class="wood">
   <div class="nameplate"><div class="nprow2"><img class="nleaf" src="sprites/ui/leaf.png" alt=""><div id="petname"></div><button id="npEdit" class="npedit" aria-label="改名">✏️</button><img class="nleaf r" src="sprites/ui/leaf.png" alt=""></div><div id="stageText" class="chips"></div><div id="traitText" class="chips"></div><div id="bondRow" class="chips"></div><div id="growText"></div><div id="alertLine" class="hidden"></div></div>
@@ -460,7 +466,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
   <button class="tool" id="bTrain"><img class="uic" src="sprites/ui/dumbbell.png" alt="">訓練</button>
   <button class="tool" id="bFish"><img class="uic" src="sprites/items/rod_bamboo.png" alt="" style="image-rendering:pixelated">釣魚</button>
   <button class="tool" id="bCodex"><img class="uic" src="sprites/ui/pawbook.png" alt="">圖鑑</button>
-  <button class="tool" id="bMate"><img class="uic" src="sprites/ui/heart.png" alt="">配對</button>
+  <button class="tool" id="bMate"><img class="uic" src="sprites/ui/heart.png" alt="">好友<span id="frDot" class="dot hidden"></span></button>
   <button class="tool" id="bMenu"><img class="uic" src="sprites/ui/gear.png" alt="">選單</button>
  </nav>
 </div>
@@ -603,10 +609,13 @@ function load(){
  o=parse(store.get(BACKUP_KEY));if(o)return{s:sanitize(o),src:main?'backup-corrupt':'backup'};
  o=parse(store.get(LEGACY_KEY));if(o)return{s:sanitize(o),src:'legacy'};
  return{s:fresh(),src:'new'}}
+const SOC={code:null,friends:[],reqs:[],sent:[],board:[],cardH:'',cardAt:0,timer:0,unread:0,ok:false};
+const VISIT={on:false,f:null,decor:null,key:'',r:null};
+const PUSH={url:undefined,last:'',timer:0,busy:false};
 let s,lastBackup=0,lastSave=0;
 /* 多分頁保護：如果別的分頁（例如捷徑開啟的新分頁）已經存了更新的進度，就採用它，不用舊資料覆蓋 */
 let WIPING=false;
-function save(){if(WIPING)return;pushSoon();
+function save(){if(WIPING)return;pushSoon();cardSoon();
  const cur=parse(store.get(SAVE_KEY));if(cur&&Number(cur.rev)>s.rev){s=sanitize(cur);lastSave=Date.now();renderUI();return}
  s.rev++;s.updated=Date.now();lastSave=s.updated;
  if(s.updated-lastBackup>60000){const prev=store.get(SAVE_KEY);if(prev&&parse(prev))store.set(BACKUP_KEY,prev);lastBackup=s.updated}
@@ -1214,7 +1223,7 @@ function plotStage(q){return!q||q.empty?'empty':q.rotten?'rot':q.ripe?(q.over?q.
 const PAPER={paper_cream:['#f2e2c4','#e6d0a8'],paper_mint:['#c4ead8','#a8dcc4'],paper_night:['#26305e','#1e2750']};
 const DRESSER={x:40,w:37,top:56,bot:71},BED_W=52;
 /* V1.51 自由佈置：玩家可以拖動家具。位置存在 s.decor.pos（[x, y]，y 負數＝底部、正數＝頂部） */
-const DEC=()=>curView()==='lounge'?s.lounge.decor:s.decor;   // V1.86.7 休息室有自己的家具擺法
+const DEC=()=>VISIT.on?VISIT.decor:curView()==='lounge'?s.lounge.decor:s.decor;   // V1.86.7 休息室有自己的家具擺法
 const ARR_DEF={feeder:[60,-86],water:[80,-86],window:[48,24],cushion:[6,-100],tower:[100,-96],wall:[74,10],toilet:[4,-80],toy:[23,-80],dresser:[40,-71],plant:[80,-82],rug:[30,92],bed:[70,-106],bed2:[6,-106],pig:[94,56]};
 /* V1.83 家具鏡像：DEC().flip[sl]=1 時以自己的中心左右翻轉 */
 function FD(sl,x,w,fn){if(!(DEC().flip&&DEC().flip[sl]))return fn();ctx.save();ctx.translate(2*x+w,0);ctx.scale(-1,1);fn();ctx.restore()}
@@ -1276,7 +1285,7 @@ function roomItems(){const P=DEC().placed,out=[];
 function winRain(now,x,y,w,h,ph){const wx=weather();if(wx!=='rain'&&wx!=='storm')return;const st=wx==='storm';ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();   // 窗外下雨
  if(!rm()){ctx.fillStyle=st?'rgba(210,222,255,.75)':'rgba(200,215,255,.6)';for(let i=0;i<(st?14:8);i++){const dx=(i*11+now/(st?30:60))%(w+8),dy=(i*7+now/(st?5:7))%(h+6);ctx.fillRect(Math.round(x+w-dx+(st?dy/3:0)),Math.round(y+dy-4),1,3)}}
  const B=WXS.bolt;if(st&&B&&now-B.t<420){ctx.fillStyle=`rgba(255,255,255,${.8*(1-(now-B.t)/420)})`;ctx.fillRect(x,y,w,h)}ctx.restore()}
-function drawRoom(now){const ph=phase(),paper=s.decor.placed.paper||'paper_cream',wx=weather(),k=ph+paper+wx;if(k!==roomKey){roomKey=k;roomCache=makeRoom(ph,paper,wx)}
+function drawRoom(now){const ph=phase(),paper=(VISIT.on?VISIT.decor:s.decor).placed.paper||'paper_cream',wx=weather(),k=ph+paper+wx;if(k!==roomKey){roomKey=k;roomCache=makeRoom(ph,paper,wx)}
  ctx.drawImage(roomCache,0,0);winRain(now,12,12,28,24,ph);const P=DEC().placed,FLOOR=104;
  syncDresser();for(const it of roomItems())it.draw();
  drawCeilingLamp(lightOn(ph));return ph}
@@ -1326,7 +1335,7 @@ function draw(now){
  const dt=Math.min(.1,(now-lastFrameT)/1000||0);lastFrameT=now;
  updateWorld(now,dt);
  const inRoom=curView()!=='yard';let rph=null;const t=now/1000;
- if(inRoom){rph=drawRoom(now);if(curView()==='lounge')drawLounge(now,dt)}else{
+ if(inRoom){rph=drawRoom(now);if(curView()==='lounge')drawLounge(now,dt);if(VISIT.on)drawVisit(now,dt)}else{
   ctx.drawImage(bgCache,0,0);drawBushBerries(now);drawGen(now);drawFire(now);
   const ca=ph==='night'?.35:ph==='dusk'?.75:1;ctx.globalAlpha=ca;
   const wsp=weather()==='breeze'?3:weather()==='storm'?4:1;const CL=wetW()?cloudWet():cloudCv;ctx.drawImage(CL,Math.round(((t*2*wsp)%(W+60))-30),10);ctx.drawImage(CL,Math.round(((t*1.3*wsp+80)%(W+60))-30),26);if(wetW()){ctx.drawImage(CL,Math.round(((t*1.7*wsp+40)%(W+60))-30),2);ctx.drawImage(CL,Math.round(((t*1.1*wsp+120)%(W+60))-30),16)}ctx.globalAlpha=1;
@@ -1337,7 +1346,7 @@ function draw(now){
    {const g=s.plots[i].g;if(g&&!q.empty&&!q.rotten)seedGlow(ctx,g,cx,cy,w,h,now,i)}   // V1.82 優良金、稀有紫、神奇彩虹
    if(st==='rot'&&!rm()){const a=now/300+i;ctx.drawImage(ICV.fly,Math.round(cx+3*Math.cos(a)),Math.round(y+2+2*Math.sin(a*1.7)))}}}
  if(mode==='play')drawRing();
- const hideP=(ARR.on||YA.on||LOVE.in||curView()==='lounge')&&!evo,nestMe=s.hatched&&PC.inNest(s)&&!LOVE.walk;   /* V1.83 佈置時把寵物藏起來 */
+ const hideP=(ARR.on||YA.on||LOVE.in||curView()==='lounge'||VISIT.on)&&!evo,nestMe=s.hatched&&PC.inNest(s)&&!LOVE.walk;   /* V1.83 佈置時把寵物藏起來 */
  if(!hideP&&!(s.pair&&PC.inNest(s.pair)&&!LOVE.walk))drawPair(now);
  const key=formKey(),S=sheet(key);let fname=currentFrame(now),fi=S.idx[fname]??0;
  const fr=FRAMES[fname]||{};const lift=-(fr.dy||0),PX=Math.round(petX),LIFT=(S.lift&&S.lift[fi])||0;   // LIFT：手繪造型跳太高時，超出格子的那段高度
@@ -1540,7 +1549,7 @@ function drawEmberMark(x,y,now){const ic=ICV.ember;if(!ic)return;const b=Math.ro
 function drawPick(now,key,LIFT){if(!s.pair||s.sleeping||mode||s.runaway)return;const top=petTopY(key,LIFT),x=Math.round(petX+24),y=Math.max(1,top-8)+(rm()?0:Math.round(Math.sin(now/220)));
  ctx.fillStyle='#1a1208';ctx.fillRect(x-4,y-1,9,2);ctx.fillRect(x-3,y+1,7,1);ctx.fillRect(x-2,y+2,5,1);ctx.fillRect(x-1,y+3,3,1);ctx.fillRect(x,y+4,1,1);
  ctx.fillStyle='#ffe066';ctx.fillRect(x-3,y,7,1);ctx.fillRect(x-2,y+1,5,1);ctx.fillRect(x-1,y+2,3,1);ctx.fillRect(x,y+3,1,1)}
-const overPair=(x,y)=>!!s.pair&&curView()!=='lounge'&&x>=PAIR.x+8&&x<=PAIR.x+40&&y>=PET_Y+10&&y<=PET_Y+46;
+const overPair=(x,y)=>!!s.pair&&curView()!=='lounge'&&!VISIT.on&&x>=PAIR.x+8&&x<=PAIR.x+40&&y>=PET_Y+10&&y<=PET_Y+46;
 function switchToPair(){if(!s.pair||evo||modeBusy()||(B&&!B.over))return;cancelMode();const r=PC.switchPair(s,Date.now());if(!r.ok){say(r.msg);return}
  const ox=petX,of=petFace;petX=Math.round(PAIR.x);petFace=PAIR.face;PAIR.x=ox;PAIR.face=of;PAIR.target=null;PAIR.cb=null;petTarget=null;walkCb=null;anim.once=null;
  save();renderUI();sfx('pet');if(!s.sleeping)playAnim('happy');say(s.sleeping?`（現在照顧 ${s.name}）`:`${s.name}：輪到我了！`,{log:false})}
@@ -1712,7 +1721,7 @@ function bgmJingle(win){bgmStop(win?.08:1.6);BGM_AFTER=performance.now()+4000;if
 document.addEventListener('visibilitychange',()=>{if(document.hidden)bgmStop()});
 /* V1.86.7 背景音樂：依照現在在哪裡自動換曲（房間、院子、休息室、晚上／睡覺、下雨、釣魚；冒險用原本的戰鬥曲） */
 function sceneTrack(){if(TG)return'normal';if(FZ)return'fish';if(FMZ)return'yard';if(!s.hatched)return'home';const ph=phase(),v=curView();
- if(ph==='night'||s.sleeping)return'night';if(wetW()&&v==='yard')return'rain';return v==='lounge'?'lounge':v==='room'?'home':'yard'}
+ if(ph==='night'||s.sleeping)return'night';if(wetW()&&v==='yard')return'rain';return v==='lounge'||v==='visit'?'lounge':v==='room'?'home':'yard'}
 setInterval(()=>{if(typeof WIPING!=='undefined'&&WIPING)return;if(B||!actx||!musicOn()||document.visibilityState!=='visible'||performance.now()<BGM_AFTER)return;const want=sceneTrack();
  if(BGM.name!==want){try{if(actx.state==='suspended')actx.resume()}catch(_){}bgmPlay(want)}},1500);
 const EL_SND={fire:'fire',water:'water',leaf:'leaf',earth:'rock',bird:'wind',elec:'zap',metal:'metal',flame:'fire',tide:'water',forest:'leaf'};
@@ -1766,7 +1775,7 @@ function nextEvo(){
   setTimeout(()=>{$('evoCap').classList.add('hidden');$('evoBlock').classList.add('hidden');$('bubble').style.visibility='';nextEvo()},rm()?800:2600)}}}
 function gatherOffer(){confirmBox('🌿 去採集？','沒有食物、金幣也不夠時，可以免費採集果子（每 2 分鐘一次），不會卡關。','採集',()=>{const g=PC.gather(s,Date.now());toast(g.msg);save();renderUI()})}
 function act(a){
- if(!s.hatched||evo)return;unlockAudio();if(nestBusy())return;
+ if(!s.hatched||evo)return;unlockAudio();if(VISIT.on){toast('在朋友家喔，先按「🏠 回家」');return}if(nestBusy())return;
  if(curView()==='lounge'&&a!=='sleep'){if(modeBusy())return;cancelMode();lgClose();s.view='room';petX=PET_X;petTarget=null;save();renderUI();toast('🏠 回房間照顧牠',1600);setTimeout(()=>act(a),450);return}   // V1.86.7 主寵不在休息室：先回房間
  if(a==='sleep'){if(Date.now()<busyUntil||modeBusy()||petTarget!==null)return;cancelMode();
   if(!s.sleeping&&curView()!=='room'){toast('🪺 外面不能睡覺，帶牠回小窩睡囉',2500);s.view='room';petX=PET_X;save();renderUI();setTimeout(()=>act('sleep'),700);return}
@@ -2110,10 +2119,9 @@ function wipeDialog(){if(modeBusy()){toast('先完成現在的互動吧');return
   try{const ks=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('pixel-familiar'))ks.push(k)}ks.forEach(k=>localStorage.removeItem(k))}catch(e){}
   for(const k of[SAVE_KEY,BACKUP_KEY,LEGACY_KEY])store.del(k);store.mem={};toast('🔄 已清除，重新開始…',2000);setTimeout(()=>location.reload(),600)}}
 /* ===== V1.86.9 手機推播通知：算好「幾點會發生什麼」送到推播伺服器，到時間推到手機 ===== */
-const PUSH={url:undefined,last:'',timer:0,busy:false};
 const NK=[['hungry','🍖 肚子很餓'],['egg','🥚 蛋孵好、小窩生蛋'],['farm','🌱 作物成熟'],['piggy','🐷 撲滿存滿'],['energy','⚡ 睡飽、體力回滿']];
 function pushId(){try{let id=localStorage.getItem('pf-push-id');if(!id||!/^[a-z0-9]{12,40}$/.test(id)){id=Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>'abcdefghijklmnopqrstuvwxyz0123456789'[b%36]).join('');localStorage.setItem('pf-push-id',id)}return id}catch(e){return null}}
-async function pushUrl(){if(PUSH.url!==undefined)return PUSH.url;try{const r=await fetch('push-config.json',{cache:'no-store'});const j=r.ok?await r.json():null;PUSH.url=j&&/^https:\/\//.test(j.url||'')?j.url.replace(/\/$/,''):null}catch(e){PUSH.url=null}return PUSH.url}
+async function pushUrl(){if(window.PF_NO_SOCIAL)return null;if(PUSH.url!==undefined)return PUSH.url;try{const r=await fetch('push-config.json',{cache:'no-store'});const j=r.ok?await r.json():null;PUSH.url=j&&/^(https:\/\/|http:\/\/localhost:)/.test(j.url||'')?j.url.replace(/\/$/,''):null}catch(e){PUSH.url=null}return PUSH.url}
 const pushPost=async(path,body,keep)=>{const u=await pushUrl();if(!u)throw new Error('no server');const r=await fetch(u+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({id:pushId()},body)),keepalive:!!keep});return r.json()};
 const pushCan=()=>standalone()&&'serviceWorker'in navigator&&'PushManager'in window&&'Notification'in window;
 function quietShift(t){const d=new Date(t),h=d.getHours();if(h>=23||h<8){const q=new Date(t);if(h>=23)q.setDate(q.getDate()+1);q.setHours(8,0,0,0);return q.getTime()}return t}   // 晚上 11 點到早上 8 點不吵你，延到早上 8 點
@@ -2151,6 +2159,102 @@ async function notifyDialog(){const N=s.settings.notify,can=pushCan(),url=await 
  if($('nTest'))$('nTest').onclick=async()=>{sfx('tap');try{const r=await pushPost('/test',{});toast(r&&r.ok?'📨 已送出，等一下就會跳出來':'❌ 沒送成功，試試關掉再重開通知',3000)}catch(e){toast('❌ 連不到通知伺服器',3000)}};
  if($('nOff'))$('nOff').onclick=async()=>{sfx('tap');N.on=false;save();try{await pushPost('/off',{});const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub)await sub.unsubscribe()}catch(e){}toast('🔕 通知關掉了');notifyDialog()}}
 setTimeout(()=>{if(s.settings.notify&&s.settings.notify.on)pushSync(true)},4000);
+/* ===== V1.87 好友：好友碼、拜訪朋友的家（摸摸、澆水、送禮、留言）、配對邀請（伺服器同推播那台） ===== */
+const GIFTS=[['food','🍎 蘋果',[1,3,5]],['seeds','🌱 種子',[1,3,5]],['candy','🍬 糖果',[1,2,3]],['potion','🧪 回復藥水',[1,2,3]],['fish','🐟 魚',[1,2,3]],['cake','🍰 蛋糕',[1,2,3]],['coins','🪙 金幣',[10,50,100]]];
+const GN=k=>(GIFTS.find(g=>g[0]===k)||[0,k])[1];
+const QUICK=['你的幻獸好可愛！','一起去冒險吧！','謝謝你的禮物 🎁','早安 ☀️','晚安 🌙','加油！💪'];
+const pendGet=()=>{try{return JSON.parse(localStorage.getItem('pf-social-pend')||'[]')}catch(e){return[]}},pendSet=a=>{try{localStorage.setItem('pf-social-pend',JSON.stringify(a.slice(-20)))}catch(e){}};
+const agoTxt=t=>{const m=(Date.now()-t)/60000;return m<10?'剛剛在線上':m<60?`${Math.floor(m)} 分鐘前`:m<1440?`${Math.floor(m/60)} 小時前`:`${Math.floor(m/1440)} 天前`};
+function myCard(){const D=s.decor,pl=(s.plots||[]).filter((p,i)=>{const q=PC.plotState(s,i,Date.now());return q&&!q.empty&&!q.ripe}).length;
+ return{v:1,pet:s.hatched?{name:s.name,gene:encodeGenome(curGenome()),stage:s.stage,route:s.route,sex:s.sex,lv:lvl()}:null,decor:{placed:D.placed,pos:D.pos||{},flip:D.flip||{}},plots:pl,dex:(s.dex||[]).length,pets:PC.petCount(s),den:s.den.level}}
+async function cardSync(force,keep){try{if(!await pushUrl())return;const c=myCard(),h=JSON.stringify(c)+ownerName();if(!force&&(h===SOC.cardH||Date.now()-SOC.cardAt<10*60e3))return;
+ const r=await pushPost('/me',{name:ownerName(),card:c},keep);if(r&&r.ok){SOC.cardH=h;SOC.cardAt=Date.now();SOC.code=r.code}}catch(e){}}
+function cardSoon(){clearTimeout(SOC.timer);SOC.timer=setTimeout(()=>cardSync(),30000)}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&SOC.code)cardSync(false,true)});
+function frDot(){const n=SOC.reqs.length+pendGet().length+SOC.unread;const d=$('frDot');if(d)d.classList.toggle('hidden',!n)}
+function applyMail(m){const who=m.name||'朋友',d=m.data||{},now=Date.now();
+ if(m.kind==='pet'){if(s.hatched){s.mood=Math.min(100,s.mood+8);s.bond=Math.min(100,(s.bond||0)+1)}return`✋ ${who} 來家裡摸了摸 ${s.name}，牠心情變好了`}
+ if(m.kind==='water'){let n=0;(s.plots||[]).forEach((p,i)=>{const q=PC.plotState(s,i,now);if(q&&!q.empty&&!q.ripe&&q.progress<1){p.at-=Math.round(q.left/(1-q.progress)*.15);n++}});return`💧 ${who} 幫你澆了水${n?'，田裡的作物長快一點了':''}`}
+ if(m.kind==='msg'){SOC.unread++;return`💌 ${who}：${d.text||''}`}
+ if(m.kind==='gift'||m.kind==='daily'){const n=Math.max(0,Math.min(500,Math.floor(+d.n||0)));if(d.item==='coins')s.coins+=n;else if(GIFTS.some(g=>g[0]===d.item))s.inv[d.item]=(s.inv[d.item]||0)+n;return`🎁 ${who} 送你 ${GN(d.item)} ×${n}`}
+ if(m.kind==='friend')return`👥 ${who} 跟你成為好友了！`;
+ if(m.kind==='mate'||m.kind==='mateBack'){const P=pendGet();P.push({kind:m.kind,code:d.code,pet:d.pet||'',name:who,fcode:m.code,at:m.at});pendSet(P);return m.kind==='mate'?`💞 ${who} 邀請 ${s.name} 跟「${d.pet||'牠的幻獸'}」配對，到「好友」看看`:`💞 ${who} 答應配對了！到「好友」完成配對拿蛋`}
+ return''}
+async function socialPoll(){try{if(!await pushUrl())return null;if(!SOC.cardAt)await cardSync(true);const r=await pushPost('/social',{});if(!r||!r.ok)return null;SOC.ok=true;
+ Object.assign(SOC,{code:r.code,friends:r.friends||[],reqs:r.reqs||[],sent:r.sent||[],board:r.board||[]});
+ const msgs=(r.inbox||[]).map(applyMail).filter(Boolean);if(msgs.length){save();renderUI();sfx('coin');msgs.forEach((t,i)=>setTimeout(()=>toast(t,3800),i*2600))}frDot();return r}catch(e){return null}}
+setTimeout(()=>socialPoll(),5000);setInterval(()=>{if(document.visibilityState==='visible')socialPoll()},120000);
+async function friendsDialog(){openModal('👥 好友','<p class="small">讀取中…</p>');const url=await pushUrl();
+ if(!url){openModal('👥 好友',`<p>好友功能要用遊戲網址開才能用：<b>${HOME_URL}</b>（建議「加入主畫面」）。</p><div class="row"><button class="btn pri" id="frMate">💞 配對・蛋籃</button></div>`);$('frMate').onclick=mateDialog;return}
+ await cardSync(true);const r=await socialPoll();if(!r){openModal('👥 好友','<p>連不到好友伺服器，等一下再試試。</p><div class="row"><button class="btn pri" id="frMate">💞 配對・蛋籃</button></div>');$('frMate').onclick=mateDialog;return}
+ const P=pendGet(),F=SOC.friends;
+ const pend=P.map((x,i)=>`<div class="frow"><div style="font-size:26px">💞</div><div class="fi"><b>${esc(x.name)}</b><div class="small">${x.kind==='mate'?`想讓「${esc(x.pet)}」跟 ${esc(s.name)} 配對`:'答應配對了，按「配對」拿蛋'}</div></div><button class="btn pri" data-pm="${i}">配對</button><button class="btn" data-px="${i}">✕</button></div>`).join('');
+ const reqs=SOC.reqs.map(q=>`<div class="frow"><div style="font-size:26px">👋</div><div class="fi"><b>${esc(q.name||'朋友')}</b><div class="small">想加你好友</div></div><button class="btn pri" data-ok="${q.code}">同意</button><button class="btn" data-no="${q.code}">✕</button></div>`).join('');
+ const list=F.map(f=>{const p=f.card&&f.card.pet;return`<div class="frow"><canvas data-fk="${f.code}" width="48" height="48"></canvas><div class="fi"><b>${esc(f.name)}</b><div class="small">${p?`${esc(p.name)} Lv.${p.lv||1}`:'還沒孵蛋'}・${agoTxt(f.seen)}</div></div><button class="btn pri" data-visit="${f.code}">🏠 拜訪</button></div>`}).join('');
+ openModal('👥 好友',`<p class="small" style="margin:0">我的好友碼</p><div class="row" style="align-items:center;margin-top:2px"><span class="fcode">${SOC.code||'…'}</span><button class="btn" id="frCopy">📋 複製</button></div>
+<div class="row"><input id="frIn" placeholder="輸入朋友的好友碼" maxlength="8" autocomplete="off" autocapitalize="characters" style="flex:1;min-width:0;font-size:18px;padding:8px;border:3px solid var(--line);text-transform:uppercase"><button class="btn pri" id="frAdd">加好友</button></div><div class="err" id="frErr"></div>${s.owner?'':'<div class="row"><button class="btn" id="frName">✏️ 設定你的名字（朋友會看到）</button></div>'}
+${pend?`<p><b>💞 配對邀請</b></p>${pend}`:''}${reqs?`<p><b>👋 好友邀請</b></p>${reqs}`:''}
+<p><b>👥 我的好友（${F.length}）</b></p>${list||'<p class="small">還沒有好友。把好友碼傳給朋友，或輸入朋友的好友碼吧！</p>'}
+${SOC.sent.length?`<p class="small">等待對方同意：${SOC.sent.map(x=>esc(x.name||'朋友')).join('、')}</p>`:''}
+<div class="row"><button class="btn" id="frBoard">📜 我的留言板（${SOC.board.length}）</button><button class="btn" id="frMate">💞 配對・蛋籃</button></div>`);
+ document.querySelectorAll('[data-fk]').forEach(c=>{const f=F.find(x=>x.code===c.dataset.fk),p=f&&f.card&&f.card.pet;if(p&&p.gene)try{thumb(c,petKey('x:'+p.gene,formCode(p.stage,p.route)),'happy1')}catch(e){}});
+ $('frCopy').onclick=async()=>{const t=`來當我的《幻獸日記》好友！到「👥 好友」輸入我的好友碼：${SOC.code}\n遊戲網址：${HOME_URL}`;try{if(navigator.share&&!inFrame)await navigator.share({text:t});else{await navigator.clipboard.writeText(t);toast('✅ 已複製，貼到 LINE 傳給朋友')}}catch(e){}};
+ $('frAdd').onclick=async()=>{const c=$('frIn').value.trim().toUpperCase();if(c.length<6){$('frErr').textContent='好友碼是 6 個字';return}$('frAdd').disabled=true;try{const q=await pushPost('/add',{code:c});if(q&&q.ok){toast(q.msg,3500);sfx('level');friendsDialog()}else{$('frErr').textContent='❌ '+(q&&q.msg||'失敗');$('frAdd').disabled=false}}catch(e){$('frErr').textContent='❌ 連不到伺服器';$('frAdd').disabled=false}};
+ document.querySelectorAll('[data-ok]').forEach(b=>b.onclick=async()=>{const q=await pushPost('/accept',{code:b.dataset.ok}).catch(()=>null);toast(q&&q.msg||'❌ 失敗',3000);if(q&&q.ok)sfx('level');friendsDialog()});
+ document.querySelectorAll('[data-no]').forEach(b=>b.onclick=async()=>{await pushPost('/decline',{code:b.dataset.no}).catch(()=>null);friendsDialog()});
+ document.querySelectorAll('[data-visit]').forEach(b=>b.onclick=()=>startVisit(b.dataset.visit));
+ document.querySelectorAll('[data-px]').forEach(b=>b.onclick=()=>{const P=pendGet();P.splice(+b.dataset.px,1);pendSet(P);frDot();friendsDialog()});
+ document.querySelectorAll('[data-pm]').forEach(b=>b.onclick=()=>acceptMate(+b.dataset.pm));
+ if($('frName'))$('frName').onclick=()=>ownerDialog(false);
+ $('frBoard').onclick=()=>{SOC.unread=0;frDot();boardDialog(SOC.board,'📜 我的留言板',friendsDialog)};$('frMate').onclick=mateDialog}
+function boardDialog(B,title,back){openModal(title,(B&&B.length?B.map(m=>`<div class="frow"><div class="fi"><b>${esc(m.name||'朋友')}</b> <span class="small">${agoTxt(m.at)}</span><div>${esc(m.text)}</div></div></div>`).join(''):'<p class="small">還沒有留言。</p>')+(back?'<div class="row"><button class="btn" id="bdBack">↩ 返回</button></div>':''));if(back)$('bdBack').onclick=back}
+function acceptMate(i){const P=pendGet(),x=P[i];if(!x)return;let f;try{f=decodeMate(x.code)}catch(e){toast('❌ 配對碼壞掉了');return}
+ const pre=PC.canBreed(s,f,Date.now());if(pre){toast('❌ '+pre,3500);return}
+ confirmBox('💞 跟朋友的幻獸配對？',`${esc(s.name)}${sexMark(s)} × ${esc(f.name)}${f.sex==='m'?' ♂':f.sex==='f'?' ♀':''}（${esc(x.name)} 的幻獸）<br><span class="small">要 ${BREED_COST} 金幣，配對後會拿到一顆蛋。</span>`,'配對！',()=>{const r=PC.breed(s,f,Date.now());if(!r.ok){toast('❌ '+r.msg,3500);return false}
+  const Q=pendGet();Q.splice(i,1);pendSet(Q);frDot();save();renderUI();playAnim('happy');spawn('heart',8,{y:70,vy:-30,jx:50,life:1.6});sfx('hatch');
+  if(x.kind==='mate'&&x.fcode)pushPost('/act',{code:x.fcode,kind:'mateBack',data:{code:mateCode(),pet:s.name}}).catch(()=>{});
+  toast(r.host?`💕 配對成功！${f.name} 會來家裡的愛的小窩住一天`:`💕 配對成功！${s.name} 要去 ${f.name} 家住一天，生完蛋才回來`,6000)})}
+/* 拜訪朋友的家 */
+async function startVisit(code){const r=await pushPost('/visit',{code}).catch(()=>null);if(!r||!r.ok){toast('❌ '+(r&&r.msg||'連不到伺服器'),3000);return}
+ const C=r.card||{},D=C.decor||{},pl={},ps={},fl={};for(const[k,v]of Object.entries(D.placed||{}))if(CONFIG.decor[v])pl[k]=v;if(!pl.paper)pl.paper='paper_cream';
+ for(const[k,v]of Object.entries(D.pos||{}))if(Array.isArray(v)&&v.length===2&&v.every(Number.isFinite))ps[k]=v;for(const k in(D.flip||{}))if(D.flip[k])fl[k]=1;
+ cancelMode();lgClose();closeModal();VISIT.decor={placed:pl,pos:ps,flip:fl};VISIT.f=r;const p=C.pet;VISIT.key=p&&p.gene?petKey('x:'+p.gene,formCode(p.stage,p.route)):'';
+ VISIT.r={x:PET_X,tx:null,face:0,act:'idle',until:performance.now()+1500,hop:0,dep:2,key:'v'};VISIT.on=true;roomKey=null;document.body.classList.add('visitMode');visitCard();renderUI();sfx('tap');
+ say(p?`來到 ${r.name} 的家！${p.name} 在這裡～`:`來到 ${r.name} 的家！`,{log:false});try{fitStage()}catch(e){}}
+function endVisit(){VISIT.on=false;VISIT.f=null;roomKey=null;document.body.classList.remove('visitMode');$('vsCard').classList.add('hidden');renderUI();say('回到家了～',{log:false});try{fitStage()}catch(e){}socialPoll()}
+function visitCard(){const f=VISIT.f,p=f.card&&f.card.pet,U=f.used||{},L=f.limit||{},left=k=>(L[k]||0)-(U[k]||0);
+ $('vsName').textContent=`🏠 ${f.name} 的家`;$('vsSub').textContent=p?`${p.name}${p.sex==='m'?' ♂':p.sex==='f'?' ♀':''}・Lv.${p.lv||1}・圖鑑 ${f.card.dex||0} 種`:'還沒孵蛋';
+ const c=$('vsCv'),x=c.getContext('2d');x.clearRect(0,0,48,48);if(VISIT.key)try{thumb(c,VISIT.key,'happy1')}catch(e){}
+ const set=(id,t,ok)=>{const b=$(id);b.textContent=t;b.disabled=!ok};
+ set('vsPet',left('pet')>0?'✋ 摸摸':'✋ 摸過了',left('pet')>0&&!!p);set('vsWater',left('water')>0?(f.card.plots?`💧 澆水（${f.card.plots}）`:'💧 沒有田'):'💧 澆過了',left('water')>0&&f.card.plots>0);
+ set('vsGift','🎁 送禮',left('gift')>0||left('daily')>0);set('vsMsg','💌 留言',left('msg')>0);set('vsBoard',`📜 留言板（${(f.board||[]).length}）`,true);set('vsMate','💞 配對',!!p&&left('mate')>0);
+ $('vsCard').classList.remove('hidden');pixifyDom($('vsCard'))}
+async function visitAct(kind,data){const f=VISIT.f;const r=await pushPost('/act',{code:f.code,kind,data}).catch(()=>null);if(!r||!r.ok){toast('❌ '+(r&&r.msg||'連不到伺服器'),3000);return null}f.used[kind]=(f.used[kind]||0)+1;visitCard();toast(r.msg,3000);return r}
+function visitPetHop(){const r=VISIT.r,t=performance.now();r.tx=null;r.act='idle';r.hop=t+800;r.until=t+2500;spawn('heart',5,{x:r.x+24,y:PET_Y+8,vy:-18,spread:14});sfx('pet')}
+async function visitPet(){if(!VISIT.f.card.pet)return;if((VISIT.f.used.pet||0)>=(VISIT.f.limit.pet||1)){visitPetHop();say(`${VISIT.f.card.pet.name}：嘿嘿～`,{log:false});return}const r=await visitAct('pet');if(r){visitPetHop();say(`${VISIT.f.card.pet.name}：好舒服～謝謝你！`,{log:false})}}
+function visitTap(x,y){const r=VISIT.r;if(r&&VISIT.key&&x>=r.x+6&&x<=r.x+42&&y>=PET_Y+r.dep+8&&y<=PET_Y+r.dep+46)visitPet()}
+function drawVisit(now,dt){const r=VISIT.r;if(!r||!VISIT.key)return;
+ if(r.tx!=null){const d=r.tx-r.x,st=20*dt;if(Math.abs(d)<=st){r.x=r.tx;r.tx=null;r.act=r.next||'idle';r.until=now+(r.act==='sleep'?8000:2000)+Math.random()*3000}else{r.x+=Math.sign(d)*st;r.face=d>0?1:0}}
+ else if(now>r.until){const q=Math.random();r.next='idle';if(q<.15&&VISIT.decor.placed.bed){r.next='sleep';r.tx=clamp(Math.round(bedX()),2,W-CELL-2)}else if(q<.75)r.tx=clamp(Math.round(4+Math.random()*(W-CELL-8)),2,W-CELL-2);else r.until=now+2000}
+ const S=sheet(VISIT.key),fn=lgFrame(r,now),fi=S.idx[fn]??S.idx.idle0??0,x=Math.round(r.x),y=PET_Y+r.dep;
+ ctx.fillStyle='rgba(20,60,30,.25)';ctx.fillRect(x+13,y+44,22,2);
+ if(r.face===1){ctx.save();ctx.translate(x+CELL,0);ctx.scale(-1,1);ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,0,y,CELL,CELL);ctx.restore()}else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,x,y,CELL,CELL);
+ if(!rm()&&r.act==='sleep'&&r.tx==null&&Math.random()<.012)spawn('z',1,{x:x+34,y:y+14,vx:5,vy:-7,jx:1,jy:1,life:1.8,spread:2})}
+function giftDialog(){const f=VISIT.f,U=f.used,L=f.limit,dl=(L.daily||1)-(U.daily||0),gl=(L.gift||3)-(U.gift||0),have=k=>k==='coins'?s.coins:(s.inv[k]||0);
+ openModal(`🎁 送禮給 ${esc(f.name)}`,`<p><b>今天的免費小禮物</b></p><p class="small">不用花你的東西，隨機送一份小禮物。</p><div class="row"><button class="btn pri" id="gfFree" ${dl>0?'':'disabled'}>${dl>0?'🎁 送出小禮物':'今天送過了'}</button></div>
+<p style="margin-top:10px"><b>從背包送</b>　<span class="small">今天還能送 ${Math.max(0,gl)} 次</span></p><div class="gift-grid">${GIFTS.map(([k,t,Q])=>Q.map(n=>`<button class="btn" data-gk="${k}" data-gn="${n}" ${gl>0&&have(k)>=n?'':'disabled'}>${t} ×${n}</button>`).join('')).join('')}</div>
+<p class="small">目前有：${GIFTS.map(([k,t])=>`${t} ${have(k)}`).join('、')}</p>`);
+ $('gfFree').onclick=async()=>{const r=await visitAct('daily');if(r){sfx('coin');giftDialog()}};
+ document.querySelectorAll('[data-gk]').forEach(b=>b.onclick=async()=>{const k=b.dataset.gk,n=+b.dataset.gn;if(have(k)<n){toast('不夠喔');return}b.disabled=true;const r=await visitAct('gift',{item:k,n});
+  if(r){if(k==='coins')s.coins-=n;else s.inv[k]-=n;save();renderUI();sfx('coin');giftDialog()}})}
+function msgDialog(){openModal(`💌 留言給 ${esc(VISIT.f.name)}`,`<textarea id="msIn" maxlength="60" placeholder="想說什麼？（60 字以內）" style="width:100%;min-height:70px;font-size:17px"></textarea>
+<div class="gift-grid" style="margin-top:6px">${QUICK.map((t,i)=>`<button class="btn" data-qm="${i}">${t}</button>`).join('')}</div><div class="row"><button class="btn pri" id="msGo">送出留言</button></div>`);
+ document.querySelectorAll('[data-qm]').forEach(b=>b.onclick=()=>{$('msIn').value=QUICK[+b.dataset.qm]});
+ $('msGo').onclick=async()=>{const t=$('msIn').value.trim();if(!t)return;$('msGo').disabled=true;const r=await visitAct('msg',{text:t});if(r){closeModal();(VISIT.f.board=VISIT.f.board||[]).unshift({text:t,at:Date.now(),name:ownerName()});visitCard()}else $('msGo').disabled=false}}
+$('vsHome').onclick=()=>{sfx('tap');endVisit()};$('vsPet').onclick=visitPet;$('vsWater').onclick=async()=>{const r=await visitAct('water');if(r){sfx('splash');spawn('bubble',8,{x:64,y:60,vy:-10,spread:40})}};
+$('vsGift').onclick=giftDialog;$('vsMsg').onclick=msgDialog;$('vsBoard').onclick=()=>boardDialog(VISIT.f.board,`📜 ${esc(VISIT.f.name)} 的留言板`);
+$('vsMate').onclick=()=>{if(!isAdult()){toast(`${s.name} 要先長到成年期才能配對`,3000);return}const fp=VISIT.f.card.pet;if(fp&&fp.sex===s.sex){toast('要一公一母才能配對喔',3000);return}
+ confirmBox('💞 邀請配對',`邀請 ${esc(VISIT.f.name)} 的「${esc(fp.name)}」跟 ${esc(s.name)} 配對？<br><span class="small">對方答應後，你們會各拿到一顆蛋（各自付 ${BREED_COST} 金幣）。</span>`,'送出邀請',()=>{visitAct('mate',{code:mateCode(),pet:s.name})})};
 function menuDialog(){
  const snd=()=>s.settings.sound?'🔊 音效：開':'🔇 音效：關',mus=()=>musicOn()?'🎵 音樂：開':'🔇 音樂：關',mo=()=>s.settings.reducedMotion?'🐢 減少動畫：開':'✨ 減少動畫：關';
  openModal('⚙️ 選單',`
@@ -2370,7 +2474,7 @@ function goalsDialog(){PC.claimDaily(s,Date.now());PC.ensureGoals(s,Date.now());
    🛒 商店與房間裝飾
    ========================================================= */
 const VIEWS=['lounge','room','yard'];   // V1.86.7 ◀ ▶ 三個畫面輪流：休息室 ↔ 房間 ↔ 院子
-function toggleView(dir){if(!s.hatched||modeBusy())return;if(s.sleeping){say('噓…牠在睡覺，先叫醒牠才能出門');return}cancelMode();lgClose();petX=PET_X;petTarget=null;
+function toggleView(dir){if(!s.hatched||modeBusy())return;if(VISIT.on){toast('在朋友家喔，先按「🏠 回家」');return}if(s.sleeping){say('噓…牠在睡覺，先叫醒牠才能出門');return}cancelMode();lgClose();petX=PET_X;petTarget=null;
  const cur=curView(),nv=dir?VIEWS[(VIEWS.indexOf(cur)+dir+3)%3]:(cur==='room'?'yard':'room');s.view=nv;save();renderUI();sfx('tap');
  say(nv==='room'?'回到小窩了～':nv==='lounge'?(lgPets().length?'來休息室看看大家～':'休息室還沒有其他夥伴，空蕩蕩的'):'出門走走！',{log:false})}
 const SLOT_NAME={paper:'壁紙',wall:'牆上',window:'窗戶',cushion:'軟墊',tower:'貓跳台',lamp:'燈',plant:'植物',bed:'床',rug:'地毯',toy:'玩具',toilet:'廁所'};
@@ -2981,9 +3085,9 @@ window.addEventListener('storage',e=>{if(e.key===SAVE_KEY&&e.newValue){const o=p
    觸控互動：放蘋果餵食、海綿刷洗、頂球小遊戲、清果核
    ========================================================= */
 let mode=null,petX=PET_X,petTarget=null,walkCb=null,homeAt=0,petFace=-1,idleAt=0;   // petFace：-1 原本方向（朝左／正面），1 左右翻轉（朝右）
-const curView=()=>s.hatched&&(s.view==='room'||s.view==='lounge')?s.view:'yard';
+const curView=()=>VISIT.on?'visit':s.hatched&&(s.view==='room'||s.view==='lounge')?s.view:'yard';
 function walkTo(x,cb){petTarget=clamp(Math.round(x),0,W-CELL);walkCb=cb||null}
-const overPet=(x,y)=>curView()!=='lounge'&&x>=petX+6&&x<=petX+42&&y>=PET_Y+8&&y<=PET_Y+46;
+const overPet=(x,y)=>curView()!=='lounge'&&!VISIT.on&&x>=petX+6&&x<=petX+42&&y>=PET_Y+8&&y<=PET_Y+46;
 const FEED={apple:null},WASH={t:0,down:false,px:0,py:0,lastMove:0,sfxAt:0},BALL={lives:3,score:0,combo:0,b:null,tapAt:0,started:false,nextAt:0,over:false,wind:0},RING={x:108,y:44,r:10,bx:108,by:44,net:0};   // V1.61 籃框加大（7→10）
 const MODE_TIP={feed:'先在下方選食物，再點畫面放下去 🍽️',wash:'拿海綿 🧽 在牠身上來回刷 3 秒',play:'點畫面開始 🏀 球快碰到頭時點一下畫面，牠就跳起來頂！可以一直點，時機越準越會進。漏接 3 次就結束'};
 function setMode(m){mode=m;document.querySelectorAll('[data-act]').forEach(b=>{if(b.dataset.act!=='sleep')b.classList.toggle('on',b.dataset.act===m)});
@@ -3225,7 +3329,7 @@ function drawBallHUD(){if(mode!=='play')return;
 const ARR={on:false,sel:null,ox:0,oy:0};
 function arrItems(){const L=roomItems();if(curView()==='room'){syncPig();L.push({sl:'pig',r:[PIG.sx,Math.min(PIG.y,PIG.sy),33,PIG.sy+7-Math.min(PIG.y,PIG.sy)]})}return L}
 const FIXED_SL=['pig','feeder','water'];   // 不能收起來的東西
-function startArrange(){if(!s.hatched||modeBusy())return;cancelMode();lgClose();if(curView()==='yard'){s.view='room';petX=PET_X;petTarget=null;renderUI()}ARR.on=true;ARR.sel=null;ARR.pick=null;arrPanel('room');arHint();trayRender();sfx('tap')}
+function startArrange(){if(!s.hatched||modeBusy()||VISIT.on)return;cancelMode();lgClose();if(curView()==='yard'){s.view='room';petX=PET_X;petTarget=null;renderUI()}ARR.on=true;ARR.sel=null;ARR.pick=null;arrPanel('room');arHint();trayRender();sfx('tap')}
 const RNAME={feeder:'自動投餵機',water:'飲水機',window:'矮窗',cushion:'軟墊',tower:'貓跳台',wall:'牆上裝飾',toilet:'便盆',toy:'玩具',dresser:'櫃子',plant:'盆栽',rug:'地毯',bed:'床',bed2:'第二張床',pig:'撲滿'};
 function arHint(){const sl=ARR.pick;$('arrHint').textContent=sl?`${RNAME[sl]||'家具'}${DEC().flip&&DEC().flip[sl]?'・已鏡像':''}　（拖到下面的家具欄就會收起來）`:'按住房間裡的家具可以拖曳；下面家具欄的東西可以拖進房間擺放';$('yaFlip').disabled=!sl;$('arrReset').textContent=sl?'↺ 恢復這個':'↺ 全部恢復'}
 function endArrange(){ARR.on=false;ARR.sel=null;ARR.pick=null;arrPanel(null);save()}
@@ -3283,7 +3387,7 @@ function yaReset(){if(YA.sel){delete s.yard[YA.sel];toast(`↺ ${YNAME[YA.sel]}�
 $('yaPlus').onclick=()=>yaScale(.1);$('yaMinus').onclick=()=>yaScale(-.1);$('yaFlip').onclick=yaFlip;
 $('arrReset').onclick=()=>{if(YA.on){yaReset();return}const sl=ARR.pick;if(sl){if(DEC().pos)delete DEC().pos[sl];if(DEC().flip)delete DEC().flip[sl];toast(`↺ ${RNAME[sl]||'家具'}回到原本的樣子`,2200)}else{DEC().pos={};DEC().flip={};toast('↺ 家具回到原本的位置',2200)}save();sfx('tap');arHint()};
 let denTapAt=0;
-function pointerTap(x,y){if(evo)return;
+function pointerTap(x,y){if(evo)return;if(VISIT.on){visitTap(x,y);return}
  if(mode==='feed'){placeApple(x,y);return}
  if(mode==='play'){playTap();return}
  if(s.hatched&&tryClearCore(x,y))return;
@@ -3341,7 +3445,7 @@ $('viewBtn').onclick=()=>toggleView();$('navL').onclick=()=>{if(modeBusy()){toas
 $('lightBtn').onclick=()=>{s.settings.light=s.settings.light===false;save();syncLightBtn(true);sfx('tap');say(s.settings.light?'💡 開燈了，暖暖的～':'關燈了，好暗喔…',{log:false})};
 /* 開燈按鈕：只在小窩裡、傍晚到晚上出現 */
 function syncLightBtn(force){const show=s.hatched&&curView()!=='yard'&&['night','dusk'].includes(phase()),b=$('lightBtn');b.classList.toggle('hidden',!show);if(show)b.textContent=s.settings.light===false?'💡 開燈':'🌙 關燈'}
-setInterval(syncLightBtn,1000);$('bSteps').onclick=stepsDialog;$('bMate').onclick=mateDialog;
+setInterval(syncLightBtn,1000);$('bSteps').onclick=stepsDialog;$('bMate').onclick=()=>friendsDialog();
 $('bFish').onclick=()=>{sfx('tap');openFish()};$('bCodex').onclick=codexDialog;$('bTrain').onclick=trainDialog;$('bMenu').onclick=menuDialog;
 $('homeTipX').onclick=()=>{$('homeTip').classList.add('hidden');store.set(TIP_KEY,'1')};
 

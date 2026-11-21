@@ -14,7 +14,7 @@ async def tap(p, x=64, y=80):
     await p.mouse.click(b['x'] + x / 128 * b['width'], b['y'] + y / 112 * b['height'])
 async def newpage(br, dev, init=None):
     ctx = await br.new_context(**dev); p = await ctx.new_page()
-    await p.add_init_script('window.PF_NO_WANDER=1;window.PF_NO_RPS=1;window.PF_NO_TRAITS=1;window.PF_NO_WEATHER=1;window.PF_NO_CRAVE=1;window.PF_NO_LVPOP=1;window.PF_NO_SKILLS=1;window.PF_SKIP_INTRO=1;window.PF_NO_GUIDE=1;window.PF_XP1=1')   # 測試時關掉待命亂走與猜拳（猜拳另外測）
+    await p.add_init_script('window.PF_NO_WANDER=1;window.PF_NO_SOCIAL=1;window.PF_NO_RPS=1;window.PF_NO_TRAITS=1;window.PF_NO_WEATHER=1;window.PF_NO_CRAVE=1;window.PF_NO_LVPOP=1;window.PF_NO_SKILLS=1;window.PF_SKIP_INTRO=1;window.PF_NO_GUIDE=1;window.PF_XP1=1')   # 測試時關掉待命亂走與猜拳（猜拳另外測）
     p.on('pageerror', lambda e: errors.append(str(e)))
     p.on('console', lambda m: errors.append(m.text) if m.type == 'error' and 'favicon' not in m.text else None)
     if init: await p.add_init_script(init)
@@ -282,13 +282,13 @@ async def main():
         await f.evaluate("PF.debug.set({stage:'adult',route:'flame',sex:'f'})"); fcode = await f.evaluate("PF.mateCode()")
         await f.evaluate("PF.debug.set({sex:'m'})"); fcode_m = await f.evaluate("PF.mateCode()"); await ctx2.close()
         await p.evaluate("PF.debug.set({mood:90,coins:100,sex:'m'})")
-        await p.click('#bMate'); await p.fill('#mIn', fcode_m); await p.click('#mGo'); await p.wait_for_timeout(300); ok('跟朋友配對也要一公一母', '一公一母' in await p.inner_text('#mErr'), await p.inner_text('#mErr'))
+        await p.evaluate('mateDialog()'); await p.fill('#mIn', fcode_m); await p.click('#mGo'); await p.wait_for_timeout(300); ok('跟朋友配對也要一公一母', '一公一母' in await p.inner_text('#mErr'), await p.inner_text('#mErr'))
         await p.fill('#mIn', fcode); await p.click('#mGo'); await p.wait_for_timeout(300); await p.screenshot(path=f'{OUT}/12_mate.png')
         await p.click('#mConfirm'); await p.wait_for_timeout(500); s = await st(p)
         ok('配對：牠去愛的小窩住一天、扣 20 金幣', bool(s.get('loveEgg')) and len(s['eggs']) == 0 and s['coins'] == 80)
         await p.evaluate("(()=>{const s=PF.state,t=Date.now()-1;s.loveEgg.end=t;s.nestUntil=t;PF.PC.applyTime(s,Date.now())})()"); await p.wait_for_timeout(200); s = await st(p)
         ok('住滿一天：回來帶著蛋（還要暖 6 小時）', len(s['eggs']) == 1 and not s.get('loveEgg') and s['eggs'][0]['ready'] > s['eggs'][0]['at'])
-        await p.click('#bMate'); await p.fill('#mIn', fcode); await p.click('#mGo'); await p.wait_for_timeout(200)
+        await p.evaluate('mateDialog()'); await p.fill('#mIn', fcode); await p.click('#mGo'); await p.wait_for_timeout(200)
         ok('配對冷卻 6 小時', '⏳' in await p.inner_text('#mErr')); await closeall(p)
         # ---------- 小窩 ----------
         await p.evaluate("PF.debug.set({view:'room',coins:500})"); await p.wait_for_timeout(500)
@@ -332,7 +332,7 @@ async def main():
         # ---------- V1.17–1.18：待命走動、皮球、暖燈、野生怪獸外型 ----------
         ctx7, q = await newpage(br, I13); await hatch(q, '走走')
         await q.evaluate("window.PF_NO_WANDER=0"); xs = set()
-        for _ in range(32): xs.add(round(await q.evaluate('PF.petX'))); await q.wait_for_timeout(500)
+        for _ in range(48): xs.add(round(await q.evaluate('PF.petX'))); await q.wait_for_timeout(500)
         ok('待命時會自己走來走去', len(xs) >= 3, sorted(xs)[:8])
         await q.evaluate("window.PF_NO_WANDER=1"); await q.wait_for_timeout(300)
         tx = await q.evaluate('PF.toy.x'); await tap(q, tx, 98); await q.wait_for_timeout(600)
@@ -355,7 +355,7 @@ async def main():
             ok('猜拳有結果（贏／平手／輸）', any(k in m for k in ['躲開', '0.8', '1.2']), m)
         await ctx7.close()
         # ---------- iOS App 版：模擬 Capacitor 健康外掛，打開就自動同步步數 ----------
-        mock = """window.PF_NO_WANDER=1;window.PF_NO_RPS=1;window.PF_NO_TRAITS=1;window.PF_NO_WEATHER=1;window.PF_NO_CRAVE=1;window.PF_NO_LVPOP=1;window.PF_NO_SKILLS=1;window.PF_SKIP_INTRO=1;window.PF_NO_GUIDE=1;window.PF_XP1=1;
+        mock = """window.PF_NO_WANDER=1;window.PF_NO_SOCIAL=1;window.PF_NO_RPS=1;window.PF_NO_TRAITS=1;window.PF_NO_WEATHER=1;window.PF_NO_CRAVE=1;window.PF_NO_LVPOP=1;window.PF_NO_SKILLS=1;window.PF_SKIP_INTRO=1;window.PF_NO_GUIDE=1;window.PF_XP1=1;
           const _d=n=>{const t=new Date(Date.now()-n*86400000);return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei'}).format(t)};
           window.Capacitor={isNativePlatform:()=>true,Plugins:{HealthSteps:{requestAuthorization:async()=>({granted:true}),getDailySteps:async()=>({days:[{date:_d(1),steps:4200},{date:_d(0),steps:6800}]})}}};"""
         ctx8 = await br.new_context(**I13); q = await ctx8.new_page(); await q.add_init_script(mock)

@@ -1,9 +1,16 @@
-// 幻獸日記 推播伺服器（Cloudflare Worker）
-// 遊戲把「預約清單」（幾點要提醒什麼）送上來；每 5 分鐘檢查一次，到時間就推通知到手機。
-// 儲存：KV（綁定名稱 PF）。VAPID 金鑰第一次啟動時自動產生，存在 KV 的 vapid。
-const ORIGINS = ['https://s52052008-prog.github.io'];
+// 幻獸日記 伺服器（Cloudflare Worker ＋ Durable Object SQLite）
+// 1. 推播：遊戲把「預約清單」送上來，每 5 分鐘檢查一次，到時間推通知到手機
+// 2. 好友：好友碼、加好友、拜訪（名片）、摸摸、澆水、留言板、送禮、配對邀請
+// VAPID 金鑰存在 KV（PF）的 vapid（第一次自動產生，之後不能換，不然大家的訂閱會失效）
+import { DurableObject } from 'cloudflare:workers';
+
+const ORIGINS = ['https://s52052008-prog.github.io', 'http://localhost:8790'];
 const SUB = 'https://s52052008-prog.github.io/pixel-familiar/';
 const MAX_ITEMS = 40, KEEP_DAYS = 30;
+const GIFT_OK = { food: 10, seeds: 10, candy: 5, potion: 5, fish: 5, cake: 3, coins: 500 };   // 可以送的東西、一次最多幾個
+const DAILY = [['food', 2], ['seeds', 2], ['candy', 1], ['coins', 30], ['potion', 1]];   // 每日免費小禮物（隨機一種）
+const GNAME = { food: '🍎 蘋果', seeds: '🌱 種子', candy: '🍬 糖果', potion: '🧪 回復藥水', fish: '🐟 魚', cake: '🍰 蛋糕', coins: '🪙 金幣' };
+const LIMIT = { pet: 1, water: 1, msg: 5, gift: 3, daily: 1, mate: 3, mateBack: 3 };   // 每天對同一個朋友最多幾次
 
 const enc = new TextEncoder();
 const b64u = buf => { let s = ''; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
@@ -41,8 +48,7 @@ async function encrypt(sub, text) {
   const nonce = (await hmac(prk, cat(enc.encode('Content-Encoding: nonce\0'), new Uint8Array([1])))).slice(0, 12);
   const k = await crypto.subtle.importKey('raw', cek, 'AES-GCM', false, ['encrypt']);
   const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce }, k, cat(enc.encode(text), new Uint8Array([2]))));
-  const rs = new Uint8Array([0, 0, 16, 0]);
-  return cat(salt, rs, new Uint8Array([asPub.length]), asPub, ct);
+  return cat(salt, new Uint8Array([0, 0, 16, 0]), new Uint8Array([asPub.length]), asPub, ct);
 }
 async function sendPush(env, sub, msg) {
   const body = await encrypt(sub, JSON.stringify(msg));
@@ -55,51 +61,137 @@ const json = (req, o, st = 200) => new Response(JSON.stringify(o), { status: st,
 const okId = id => typeof id === 'string' && /^[a-z0-9]{12,40}$/.test(id);
 const okSub = s => s && typeof s.endpoint === 'string' && /^https:\/\//.test(s.endpoint) && s.endpoint.length < 600 && s.keys && typeof s.keys.p256dh === 'string' && typeof s.keys.auth === 'string';
 const clean = it => ({ at: Math.round(+it.at), title: String(it.title || '幻獸日記').slice(0, 40), body: String(it.body || '').slice(0, 140), tag: String(it.tag || '').slice(0, 24) });
+const str = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').slice(0, n);
+const twHour = t => new Date(t + 8 * 3600e3).getUTCHours();
+const twDay = t => new Date(t + 8 * 3600e3).toISOString().slice(0, 10);
+const quiet = t => { const h = twHour(t); return h >= 23 || h < 8; };   // 晚上 11 點到早上 8 點不推好友通知（打開遊戲就看得到）
+const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // 好友碼：去掉容易看錯的 0 O 1 I
 
-async function users(env) { return (await env.PF.get('users', 'json')) || []; }
-async function addUser(env, id) { const U = await users(env); if (!U.includes(id)) { U.push(id); await env.PF.put('users', JSON.stringify(U)); } }
+export class Store extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env); this.env = env; this.sql = ctx.storage.sql;
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, code TEXT UNIQUE, name TEXT, card TEXT, sub TEXT, items TEXT, seen INTEGER);
+      CREATE TABLE IF NOT EXISTS friends(a TEXT, b TEXT, at INTEGER, PRIMARY KEY(a,b));
+      CREATE TABLE IF NOT EXISTS reqs(f TEXT, t TEXT, at INTEGER, PRIMARY KEY(f,t));
+      CREATE TABLE IF NOT EXISTS inbox(n INTEGER PRIMARY KEY AUTOINCREMENT, t TEXT, f TEXT, kind TEXT, data TEXT, at INTEGER);
+      CREATE TABLE IF NOT EXISTS board(n INTEGER PRIMARY KEY AUTOINCREMENT, t TEXT, f TEXT, text TEXT, at INTEGER);
+      CREATE TABLE IF NOT EXISTS lim(k TEXT PRIMARY KEY, v INTEGER);
+      CREATE INDEX IF NOT EXISTS inbox_t ON inbox(t); CREATE INDEX IF NOT EXISTS board_t ON board(t);`);
+  }
+  one(q, ...a) { const r = this.sql.exec(q, ...a).toArray(); return r[0] || null; }
+  all(q, ...a) { return this.sql.exec(q, ...a).toArray(); }
+  user(id) { return this.one('SELECT * FROM users WHERE id=?', id); }
+  byCode(code) { return this.one('SELECT * FROM users WHERE code=?', String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '')); }
+  ensure(id) {
+    let u = this.user(id); if (u) return u;
+    let code; do { code = Array.from(crypto.getRandomValues(new Uint8Array(6)), b => CODE_CH[b % CODE_CH.length]).join(''); } while (this.byCode(code));
+    this.sql.exec('INSERT INTO users(id,code,name,card,sub,items,seen) VALUES(?,?,?,?,?,?,?)', id, code, '', '{}', null, '[]', Date.now());
+    return this.user(id);
+  }
+  isFriend(a, b) { return !!this.one('SELECT 1 AS x FROM friends WHERE a=? AND b=?', a, b); }
+  petName(u) { try { return JSON.parse(u.card || '{}').pet.name || '牠'; } catch (_) { return '牠'; } }
+  async notify(u, body, tag) {   // 好友互動：馬上推一則（晚上不吵）
+    if (!u || !u.sub || quiet(Date.now())) return;
+    try { const st = await sendPush(this.env, JSON.parse(u.sub), { title: '幻獸日記', body, tag: tag || 'friend' }); if (st === 404 || st === 410) this.sql.exec('UPDATE users SET sub=NULL WHERE id=?', u.id); } catch (_) {}
+  }
+  bump(k, max) { const r = this.one('SELECT v FROM lim WHERE k=?', k), v = r ? r.v : 0; if (v >= max) return false; this.sql.exec('INSERT INTO lim(k,v) VALUES(?,1) ON CONFLICT(k) DO UPDATE SET v=v+1', k); return true; }
+  befriend(a, b) { const t = Date.now(); this.sql.exec('INSERT OR IGNORE INTO friends(a,b,at) VALUES(?,?,?)', a, b, t); this.sql.exec('INSERT OR IGNORE INTO friends(a,b,at) VALUES(?,?,?)', b, a, t); this.sql.exec('DELETE FROM reqs WHERE (f=? AND t=?) OR (f=? AND t=?)', a, b, b, a); }
+  mail(t, f, kind, data) { this.sql.exec('INSERT INTO inbox(t,f,kind,data,at) VALUES(?,?,?,?,?)', t, f, kind, JSON.stringify(data || {}), Date.now()); }
+  pub(u) { let card = {}; try { card = JSON.parse(u.card || '{}'); } catch (_) {} return { code: u.code, name: u.name || '朋友', card, seen: u.seen }; }
+
+  async fetch(req) {
+    const url = new URL(req.url), P = url.pathname;
+    if (P === '/cron') return this.cron();
+    if (P === '/vapid') return json(req, { key: (await vapidKeys(this.env)).pub });
+    if (req.method !== 'POST') return json(req, { ok: true, name: 'pixel-familiar' });
+    const b = await req.json().catch(() => ({})); if (!okId(b.id)) return json(req, { ok: false, msg: 'bad id' }, 400);
+    const now = Date.now();
+    // ---------- 推播 ----------
+    if (P === '/sub') { if (!okSub(b.sub)) return json(req, { ok: false, msg: 'bad sub' }, 400); this.ensure(b.id); this.sql.exec('UPDATE users SET sub=?, seen=? WHERE id=?', JSON.stringify(b.sub), now, b.id); return json(req, { ok: true }); }
+    if (P === '/plan') {
+      const u = this.user(b.id); if (!u || !u.sub) return json(req, { ok: false, msg: 'no sub' }, 404);
+      const items = (Array.isArray(b.items) ? b.items : []).map(clean).filter(i => i.at > now - 60e3 && i.at < now + 7 * 864e5).sort((x, y) => x.at - y.at).slice(0, MAX_ITEMS);
+      this.sql.exec('UPDATE users SET items=?, seen=? WHERE id=?', JSON.stringify(items), now, b.id); return json(req, { ok: true, n: items.length });
+    }
+    if (P === '/test') { const u = this.user(b.id); if (!u || !u.sub) return json(req, { ok: false, msg: 'no sub' }, 404); const st = await sendPush(this.env, JSON.parse(u.sub), { title: '幻獸日記', body: b.body ? str(b.body, 140) : '🔔 通知設定好了！之後牠有事就會叫你～', tag: 'test' }); return json(req, { ok: st >= 200 && st < 300, status: st }); }
+    if (P === '/off') { this.sql.exec("UPDATE users SET sub=NULL, items='[]' WHERE id=?", b.id); return json(req, { ok: true }); }
+    // ---------- 好友 ----------
+    if (P === '/me') {   // 上傳名片（主人名字、幻獸、房間擺設、田…），拿到自己的好友碼
+      const u = this.ensure(b.id), card = JSON.stringify(b.card || {}); if (card.length > 8000) return json(req, { ok: false, msg: 'card too big' }, 400);
+      this.sql.exec('UPDATE users SET name=?, card=?, seen=? WHERE id=?', str(b.name, 16), card, now, b.id); return json(req, { ok: true, code: u.code });
+    }
+    const me = this.ensure(b.id);
+    if (P === '/social') {   // 好友名單、邀請、信箱（信箱拿了就清掉）
+      this.sql.exec('UPDATE users SET seen=? WHERE id=?', now, b.id);
+      const friends = this.all('SELECT u.* FROM friends f JOIN users u ON u.id=f.b WHERE f.a=? ORDER BY u.seen DESC', b.id).map(u => this.pub(u));
+      const reqs = this.all('SELECT u.code, u.name FROM reqs r JOIN users u ON u.id=r.f WHERE r.t=? ORDER BY r.at DESC LIMIT 20', b.id);
+      const sent = this.all('SELECT u.code, u.name FROM reqs r JOIN users u ON u.id=r.t WHERE r.f=? ORDER BY r.at DESC LIMIT 20', b.id);
+      const inbox = this.all('SELECT i.n, i.kind, i.data, i.at, u.code, u.name FROM inbox i LEFT JOIN users u ON u.id=i.f WHERE i.t=? ORDER BY i.n LIMIT 50', b.id).map(r => ({ ...r, data: JSON.parse(r.data || '{}') }));
+      if (inbox.length) this.sql.exec('DELETE FROM inbox WHERE t=? AND n<=?', b.id, inbox[inbox.length - 1].n);
+      const board = this.all('SELECT b.text, b.at, u.name, u.code FROM board b LEFT JOIN users u ON u.id=b.f WHERE b.t=? ORDER BY b.n DESC LIMIT 30', b.id);
+      return json(req, { ok: true, code: me.code, friends, reqs, sent, inbox, board });
+    }
+    const other = this.byCode(b.code);
+    if (!other) return json(req, { ok: false, msg: '找不到這個好友碼，請再確認一次' });
+    if (other.id === b.id) return json(req, { ok: false, msg: '這是你自己的好友碼喔' });
+    const myName = me.name || '朋友';
+    if (P === '/add') {
+      if (this.isFriend(b.id, other.id)) return json(req, { ok: true, msg: `你們已經是好友了` });
+      if (this.one('SELECT 1 AS x FROM reqs WHERE f=? AND t=?', other.id, b.id)) { this.befriend(b.id, other.id); this.mail(other.id, b.id, 'friend', {}); await this.notify(other, `👥 ${myName} 跟你成為好友了！`); return json(req, { ok: true, friend: true, msg: `🎉 你和 ${other.name || '朋友'} 成為好友了！` }); }
+      this.sql.exec('INSERT OR REPLACE INTO reqs(f,t,at) VALUES(?,?,?)', b.id, other.id, now); await this.notify(other, `👥 ${myName} 想加你好友，打開遊戲看看吧`);
+      return json(req, { ok: true, msg: `已送出好友邀請給 ${other.name || '朋友'}，等對方同意` });
+    }
+    if (P === '/accept') {
+      if (!this.one('SELECT 1 AS x FROM reqs WHERE f=? AND t=?', other.id, b.id)) return json(req, { ok: false, msg: '邀請已經不在了' });
+      this.befriend(b.id, other.id); this.mail(other.id, b.id, 'friend', {}); await this.notify(other, `👥 ${myName} 同意了你的好友邀請！`); return json(req, { ok: true, msg: `🎉 你和 ${other.name || '朋友'} 成為好友了！` });
+    }
+    if (P === '/decline') { this.sql.exec('DELETE FROM reqs WHERE (f=? AND t=?) OR (f=? AND t=?)', other.id, b.id, b.id, other.id); return json(req, { ok: true }); }
+    if (!this.isFriend(b.id, other.id)) return json(req, { ok: false, msg: '你們還不是好友' });
+    if (P === '/remove') { this.sql.exec('DELETE FROM friends WHERE (a=? AND b=?) OR (a=? AND b=?)', b.id, other.id, other.id, b.id); return json(req, { ok: true }); }
+    if (P === '/visit') {
+      const board = this.all('SELECT b.text, b.at, u.name FROM board b LEFT JOIN users u ON u.id=b.f WHERE b.t=? ORDER BY b.n DESC LIMIT 20', other.id);
+      const day = twDay(now), used = {}; for (const k of Object.keys(LIMIT)) { const r = this.one('SELECT v FROM lim WHERE k=?', `${k}:${b.id}:${other.id}:${day}`); used[k] = r ? r.v : 0; }
+      return json(req, { ok: true, ...this.pub(other), board, used, limit: LIMIT });
+    }
+    if (P === '/act') {
+      const kind = String(b.kind), lim = LIMIT[kind]; if (!lim) return json(req, { ok: false, msg: 'bad kind' }, 400);
+      const day = twDay(now), key = `${kind}:${b.id}:${other.id}:${day}`, pn = this.petName(other);
+      let data = {}, push = '', msg = '';
+      if (kind === 'pet') { push = `✋ ${myName} 來你家摸了摸 ${pn}，牠好開心！`; msg = `✋ 摸了摸 ${pn}，牠很開心！`; }
+      else if (kind === 'water') { push = `💧 ${myName} 幫你的田澆了水，作物長快一點了`; msg = '💧 幫忙澆水了！'; }
+      else if (kind === 'msg') { const t = str(b.data && b.data.text, 60).trim(); if (!t) return json(req, { ok: false, msg: '留言是空的' }); data = { text: t }; push = `💌 ${myName}：${t}`; msg = '💌 留言送出了'; }
+      else if (kind === 'gift') { const it = b.data && b.data.item, n = Math.floor(+(b.data && b.data.n)); if (!GIFT_OK[it] || !(n >= 1 && n <= GIFT_OK[it])) return json(req, { ok: false, msg: '不能送這個' }); data = { item: it, n }; push = `🎁 ${myName} 送你 ${GNAME[it]} ×${n}！`; msg = `🎁 送出 ${GNAME[it]} ×${n}`; }
+      else if (kind === 'daily') { const [it, n] = DAILY[Math.floor(Math.random() * DAILY.length)]; data = { item: it, n, free: 1 }; push = `🎁 ${myName} 送你一份小禮物：${GNAME[it]} ×${n}`; msg = `🎁 送出今天的小禮物：${GNAME[it]} ×${n}`; }
+      else if (kind === 'mate' || kind === 'mateBack') { const c = str(b.data && b.data.code, 3000); if (!/^PFM1\./.test(c)) return json(req, { ok: false, msg: '配對碼不對' }); data = { code: c, pet: str(b.data.pet, 16) }; push = kind === 'mate' ? `💞 ${myName} 想讓牠的幻獸跟 ${pn} 配對！` : `💞 ${myName} 答應配對了！打開遊戲完成配對`; msg = kind === 'mate' ? '💞 配對邀請送出了，等對方答應' : '💞 已經答應，對方也會拿到蛋'; }
+      if (!this.bump(key, lim)) return json(req, { ok: false, msg: lim === 1 ? '今天已經做過了，明天再來吧' : '今天的次數用完了，明天再來吧' });
+      if (kind === 'msg') { this.sql.exec('INSERT INTO board(t,f,text,at) VALUES(?,?,?,?)', other.id, b.id, data.text, now); this.sql.exec('DELETE FROM board WHERE t=? AND n NOT IN (SELECT n FROM board WHERE t=? ORDER BY n DESC LIMIT 30)', other.id, other.id); }
+      this.mail(other.id, b.id, kind, data); await this.notify(other, push, kind);
+      return json(req, { ok: true, msg, data });
+    }
+    return json(req, { ok: false }, 404);
+  }
+  async cron() {   // 每 5 分鐘：預約的通知到時間就推
+    const now = Date.now();
+    this.sql.exec('DELETE FROM lim WHERE k NOT LIKE ?', `%:${twDay(now)}`);
+    this.sql.exec('DELETE FROM inbox WHERE at<?', now - 60 * 864e5);
+    for (const u of this.all("SELECT * FROM users WHERE sub IS NOT NULL AND items!='[]'")) {
+      if (now - (u.seen || 0) > KEEP_DAYS * 864e5) { this.sql.exec("UPDATE users SET items='[]' WHERE id=?", u.id); continue; }   // 太久沒玩就不再提醒
+      let items = []; try { items = JSON.parse(u.items || '[]'); } catch (_) {}
+      const due = items.filter(i => i.at <= now); if (!due.length) continue;
+      this.sql.exec('UPDATE users SET items=? WHERE id=?', JSON.stringify(items.filter(i => i.at > now)), u.id);
+      const msg = due.length > 1 ? { title: '幻獸日記', body: due.slice(-3).map(i => i.body).join('\n'), tag: 'multi' } : due[0];   // 同時好幾件就合成一則
+      try { const st = await sendPush(this.env, JSON.parse(u.sub), msg); if (st === 404 || st === 410) this.sql.exec("UPDATE users SET sub=NULL, items='[]' WHERE id=?", u.id); } catch (_) {}
+    }
+    return new Response('ok');
+  }
+}
 
 export default {
   async fetch(req, env) {
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors(req) });
-    const url = new URL(req.url);
-    try {
-      if (url.pathname === '/vapid') return json(req, { key: (await vapidKeys(env)).pub });
-      if (req.method !== 'POST') return json(req, { ok: true, name: 'pixel-familiar-push' });
-      const b = await req.json(); if (!okId(b.id)) return json(req, { ok: false, msg: 'bad id' }, 400);
-      const key = 'u:' + b.id;
-      if (url.pathname === '/sub') {
-        if (!okSub(b.sub)) return json(req, { ok: false, msg: 'bad sub' }, 400);
-        const u = (await env.PF.get(key, 'json')) || { items: [] }; u.sub = b.sub; u.seen = Date.now();
-        await env.PF.put(key, JSON.stringify(u)); await addUser(env, b.id); return json(req, { ok: true });
-      }
-      if (url.pathname === '/plan') {
-        const u = await env.PF.get(key, 'json'); if (!u || !u.sub) return json(req, { ok: false, msg: 'no sub' }, 404);
-        const now = Date.now(); u.items = (Array.isArray(b.items) ? b.items : []).map(clean).filter(i => i.at > now - 60e3 && i.at < now + 7 * 864e5).sort((a, b) => a.at - b.at).slice(0, MAX_ITEMS); u.seen = now;
-        await env.PF.put(key, JSON.stringify(u)); return json(req, { ok: true, n: u.items.length });
-      }
-      if (url.pathname === '/test') {
-        const u = await env.PF.get(key, 'json'); if (!u || !u.sub) return json(req, { ok: false, msg: 'no sub' }, 404);
-        const st = await sendPush(env, u.sub, { title: '幻獸日記', body: b.body ? String(b.body).slice(0, 140) : '🔔 通知設定好了！之後牠有事就會叫你～', tag: 'test' });
-        return json(req, { ok: st >= 200 && st < 300, status: st });
-      }
-      if (url.pathname === '/off') { await env.PF.delete(key); return json(req, { ok: true }); }
-      return json(req, { ok: false }, 404);
-    } catch (e) { return json(req, { ok: false, msg: String(e && e.message || e) }, 500); }
+    if (new URL(req.url).pathname === '/cron') return new Response('no', { status: 403 });
+    try { return await env.STORE.get(env.STORE.idFromName('main')).fetch(req); }
+    catch (e) { return json(req, { ok: false, msg: String(e && e.message || e) }, 500); }
   },
-  async scheduled(ev, env) {
-    const now = Date.now(), U = await users(env), keep = [];
-    for (const id of U) {
-      const key = 'u:' + id, u = await env.PF.get(key, 'json'); if (!u || !u.sub) continue;
-      if (now - (u.seen || 0) > KEEP_DAYS * 864e5) { await env.PF.delete(key); continue; }   // 太久沒玩就不再提醒
-      keep.push(id);
-      const due = (u.items || []).filter(i => i.at <= now); if (!due.length) continue;
-      u.items = u.items.filter(i => i.at > now);
-      const last = due[due.length - 1], msg = due.length > 1 ? { title: '幻獸日記', body: due.slice(-3).map(i => i.body).join('\n'), tag: 'multi' } : last;   // 同時好幾件就合成一則
-      const st = await sendPush(env, u.sub, msg);
-      if (st === 404 || st === 410) { await env.PF.delete(key); keep.pop(); continue; }   // 手機取消訂閱了
-      await env.PF.put(key, JSON.stringify(u));
-    }
-    if (keep.length !== U.length) await env.PF.put('users', JSON.stringify(keep));
-  }
+  async scheduled(ev, env, ctx) { ctx.waitUntil(env.STORE.get(env.STORE.idFromName('main')).fetch('https://store/cron', { method: 'POST' })); }
 };

@@ -10,6 +10,6 @@ let ns = (await cf(`/accounts/${A}/storage/kv/namespaces?per_page=100`)).result 
 if (!kv) { const c = await cf(`/accounts/${A}/storage/kv/namespaces`, { method: 'POST', body: JSON.stringify({ title: NAME }) }); if (!c.success) fail('建立 KV 失敗：' + JSON.stringify(c.errors)); kv = c.result; console.log('已建立 KV'); }
 let sd = await cf(`/accounts/${A}/workers/subdomain`), sub = sd.success && sd.result && sd.result.subdomain;
 if (!sub) { for (let i = 0; i < 5 && !sub; i++) { const want = 'pixelfamiliar' + Math.random().toString(36).slice(2, 6); const r = await cf(`/accounts/${A}/workers/subdomain`, { method: 'PUT', body: JSON.stringify({ subdomain: want }) }); if (r.success) sub = r.result.subdomain || want; } if (!sub) fail('設定 workers.dev 子網域失敗'); console.log('已建立子網域'); }
-fs.writeFileSync('push-server/wrangler.toml', `name = "${NAME}"\nmain = "worker.js"\ncompatibility_date = "2024-11-01"\nworkers_dev = true\n\n[[kv_namespaces]]\nbinding = "PF"\nid = "${kv.id}"\n\n[triggers]\ncrons = ["*/5 * * * *"]\n`);
+fs.writeFileSync('push-server/wrangler.toml', `name = "${NAME}"\nmain = "worker.js"\ncompatibility_date = "2024-11-01"\nworkers_dev = true\n\n[[kv_namespaces]]\nbinding = "PF"\nid = "${kv.id}"\n\n[[durable_objects.bindings]]\nname = "STORE"\nclass_name = "Store"\n\n[[migrations]]\ntag = "v1"\nnew_sqlite_classes = ["Store"]\n\n[triggers]\ncrons = ["*/5 * * * *"]\n`);
 fs.appendFileSync(process.env.GITHUB_ENV, `CLOUDFLARE_ACCOUNT_ID=${A}\nPUSH_URL=https://${NAME}.${sub}.workers.dev\n`);
 console.log('網址：', `https://${NAME}.${sub}.workers.dev`);
