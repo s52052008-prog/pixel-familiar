@@ -34,3 +34,9 @@ for sheet, (C, R, ITEMS) in SHEETS.items():
         (im,), _ = quantize([im], 24)
         Image.fromarray(im).save(f'sprites/decor/{nm}.png'); print(nm, im.shape[1], im.shape[0])
 # 註：tower_cat 的毛球顏色縮小後變淡，匯入後有手動改回粉紅（見 V1.86.7）
+# 這些小圖直接內嵌進 index.html（Claude 網頁版一個版本最多 512 個檔案，省檔案數）
+import base64, re, glob, os
+mp = {os.path.basename(f)[:-4]: base64.b64encode(open(f, 'rb').read()).decode() for f in sorted(glob.glob('sprites/decor/*.png'))}
+line = 'const DECOR_B64=' + '{' + ','.join(f"{k}:'{v}'" for k, v in mp.items()) + '};   // 由 tools/import_lounge.py 產生'
+h = open('index.html').read(); h = re.sub(r'const DECOR_B64=\{.*?\};[^\n]*', lambda _: line, h, count=1) if 'const DECOR_B64=' in h else h.replace('const DECOR_ART=', line + '\nconst DECOR_ART=', 1)
+open('index.html', 'w').write(h); print('embedded', len(mp))
