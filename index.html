@@ -279,7 +279,7 @@ body.scrollm #app{height:auto!important;min-height:100dvh!important;overflow:vis
 .hleaf{width:18px;height:18px;image-rendering:pixelated;vertical-align:-2px;margin-right:4px;transform:rotate(-20deg)}.hleaf.r{margin:0 0 0 4px;transform:scaleX(-1) rotate(-20deg)}
 .nprow2{display:flex;align-items:center;justify-content:center;gap:6px}.nleaf{width:16px;height:16px;image-rendering:pixelated;opacity:.9}.nleaf.r{transform:scaleX(-1)}.npedit{background:none;border:0;padding:0;font-size:15px;width:44px;height:44px;margin:-10px -8px;min-width:0;cursor:pointer}
 .nameplate .chips{display:flex;flex-wrap:wrap;justify-content:center;gap:3px 4px;margin-top:3px;white-space:normal!important;overflow:visible!important}
-.chip{display:inline-flex;align-items:center;gap:3px;padding:1px 8px;border-radius:11px;background:rgba(30,16,6,.45);border:1.5px solid #c8913a;color:#fff3d8;font-size:11.5px;line-height:1.45;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}.chip .mi{width:14px;height:14px}.chip.good{border-color:#e8c070}.chip.bad{border-color:#e0a050;color:#ffe2a8}.chip.cgoal{border-color:#f0c868;color:#ffe9a8}
+.chip{display:inline-flex;align-items:center;gap:3px;padding:1px 8px;border-radius:11px;background:rgba(30,16,6,.45);border:1.5px solid #c8913a;color:#fff3d8;font-size:11.5px;line-height:1.45;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}.chip .mi{width:14px;height:14px}.chip.good{border-color:#e8c070}.chip.bad{border-color:#e0a050;color:#ffe2a8}.chip.ember{border-color:#ff9a3a;color:#ffd2a0}.chip.cgoal{border-color:#f0c868;color:#ffe9a8}
 .chip.bond{gap:4px}.bbar{display:inline-block;width:46px;height:7px;background:#2a170a;border-radius:4px;overflow:hidden;border:1px solid #000}.bbar b{display:block;height:100%;background:#ff7aa8}
 .sh .sl{display:inline!important;font-size:11px;font-weight:800;margin-right:auto}
 .act.need{box-shadow:0 0 0 3px #ffe066,0 0 10px 3px #ffd040,inset 0 -5px 0 #a8703e,inset 0 3px 0 #ffe2a8!important;animation:needPulse 1.6s ease-in-out infinite}@keyframes needPulse{50%{box-shadow:0 0 0 3px #ffe066,0 0 16px 6px #ffd040aa,inset 0 -5px 0 #a8703e,inset 0 3px 0 #ffe2a8}}body.rm .act.need{animation:none}
@@ -387,6 +387,17 @@ header{padding-top:10px}
 #arrPanel #arrReset,#arrPanel #arrDone{grid-column:span 3}
 #arrPanel.room #yaMinus,#arrPanel.room #yaPlus{display:none}#arrPanel.room #yaFlip,#arrPanel.room #arrReset,#arrPanel.room #arrDone{grid-column:span 2}
 #arrPanel .btn:disabled{opacity:.4}
+body.arrMode .snav{display:none}
+#lgCard{flex:0 0 auto;background:#3a2414;border:3px solid #2a170a;box-shadow:0 0 0 2px #b8854e;border-radius:6px;padding:10px;margin:0 6px 4px;display:flex;flex-direction:column;gap:10px;color:#fff3d8}
+#lgCard .lgTop{display:flex;gap:10px;align-items:center}#lgCv{width:72px;height:72px;image-rendering:pixelated;background:#5a3a20;border:2px solid #2a170a;border-radius:6px;flex:0 0 auto}
+#lgCard .lgInfo{flex:1;min-width:0}#lgName{font-size:19px}#lgSub{font-size:14px;color:#f0d8a8;margin:2px 0 6px}
+#lgBars{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:4px 6px;align-items:center;font-size:13px}#lgBars i{display:block;height:8px;background:#1a0e06;border-radius:3px;overflow:hidden}#lgBars i b{display:block;height:100%;background:#6fcf5a}
+#lgCard .lgx{align-self:flex-start;background:none;border:0;color:#fff3d8;font-size:22px;padding:2px 6px}#lgCard .row{display:grid;grid-template-columns:1fr 1.4fr;gap:8px}#lgCard .btn{min-height:50px;font-size:17px;margin:0}
+body.lgMode #infoSlot,body.lgMode #app>.panel,body.lgMode #stats,body.lgMode #homeTip{display:none!important}
+#arrTray{display:none;gap:6px;overflow-x:auto;padding:4px 2px 6px;-webkit-overflow-scrolling:touch;background:rgba(0,0,0,.25);border-radius:6px;min-height:84px}#arrPanel.room #arrTray{display:flex}
+.trt{flex:0 0 auto;width:66px;display:flex;flex-direction:column;align-items:center;gap:2px;background:#5a3a20;border:2px solid #2a170a;border-radius:6px;padding:4px 2px;color:#fff3d8;font-size:11px;line-height:1.2;text-align:center;touch-action:none;user-select:none;-webkit-user-select:none}
+.trt canvas{width:44px;height:40px;image-rendering:pixelated;object-fit:contain;pointer-events:none}.trt.on{background:#8a6a2a;border-color:#ffe066;box-shadow:0 0 0 2px #ffe06688}.trt.on::after{content:'已擺上';font-size:10px;color:#ffe066}
+#trGhost{position:fixed;z-index:99998;pointer-events:none;width:56px;height:56px;image-rendering:pixelated;opacity:.85;transform:translate(-50%,-60%)}#arrTray.drop{outline:3px dashed #ffe066}
 body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode #app>.actions,body.arrMode #app>.toolbar,body.arrMode #homeTip{display:none!important}
 
 /* V1.84 組合拳方向鍵放大 */.tctl.pad{padding:2px 8px 10px!important}.tctl.pad .dpad{width:174px!important;height:174px!important}.tctl.pad .dpad::before{left:58px!important;width:58px!important;height:174px!important}.tctl.pad .dpad::after{top:58px!important;width:174px!important;height:58px!important}.tctl.pad .dpad .pk{width:58px!important;height:58px!important}.tctl.pad .dpad .pk svg{width:34px!important;height:34px!important}.tctl.pad .pkU{left:58px!important;top:0!important}.tctl.pad .pkD{left:58px!important;top:116px!important}.tctl.pad .pkL{left:0!important;top:58px!important}.tctl.pad .pkR{left:116px!important;top:58px!important}
@@ -417,9 +428,10 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
   <button id="lightBtn" class="viewbtn hidden" style="top:56px">💡 開燈</button>
   <button id="denBtn" class="viewbtn hidden" style="left:auto;right:6px">🛠 小窩</button>
  </div></div>
- <div id="arrPanel" class="hidden"><div id="arrHint"></div><div class="row">
+ <div id="arrPanel" class="hidden"><div id="arrHint"></div><div id="arrTray"></div><div class="row">
   <button class="btn ya" id="yaMinus">－ 縮小</button><button class="btn ya" id="yaPlus">＋ 放大</button><button class="btn ya" id="yaFlip">↔ 鏡像</button>
   <button class="btn" id="arrReset">↺ 恢復</button><button class="btn pri" id="arrDone">✅ 完成</button></div></div>
+ <div id="lgCard" class="hidden"><div class="lgTop"><canvas id="lgCv" width="48" height="48"></canvas><div class="lgInfo"><b id="lgName"></b><div id="lgSub"></div><div id="lgBars"></div></div><button class="lgx" id="lgClose" aria-label="關閉">✕</button></div><div class="row"><button class="btn" id="lgPet">✋ 摸摸牠</button><button class="btn pri" id="lgSwap">🔁 換牠出來陪你</button></div></div>
  <div id="infoSlot" class="wood">
   <div class="nameplate"><div class="nprow2"><img class="nleaf" src="sprites/ui/leaf.png" alt=""><div id="petname"></div><button id="npEdit" class="npedit" aria-label="改名">✏️</button><img class="nleaf r" src="sprites/ui/leaf.png" alt=""></div><div id="stageText" class="chips"></div><div id="traitText" class="chips"></div><div id="bondRow" class="chips"></div><div id="growText"></div><div id="alertLine" class="hidden"></div></div>
   <div id="pairBar" class="pairbar hidden"></div>
@@ -508,7 +520,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.86.6';
+const VERSION='1.86.7';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -526,6 +538,7 @@ const store={ok:true,mem:{},
 /* ---------------- 規則核心（game-core.js，可單獨做單元測試） ---------------- */
 const PC=window.PFCore;if(window.PF_NO_TRAITS)PC.CONFIG.traitsOn=false;if(window.PF_NO_WEATHER)PC.CONFIG.weatherOn=false;if(window.PF_NO_CRAVE)PC.CONFIG.crave.fruits=['__none','__none2'];   // 測試用：關掉屬性特性，數值才固定
 const {CONFIG,ROUTES,makeGenome,CLASSIC_G,encodeGenome,decodeGenome,G_SIDE,gidOf,genomeFromId,formCode,fresh,sanitize}=PC;
+if(window.PF_XP1)CONFIG.xpGain=1;   // 測試用：經驗不打折
 const FORMS={egg:{name:'神秘的蛋',stage:0}};
 const STAGE_NAME={egg:'蛋',baby:'嬰兒期',juvenile:'幼年期',adolescent:'少年期',adult:'成年期',ascended:'高階'};
 const ROUTE_ICON={flame:'🔥',tide:'💧',forest:'🌿',earth:'🪨',bird:'🐦',elec:'⚡',metal:'⚙️'},ROUTE_LABEL={flame:'火系',tide:'水系',forest:'草系',earth:'岩系',bird:'飛行系',elec:'雷系',metal:'鋼系'};
@@ -990,7 +1003,7 @@ function loadItems(){let left=ITEM_NAMES.length;for(const n of ITEM_NAMES){const
  for(const g of['burn','splash','zap'])for(let i=0;i<3;i++){const im=new Image();im.onload=()=>{FXA[g+i]=im};im.src=`sprites/fx/${g}${i}.png`}
  function done(){if(--left)return;bgKey='';document.querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));if(typeof renderFoodBar==='function')renderFoodBar()}}
 /* 新版介面圖示（sprites/ui，高解析度）：愛心、閃電、月亮、星星 */
-const UI_OVR={heart:'heart',bolt:'bolt',moon:'moon',star:'star',gem:'gem'},UIIMG={};
+const UI_OVR={heart:'heart',bolt:'bolt',moon:'moon',star:'star',gem:'gem',fist:'../ui2/fist',shield:'../ui2/shield',run:'../ui2/run'},UIIMG={};
 for(const k in UI_OVR){const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);UIIMG[k]=c;document.querySelectorAll(`canvas.picon[data-icon="${k}"]`).forEach(c=>paintIcon(c,k))};im.src=`sprites/ui/${UI_OVR[k]}.png`}
 function paintIcon(cv,name){const src=UIIMG[name]||ICV[name];if(!src)return;const sc0=+(cv.dataset.s||3),sc=UIIMG[name]&&sc0>2?2:sc0;cv.width=src.width;cv.height=src.height;
  cv.style.width=src.width*sc+'px';cv.style.height=src.height*sc+'px';const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);c.drawImage(src,0,0)}
@@ -1191,10 +1204,11 @@ function plotStage(q){return!q||q.empty?'empty':q.rotten?'rot':q.ripe?(q.over?q.
 const PAPER={paper_cream:['#f2e2c4','#e6d0a8'],paper_mint:['#c4ead8','#a8dcc4'],paper_night:['#26305e','#1e2750']};
 const DRESSER={x:40,w:37,top:56,bot:71},BED_W=52;
 /* V1.51 自由佈置：玩家可以拖動家具。位置存在 s.decor.pos（[x, y]，y 負數＝底部、正數＝頂部） */
-const ARR_DEF={wall:[74,10],toilet:[4,-80],toy:[23,-80],dresser:[40,-71],plant:[80,-82],rug:[30,92],bed:[70,-106],bed2:[6,-106],pig:[94,56]};
-/* V1.83 家具鏡像：s.decor.flip[sl]=1 時以自己的中心左右翻轉 */
-function FD(sl,x,w,fn){if(!(s.decor.flip&&s.decor.flip[sl]))return fn();ctx.save();ctx.translate(2*x+w,0);ctx.scale(-1,1);fn();ctx.restore()}
-const posOf=sl=>{const q=s.decor&&s.decor.pos&&s.decor.pos[sl];return Array.isArray(q)?q:ARR_DEF[sl]};
+const DEC=()=>curView()==='lounge'?s.lounge.decor:s.decor;   // V1.86.7 休息室有自己的家具擺法
+const ARR_DEF={feeder:[60,-86],water:[80,-86],window:[48,24],cushion:[6,-100],tower:[100,-96],wall:[74,10],toilet:[4,-80],toy:[23,-80],dresser:[40,-71],plant:[80,-82],rug:[30,92],bed:[70,-106],bed2:[6,-106],pig:[94,56]};
+/* V1.83 家具鏡像：DEC().flip[sl]=1 時以自己的中心左右翻轉 */
+function FD(sl,x,w,fn){if(!(DEC().flip&&DEC().flip[sl]))return fn();ctx.save();ctx.translate(2*x+w,0);ctx.scale(-1,1);fn();ctx.restore()}
+const posOf=sl=>{const q=s.decor&&DEC().pos&&DEC().pos[sl];return Array.isArray(q)?q:ARR_DEF[sl]};
 function syncDresser(){const[x,y]=posOf('dresser');DRESSER.x=x;DRESSER.bot=-y;DRESSER.top=-y-15}
 const bedX=()=>posOf('bed')[0]+BED_W/2-24,bed2X=()=>posOf('bed2')[0]+BED_W/2-24;
 function drawDresser(c){const{x,w,top,bot}=DRESSER,h=bot-top;c.fillStyle='#5c3a20';c.fillRect(x,top,w,h);c.fillStyle='#a8703e';c.fillRect(x+1,top+1,w-2,h-3);c.fillStyle='#c48a4e';c.fillRect(x-1,top-1,w+2,2);c.fillStyle='#d8a060';c.fillRect(x-1,top-1,w+2,1);
@@ -1202,7 +1216,10 @@ function drawDresser(c){const{x,w,top,bot}=DRESSER,h=bot-top;c.fillStyle='#5c3a2
  c.fillStyle='#5c3a20';c.fillRect(x+1,bot-2,2,2);c.fillRect(x+w-3,bot-2,2,2)}   // 五斗櫃（三層抽屜、金色把手）
 const bedCache={};function bigBed(id,sp){const k=id;if(bedCache[k]&&bedCache[k].src===sp)return bedCache[k].cv;const w=BED_W,h=Math.round(sp.height*1.15),cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.drawImage(sp,0,0,w,h);bedCache[k]={src:sp,cv};return cv}   // 床加寬（寵物比較大）
 const DSPR={};
-function makeDecor(id){if(DSPR[id])return DSPR[id];let g;const R=(x,y,w,h,c)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)px(g,x+i,y+j,c)};
+const DECOR_ART=['feeder1','feeder2','feeder3','water1','water2','water3','cushion_soft','tower_cat','window_low'];   // V1.86.7 有手繪圖的家具 id（sprites/decor/<id>.png），沒有的用程式畫的暫代
+const DIMG={};for(const id of DECOR_ART){const im=new Image();im.onload=()=>{DIMG[id]=im;delete DSPR[id];for(const k in LGSPR)delete LGSPR[k];roomKey=null};im.src=`sprites/decor/${id}.png`}
+function artCv(id){const im=DIMG[id];if(!im)return null;const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);return c}
+function makeDecor(id){if(DSPR[id])return DSPR[id];{const a=artCv(id);if(a)return DSPR[id]=a}let g;const R=(x,y,w,h,c)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)px(g,x+i,y+j,c)};
  if(id==='wall_frame'){g=grid(28,22);R(0,0,28,22,'#7a4a2a');R(2,2,24,18,'#8fd0f0');R(2,12,24,8,'#6fbf5a');ellipse(g,9,15,8,4,()=> '#4f9a4a');ellipse(g,20,5,3,3,()=> '#fff3a6');R(1,1,26,1,'#a8703e')}
  else if(id==='wall_clock'){g=grid(18,28);for(let i=0;i<7;i++)R(8-i,i,2+2*i,1,'#9a3a34');R(2,7,14,15,'#a8703e');ellipse(g,9,13,5,5,()=> '#fff8e8');px(g,9,10,'#1b2a44');px(g,9,11,'#1b2a44');px(g,9,12,'#1b2a44');px(g,10,13,'#1b2a44');px(g,11,13,'#1b2a44');R(8,22,2,4,'#c48a3a');ellipse(g,9,26,1.8,1.8,()=> '#f2c55c')}
  else if(id==='lamp_candle'){g=grid(10,16);R(1,13,8,3,'#a8703e');R(3,6,4,7,'#fff3e0');R(4,6,1,7,'#ffffff');px(g,5,5,'#5a3a2a');ellipse(g,5,3,1.8,2.6,(x,y,nx,ny)=>ny<-.2?'#ffe066':'#ff9a3a')}
@@ -1216,6 +1233,9 @@ function makeDecor(id){if(DSPR[id])return DSPR[id];let g;const R=(x,y,w,h,c)=>{f
  else if(id==='rug_red'){g=grid(56,12);ellipse(g,28,6,27.5,5.5,(x,y,nx,ny)=>nx*nx+ny*ny>.72?'#ffd34a':(x%6<3?'#c8403a':'#b0302e'))}
  else if(id==='rug_star'){g=grid(56,12);ellipse(g,28,6,27.5,5.5,(x,y,nx,ny)=>nx*nx+ny*ny>.75?'#8fa8e0':((x*7+y*13)%23===0?'#fff3a6':'#2a3a7a'))}
  else if(id==='toy_ball'){return DSPR[id]=ICV.ball}
+ else if(id==='cushion_soft'){g=grid(34,11);ellipse(g,17,6,16.5,4.8,(x,y,nx,ny)=>ny<-.25?'#ffd0e0':nx*nx+ny*ny>.6?'#d87a9a':'#f4a8c0');for(const x of[8,17,26])px(g,x,6,'#c86a8a')}   // 暫代圖
+ else if(id==='tower_cat'){g=grid(28,54);R(12,8,4,44,'#c8a070');for(let y=10;y<50;y+=3)R(12,y,4,1,'#a87a4a');R(0,4,28,5,'#8a5a34');R(1,3,26,2,'#e8c8a0');R(2,26,18,4,'#8a5a34');R(3,25,16,2,'#e8c8a0');R(0,50,28,4,'#8a5a34');R(1,49,26,2,'#e8c8a0');R(4,0,6,4,'#f4a8c0')}
+ else if(id==='window_low'){g=grid(30,22);R(0,0,30,22,'#6a4428');R(2,2,26,18,'#8fd0f0');R(14,2,2,18,'#6a4428');R(2,10,26,2,'#6a4428');R(3,14,10,5,'#6fbf5a');R(17,15,10,4,'#6fbf5a');R(0,20,30,2,'#8a5a34')}
  else if(id==='toy_block'){g=grid(16,12);R(0,5,7,7,'#e8433f');R(8,5,7,7,'#5fb4f0');R(4,0,7,6,'#ffd34a');px(g,2,7,'#fff');px(g,10,7,'#fff');px(g,6,2,'#fff')}
  if(!g)return null;outline(g,'#2a1a10');return DSPR[id]=gridCanvas(g)}
 let roomCache=null,roomKey='';
@@ -1232,16 +1252,18 @@ function makeRoom(ph,paper){const cv=document.createElement('canvas');cv.width=W
  if(ph==='night'){c.fillStyle='#f3f0d0';c.fillRect(32,15,4,4);c.fillStyle='#fff';c.fillRect(16,18,1,1);c.fillRect(24,14,1,1);c.fillRect(20,28,1,1)}else{c.fillStyle=ph==='dusk'?'#ffb35a':'#fff3a6';c.fillRect(31,15,5,5)}
  c.fillStyle='#6a4428';c.fillRect(25,12,2,24);c.fillRect(12,23,28,2);c.fillStyle='#8a5a34';c.fillRect(8,37,36,3);return cv}
 /* 房間裡每件可以拖動的家具：位置框 r＝[x,y,w,h]、畫法 draw()。地上的東西照「底部 y」排前後 */
-function roomItems(){const P=s.decor.placed,out=[];
- const add=(sl,sp,extra)=>{const[x,y]=posOf(sl),top=y<0?-y-sp.height:y;out.push({sl,r:[x,top,sp.width,sp.height],z:sl==='wall'?-2:sl==='rug'?-1:top+sp.height,draw:extra||(()=>FD(sl,x,sp.width,()=>ctx.drawImage(sp,x,top)))})};
+function roomItems(){const P=DEC().placed,out=[];
+ const add=(sl,sp,extra)=>{const[x,y]=posOf(sl),top=y<0?-y-sp.height:y;out.push({sl,r:[x,top,sp.width,sp.height],z:sl==='wall'||sl==='window'?-2:sl==='rug'||sl==='cushion'?-1:top+sp.height,draw:extra||(()=>FD(sl,x,sp.width,()=>ctx.drawImage(sp,x,top)))})};
  if(P.wall){const sp=makeDecor(P.wall);if(sp)add('wall',sp)}
- for(const sl of['toilet','toy','rug','bed','bed2']){const id=P[sl];if(!id||id==='toy_ball')continue;let sp=makeDecor(id);if(!sp)continue;if(sl==='bed'||sl==='bed2')sp=bigBed(id,sp);add(sl,sp)}
+ if(P.window){const sp=makeDecor(P.window);if(sp)add('window',sp)}
+ if(curView()==='lounge'){const lv=s.lounge.lv;add('feeder',feederSpr(lv));add('water',waterSpr(lv))}   // V1.86.7 休息室的投餵機、飲水機
+ for(const sl of['toilet','toy','rug','cushion','tower','bed','bed2']){const id=P[sl];if(!id||id==='toy_ball')continue;let sp=makeDecor(id);if(!sp)continue;if(sl==='bed'||sl==='bed2')sp=bigBed(id,sp);add(sl,sp)}
  if(P.plant==='plant_flower'){const sp=makeDecor('plant_flower');if(sp)add('plant',sp)}
  {const{x,w,top,bot}=DRESSER;let t=top;const on=[];if(P.plant==='plant_pot'){const sp=makeDecor('plant_pot');if(sp){on.push([sp,x+1]);t=Math.min(t,top-sp.height)}}if(P.lamp){const sp=makeDecor(P.lamp);if(sp){on.push([sp,x+w-1-sp.width]);t=Math.min(t,top-sp.height)}}
   out.push({sl:'dresser',r:[x-1,t,w+2,bot-t],z:bot,draw:()=>FD('dresser',x-1,w+2,()=>{drawDresser(ctx);for(const[sp,sx]of on)ctx.drawImage(sp,sx,top-sp.height)})})}
  return out.sort((a,b)=>a.z-b.z)}
 function drawRoom(now){const ph=phase(),paper=s.decor.placed.paper||'paper_cream',k=ph+paper;if(k!==roomKey){roomKey=k;roomCache=makeRoom(ph,paper)}
- ctx.drawImage(roomCache,0,0);const P=s.decor.placed,FLOOR=104;
+ ctx.drawImage(roomCache,0,0);const P=DEC().placed,FLOOR=104;
  syncDresser();for(const it of roomItems())it.draw();
  drawCeilingLamp(lightOn(ph));return ph}
 /* 天花板吊燈（免費、一直都在）：傍晚和晚上可以開關，開了是暖黃色的燈光 */
@@ -1249,7 +1271,7 @@ const lightOn=ph=>(ph==='night'||ph==='dusk')&&s.settings.light!==false;
 function drawCeilingLamp(on){const x=58;ctx.fillStyle='#4a3a2a';ctx.fillRect(x+5,0,1,7);
  ctx.fillStyle='#6a4a2a';ctx.fillRect(x+2,7,7,1);ctx.fillStyle=on?'#ffcf6a':'#c8b48a';ctx.fillRect(x+1,8,9,3);ctx.fillStyle=on?'#ffe9a8':'#d8c8a0';ctx.fillRect(x+2,8,3,1);
  ctx.fillStyle='#6a4a2a';ctx.fillRect(x,11,11,1);ctx.fillStyle=on?'#fff6d0':'#a8a090';ctx.fillRect(x+4,12,3,2)}
-function drawRoomFront(now,ph){const P=s.decor.placed;
+function drawRoomFront(now,ph){const P=DEC().placed;
  if(lightOn(ph)){ctx.fillStyle='rgba(20,15,40,.18)';ctx.fillRect(0,0,W,H);   // 燈罩以外稍暗，扇形光才看得出來
   // 暖燈：從吊燈往下散開的扇形光
   const g=ctx.createLinearGradient(0,13,0,108);g.addColorStop(0,'rgba(255,214,130,.62)');g.addColorStop(.45,'rgba(255,196,110,.30)');g.addColorStop(1,'rgba(255,180,100,.10)');
@@ -1289,8 +1311,8 @@ function draw(now){
  const ph=phase(),bk=ph+'|'+s.den.level+'|'+(s.loveNest?1:0)+'|'+JSON.stringify(s.yard||{})+'|'+(s.hatched&&PC.bushBerries(s,Date.now())>0?1:0);if(bk!==bgKey){bgKey=bk;bgCache=makeBg(ph,s.den.level)}
  const dt=Math.min(.1,(now-lastFrameT)/1000||0);lastFrameT=now;
  updateWorld(now,dt);
- const inRoom=curView()==='room';let rph=null;const t=now/1000;
- if(inRoom){rph=drawRoom(now);drawResidents(now)}else{
+ const inRoom=curView()!=='yard';let rph=null;const t=now/1000;
+ if(inRoom){rph=drawRoom(now);if(curView()==='lounge')drawLounge(now,dt)}else{
   ctx.drawImage(bgCache,0,0);drawBushBerries(now);drawGen(now);drawFire(now);
   const ca=ph==='night'?.35:ph==='dusk'?.75:1;ctx.globalAlpha=ca;
   const wsp=weather()==='breeze'?3:weather()==='storm'?4:1;ctx.drawImage(cloudCv,Math.round(((t*2*wsp)%(W+60))-30),10);ctx.drawImage(cloudCv,Math.round(((t*1.3*wsp+80)%(W+60))-30),26);ctx.globalAlpha=1;
@@ -1316,7 +1338,7 @@ function draw(now){
  else{drawAura(ctx,S,fi,PX,PET_Y+LIFT,petFace===1,auraOf(s),now);if(petFace===1){ctx.save();ctx.translate(PX+CELL,0);ctx.scale(-1,1);ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,0,PET_Y+LIFT,CELL,CELL);ctx.restore()}   // 往右走時轉身，不會倒退走
  else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,PX,PET_Y+LIFT,CELL,CELL)}
  if(!gone&&!evo&&s.hatched)drawStatusFx(now,S,fi,PX,LIFT,key);
- if(!gone&&!evo&&s.hatched&&s.emberOn===s.seed)drawEmberMark(PX+36,petTopY(key,LIFT)-4,now);   /* V1.85 帶著經驗火種 */
+
  if(!gone&&!evo&&s.hatched)drawPick(now,key,LIFT);
  drawToy();drawCores(now);drawApple();drawBall();drawRingFront();drawPop(now);drawDrink(now);
  if(inRoom){drawPig(now);if(!evo)drawRoomFront(now,rph);if(ARR.on)drawArrange(now);if(YA.on)endYardArrange()}else{if(ARR.on)endArrange();if(YA.on)drawYArr(now)}
@@ -1367,7 +1389,7 @@ function drawStatusFx(now,S,fi,PX,LIFT,key){const top=petTopY(key,LIFT),cx=PX+24
  if(s.energy<15&&!s.sleeping){const yy=top+6+(still?0:(t*6)%4);ctx.fillStyle='#8fd0f0';ctx.fillRect(cx-13,Math.round(yy),2,3);ctx.fillRect(cx-12,Math.round(yy)-1,1,1);ctx.fillStyle='#e8f8ff';ctx.fillRect(cx-13,Math.round(yy),1,1)}
 }
 /* 離家出走：空空的院子＋告示牌＋腳印 */
-function drawRunaway(now){if(curView()==='room')return;const x=58,y=78;
+function drawRunaway(now){if(curView()!=='yard')return;const x=58,y=78;
  ctx.fillStyle='#6a4428';ctx.fillRect(x+9,y+8,2,16);ctx.fillStyle='#e8c98c';ctx.fillRect(x,y,20,10);ctx.fillStyle='#a8703e';ctx.fillRect(x,y+9,20,1);ctx.fillRect(x,y,20,1);
  ctx.fillStyle='#3a2210';for(const[dx,dy]of[[3,3],[5,3],[8,4],[11,3],[14,3],[16,4],[4,6],[9,6],[13,6]])ctx.fillRect(x+dx,y+dy,1,1);   // 「…」的字跡
  ctx.fillStyle='rgba(60,40,20,.55)';for(let i=0;i<5;i++){const fx=x+26+i*8,fy=y+20-(i%2)*3;ctx.fillRect(fx,fy,2,2);ctx.fillRect(fx+3,fy-1,1,1)}}
@@ -1379,7 +1401,7 @@ const weatherBad=()=>{const w=weather();return w==='rain'||w==='storm'};
 const WXS={drops:[],leaves:[],bolt:null,nextBolt:0,last:null,sayAt:0};
 function updateWeatherTalk(now){const w=weather();
  if(WXS.last&&WXS.last!==w&&s.hatched)toast({clear:'☀️ 雨停了，天晴了！',breeze:'🍃 起風了，涼涼的好舒服',rain:'🌧️ 開始下雨了！在外面會淋濕變髒',storm:'⛈️ 打雷了！快帶牠回小窩躲雨'}[w],3200);
- WXS.last=w;if(!s.hatched||s.sleeping||evo||mode||curView()==='room'||now<WXS.sayAt)return;WXS.sayAt=now+45000+Math.random()*30000;
+ WXS.last=w;if(!s.hatched||s.sleeping||evo||mode||curView()!=='yard'||now<WXS.sayAt)return;WXS.sayAt=now+45000+Math.random()*30000;
  if(w==='rain')say(['下雨了…身上都濕了','好想回小窩躲雨…','淋雨冷冷的～'][Math.floor(Math.random()*3)],{log:false});
  else if(w==='storm'){say(['打雷了好可怕！😨','我想回家…','轟隆隆…不要不要！'][Math.floor(Math.random()*3)],{log:false});if(!anim.once)playAnim('no')}
  else if(w==='breeze'&&Math.random()<.5)say('風吹起來好舒服～',{log:false})}
@@ -1463,12 +1485,12 @@ function makePig(lv){const{k,w,h}=pigDims(lv),g=grid(w,h),gold=lv>=6,S=v=>v*k,oy
 function syncPig(){const lv=PC.pigLevel(s),art=DSPR['pig'+lv];if(PIG.lv!==lv||!pigCv||(art&&pigCv!==art)){PIG.lv=lv;pigCv=art||makePig(lv);PIG.w=pigCv.width;PIG.h=pigCv.height;}const[sx,sy]=posOf('pig');PIG.sx=sx;PIG.sy=sy;PIG.x=Math.min(sx+6,sx+33-PIG.w);PIG.y=sy+2-PIG.h}   // V1.45 用手繪圖（sprites/items/pig1～6.png），沒載入時用程式畫的
 function drawPig(now){if(!s.hatched||curView()!=='room')return;syncPig();
  {const X=PIG.sx,Y=PIG.sy;ctx.fillStyle='#6a4428';ctx.fillRect(X,Y,33,3);ctx.fillStyle='#8a5a34';ctx.fillRect(X,Y,33,1);ctx.fillStyle='#4a2e18';ctx.fillRect(X+4,Y+3,2,4);ctx.fillRect(X+26,Y+3,2,4)}   // 木架
- if(PIG.lv>=6){const a=rm()?.8:.75+.2*Math.sin(now/260),cx=PIG.x+PIG.w/2,cy=PIG.y+PIG.h/2;for(const[r,al]of[[1.15,.4],[.9,.75]]){ctx.fillStyle=`rgba(255,214,70,${a*al})`;ctx.beginPath();ctx.ellipse(cx,cy,PIG.w*.6*r+2,PIG.h*.7*r+2,0,0,Math.PI*2);ctx.fill()}
-  if(Math.floor(now/300)%3===0)spawn('spark',1,{x:PIG.x+PIG.w/2,y:PIG.y,vy:-6,life:.6,spread:PIG.w})}
+ if(PIG.lv>=6){const a=rm()?.3:.26+.08*Math.sin(now/400),cx=PIG.x+PIG.w/2,cy=PIG.y+PIG.h/2;for(const[r,al]of[[1.1,.5],[.85,.8]]){ctx.fillStyle=`rgba(255,214,70,${a*al})`;ctx.beginPath();ctx.ellipse(cx,cy,PIG.w*.6*r+2,PIG.h*.7*r+2,0,0,Math.PI*2);ctx.fill()}
+  if(Math.floor(now/300)%9===0)spawn('spark',1,{x:PIG.x+PIG.w/2,y:PIG.y,vy:-6,life:.6,spread:PIG.w})}
  FD('pig',PIG.x,PIG.w,()=>ctx.drawImage(pigCv,PIG.x,PIG.y));
  const n=Math.floor(s.piggy||0),full=n>=PC.piggyCap(s);if(n<1)return;
  const bob=rm()?0:Math.round(Math.sin(now/300)),ic=ICV.coin;const ns=String(n),bw=ic.width+ns.length*4+4,bx=Math.max(1,PIG.x-bw-1),by=PIG.y+2+bob;ctx.fillStyle='rgba(30,18,8,.72)';ctx.fillRect(bx,by-1,bw,ic.height+2);ctx.drawImage(ic,bx+1,by);pixNum(ns,bx+ic.width+3,by+3,full?'#ffe066':'#ffffff');   /* V1.84 存錢筒金幣數改到豬的左邊，加底色，不會被按鈕擋住 */
- if(full&&!rm()&&Math.floor(now/250)%2)spawn('spark',1,{x:PIG.x+8,y:PIG.y-8,vy:-8,life:.5,spread:10})}
+ if(full&&!rm()&&Math.floor(now/250)%6===0)spawn('spark',1,{x:PIG.x+8,y:PIG.y-8,vy:-8,life:.5,spread:10})}
 const overPig=(x,y)=>s.hatched&&curView()==='room'&&x>=PIG.x-3&&x<=PIG.x+PIG.w+3&&y>=PIG.y-14&&y<=PIG.y+PIG.h+3;
 function tapPig(){const r=PC.collectPiggy(s,Date.now());if(!r.ok){say(`${PC.pigLevel(s)} 級小豬撲滿還在存…（每小時約 ${PC.piggyRate(s).toFixed(1)} 枚，最多 ${PC.piggyCap(s)}）`,{log:false});sfx('tap');return}
  sfx('level');buzz(15);spawn('coin',Math.min(8,2+Math.floor(r.n/5)),{x:PIG.x+8,y:PIG.y,vy:-26,jx:24,life:1,spread:8,stagger:.05});
@@ -1487,7 +1509,7 @@ function updatePair(now,dt){const p=s.pair;if(!p||!s.hatched)return;
  if(PAIR.target===null&&!window.PF_NO_WANDER&&!s.ballBroken&&!TOY.held&&!RALLY.on&&pairCloser()&&curView()==='yard'&&(Math.abs(TOY.vx)>25||TOY.y<TOY_GROUND-TOY.r-4)&&now>(PAIR.chaseAt||0)&&Math.random()<.5){PAIR.chaseAt=now+700;const lead=TOY.x+TOY.vx*.4;pairWalk(lead-24+(lead>PAIR.x+24?8:-8));return}   // 球在滾：第二隻也會追
  if(PAIR.target===null&&!RALLY.on&&!TOY.held&&petTarget===null&&!window.PF_NO_WANDER&&Math.abs(PAIR.x-petX)<18&&now>(PAIR.sepAt||0)){PAIR.sepAt=now+1500;pairWalk(clamp(PAIR.x+(PAIR.x>=petX?30:-30),4,W-CELL-4)>=petX+18||clamp(PAIR.x+(PAIR.x>=petX?30:-30),4,W-CELL-4)<=petX-18?clamp(PAIR.x+(PAIR.x>=petX?30:-30),4,W-CELL-4):clamp(PAIR.x+(PAIR.x>=petX?-30:30),4,W-CELL-4));return}   // V1.69 太靠近就分開一點
  if(PAIR.target!==null||now<PAIR.next||window.PF_NO_WANDER)return;
- PAIR.next=now+3000+Math.random()*4500;const r=Math.random(),lo=curView()==='room'?16:4,hi=W-CELL-4;
+ PAIR.next=now+3000+Math.random()*4500;const r=Math.random(),lo=curView()!=='yard'?16:4,hi=W-CELL-4;
  if(r<.22&&!s.ballBroken&&!TOY.held&&curView()==='yard'&&Math.abs(TOY.x-meC())>34){const dir=TOY.x>PAIR.x+24?1:-1;pairWalk(TOY.x-24+dir*10)}
  else if(r<.42&&petTarget===null&&!anim.once){const side=PAIR.x<petX?-1:1;pairWalk(petX+side*22,()=>{PAIR.face=-side;PAIR.anim='happy';PAIR.t0=performance.now();
    if(!anim.once&&!s.sleeping){petFace=side;playAnim('happy')}spawn('heart',2,{x:Math.min(PAIR.x,petX)+35,y:66,vy:-14,life:1,spread:10});
@@ -1498,7 +1520,7 @@ function pairFrame(now){if(PAIR.anim==='header'&&now-PAIR.t0<420)return['jump0',
 function drawPair(now){if(!s.pair||!s.hatched||evo)return;const S=sheet(pairKey()),fn=pairFrame(now),fi=S.idx[fn]??0,X=Math.round(PAIR.x),LIFT=(S.lift&&S.lift[fi])||0;
  ctx.fillStyle='rgba(20,60,30,.28)';ctx.fillRect(X+11,PET_Y+44,26,2);drawAura(ctx,S,fi,X,PET_Y+LIFT,PAIR.face===1,auraOf(s.pair),now);
  if(PAIR.face===1){ctx.save();ctx.translate(X+CELL,0);ctx.scale(-1,1);ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,0,PET_Y+LIFT,CELL,CELL);ctx.restore()}else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,X,PET_Y+LIFT,CELL,CELL);
- if(s.emberOn===s.pair.seed)drawEmberMark(X+36,petTopY(pairKey(),LIFT)-4,now)}
+}
 function drawEmberMark(x,y,now){const ic=ICV.ember;if(!ic)return;const b=Math.round(Math.sin(now/260)*1.5),f=Math.floor(now/180)%2;ctx.save();ctx.globalAlpha=.9;const w=Math.round(ic.width*.75),h=Math.round(ic.height*.75);ctx.drawImage(ic,Math.round(x-w/2+(f?0:1)),Math.round(y-h+b),w,h);ctx.restore()}
 /* 目前照顧的那隻：頭上一個小箭頭 */
 function drawPick(now,key,LIFT){if(!s.pair||s.sleeping||mode||s.runaway)return;const top=petTopY(key,LIFT),x=Math.round(petX+24),y=Math.max(1,top-8)+(rm()?0:Math.round(Math.sin(now/220)));
@@ -1508,8 +1530,81 @@ const overPair=(x,y)=>!!s.pair&&x>=PAIR.x+8&&x<=PAIR.x+40&&y>=PET_Y+10&&y<=PET_Y
 function switchToPair(){if(!s.pair||evo||modeBusy()||(B&&!B.over))return;cancelMode();const r=PC.switchPair(s,Date.now());if(!r.ok){say(r.msg);return}
  const ox=petX,of=petFace;petX=Math.round(PAIR.x);petFace=PAIR.face;PAIR.x=ox;PAIR.face=of;PAIR.target=null;PAIR.cb=null;petTarget=null;walkCb=null;anim.once=null;
  save();renderUI();sfx('pet');if(!s.sleeping)playAnim('happy');say(s.sleeping?`（現在照顧 ${s.name}）`:`${s.name}：輪到我了！`,{log:false})}
-function drawResidents(now){s.roster.forEach((p,i)=>{const id=gidOf(p),S=sheet(petKey(id,formCode(p.stage,p.route))),[x,y]=[[66,50],[82,50],[44,52],[22,52],[4,52],[56,54]][i]||[66,50];
- ctx.drawImage(S.cv,S.idx[Math.floor(now/900+i)%2?'sleep0':'sleep1']*CELL,0,CELL,CELL,x,y,24,24);if(!rm()&&Math.random()<.004)spawn('z',1,{x:x+18,y:y+4,vx:4,vy:-6,jx:1,jy:1,life:1.6,spread:2})})}
+/* V1.86.7 小窩休息的夥伴改住休息室（drawLounge），房間裡不再畫縮小版 */
+/* ===== V1.86.7 休息室：小窩裡休息的夥伴住這裡，自己吃、自己喝、自己玩、自己睡 ===== */
+const LG={r:{},sel:null},LG_DEP=[-4,6,0,9,-7,3,-1];
+const lgKey=(p,i)=>String(p.seed!=null?p.seed:'i'+i);
+function lgPets(){const n=Date.now();return s.roster.map((p,i)=>({p,i})).filter(o=>o.p.hatched!==false&&!PC.inNest(o.p,n))}
+const LGSPR={};
+function feederSpr(lv){const k='f'+lv;if(LGSPR[k])return LGSPR[k];{const a=artCv('feeder'+lv);if(a)return LGSPR[k]=a}const g=grid(18,27),R=(x,y,w,h,c)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)px(g,x+i,y+j,c)},[lid,bw,bh]=[['#5a8ab0','#e8584a','#ff8a7a'],['#3a9a5a','#4a8ae8','#8ab8ff'],['#c8901a','#e8b030','#ffe066']][lv-1];
+ R(3,1,12,13,'#d8f0f8');R(4,2,2,11,'#ffffff');R(4,6,10,7,'#c88a4a');for(let i=0;i<5;i++)px(g,5+i*2,7+(i%2)*3,'#a8642a');R(2,0,14,2,lid);R(6,14,6,3,lid);
+ R(0,17,18,2,bh);R(1,19,16,4,bw);R(3,17,12,1,'#c88a4a');px(g,5,16,'#c88a4a');px(g,9,16,'#a8642a');px(g,12,16,'#c88a4a');R(2,23,2,3,'#5a3a2a');R(14,23,2,3,'#5a3a2a');
+ if(lv===3){px(g,8,0,'#fff8c0');px(g,1,18,'#fff8c0');px(g,16,18,'#fff8c0')}
+ outline(g,'#2a1a10');return LGSPR[k]=gridCanvas(g)}   // 自動投餵機：上面透明飼料桶、下面碗
+function waterSpr(lv){const k='w'+lv;if(LGSPR[k])return LGSPR[k];{const a=artCv('water'+lv);if(a)return LGSPR[k]=a}const g=grid(14,27),R=(x,y,w,h,c)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)px(g,x+i,y+j,c)},[lid,bw]=[['#5a8ab0','#e8584a'],['#3a9a5a','#4a8ae8'],['#c8901a','#e8b030']][lv-1];
+ R(2,0,10,14,'#bfe6fa');R(3,4,8,10,'#6fc0f0');R(3,1,2,12,'#e8f8ff');px(g,8,7,'#ffffff');px(g,7,10,'#ffffff');R(5,14,4,3,lid);R(1,17,12,2,'#8a6a4a');R(1,19,2,4,'#8a6a4a');R(11,19,2,4,'#8a6a4a');
+ R(0,22,14,4,bw);R(1,22,12,1,'#5fb4f0');R(2,23,10,1,'#8fd0f8');if(lv===3){px(g,6,0,'#fff8c0');px(g,0,23,'#fff8c0')}
+ outline(g,'#2a1a10');return LGSPR[k]=gridCanvas(g)}   // 飲水機：倒放的水瓶＋水碗
+const slC=sl=>{const it=roomItems().find(o=>o.sl===sl);return it?it.r[0]+it.r[2]/2:posOf(sl)[0]};   // 家具中心 x
+function lgFree(r){const cl=x=>clamp(Math.round(x),2,W-CELL-2),O=Object.values(LG.r).filter(o=>o!==r).map(o=>o.tx!=null?o.tx:o.x).concat(curView()==='lounge'?[petX]:[]);let best=r.x,bd=-1;
+ for(let k=0;k<6;k++){const x=cl(4+Math.random()*(W-CELL-8)),d=O.length?Math.min(...O.map(o=>Math.abs(o-x))):99;if(d>bd){bd=d;best=x}}return best}   // 走去比較空的地方，大家會散開
+function lgThink(r,L,now){const cl=x=>clamp(Math.round(x),2,W-CELL-2),q=Math.random(),fx=slC('feeder')-24,wx=slC('water')-24,P=DEC().placed;r.act='idle';r.mate=null;r.next='idle';r.lift=0;
+ const tw=P.tower&&!Object.values(LG.r).some(o=>o!==r&&(o.next==='perch'||o.act==='perch'));
+ if(q<.13){r.next='eat';r.tx=cl(fx+(Math.random()-.5)*8)}
+ else if(q<.24){r.next='drink';r.tx=cl(wx+(Math.random()-.5)*6)}
+ else if(q<.34&&tw){r.next='perch';r.tx=cl(slC('tower')-24)}
+ else if(q<.46){r.next='sleep';const sp=[];if(P.bed)sp.push(bedX());if(P.cushion)sp.push(slC('cushion')-24);r.tx=sp.length?cl(sp[Math.floor(Math.random()*sp.length)]+(Math.random()-.5)*10):cl(r.x)}
+ else if(q<.63&&L.length>1){const C=Object.values(LG.r).filter(o=>o!==r&&o.tx==null&&o.act!=='sleep'&&o.act!=='play');const o=C[Math.floor(Math.random()*C.length)];
+  if(o){const mid=(r.x+o.x)/2;r.tx=cl(mid-(r.x<o.x?13:-13));o.tx=cl(mid+(r.x<o.x?13:-13));r.next=o.next='play';r.mate=o;o.mate=r}else r.tx=cl(4+Math.random()*(W-CELL-8))}
+ else if(q<.88)r.tx=lgFree(r);
+ else r.until=now+1500+Math.random()*2500}
+function lgArrive(r,now){r.act=r.next||'idle';const D={eat:[2600,1200],drink:[2000,1000],sleep:[9000,8000],play:[2600,800],perch:[7000,6000],idle:[1500,2500]}[r.act]||[2000,2000];r.until=now+D[0]+Math.random()*D[1];
+ if(r.act==='eat')r.face=slC('feeder')>r.x+24?1:0;else if(r.act==='drink')r.face=slC('water')>r.x+24?1:0;else if(r.act==='play'&&r.mate)r.face=r.mate.x>r.x?1:0;else if(r.act==='perch'){const it=roomItems().find(o=>o.sl==='tower');r.lift=it?Math.max(0,PET_Y+r.dep+44-(it.r[1]+4)):0;r.face=Math.random()<.5?1:0}}
+function lgUpdate(now,dt){const L=lgPets(),keys=new Set();
+ L.forEach(({p,i},k)=>{const key=lgKey(p,i);keys.add(key);let r=LG.r[key];
+  if(!r)r=LG.r[key]={key,x:clamp(10+((k*41+17)%(W-CELL-20)),2,W-CELL-2),face:k%2,act:'idle',until:now+800+Math.random()*2500,tx:null,next:null,hop:0};
+  r.i=i;r.p=p;r.dep=LG_DEP[k%LG_DEP.length];
+  if(r.act==='perch'&&now>r.until){r.act='idle';r.lift=0}
+  if(r.tx!=null){const d=r.tx-r.x,st=20*dt;if(Math.abs(d)<=st){r.x=r.tx;r.tx=null;lgArrive(r,now)}else{r.x+=Math.sign(d)*st;r.face=d>0?1:0}return}
+  if(now>r.until&&!ARR.on)lgThink(r,L,now)});
+ for(const k in LG.r)if(!keys.has(k)){delete LG.r[k];if(LG.sel===k)lgClose()}}
+function lgFrame(r,now){if(r.tx!=null)return['idle1','jump0'][Math.floor(now/130)%2];if(r.hop>now)return'happy'+(Math.floor(now/120)%2);
+ switch(r.act){case'eat':case'drink':return['eat1','eat2'][Math.floor(now/220)%2];case'sleep':return Math.floor(now/900)%2?'sleep0':'sleep1';case'perch':return now%4000<160?'blink':['idle0','idle1'][Math.floor(now/600)%2];case'play':return['jump0','jump1','jump2','jump1','happy0','happy1'][Math.floor(now/120)%6];
+  default:return now%3200<160?'blink':['idle0','idle1'][Math.floor(now/500)%2]}}
+function drawLounge(now,dt){lgUpdate(now,dt);if(ARR.on)return;
+ for(const r of Object.values(LG.r).sort((a,b)=>a.dep-b.dep)){const p=r.p,S=sheet(petKey(gidOf(p),formCode(p.stage,p.route))),fn=lgFrame(r,now),fi=S.idx[fn]??S.idx.idle0??0,x=Math.round(r.x),gy=PET_Y+r.dep,
+   y=gy-(r.lift||0)-(r.act==='play'&&r.tx==null&&!rm()?Math.round(Math.abs(Math.sin(now/130))*3):0);
+  if(!r.lift){ctx.fillStyle='rgba(20,60,30,.25)';ctx.fillRect(x+13,gy+44,22,2);ctx.fillRect(x+15,gy+43,18,1)}
+  if(r.face===1){ctx.save();ctx.translate(x+CELL,0);ctx.scale(-1,1);ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,0,y,CELL,CELL);ctx.restore()}else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,x,y,CELL,CELL);
+  if(LG.sel===r.key){const ax=x+24,ay=y+4+(rm()?0:Math.round(Math.sin(now/220)));ctx.fillStyle='#1a1208';ctx.fillRect(ax-4,ay-1,9,2);ctx.fillRect(ax-3,ay+1,7,1);ctx.fillRect(ax-2,ay+2,5,1);ctx.fillRect(ax-1,ay+3,3,1);ctx.fillStyle='#ffe066';ctx.fillRect(ax-3,ay,7,1);ctx.fillRect(ax-2,ay+1,5,1);ctx.fillRect(ax-1,ay+2,3,1)}
+  if(!rm()&&r.tx==null){if(r.act==='sleep'&&Math.random()<.012)spawn('z',1,{x:x+(r.face?14:34),y:y+14,vx:5,vy:-7,jx:1,jy:1,life:1.8,spread:2});
+   if(r.act==='play'&&Math.random()<.03)spawn(Math.random()<.5?'heart':'note',1,{x:x+24,y:y+8,vy:-14,life:1,spread:8});
+   if((r.act==='eat'||r.act==='drink')&&Math.random()<.018)spawn(r.act==='eat'?'spark':'bubble',1,{x:x+(r.face?40:8),y:gy+30,vy:-6,life:.6,spread:3})}}}
+function loungeTap(x,y){if(curView()!=='lounge'||!s.hatched)return false;
+ for(const r of Object.values(LG.r).sort((a,b)=>b.dep-a.dep)){const gy=PET_Y+r.dep-(r.lift||0);if(x>=r.x+6&&x<=r.x+42&&y>=gy+8&&y<=gy+46){lgPick(r);return true}}
+ for(const it of roomItems())if(it.sl==='feeder'||it.sl==='water'){const[rx,ry,rw,rh]=it.r;if(x>=rx-2&&x<=rx+rw+2&&y>=ry-2&&y<=ry+rh+2){sfx('tap');feederDialog();return true}}
+ return false}
+const LG_LINES=['嘿嘿～好癢！','你來看我啦！','這裡的飼料好好吃','我剛剛睡得好飽','要一起玩嗎？','今天也好開心～'];
+function lgCheer(r,line){const t=performance.now();r.tx=null;r.hop=t+700;if(r.act==='sleep'||r.act==='perch'){r.act='idle';r.lift=0}r.until=t+2600;r.face=petX>r.x?1:0;spawn('heart',3,{x:r.x+24,y:PET_Y+r.dep+10,vy:-16,spread:14});sfx('pet');say(`${r.p.name}：${line||LG_LINES[Math.floor(Math.random()*LG_LINES.length)]}`,{log:false})}
+function lgPick(r){const wasSleep=r.act==='sleep'&&r.tx==null;LG.sel=r.key;lgCheer(r,wasSleep?'嗯…？（揉揉眼睛）':null);lgCard(r)}
+function lgCard(r){const p=r.p,L=CONFIG.lounge[s.lounge.lv-1],bar=(ic,v)=>`<span>${ic}</span><i><b style="width:${Math.round(Math.max(0,Math.min(100,v||0)))}%;background:${v<30?'#e8584a':v<60?'#ffd34a':'#6fcf5a'}"></b></i>`;
+ $('lgName').innerHTML=`${esc(p.name)}${sexMark(p)}`;$('lgSub').textContent=`Lv.${PC.level(p.xp||0)}・${STAGE_NAME[p.stage]||''}・在休息室休息${L.xpH?'（慢慢累積經驗中）':''}`;
+ $('lgBars').innerHTML=bar('🍖',p.hunger)+bar('💗',p.mood)+bar('🫧',p.clean)+bar('⚡',p.energy);
+ const c=$('lgCv'),x=c.getContext('2d'),S=sheet(petKey(gidOf(p),formCode(p.stage,p.route)));x.imageSmoothingEnabled=false;x.clearRect(0,0,48,48);x.drawImage(S.cv,(S.idx.idle0||0)*CELL,0,CELL,CELL,0,0,48,48);
+ $('lgCard').classList.remove('hidden');document.body.classList.add('lgMode');pixifyDom($('lgCard'));try{fitStage&&fitStage()}catch(_){}}
+function lgClose(){LG.sel=null;const c=$('lgCard');if(c&&!c.classList.contains('hidden')){c.classList.add('hidden');document.body.classList.remove('lgMode');try{fitStage&&fitStage()}catch(_){}}}
+$('lgClose').onclick=()=>{sfx('tap');lgClose()};
+$('lgPet').onclick=()=>{const r=LG.r[LG.sel];if(r)lgCheer(r)};
+$('lgSwap').onclick=()=>{const r=LG.r[LG.sel];if(!r)return;if(modeBusy()){toast('先完成現在的互動吧');return}if(s.sleeping){toast('先叫醒現在的寵物再換');return}cancelMode();
+ const ox=petX,oldSeed=s.seed,res=PC.swapPet(s,r.i,Date.now());toast(res.msg);if(!res.ok)return;
+ delete LG.r[r.key];LG.sel=null;petX=Math.round(r.x);petTarget=null;walkCb=null;anim.once=null;const nk=String(oldSeed!=null?oldSeed:'i'+(s.roster.length-1));LG.r[nk]={key:nk,x:clamp(Math.round(ox),2,W-CELL-2),face:0,act:'idle',until:performance.now()+2500,tx:null,next:null,hop:performance.now()+700};
+ lgClose();save();renderUI();playAnim('happy');say(`${s.name}：輪到我陪你了！`)};
+function feederDialog(){const L=CONFIG.lounge,lv=s.lounge.lv,cur=L[lv-1],nx=L[lv];
+ openModal('🥣 自動投餵機・飲水機',`<p>現在是「<b>${cur.name}</b>」（${lv} / ${L.length}）</p>
+<p class="small">飼料和水都會自動補滿，休息室的夥伴餓了、渴了會自己去吃、自己去喝，不用你操心。</p>
+<p class="small">${cur.xpH?(nx?'✨ 休息的夥伴會慢慢累積經驗。':'✨ 休息的夥伴累積經驗的速度是最快的！'):'升級之後，休息的夥伴也會慢慢累積經驗。'}</p>
+${nx?`<p>下一級：「<b>${nx.name}</b>」${cur.xpH?'，累積經驗更快':''}</p>`:'<p class="small">已經是最好的投餵機了 🎉</p>'}`,
+ nx?[{t:'關閉'},{t:`升級（${nx.cost} 金幣）`,cls:'pri',fn:()=>{const r=PC.upgradeLounge(s,Date.now());toast(r.msg,2600);if(!r.ok){sfx('no');return false}save();renderUI();sfx('level');spawn('star',5,{x:slC('feeder'),y:80,vy:-20,spread:20})}}]:[{t:'關閉'}])}
 let rafOn=false,lastDraw=0;
 function loop(now){if(document.hidden){rafOn=false;return}if(now-lastDraw>=45){lastDraw=now;if(B)drawBattle(now);else draw(now)}requestAnimationFrame(loop)}
 function startLoop(){if(!rafOn){rafOn=true;requestAnimationFrame(loop)}}
@@ -1605,18 +1700,19 @@ const lvl=()=>PC.level(s.xp);
 /* 每次有變化後：檢查等級顯示與成長階段 */
 /* V1.75 升級視窗：列出這次能力提升了哪些（等戰鬥、訓練、進化、其他視窗都結束才跳） */
 const LVQ=[];
-function flushLv(){if(!LVQ.length)return;if(window.PF_NO_LVPOP){LVQ.length=0;return}if(B||evo||TG||!$('modal').classList.contains('hidden')||!$('chestScene').classList.contains('hidden')){setTimeout(flushLv,1000);return}
+function flushLv(){if(!LVQ.length)return;if(window.PF_NO_LVPOP){LVQ.length=0;return}if(B||evo||TG||!$('modal').classList.contains('hidden')||!$('chestScene').classList.contains('hidden')||!$('gResult').classList.contains('hidden')){setTimeout(flushLv,1000);return}
  const L0=Math.min(...LVQ.map(x=>x[0])),L1=Math.max(...LVQ.map(x=>x[1]));LVQ.length=0;
  const F=L=>PC.buffFighter(PC.mkFighter(s.name,formKey(),L,s.route,tier(),80,s.bond),s),a=F(L0),b=F(L1),pg=L=>PC.piggyRateOf(Object.assign({},s,{xp:PC.lvBase(L)}));
- const row=(ic,nm,x,y,f=v=>Math.round(v))=>`<tr><td>${ic} ${nm}</td><td>${f(x)}</td><td>→</td><td class="up">${f(y)}　▲${f(y)-f(x)>0?(Number.isInteger(f(y)-f(x))?f(y)-f(x):(f(y)-f(x)).toFixed(1)):0}</td></tr>`;
- openModal('🎉 升級了！',`<div class="lvup"><div class="big">Lv.${L0} → Lv.${L1}</div><p class="small">${esc(s.name)}變得更強了！</p>
- <table class="lvtab">${row('❤️','血量',a.max,b.max)}${row('👊','攻擊',a.atk,b.atk)}${row('🛡️','防禦',a.def,b.def)}${row('🏃','速度',a.spd,b.spd)}${row('🐷','小豬存錢／小時',pg(L0),pg(L1),v=>Math.round(v*10)/10)}</table>
- ${L1>=PC.MAX_LV?'<p><b>🏆 已經練到最高等級了！</b></p>':`<p class="small">下一級還差 ${PC.toNextLv(s.xp)} 經驗</p>`}</div>`,[{t:'太棒了！',cls:'pri'}]);sfx('level')}
+ const d=(x,y,f=v=>Math.round(v))=>{const D=f(y)-f(x);return`${f(x)} → ${f(y)}${D>0?`（▲${Number.isInteger(D)?D:D.toFixed(1)}）`:''}`};
+ resultCard(`🎉 升級了！Lv.${L0} → Lv.${L1}`,[['heart','血量',d(a.max,b.max),''],['fist','攻擊',d(a.atk,b.atk),''],['shield','防禦',d(a.def,b.def),''],['run','速度',d(a.spd,b.spd),''],['coin','小豬存錢／小時',d(pg(L0),pg(L1),v=>Math.round(v*10)/10),'']],
+  `${esc(s.name)}變得更強了！${L1>=PC.MAX_LV?'<br>🏆 已經練到最高等級了！':`<br>下一級還差 ${PC.toNextLv(s.xp)} 經驗`}`);sfx('level')}   /* V1.86.7 升級改用結算卡片 */
 /* V1.75 經驗條：獲得經驗時慢慢長上去，跨等級會先滿再從頭開始 */
 let XPS=null,xpRaf=0;
 function xpPaint(){const v=XPS,L=PC.level(v),b0=PC.lvBase(L),b1=PC.lvBase(L+1),max=L>=PC.MAX_LV,f=max?1:(v-b0)/Math.max(1,b1-b0);$('xpbar').style.width=(f*100).toFixed(1)+'%';
  $('lvNeed').textContent=max?`· Lv.${L} 已練滿`:`· Lv.${L}　${Math.floor(v-b0)} / ${b1-b0}`}
+let XPS_ID='';
 function xpAnim(){if(!s.hatched){XPS=null;$('xpbar').style.width='0%';$('lvNeed').textContent='';return}
+ {const id=(s.seed||'')+'|'+(s.genes||'')+'|'+s.hatchedAt;if(id!==XPS_ID){XPS_ID=id;if(xpRaf){cancelAnimationFrame(xpRaf);xpRaf=0}XPS=s.xp;xpPaint();return}}   /* V1.86.7 換照顧別隻時經驗條直接換，不重跑 */
  if(XPS===null||XPS>s.xp||rm()){XPS=s.xp;xpPaint();return}if(XPS===s.xp){if(!xpRaf)xpPaint();return}if(xpRaf)return;
  const from=XPS,to=s.xp,t0=performance.now(),D=Math.min(1800,600+(to-from)*12),bar=$('xpbar').parentNode;bar.style.position='relative';
  const pl=document.createElement('span');pl.className='xpplus';pl.textContent=`+${Math.round(to-from)} XP`;bar.appendChild(pl);setTimeout(()=>pl.remove(),1300);
@@ -1651,7 +1747,7 @@ function act(a){
    sfx(r.sfx);say(r.msg);save();renderUI();afterChange(x0)};
   if(!s.sleeping&&s.decor.placed.bed){say('走回床上…',{log:false});walkTo(bedX(),goSleep)}else goSleep();return}
  if(mode===a){if(modeBusy())return;setMode(null);say('先不要了～',{log:false});renderUI();return}
- if(a==='play'&&curView()==='room'&&!s.sleeping){if(mode&&modeBusy())return;cancelMode();toast('🏀 頂球要到外面玩，帶牠出去囉',2500);s.view='yard';petX=PET_X;save();renderUI();setTimeout(()=>act('play'),700);return}   // V1.67 室內不能頂球
+ if(a==='play'&&curView()!=='yard'&&!s.sleeping){if(mode&&modeBusy())return;cancelMode();toast('🏀 頂球要到外面玩，帶牠出去囉',2500);s.view='yard';petX=PET_X;save();renderUI();setTimeout(()=>act('play'),700);return}   // V1.67 室內不能頂球
  if(mode&&modeBusy())return;
  const why=PC.canAct(s,a,Date.now());
  if(s.sleeping){say('噓…牠在睡覺，按「睡覺」叫醒牠才能'+({feed:'吃東西',play:'玩',wash:'洗澡'}[a]||'做這件事'));sfx('no');return}   // 睡覺時不播放睜眼動畫
@@ -1716,14 +1812,14 @@ function infoDialog(which){if(!s.hatched){toast('先把蛋孵出來吧！');retu
 function renderPairBar(){const el=$('pairBar'),p=s.pair;if(!p||!s.hatched){el.classList.add('hidden');return}el.classList.remove('hidden');
  const k=`${Object.keys(ICV).length}|${p.name}|${p.stage}|${p.route}|${Math.round(p.hunger)}|${Math.round(p.mood)}|${Math.round(p.clean)}|${Math.round(p.energy)}`;if(el.dataset.k===k)return;el.dataset.k=k;
  const low=v=>v<20?' style="color:#ff8a8a"':'';
- el.innerHTML=`<canvas id="pbT" width="48" height="48"></canvas><div><b>${MI_UI('paw')}${esc(p.name)}${sexMark(p)}</b> Lv.${PC.level(p.xp)}<br><span${low(p.hunger)}>${MI('apple','🍎')}${Math.round(p.hunger)}</span> <span${low(p.mood)}>${MI('heart','😊')}${Math.round(p.mood)}</span> <span${low(p.clean)}>${MI('tub','🛁')}${Math.round(p.clean)}</span> <span${low(p.energy)}>${MI('bolt','⚡')}${Math.round(p.energy)}</span></div><button class="btn" id="pbSw">換照顧牠</button>`;
+ el.innerHTML=`<canvas id="pbT" width="48" height="48"></canvas><div><b>${MI_UI('paw')}${esc(p.name)}${sexMark(p)}</b> Lv.${PC.level(p.xp)}${s.emberOn===p.seed&&s.emberOwned?' <img class="mi" src="sprites/items/ic_ember.png" alt="經驗火種" title="帶著經驗火種">':''}<br><span${low(p.hunger)}>${MI('apple','🍎')}${Math.round(p.hunger)}</span> <span${low(p.mood)}>${MI('heart','😊')}${Math.round(p.mood)}</span> <span${low(p.clean)}>${MI('tub','🛁')}${Math.round(p.clean)}</span> <span${low(p.energy)}>${MI('bolt','⚡')}${Math.round(p.energy)}</span></div><button class="btn" id="pbSw">換照顧牠</button>`;
  thumb($('pbT'),pairKey(),'idle0');$('pbSw').onclick=()=>switchToPair()}
 function renderUI(){if(s&&s.inv)PC.markSeen(s);
  $('coins').textContent=s.coins;renderPairBar();
  const F=formOf(formKey()),rar=F.genome&&F.genome.rarity>1&&!F.classic?` · ${STARS[F.genome.rarity]}${RARITY[F.genome.rarity]}`:'',tierN=PC.stepTier(s);
  $('petname').innerHTML=s.hatched?`${s.awake?'🌟星耀 ':''}${esc(s.name)}${sexMark(s)}　Lv.${lvl()}${tierN?' '+'✦'.repeat(Math.min(5,tierN)):''}`:F.name;$('npEdit').classList.toggle('hidden',!s.hatched);
  {const T=s.hatched&&PC.traitOf(s.route);$('traitText').innerHTML=T&&T.good?`<span class="chip good"><img class="mi" src="sprites/ui2/shield.png" alt="">${esc(T.good)}</span><span class="chip bad"><img class="mi" src="sprites/ui2/warn.png" alt="">${esc(T.bad)}</span>`:''}
- $('stageText').innerHTML=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome&&F.genome.el?' · 會孵出'+ROUTE_LABEL[F.genome.el]+'的新物種':''}`:[s.route?rIcon(s.route)+ROUTE_LABEL[s.route]:'',STAGE_NAME[s.stage],F.name+rar,`第 ${dayCount()} 天`].filter(Boolean).map(x=>`<span class="chip">${x}</span>`).join('');$('bondRow').innerHTML=s.hatched?bondRowHTML():'';
+ $('stageText').innerHTML=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome&&F.genome.el?' · 會孵出'+ROUTE_LABEL[F.genome.el]+'的新物種':''}`:[s.route?rIcon(s.route)+ROUTE_LABEL[s.route]:'',STAGE_NAME[s.stage],F.name+rar,`第 ${dayCount()} 天`].filter(Boolean).map(x=>`<span class="chip">${x}</span>`).join('');$('bondRow').innerHTML=s.hatched?(s.emberOn===s.seed&&s.emberOwned?'<span class="chip ember"><img class="mi" src="sprites/items/ic_ember.png" alt="">帶著經驗火種</span>':'')+bondRowHTML():'';
  $('growText').textContent=s.runaway?`😢 ${s.name}離家出走了！到「👟 步數」登記走路，找牠回來：${(s.runaway.got||0).toLocaleString()} / ${CONFIG.runaway.steps.toLocaleString()} 步`
   :PC.inNest(s)?`💕 ${esc(s.name)} ${s.loveEgg&&s.loveEgg.away?'去朋友家的愛的小窩':'在愛的小窩裡'}，還要 ${fmtLeft(s.nestUntil-Date.now())}（可到「🪺 小窩」換別隻出來陪你）`:s.starveSince?`⚠️ 餓壞了！再 ${Math.max(0,Math.ceil((s.starveSince+CONFIG.runaway.starveHours*3600000-Date.now())/3600000))} 小時不餵，牠就會離家出走！`:'';$('growText').classList.toggle('hidden',!$('growText').textContent);
  {const al=$('alertLine'),t=!s.hatched?$('stageText').textContent:(s.runaway||s.starveSince)?$('growText').textContent:'';al.textContent='';al.classList.add('hidden')}   // V1.58 重要提示（孵蛋、離家出走）還是直接顯示
@@ -1740,7 +1836,7 @@ function renderUI(){if(s&&s.inv)PC.markSeen(s);
  $('goalDot').classList.toggle('hidden',!(s.goals.list||[]).some(g=>!g.claimed&&g.n>=g.need));
  {const need=s.hatched&&!s.sleeping?STATS.map(([k])=>[k,s[k]]).filter(([,v])=>v<35).sort((a,b)=>a[1]-b[1])[0]:null,A={hunger:'feed',mood:'play',clean:'wash',energy:'sleep'};document.querySelectorAll('[data-act]').forEach(b=>b.classList.toggle('need',!!need&&b.dataset.act===A[need[0]]))}   /* V1.86 最需要照顧的那一項會發光 */
  renderGuide();wxChip();$('navL').classList.toggle('hidden',!s.hatched);$('navR').classList.toggle('hidden',!s.hatched)}
-function wxChip(){const el=$('wxChip');if(!el)return;const room=!s.hatched||curView()==='room';el.classList.toggle('hidden',room);if(room)return;const w=weather(),ic=w==='clear'?(phase()==='night'?'ui/moon':'items/ic_sun'):w==='breeze'?'ui/leaf':w==='rain'?'items/ic_drop':'ui/bolt',nm=w==='clear'?(phase()==='night'?'晴朗的夜晚':'晴'):PC.WEATHER_NAME[w];const k=ic+nm;if(el.dataset.k===k)return;el.dataset.k=k;el.innerHTML=`<img src="sprites/${ic}.png" alt="">${nm}`}
+function wxChip(){const el=$('wxChip');if(!el)return;const room=!s.hatched||curView()!=='yard';el.classList.toggle('hidden',room);if(room)return;const w=weather(),ic=w==='clear'?(phase()==='night'?'ui/moon':'items/ic_sun'):w==='breeze'?'ui/leaf':w==='rain'?'items/ic_drop':'ui/bolt',nm=w==='clear'?(phase()==='night'?'晴朗的夜晚':'晴'):PC.WEATHER_NAME[w];const k=ic+nm;if(el.dataset.k===k)return;el.dataset.k=k;el.innerHTML=`<img src="sprites/${ic}.png" alt="">${nm}`}
 setInterval(()=>{try{wxChip()}catch(e){}},60000);
 
 /* =========================================================
@@ -1882,7 +1978,7 @@ function itemDexDialog(){PC.markSeen(s);const C=CONFIG,F=C.foods,SN=s.seen||{},R
 function codexDialog(){setTimeout(()=>guideHit('dex'),1200);   // V1.67 每個物種列出 5 種型態：還沒進化到的用黑色剪影、名字 ？？？，引導玩家把牠養大
  const ORD=['baby','juvenile','adolescent','adult','ascended'];const lostIds=new Set(PC.lostPets(s).map(x=>x.id));
  /* V1.86.3 同一種（同屬性、同名字的一家）只列一張卡，下面列出每一隻現在在哪裡 */
- const WH={cur:'🏠 現在的夥伴',pair:'🐾 在外面陪你',den:'🪺 在小窩休息',foster:'🏡 在老爺爺家',nest:'💕 在愛的小窩',gone:'💭 已經告別'},grp=new Map();
+ const WH={cur:'🏠 現在的夥伴',pair:'🐾 在外面陪你',den:'🪺 在小窩休息',foster:'🏡 在老爺爺家',nest:'💕 在愛的小窩',gone:'💭 已經告別',released:'🍃 已放生'},grp=new Map();
  for(const e of s.dex.slice().reverse()){const route=e.route||genomeFromId(e.id).el||null,key=(route||'?')+'|'+formOf(petKey(e.id,formCode('baby',route))).name;if(!grp.has(key))grp.set(key,[]);grp.get(key).push(e)}
  const dex=[...grp.values()].map(L=>{const best=L.slice().sort((a,b)=>ORD.indexOf(b.stage)-ORD.indexOf(a.stage))[0];return Object.assign({},best,{members:L})});
  const cards=dex.length?dex.map((e,di)=>{const route=e.route||genomeFromId(e.id).el||null,reach=ORD.indexOf(e.stage),cur=e.members.some(m=>m.id===gidOf(s)&&s.hatched);
@@ -2005,7 +2101,7 @@ function menuDialog(){
  $('mUpdate').onclick=async()=>{try{const r=await navigator.serviceWorker?.getRegistration();if(r){await r.update()}}catch(e){}toast('正在重新載入最新版本…');setTimeout(()=>location.reload(),600)};
  $('mReset').onclick=()=>{if(modeBusy()){toast('先完成現在的互動吧');return}const ep=PC.eggPrice(s);if(s.coins<ep){toast(`❌ 新的蛋要 ${ep} 金幣（你有 ${s.coins}）`,3000);sfx('no');return}confirmBox('🥚 迎接新的蛋？',`<b>新的蛋要 🪙 ${ep}</b>（第 1 顆 300、第 2 顆 700、之後每顆 1000）。<br>${!s.hatched?'目前的蛋會被換掉':PC.petCount(s)<PC.denCap(s)?'小窩還有空位：「'+esc(s.name)+'」會搬進小窩休息，隨時可以換回來':'小窩已經滿了：「'+esc(s.name)+'」會告別（永遠留在「📖 圖鑑」裡）。升級小窩就能讓更多夥伴住下來'}。金幣、食物、步數、冒險進度、日記都會保留。<br><br>建議先到「存檔」匯出存檔碼備份。`,`花 ${ep} 迎接新蛋`,()=>{const r=PC.buyEgg(s);if(!r.ok){toast('❌ '+r.msg);return}cancelMode();newPet(null);setTimeout(()=>quizIntro(false),900)})}}
 function denDialog(){const D=CONFIG.den,L=s.den.level,cur=D[L-1],next=D[L],cap=PC.denCap(s);
- const rows=s.roster.map((p,i)=>`<div class="eggrow"><canvas data-r="${i}" width="48" height="48"></canvas><div style="flex:1"><b>${esc(p.name)}${sexMark(p)}</b><div class="small">${STAGE_NAME[p.stage]}・XP ${p.xp}・在小窩休息中</div></div><div style="display:flex;flex-direction:column;gap:4px;flex:0 0 auto">${s.pair?'':`<button class="btn pri" data-out="${i}" style="min-width:84px">一起出來玩</button>`}<button class="btn" data-sw="${i}" style="min-width:84px">換牠出來</button><button class="btn" data-fo="${i}" style="min-width:84px">🏡 寄養${p.fosterPaid?'':`（${CONFIG.foster.price}）`}</button></div></div>`).join('');
+ const rows=s.roster.map((p,i)=>`<div class="eggrow"><canvas data-r="${i}" width="48" height="48"></canvas><div style="flex:1"><b>${esc(p.name)}${sexMark(p)}</b><div class="small">${STAGE_NAME[p.stage]}・XP ${p.xp}・在小窩休息中</div></div><div style="display:flex;flex-direction:column;gap:4px;flex:0 0 auto">${s.pair?'':`<button class="btn pri" data-out="${i}" style="min-width:84px">一起出來玩</button>`}<button class="btn" data-sw="${i}" style="min-width:84px">換牠出來</button><button class="btn" data-fo="${i}" style="min-width:84px">🏡 寄養${p.fosterPaid?'':`（${CONFIG.foster.price}）`}</button><button class="btn" data-rel="r:${i}" style="min-width:84px;border-color:#7a9a5a">🍃 放生</button></div></div>`).join('');
  const prow=s.pair?`<div class="eggrow"><canvas id="dPair" width="48" height="48"></canvas><div style="flex:1"><b>🐾 ${esc(s.pair.name)}${sexMark(s.pair)}</b><div class="small">${STAGE_NAME[s.pair.stage]}・XP ${s.pair.xp}・正在外面陪你（狀態變化速度減半）</div></div><button class="btn" id="dIn2" style="min-width:84px;flex:0 0 auto">回小窩休息</button></div>`:'';
  openModal(`🪺 ${cur.name}`,`<p>小窩等級 <b>${L}</b> / ${D.length}　可以住 <b>${cap}</b> 隻（現在 ${PC.petCount(s)} 隻）</p>
 <p class="small">「迎接新的蛋」時，如果小窩還有空位，現在的夥伴會搬進小窩休息，不用告別。休息中的夥伴數值不會下降。</p>
@@ -2013,7 +2109,7 @@ function denDialog(){const D=CONFIG.den,L=s.den.level,cur=D[L-1],next=D[L],cap=P
 ${prow}${rows||(s.pair?'':'<p class="small">小窩裡還沒有其他夥伴。</p>')}
 <p style="margin-top:12px"><b>🏡 神秘老爺爺的家</b>（寄養 ${(s.foster||[]).length} 隻）</p>
 <p class="small">暫時不想養的幻獸可以寄養在這裡：不佔小窩的位置、數值不會變。每隻第一次寄養付 ${CONFIG.foster.price} 金幣，之後隨時接回、再寄都免費。</p>
-${(s.foster||[]).map((p,j)=>`<div class="eggrow"><canvas data-fr="${j}" width="48" height="48"></canvas><div style="flex:1"><b>${esc(p.name)}${sexMark(p)}</b><div class="small">${STAGE_NAME[p.stage]}・Lv.${PC.level(p.xp)}・在老爺爺家</div></div><div style="display:flex;flex-direction:column;gap:4px;flex:0 0 auto"><button class="btn pri" data-fsw="${j}" style="min-width:84px">換牠出來陪你</button><button class="btn" data-fb="${j}" style="min-width:84px">接回小窩</button></div></div>`).join('')||'<p class="small">老爺爺家現在沒有寄養的幻獸。</p>'}
+${(s.foster||[]).map((p,j)=>`<div class="eggrow"><canvas data-fr="${j}" width="48" height="48"></canvas><div style="flex:1"><b>${esc(p.name)}${sexMark(p)}</b><div class="small">${STAGE_NAME[p.stage]}・Lv.${PC.level(p.xp)}・在老爺爺家</div></div><div style="display:flex;flex-direction:column;gap:4px;flex:0 0 auto"><button class="btn pri" data-fsw="${j}" style="min-width:84px">換牠出來陪你</button><button class="btn" data-fb="${j}" style="min-width:84px">接回小窩</button><button class="btn" data-rel="f:${j}" style="min-width:84px;border-color:#7a9a5a">🍃 放生</button></div></div>`).join('')||'<p class="small">老爺爺家現在沒有寄養的幻獸。</p>'}
 <div class="row"><button class="btn pri" id="dIn">🏠 進入小窩</button><button class="btn" id="dArr">🪑 佈置房間</button><button class="btn" id="dYard">🌳 佈置院子</button>${next?`<button class="btn" id="dUp">⬆️ 升級成「${next.name}」（${next.cost} 金幣）</button>`:''}</div>
 <div class="err" id="dErr"></div>`);
  document.querySelectorAll('[data-r]').forEach(c=>{const p=s.roster[+c.dataset.r];thumb(c,petKey(gidOf(p),formCode(p.stage,p.route)),'sleep0')});
@@ -2022,6 +2118,8 @@ ${(s.foster||[]).map((p,j)=>`<div class="eggrow"><canvas data-fr="${j}" width="4
   if(p.fosterPaid)go();else confirmBox('🏡 寄養到神秘老爺爺家？',`把「${esc(p.name)}」寄養要 ${CONFIG.foster.price} 金幣（只付這一次，之後隨時接回、再寄都免費）。`,`付 ${CONFIG.foster.price} 寄養`,go)});
  document.querySelectorAll('[data-fsw]').forEach(b=>b.onclick=()=>{const r=PC.fosterSwap(s,+b.dataset.fsw,Date.now());toast(r.ok?'🎉 '+r.msg:'❌ '+r.msg,4500);if(r.ok){sfx('level');petX=PET_X;evo=null;cancelMode();save();renderUI();closeModal()}else denDialog()});
  document.querySelectorAll('[data-fb]').forEach(b=>b.onclick=()=>{const r=PC.fosterBack(s,+b.dataset.fb,Date.now());toast(r.ok?'🎉 '+r.msg:'❌ '+r.msg,3000);if(r.ok){sfx('level');save();renderUI()}denDialog()});
+ document.querySelectorAll('[data-rel]').forEach(b=>b.onclick=()=>{const[w,ix]=b.dataset.rel.split(':'),L=w==='f'?s.foster:s.roster,p=L[+ix];if(!p)return;
+  confirmBox('🍃 放生「'+esc(p.name)+'」？',`<p>${esc(p.name)} 會回到大自然，<b style="color:#ffb070">放生後就不能再找回來了</b>。</p><p class="small">牠戴的寶物會放回背包；圖鑑裡還會留著牠的紀錄（標示「已放生」）。</p>`,'放生',()=>{const r=PC.releasePet(s,w==='f'?'foster':'den',+ix,Date.now());toast(r.ok?r.msg:'❌ '+r.msg,4000);if(r.ok){sfx('wake');save();renderUI()}denDialog()})});
  if($('dPair'))thumb($('dPair'),pairKey(),'happy1');
  if($('dIn2'))$('dIn2').onclick=()=>{const r=PC.sendIn(s,Date.now());toast(r.msg);if(r.ok){save();renderUI();denDialog()}};
  document.querySelectorAll('[data-out]').forEach(b=>b.onclick=()=>{if(modeBusy())return;const r=PC.bringOut(s,+b.dataset.out,Date.now());toast(r.msg);if(r.ok){PAIR.x=petX>W/2-24?8:W-CELL-8;PAIR.target=null;save();renderUI();closeModal();PAIR.anim='happy';PAIR.t0=performance.now();say(`${s.pair.name}：我也來了！`)}});
@@ -2199,8 +2297,11 @@ function goalsDialog(){PC.claimDaily(s,Date.now());PC.ensureGoals(s,Date.now());
 /* =========================================================
    🛒 商店與房間裝飾
    ========================================================= */
-function toggleView(){if(!s.hatched||modeBusy())return;if(s.sleeping){say('噓…牠在睡覺，先叫醒牠才能出門');return}cancelMode();petX=PET_X;petTarget=null;s.view=s.view==='room'?'yard':'room';save();renderUI();sfx('tap');say(s.view==='room'?'回到小窩了～':'出門走走！',{log:false})}
-const SLOT_NAME={paper:'壁紙',wall:'牆上',lamp:'燈',plant:'植物',bed:'床',rug:'地毯',toy:'玩具',toilet:'廁所'};
+const VIEWS=['lounge','room','yard'];   // V1.86.7 ◀ ▶ 三個畫面輪流：休息室 ↔ 房間 ↔ 院子
+function toggleView(dir){if(!s.hatched||modeBusy())return;if(s.sleeping){say('噓…牠在睡覺，先叫醒牠才能出門');return}cancelMode();lgClose();petX=PET_X;petTarget=null;
+ const cur=curView(),nv=dir?VIEWS[(VIEWS.indexOf(cur)+dir+3)%3]:(cur==='room'?'yard':'room');s.view=nv;save();renderUI();sfx('tap');
+ say(nv==='room'?'回到小窩了～':nv==='lounge'?(lgPets().length?'來休息室看看大家～':'休息室還沒有其他夥伴，空蕩蕩的'):'出門走走！',{log:false})}
+const SLOT_NAME={paper:'壁紙',wall:'牆上',window:'窗戶',cushion:'軟墊',tower:'貓跳台',lamp:'燈',plant:'植物',bed:'床',rug:'地毯',toy:'玩具',toilet:'廁所'};
 function decorPreview(id){if(id.startsWith('paper_')){const c=document.createElement('canvas');c.width=24;c.height=16;const x=c.getContext('2d'),[a,b]=PAPER[id];x.fillStyle=a;x.fillRect(0,0,24,16);x.fillStyle=b;
   if(id==='paper_night'){x.fillStyle='#fff3a6';for(let i=0;i<8;i++)x.fillRect((i*7)%24,(i*5)%16,1,1)}else for(let i=0;i<24;i+=6)x.fillRect(i,0,2,16);return c}return makeDecor(id)}
 /* 商店：左欄物品名稱、右邊大圖＋說明＋按鈕 */
@@ -2208,7 +2309,7 @@ const SHOP_SEL={};
 function shopDialog(tab,bagOnly=tab==='bag'){PC.claimDaily(s,Date.now());
  const D=CONFIG.decor,C=CONFIG;
  const foodDesc=F=>`飽食 +${F.hunger}${F.mood?`、心情 +${F.mood}`:''}${F.energy?`、體力 +${F.energy}`:''}<br>${C.crave.fruits.includes(Object.keys(C.foods).find(k=>C.foods[k]===F))?`💭 剛好是牠頭上泡泡想吃的：飽食 +${C.crave.bonus.hunger}、心情 +${C.crave.bonus.mood}、體力 +${C.crave.bonus.energy}、親密度 +${C.crave.bonus.bond}、經驗 +${C.crave.bonus.xp}${F.power?`（能力水果再加體力 +${C.powerBonus.energy}、經驗 +${C.powerBonus.xp}）`:''}`:!F.fav.length?'大家都能吃':F.fav.length>=7?'❤️ 大家都愛吃（心情 +10、經驗 +5）':'❤️ 愛吃：'+F.fav.map(r=>ROUTE_ICON[r]+ROUTE_LABEL[r]).join('、')}`;
- const DECOR_NOTE={toilet_pot:'牠會自己上廁所，不會再亂大便',lamp_candle:'晚上房間比較亮',lamp_moon:'晚上房間比較亮',bed_round:'睡覺的地方',bed_straw:'睡覺的地方',bed_cloud:'睡覺的地方',toy_ball:'院子和房間裡可以玩的皮球（兩隻都會追、會踢）；球爆掉時買它就換新球'};
+ const DECOR_NOTE={cushion_soft:'夥伴會窩在上面打盹',tower_cat:'夥伴會爬上去坐在最上面',window_low:'貼著地板的小窗，可以看外面',toilet_pot:'牠會自己上廁所，不會再亂大便',lamp_candle:'晚上房間比較亮',lamp_moon:'晚上房間比較亮',bed_round:'睡覺的地方',bed_straw:'睡覺的地方',bed_cloud:'睡覺的地方',toy_ball:'院子和房間裡可以玩的皮球（兩隻都會追、會踢）；球爆掉時買它就換新球'};
  for(const b of['bed_round','bed_straw','bed_cloud'])DECOR_NOTE[b]='睡覺的地方。床可以擺兩張（左邊、右邊），兩隻一起出來時各睡一張';
  // 每一項：id、名稱、清單小字、圖（家具 dp／圖示 icon）、說明、按鈕
  const entries=()=>{if(tab==='decor'){const out=[];for(const sl of C.decorSlots){out.push({head:SLOT_NAME[sl]});for(const id of Object.keys(D).filter(id=>D[id].slot===sl)){const it=D[id],own=s.decor.owned.includes(id),on=s.decor.placed[sl]===id;
@@ -2490,7 +2591,7 @@ function stChips(t){const L=[];if(t.burnT>0)L.push(SKI('s_burn','點燃'));if(t.
  if(t.voltReady)L.push(SKI('s_charged','充電一擊'));if(t.stiff)L.push(SKI('s_stiff','僵硬')+t.stiff);if(t.rageT>0||t.enraged)L.push(SKI('s_rage','暴怒'));if(t.chanting)L.push(SKI('b_chant','魔法詠唱'));if(t.sproutT>0)L.push(SKI('leaf_tal1','新芽'));return L.join('')}
 function tpop(f,txt,col){if(!B||!f||!f._pos)return;const[x,y,sc]=f._pos;(B.nums||(B.nums=[])).push({txt,col,x:x+(Math.random()-.5)*6,y:y-52*sc,t:performance.now()})}
 const isEl=(t,el)=>!!t&&(t.el===el||t.el2===el||t.elA===el||t.el2s===el);
-function ignite(t,turns){if(!t||t.hp<=0||isEl(t,'water')||(t.burnT||0)>=turns)return false;t.burnT=turns;tpop(t,'點燃！','#ff8a3a');const[x,y]=BPOS[sideOf(t)];spawn('fire',5,{x,y,vy:-14,jx:16,life:.8,spread:10},bparts);return true}
+function ignite(t,turns){if(!t||t.hp<=0||isEl(t,'water')||isEl(t,'fire')||(t.burnT||0)>=turns)return false;t.burnT=turns;tpop(t,'點燃！','#ff8a3a');const[x,y]=BPOS[sideOf(t)];spawn('fire',5,{x,y,vy:-14,jx:16,life:.8,spread:10},bparts);return true}
 function frostOn(t){if(!t||isEl(t,'fire'))return false;t.frost=true;return true}
 const talP=(t,el)=>CONFIG.talents[el][t.talLv===2?'f':'w'];
 /* 打中之後：天賦、魔王天賦、狀態 */
@@ -2808,7 +2909,7 @@ window.addEventListener('storage',e=>{if(e.key===SAVE_KEY&&e.newValue){const o=p
    觸控互動：放蘋果餵食、海綿刷洗、頂球小遊戲、清果核
    ========================================================= */
 let mode=null,petX=PET_X,petTarget=null,walkCb=null,homeAt=0,petFace=-1,idleAt=0;   // petFace：-1 原本方向（朝左／正面），1 左右翻轉（朝右）
-const curView=()=>s.hatched&&s.view==='room'?'room':'yard';
+const curView=()=>s.hatched&&(s.view==='room'||s.view==='lounge')?s.view:'yard';
 function walkTo(x,cb){petTarget=clamp(Math.round(x),0,W-CELL);walkCb=cb||null}
 const overPet=(x,y)=>x>=petX+6&&x<=petX+42&&y>=PET_Y+8&&y<=PET_Y+46;
 const FEED={apple:null},WASH={t:0,down:false,px:0,py:0,lastMove:0,sfxAt:0},BALL={lives:3,score:0,combo:0,b:null,tapAt:0,started:false,nextAt:0,over:false,wind:0},RING={x:108,y:44,r:10,bx:108,by:44,net:0};   // V1.61 籃框加大（7→10）
@@ -2820,7 +2921,7 @@ function modeBusy(){return(mode==='feed'&&FEED.apple)||(mode==='play'&&(BALL.b||
 function cancelMode(){if(!mode)return;setMode(null)}
 /* ---- 待命時自己動：走來走去、跳一下、去踢皮球 ---- */
 const TOY={x:96,y:96,vx:0,vy:0,rot:0,held:false,r:6,chaseAt:0};const TOY_GROUND=PET_Y+46;   // 球心最低 = 地面 − 半徑
-function idleAct(now){idleAt=now+2500+Math.random()*4500;const r=Math.random(),lo=curView()==='room'?16:4,hi=W-CELL-4;
+function idleAct(now){idleAt=now+2500+Math.random()*4500;const r=Math.random(),lo=curView()!=='yard'?16:4,hi=W-CELL-4;
  if(r<.35&&!TOY.held&&!s.ballBroken&&curView()==='yard'&&!RALLY.on&&!(s.pair&&Math.abs(TOY.x-paC())<34)){const dir=TOY.x>petX+24?1:-1;walkTo(TOY.x-24+dir*10)}           // 去踢球
  else if(r<.47){playAnim('happy');busyUntil=0}                                                         // 原地開心跳一下
  else if(r<.6&&curView()==='yard')goDrink();   // 走到池塘邊舔水
@@ -2828,7 +2929,7 @@ function idleAct(now){idleAt=now+2500+Math.random()*4500;const r=Math.random(),l
  else{let x=lo+Math.random()*(hi-lo);if(s.pair&&curView()==='yard'&&Math.abs(x-PAIR.x)<26)x=PAIR.x+(x<PAIR.x?-30:30);if(x<lo||x>hi)x=PAIR.x+(PAIR.x>W/2-24?-34:34);walkTo(x)}}                                                                 // 隨便走走
 function kickToy(dir,power){if(ARR.on||YA.on)return;TOY.vx=dir*(power||70+Math.random()*40);TOY.vy=-(40+Math.random()*60);sfx('bounce')}
 function updateToy(dt){if(ARR.on||YA.on)return;const gy=TOY_GROUND-TOY.r;   // V1.86.4 佈置時球不動
- if(TOY.held||curView()==='room')return;
+ if(TOY.held||curView()!=='yard')return;
  // 幻獸撞到球：踢出去
  if(mode!=='play'&&!RALLY.on&&petTarget!==null&&!s.sleeping){const cx=petX+24,dx=TOY.x-cx;
   if(Math.abs(dx)<13&&TOY.y>gy-16&&Math.sign(dx||petFace)===petFace&&TOY.vx*petFace<40){kickToy(petFace);if(Math.random()<.4)spawn('note',1,{x:cx,y:62,vy:-10,life:.9,spread:4})}}
@@ -2881,7 +2982,7 @@ const rallyFly=()=>RALLY.on&&(RALLY.stage==='fly'||RALLY.stage==='drop');
 const pairCloser=()=>!!(s.pair&&curView()==='yard'&&Math.abs(TOY.x-paC())<Math.abs(TOY.x-meC()));
 /* 抓球：手指按住球可以拖著走，放開就丟出去 */
 const DRAG={on:false,x:0,y:0,t:0,vx:0,vy:0,moved:0,t0:0};
-const nearToy=(x,y)=>s.hatched&&!s.ballBroken&&mode!=='play'&&!evo&&curView()!=='room'&&Math.hypot(x-TOY.x,y-TOY.y)<=TOY.r+5;
+const nearToy=(x,y)=>s.hatched&&!s.ballBroken&&mode!=='play'&&!evo&&curView()==='yard'&&Math.hypot(x-TOY.x,y-TOY.y)<=TOY.r+5;
 function toyGrab(x,y){TOY.held=true;DRAG.on=true;DRAG.x=x;DRAG.y=y;DRAG.t=performance.now();DRAG.t0=DRAG.t;DRAG.vx=DRAG.vy=0;DRAG.moved=0;TOY.vx=TOY.vy=0}
 function toyDrag(x,y){if(!DRAG.on)return;const now=performance.now(),dt=Math.max(.016,(now-DRAG.t)/1000);
  DRAG.vx=DRAG.vx*.5+((x-DRAG.x)/dt)*.5;DRAG.vy=DRAG.vy*.5+((y-DRAG.y)/dt)*.5;DRAG.moved+=Math.hypot(x-DRAG.x,y-DRAG.y);DRAG.x=x;DRAG.y=y;DRAG.t=now;
@@ -2890,7 +2991,7 @@ function toyRelease(){if(!DRAG.on)return;DRAG.on=false;TOY.held=false;
  if(DRAG.moved<3&&performance.now()-DRAG.t0<300){kickToy(TOY.x<W/2?1:-1,90);return}   // 只是點一下：踢一下
  TOY.vx=clamp(DRAG.vx,-220,220);TOY.vy=clamp(DRAG.vy,-260,200);sfx('tap');TOY.chaseAt=0}
 let toyCv=null;
-function drawToy(){if(mode==='play'||!s.hatched||s.ballBroken||curView()==='room')return;   // V1.67 皮球只在外面   // 球爆掉了：等買新球
+function drawToy(){if(mode==='play'||!s.hatched||s.ballBroken||curView()!=='yard')return;   // V1.67 皮球只在外面   // 球爆掉了：等買新球
  if(!toyCv&&DSPR.toy_ball){const b=DSPR.toy_ball;toyCv=[[1,1],[-1,1],[-1,-1],[1,-1]].map(([fx,fy])=>{const c=document.createElement('canvas');c.width=15;c.height=15;const x=c.getContext('2d');x.translate(fx<0?15:0,fy<0?15:0);x.scale(fx,fy);x.drawImage(b,Math.round((15-b.width)/2),Math.round((15-b.height)/2));return c})}   // 手繪皮球：翻轉做出滾動感
  if(!toyCv){toyCv=[0,1,2,3].map(k=>{const g=grid(15,15);ellipse(g,7.5,7.5,6.4,6.4,(x,y,nx,ny)=>{const band=Math.floor(((nx*.8-ny*.6)*2.2+k*.5+4))%2,shade=nx*.45+ny*.6>.42;
    if((nx+.38)**2+(ny+.42)**2<.05)return'#ffffff';return shade?(band?'#c8303a':'#d0d0dc'):(band?'#f0505a':'#fbfbff')});outline(g,'#3a1a20');return gridCanvas(g)})}
@@ -3050,16 +3151,17 @@ function drawBallHUD(){if(mode!=='play')return;
 /* ---- 畫面點擊 ---- */
 /* 🪑 V1.51 自由佈置房間：按住家具拖到想要的位置，放開就存好 */
 const ARR={on:false,sel:null,ox:0,oy:0};
-function arrItems(){syncPig();const L=roomItems();L.push({sl:'pig',r:[PIG.sx,Math.min(PIG.y,PIG.sy),33,PIG.sy+7-Math.min(PIG.y,PIG.sy)]});return L}
-function startArrange(){if(!s.hatched||modeBusy())return;cancelMode();if(curView()!=='room'){s.view='room';petX=PET_X;petTarget=null;renderUI()}ARR.on=true;ARR.sel=null;ARR.pick=null;arrPanel('room');arHint();sfx('tap')}
-const RNAME={wall:'牆上裝飾',toilet:'便盆',toy:'玩具',dresser:'櫃子',plant:'盆栽',rug:'地毯',bed:'床',bed2:'第二張床',pig:'撲滿'};
-function arHint(){const sl=ARR.pick;$('arrHint').textContent=sl?`${RNAME[sl]||'家具'}${s.decor.flip&&s.decor.flip[sl]?'・已鏡像':''}`:'點一下家具選取，按住可以拖曳';$('yaFlip').disabled=!sl;$('arrReset').textContent=sl?'↺ 恢復這個':'↺ 全部恢復'}
+function arrItems(){const L=roomItems();if(curView()==='room'){syncPig();L.push({sl:'pig',r:[PIG.sx,Math.min(PIG.y,PIG.sy),33,PIG.sy+7-Math.min(PIG.y,PIG.sy)]})}return L}
+const FIXED_SL=['pig','feeder','water'];   // 不能收起來的東西
+function startArrange(){if(!s.hatched||modeBusy())return;cancelMode();lgClose();if(curView()==='yard'){s.view='room';petX=PET_X;petTarget=null;renderUI()}ARR.on=true;ARR.sel=null;ARR.pick=null;arrPanel('room');arHint();trayRender();sfx('tap')}
+const RNAME={feeder:'自動投餵機',water:'飲水機',window:'矮窗',cushion:'軟墊',tower:'貓跳台',wall:'牆上裝飾',toilet:'便盆',toy:'玩具',dresser:'櫃子',plant:'盆栽',rug:'地毯',bed:'床',bed2:'第二張床',pig:'撲滿'};
+function arHint(){const sl=ARR.pick;$('arrHint').textContent=sl?`${RNAME[sl]||'家具'}${DEC().flip&&DEC().flip[sl]?'・已鏡像':''}　（拖到下面的家具欄就會收起來）`:'按住房間裡的家具可以拖曳；下面家具欄的東西可以拖進房間擺放';$('yaFlip').disabled=!sl;$('arrReset').textContent=sl?'↺ 恢復這個':'↺ 全部恢復'}
 function endArrange(){ARR.on=false;ARR.sel=null;ARR.pick=null;arrPanel(null);save()}
 function arrDown(x,y){const L=arrItems();for(let i=L.length-1;i>=0;i--){const it=L[i],[rx,ry,rw,rh]=it.r;if(x>=rx-2&&x<=rx+rw+2&&y>=ry-2&&y<=ry+rh+2){ARR.sel=it.sl;ARR.ox=x-rx;ARR.oy=y-ry;ARR.dx=posOf(it.sl)[0]-rx;ARR.dy=it.sl==='pig'?PIG.sy-ry:0;ARR.pick=it.sl;sfx('tap');arHint();return true}}ARR.sel=null;ARR.pick=null;arHint();return false}
 function arrMove(x,y){const sl=ARR.sel;if(!sl)return;const it=arrItems().find(o=>o.sl===sl);if(!it)return;const[,,rw,rh]=it.r;
  const rx=clamp(Math.round(x-ARR.ox),-Math.floor(rw/3),W-rw+Math.floor(rw/3)),ry=Math.round(y-ARR.oy);let py;
- if(sl==='wall')py=clamp(ry,0,58-rh);else if(sl==='pig')py=clamp(ry+ARR.dy,ARR.dy,62);else py=-clamp(ry+rh,64,H+4);
- if(!s.decor.pos)s.decor.pos={};s.decor.pos[sl]=[rx+ARR.dx,py]}
+ if(sl==='wall'||sl==='window')py=clamp(ry,0,58-rh);else if(sl==='pig')py=clamp(ry+ARR.dy,ARR.dy,62);else py=-clamp(ry+rh,64,H+4);
+ if(!DEC().pos)DEC().pos={};DEC().pos[sl]=[rx+ARR.dx,py]}
 function drawArrange(now){const L=arrItems();ctx.save();ctx.lineWidth=1;for(const it of L){const[x,y,w,h]=it.r,on=it.sl===(ARR.sel||ARR.pick);ctx.setLineDash(on?[]:[2,2]);ctx.lineDashOffset=on?0:-(now/120|0)%4;ctx.strokeStyle=on?'#ffe066':'rgba(255,255,255,.85)';ctx.strokeRect(x-1.5,y-1.5,w+3,h+3)}ctx.restore()}
 function toLogical(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}}
 cv.addEventListener('pointerdown',e=>{const p=toLogical(e);unlockAudio();requestPersist();
@@ -3073,8 +3175,8 @@ cv.addEventListener('pointerdown',e=>{const p=toLogical(e);unlockAudio();request
  pointerTap(p.x,p.y)});
 /* 手指按在球上時不要讓頁面捲動 */
 cv.addEventListener('touchstart',e=>{const t0=e.touches[0];if(ARR.on||YA.on){e.preventDefault();return}if(!t0||mode)return;const p=toLogical(t0);if(nearToy(p.x,p.y)&&!coreAt(p.x,p.y))e.preventDefault()},{passive:false});
-cv.addEventListener('pointermove',e=>{if(YA.on){if(YA.drag){const p=toLogical(e);yaMove(p.x,p.y)}return}if(ARR.on){if(ARR.sel){const p=toLogical(e);arrMove(p.x,p.y)}return}if(DRAG.on){const p=toLogical(e);toyDrag(p.x,p.y);return}if(mode!=='wash'||!WASH.down)return;const p=toLogical(e);if(Math.hypot(p.x-WASH.px,p.y-WASH.py)>.6)WASH.lastMove=performance.now();WASH.px=p.x;WASH.py=p.y});
-for(const ev of['pointerup','pointercancel','pointerleave'])cv.addEventListener(ev,()=>{if(YA.on){if(YA.drag){YA.drag=false;save()}return}if(ARR.on){if(ARR.sel){ARR.sel=null;save()}return}WASH.down=false;toyRelease()});
+cv.addEventListener('pointermove',e=>{if(YA.on){if(YA.drag){const p=toLogical(e);yaMove(p.x,p.y)}return}if(ARR.on){if(ARR.sel){const p=toLogical(e);arrMove(p.x,p.y);$('arrTray').classList.toggle('drop',!FIXED_SL.includes(ARR.sel)&&overTray(e))}return}if(DRAG.on){const p=toLogical(e);toyDrag(p.x,p.y);return}if(mode!=='wash'||!WASH.down)return;const p=toLogical(e);if(Math.hypot(p.x-WASH.px,p.y-WASH.py)>.6)WASH.lastMove=performance.now();WASH.px=p.x;WASH.py=p.y});
+for(const ev of['pointerup','pointercancel','pointerleave'])cv.addEventListener(ev,e=>{if(YA.on){if(YA.drag){YA.drag=false;save()}return}if(ARR.on){if(ARR.sel){const sl=ARR.sel;ARR.sel=null;$('arrTray').classList.remove('drop');if(ev==='pointerup'&&!FIXED_SL.includes(sl)&&overTray(e)){const id=DEC().placed[sl];if(id){PC.placeDecor(s,id,curView());if(DEC().pos)delete DEC().pos[sl];ARR.pick=null;bgKey='';renderUI();arHint();trayRender();toast(`收起「${CONFIG.decor[id].name}」`,1600);sfx('tap')}}save()}return}WASH.down=false;toyRelease()});
 $('arrDone').onclick=()=>{if(YA.on){endYardArrange();sfx('level');toast('🌳 院子佈置好了！',2200);return}endArrange();sfx('level');toast('🪑 房間佈置好了！',2200)};
 /* V1.82 院子佈置：拖曳房子、小窩、樹、灌木、步道、水池、田地；選中後可以用 ＋／－ 放大縮小 */
 const YA={on:false,sel:null,drag:false,x0:0,y0:0,st:null};
@@ -3082,17 +3184,32 @@ const YNAME={fire:'營火',gen:'小發電機',den:'小窩',nest:'愛的小窩',t
 const yaIds=()=>['path','pond','plots','bush','tree1','tree2','den'].concat(s.loveNest?['nest']:[],hasGen()?['gen']:[],hasFire()?['fire']:[]);
 function startYardArrange(){if(!s.hatched||modeBusy())return;cancelMode();if(curView()!=='yard'){s.view='yard';petX=PET_X;petTarget=null;renderUI()}YA.on=true;YA.sel=null;arrPanel('yard');yaHint();sfx('tap')}
 function endYardArrange(){YA.on=false;YA.sel=null;YA.drag=false;arrPanel(null);save()}
+/* V1.86.7 佈置房間：下方家具欄，拖進房間擺放、把家具拖回來收起，點一下也能擺上／收起 */
+function decorThumb(id){const it=CONFIG.decor[id];if(!it)return null;if(it.slot==='paper'){const c=document.createElement('canvas');c.width=12;c.height=10;const x=c.getContext('2d');x.fillStyle=id==='paper_mint'?'#bfe8d0':id==='paper_night'?'#2a3060':'#f6e6c0';x.fillRect(0,0,12,10);if(id==='paper_night'){x.fillStyle='#ffe066';x.fillRect(3,3,1,1);x.fillRect(8,6,1,1)}return c}
+ return makeDecor(id)||ICV[id]||DSPR[id]}
+function trayRender(){const T=$('arrTray');if(!T||!ARR.on){if(T)T.innerHTML='';return}const D=DEC(),ids=s.decor.owned.filter(id=>CONFIG.decor[id]);
+ T.innerHTML=ids.map(id=>{const it=CONFIG.decor[id],on=(it.slot==='paper'?s.decor:D).placed[it.slot]===id;return`<div class="trt${on?' on':''}" data-tid="${id}"><canvas width="44" height="40"></canvas><span>${esc(it.name)}</span></div>`}).join('')||'<p class="small">還沒有家具，可以到商店買</p>';
+ T.querySelectorAll('.trt').forEach(el=>{const c=el.querySelector('canvas'),sp=decorThumb(el.dataset.tid);if(sp){const x=c.getContext('2d');x.imageSmoothingEnabled=false;const k=Math.min(44/sp.width,40/sp.height);x.drawImage(sp,(44-sp.width*k)/2,(40-sp.height*k)/2,sp.width*k,sp.height*k)}trayDrag(el)})}
+function trayToggle(id){const it=CONFIG.decor[id],r=PC.placeDecor(s,id,curView());if(!r.ok){toast('❌ '+r.msg,2200);sfx('no');return}sfx('tap');if(it.slot!=='paper'&&DEC().placed[it.slot]===id){ARR.pick=it.slot}else ARR.pick=null;bgKey='';save();renderUI();arHint();trayRender();toast(r.msg,1800)}
+function trayDrag(el){let st=null,g=null;el.onpointerdown=e=>{st={x:e.clientX,y:e.clientY,moved:false};try{el.setPointerCapture(e.pointerId)}catch(_){}};
+ el.onpointermove=e=>{if(!st)return;if(!st.moved&&Math.hypot(e.clientX-st.x,e.clientY-st.y)>8){st.moved=true;g=document.createElement('canvas');g.id='trGhost';const src=el.querySelector('canvas');g.width=src.width;g.height=src.height;g.getContext('2d').drawImage(src,0,0);document.body.appendChild(g)}if(g){g.style.left=e.clientX+'px';g.style.top=e.clientY+'px'}};
+ el.onpointerup=el.onpointercancel=e=>{if(!st)return;const moved=st.moved;st=null;if(g){g.remove();g=null}const id=el.dataset.tid,it=CONFIG.decor[id];
+  if(!moved){trayToggle(id);return}const r=cv.getBoundingClientRect();if(e.type==='pointercancel'||e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)return;
+  if(DEC().placed[it.slot]!==id){const q=PC.placeDecor(s,id,curView());if(!q.ok){toast('❌ '+q.msg);return}}bgKey='';renderUI();
+  if(it.slot!=='paper'){const p=toLogical(e),t=arrItems().find(o=>o.sl===it.slot);if(t){const[rx,ry,rw,rh]=t.r;ARR.sel=it.slot;ARR.ox=rw/2;ARR.oy=rh/2;ARR.dx=posOf(it.slot)[0]-rx;ARR.dy=0;arrMove(p.x,p.y);ARR.sel=null;ARR.pick=it.slot}}
+  sfx('tap');save();arHint();trayRender();toast(`擺上「${it.name}」`,1600)}}
+function overTray(e){const T=$('arrTray');if(!T||!ARR.on)return false;const r=T.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom}
 function arrPanel(kind,hint){const P=$('arrPanel');document.body.classList.toggle('arrMode',!!kind);document.querySelector('.stagewrap').classList.toggle('arranging',!!kind);P.classList.toggle('hidden',!kind);P.classList.toggle('room',kind==='room');if(hint)$('arrHint').textContent=hint;try{fitStage&&fitStage()}catch(_){}}
 function yaHint(){const id=YA.sel;$('arrHint').textContent=id?`${YNAME[id]}　大小 ×${yardOf(id)[2]}${yardOf(id)[3]?'・已鏡像':''}`:'點一下院子裡的東西選取，按住可以拖曳';for(const b of['yaMinus','yaPlus','yaFlip'])$(b).disabled=!id;$('arrReset').textContent=id?'↺ 恢復這個':'↺ 全部恢復'}
 function yaDown(x,y){const L=yaIds().map(id=>[id,yBox(id)]).sort((a,b)=>b[1][3]-a[1][3]);for(const[id,b]of L){if(x>=b[0]-2&&x<=b[2]+2&&y>=b[1]-2&&y<=b[3]+2){YA.sel=id;YA.drag=true;YA.x0=x;YA.y0=y;YA.st=[...yardOf(id)];sfx('tap');yaHint();return true}}YA.sel=null;yaHint();return false}
 function yaMove(x,y){const id=YA.sel;if(!id)return;const[ax,ay]=YARD_ANCHOR[id],k=YA.st[2];let dx=Math.round(YA.st[0]+x-YA.x0),dy=Math.round(YA.st[1]+y-YA.y0);
  dx=clamp(dx,4-ax,124-ax);dy=clamp(dy,(id==='path'||id==='pond'||id==='plots'?64:60)-ay,(id==='tree1'||id==='tree2'||id==='den'||id==='nest'?100:110)-ay);if(!s.yard)s.yard={};s.yard[id]=[dx,dy,k,YA.st[3]]}
 function yaScale(d){const id=YA.sel;if(!id){toast('先點一下要調整的東西',1800);return}const v=yardOf(id),k=Math.round(clamp(v[2]+d,.5,1.8)*10)/10;if(!s.yard)s.yard={};s.yard[id]=[v[0],v[1],k,v[3]];sfx('tap');save();yaHint()}
-function yaFlip(){if(ARR.on){const sl=ARR.pick;if(!sl)return;if(!s.decor.flip)s.decor.flip={};if(s.decor.flip[sl])delete s.decor.flip[sl];else s.decor.flip[sl]=1;sfx('tap');save();arHint();return}const id=YA.sel;if(!id)return;const v=yardOf(id);if(!s.yard)s.yard={};s.yard[id]=[v[0],v[1],v[2],v[3]?0:1];sfx('tap');save();yaHint()}
+function yaFlip(){if(ARR.on){const sl=ARR.pick;if(!sl)return;if(!DEC().flip)DEC().flip={};if(DEC().flip[sl])delete DEC().flip[sl];else DEC().flip[sl]=1;sfx('tap');save();arHint();return}const id=YA.sel;if(!id)return;const v=yardOf(id);if(!s.yard)s.yard={};s.yard[id]=[v[0],v[1],v[2],v[3]?0:1];sfx('tap');save();yaHint()}
 function drawYArr(now){ctx.save();ctx.lineWidth=1;for(const id of yaIds()){const[x1,y1,x2,y2]=yBox(id),on=id===YA.sel;ctx.setLineDash(on?[]:[2,2]);ctx.lineDashOffset=on?0:-(now/120|0)%4;ctx.strokeStyle=on?'#ffe066':'rgba(255,255,255,.85)';ctx.strokeRect(Math.round(x1)-1.5,Math.round(y1)-1.5,Math.round(x2-x1)+3,Math.round(y2-y1)+3)}ctx.restore()}
 function yaReset(){if(YA.sel){delete s.yard[YA.sel];toast(`↺ ${YNAME[YA.sel]}回到原本的樣子`,2200)}else{s.yard={};toast('↺ 院子全部回到原本的位置',2200)}save();sfx('tap');yaHint()}
 $('yaPlus').onclick=()=>yaScale(.1);$('yaMinus').onclick=()=>yaScale(-.1);$('yaFlip').onclick=yaFlip;
-$('arrReset').onclick=()=>{if(YA.on){yaReset();return}const sl=ARR.pick;if(sl){if(s.decor.pos)delete s.decor.pos[sl];if(s.decor.flip)delete s.decor.flip[sl];toast(`↺ ${RNAME[sl]||'家具'}回到原本的樣子`,2200)}else{s.decor.pos={};s.decor.flip={};toast('↺ 家具回到原本的位置',2200)}save();sfx('tap');arHint()};
+$('arrReset').onclick=()=>{if(YA.on){yaReset();return}const sl=ARR.pick;if(sl){if(DEC().pos)delete DEC().pos[sl];if(DEC().flip)delete DEC().flip[sl];toast(`↺ ${RNAME[sl]||'家具'}回到原本的樣子`,2200)}else{DEC().pos={};DEC().flip={};toast('↺ 家具回到原本的位置',2200)}save();sfx('tap');arHint()};
 let denTapAt=0;
 function pointerTap(x,y){if(evo)return;
  if(mode==='feed'){placeApple(x,y);return}
@@ -3100,6 +3217,7 @@ function pointerTap(x,y){if(evo)return;
  if(s.hatched&&tryClearCore(x,y))return;
  if(s.runaway){say(`${s.name}不在家…走路去找牠吧（${(s.runaway.got||0).toLocaleString()} / ${CONFIG.runaway.steps.toLocaleString()} 步）`);return}
  if(overPig(x,y)&&!overPet(x,y)){tapPig();return}
+ if(!overPet(x,y)&&loungeTap(x,y))return;   // V1.86.7 休息室：點夥伴、點投餵機
  if(s.hatched&&overPair(x,y)&&!overPet(x,y)){switchToPair();return}   // 點另一隻：換照顧牠
  if(overPet(x,y)||(!s.hatched&&x>=PET_X&&x<=PET_X+CELL&&y>=PET_Y&&y<=PET_Y+CELL)){tapPet();return}
  if(s.hatched&&curView()==='yard'){const d=denBox(s.den.level);if(x>=d[0]&&x<=d[2]&&y>=d[1]&&y<=d[3]){const nw=performance.now();   // 點兩下小窩：進去
@@ -3112,7 +3230,7 @@ document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()
 /* V1.55 遊戲畫面依剩下的高度縮放（整頁不用捲） */
 /* V1.86 主畫面填滿寬度：高度不夠時，上下各切掉一點點（最多 15%，大多切下面的草地），點擊位置照樣對得準 */
 /* ================= V1.86.4 新手手冊 ================= */
-function renderGuide(){const bar=$('guideBar');if(!bar)return;if(window.PF_NO_GUIDE){bar.classList.add('hidden');document.body.classList.remove('guiding');$('gdShade').classList.add('hidden');document.body.classList.remove('gdOn');return}
+function renderGuide(){const bar=$('guideBar');if(!bar)return;if(window.PF_XP1)CONFIG.xpGain=1;if(window.PF_NO_GUIDE){bar.classList.add('hidden');document.body.classList.remove('guiding');$('gdShade').classList.add('hidden');document.body.classList.remove('gdOn');return}
  let S=PC.guideStep(s);if(S&&S.k==='hatch'&&s.hatched){guideHit('hatch');S=PC.guideStep(s)}
  document.querySelectorAll('.gpoint').forEach(b=>b.classList.remove('gpoint'));
  if(!S||B){bar.classList.add('hidden');document.body.classList.remove('guiding');$('gdShade').classList.add('hidden');document.body.classList.remove('gdOn');document.querySelectorAll('.gpoint').forEach(b=>b.classList.remove('gpoint'));return}const n=CONFIG.guide.length,i=s.guide.i;
@@ -3147,10 +3265,10 @@ function fitStage(){const a=$('stagearea'),w=$('stagewrap'),c=$('scrop'),cv0=$('
  const h=ah/(1-MAXC),wd=h*128/112;w.style.width=Math.floor(wd+fr)+'px';c.style.height=Math.floor(ah)+'px';cv0.style.marginTop=-Math.round((h-ah)*.3)+'px'}
 try{new ResizeObserver(fitStage).observe($('stagearea'))}catch(e){}addEventListener('resize',fitStage);fitStage();
 $('bAdv').onclick=()=>advDialog();$('bFarm').onclick=()=>openFarm();$('bGoals').onclick=goalsDialog;$('bShop').onclick=()=>shopDialog('bag');$('coinBtn').onclick=()=>shopDialog('decor');
-$('viewBtn').onclick=()=>toggleView();$('navL').onclick=$('navR').onclick=()=>{if(modeBusy()){toast('先完成現在的互動吧');return}toggleView();sfx('tap')};$('npEdit').onclick=()=>renameDialog(false);$('denBtn').onclick=()=>denDialog();
+$('viewBtn').onclick=()=>toggleView();$('navL').onclick=()=>{if(modeBusy()){toast('先完成現在的互動吧');return}toggleView(-1)};$('navR').onclick=()=>{if(modeBusy()){toast('先完成現在的互動吧');return}toggleView(1)};$('npEdit').onclick=()=>renameDialog(false);$('denBtn').onclick=()=>denDialog();
 $('lightBtn').onclick=()=>{s.settings.light=s.settings.light===false;save();syncLightBtn(true);sfx('tap');say(s.settings.light?'💡 開燈了，暖暖的～':'關燈了，好暗喔…',{log:false})};
 /* 開燈按鈕：只在小窩裡、傍晚到晚上出現 */
-function syncLightBtn(force){const show=s.hatched&&curView()==='room'&&['night','dusk'].includes(phase()),b=$('lightBtn');b.classList.toggle('hidden',!show);if(show)b.textContent=s.settings.light===false?'💡 開燈':'🌙 關燈'}
+function syncLightBtn(force){const show=s.hatched&&curView()!=='yard'&&['night','dusk'].includes(phase()),b=$('lightBtn');b.classList.toggle('hidden',!show);if(show)b.textContent=s.settings.light===false?'💡 開燈':'🌙 關燈'}
 setInterval(syncLightBtn,1000);$('bSteps').onclick=stepsDialog;$('bMate').onclick=mateDialog;
 $('bFish').onclick=()=>{sfx('tap');openFish()};$('bCodex').onclick=codexDialog;$('bTrain').onclick=trainDialog;$('bMenu').onclick=menuDialog;
 $('homeTipX').onclick=()=>{$('homeTip').classList.add('hidden');store.set(TIP_KEY,'1')};
@@ -3187,7 +3305,7 @@ function init(){
    閃避：躲避球｜攻擊：沙包連打、組合拳、靈光一閃｜防禦：瀑布打坐
    ========================================================= */
 const TRAIN_INFO={
- dodge:{icon:'⚾',title:'閃避訓練：躲棒球',goal:'投手會丟直球、曲球、蝴蝶球、伸卡球、變速球，還有全身發光的超級球！按左右移動閃開，共 12 球；階段越高球越快、越刁鑽，能被打中的次數也越少'},
+ dodge:{icon:'⚾',title:'閃避訓練：躲棒球',goal:'投手會丟直球、曲球、蝴蝶球、伸卡球、變速球、分身球，還有全身發光的超級球！按左右移動閃開，共 12 球；階段越高球越快、越刁鑽，能被打中的次數也越少'},
  rush:{icon:'👊',title:'攻擊訓練：沙包連打',goal:'3 秒內連續打沙包（第 1–3 階約 70 下，越高階要越多下）'},
  combo:{icon:'🥊',title:'攻擊訓練：組合拳',goal:'像打太鼓一樣：符號滑到沙包旁的圓圈時，照符號按 ▲▼◀▶ 或 A／B。5 組 × 5 拳全部打完才結算；階段越高節奏越快、判定越嚴'},
  flash:{icon:'💡',title:'攻擊訓練：靈光一閃',goal:'飛盤會亂飛！飛進紅色攻擊範圍時點螢幕，寵物會用屬性技從遠處射中它。10 個飛盤要打中 6～9 個（看階段）；有時一次飛兩個，兩隻手指同時點就能射兩發'},
@@ -3294,20 +3412,20 @@ function tBar(c,x,y,w,p,col){c.fillStyle='#2a170a';c.fillRect(x-1,y-1,w+2,5);c.f
 const TRAIN_INIT={
  /* 閃避：三條路線，球從前方丟過來越飛越大，到身體時要不在那條路上 */
  dodge(G){const Q=TLV('dodge'),LIVES=[4,3,3,2][Q.t],TK=[1.15,1,.88,.78][Q.t]*(1-Q.sub*.03),LX=[26,64,102],N=12,HX=62,HY=48,HIT=.76,ss=v=>{v=Math.max(0,Math.min(1,v));return v*v*(3-2*v)};
-  const PT={straight:{nm:'直球',T:1.1,col:'#f4f4f4'},curve:{nm:'曲球！',T:1.1,col:'#f4f4f4'},knuckle:{nm:'蝴蝶球！',T:1.25,col:'#f4f4f4'},sinker:{nm:'伸卡球！',T:1,col:'#f4f4f4'},change:{nm:'變速球！',T:1.15,col:'#f4f4f4'},super:{nm:'⚡超級球！！',T:.55,col:'#ffe14a'}};
-  const pick=i=>{if(i===7||i===11)return'super';if(i<2)return'straight';const W=i<6-Q.t*2?[['straight',.4],['curve',.25],['sinker',.15],['change',.2]]:[['straight',.15-Q.t*.04],['curve',.25],['knuckle',.25+Q.t*.04],['sinker',.15],['change',.2]];let x=Math.random();for(const[k,w]of W){if(x<w)return k;x-=w}return'curve'};
+  const PT={straight:{nm:'直球',T:1.1,col:'#f4f4f4'},curve:{nm:'曲球！',T:1.1,col:'#f4f4f4'},knuckle:{nm:'蝴蝶球！',T:1.25,col:'#f4f4f4'},sinker:{nm:'伸卡球！',T:1,col:'#f4f4f4'},change:{nm:'變速球！',T:1.15,col:'#f4f4f4'},split:{nm:'分身球！',T:1.2,col:'#f4f4f4'},super:{nm:'⚡超級球！！',T:.55,col:'#ffe14a'}};
+  const pick=i=>{if(i===7||i===11)return'super';if(i<2)return'straight';const W=i<6-Q.t*2?[['straight',.4],['curve',.25],['sinker',.15],['change',.2]]:[['straight',.12-Q.t*.03],['curve',.2],['knuckle',.2+Q.t*.03],['sinker',.13],['change',.15],['split',.2]];let x=Math.random();for(const[k,w]of W){if(x<w)return k;x-=w}return'curve'};
   const plan=Array.from({length:N},(_,i)=>pick(i));
-  const lx=(b,p)=>{if(b.type==='curve')return LX[b.from]+(LX[b.lane]-LX[b.from])*ss((p-.3)/.45);if(b.type==='knuckle')return LX[b.from]+(LX[b.lane]-LX[b.from])*ss((p-.42)/.3)+Math.sin(p*28+b.ph)*6*(1-p);return LX[b.lane]};
+  const lx=(b,p)=>{if(b.type==='split'&&b.gx!=null)return LX[b.lane]+(LX[b.gx]-LX[b.lane])*(1-ss((p-.54)/.18))*Math.min(2.2,1/(p+.15));if(b.type==='curve')return LX[b.from]+(LX[b.lane]-LX[b.from])*ss((p-.3)/.45);if(b.type==='knuckle')return LX[b.from]+(LX[b.lane]-LX[b.from])*ss((p-.42)/.3)+Math.sin(p*28+b.ph)*6*(1-p);return LX[b.lane]};
   const bx=(b,p)=>HX+(lx(b,p)-HX)*p,by=(b,p)=>HY+64*p+(b.type==='sinker'?-9*Math.sin(Math.PI*Math.min(1,p*1.25)):0);
   Object.assign(G,{lane:1,px:64,balls:[],next:1.1,thrown:0,done:0,hits:0,dodged:0,btns:[['L','◀ 左'],['R','右 ▶']],
    btn(b){G.lane=Math.max(0,Math.min(2,G.lane+(b==='L'?-1:1)));sfx('tap')},
    tap(x){G.btn(x<G.px?'L':'R')},
-   hud(){return`${Q.tag}　${'❤️'.repeat(Math.max(0,LIVES-G.hits))}${'🖤'.repeat(Math.min(LIVES,G.hits))}　躲過 ${G.dodged}/${N}　<b>${G.cur||''}</b>`},
+   hud(){return`${Q.tag}　${'❤️'.repeat(Math.max(0,LIVES-G.hits))}${'🖤'.repeat(Math.min(LIVES,G.hits))}　躲過 ${G.dodged}/${N}`},
    update(dt){G.px+=(LX[G.lane]-G.px)*Math.min(1,dt*16);const nx=plan[G.thrown];G.aura=nx==='super'&&G.thrown<N&&G.t>G.next-1.1;
     if(G.aura&&Math.random()<.5)TG.fx.push({ic:'spark',x:64+(Math.random()-.5)*22,y:40+Math.random()*20,vy:-30,t:0,life:.5});
     if(G.thrown<N&&G.t>=G.next){const type=nx,P=PT[type],lane=Math.random()<.6?G.lane:Math.floor(Math.random()*3);let from=lane;
      if(type==='curve')from=lane===1?(Math.random()<.5?0:2):1;else if(type==='knuckle')from=Math.floor(Math.random()*3);
-     G.balls.push({type,lane,from,p:0,T:P.T*1.15*(1-G.thrown*.02)*TK,col:P.col,ph:Math.random()*6});G.cur=P.nm;G.thrown++;G.throwAt=G.t;G.next=G.t+Math.max(1.05,1.6-G.thrown*.04)+Math.random()*.3;
+     G.balls.push({type,lane,from,p:0,T:P.T*1.15*(1-G.thrown*.02)*TK,col:P.col,ph:Math.random()*6});G.thrown++;G.throwAt=G.t;G.next=G.t+Math.max(1.05,1.6-G.thrown*.04)+Math.random()*.3;
      if(type==='super'){sfx('boom');buzz(30);G.shake=.3}else sfx('whoosh')}
     for(let i=G.balls.length-1;i>=0;i--){const b=G.balls[i],p0=b.p,warp=b.type==='change'?(b.p<.45?.45:1.7):b.type==='sinker'?(.7+.9*b.p):1;b.p+=dt/b.T*warp;
      if(p0<HIT&&b.p>=HIT){const x=bx(b,HIT);if(Math.abs(G.px-x)<17){G.hits++;b.hit=true;G.flash=performance.now()+500;G.shake=.3;sfx('crack');buzz(40);tMsg(b.type==='straight'?'被打中了！':`被${PT[b.type].nm.replace(/[！⚡]/g,'')}打中了！`);if(G.hits>=LIVES){endTraining(false,`被打中 ${G.hits} 次…`);return}}else{G.dodged++;tMsg('閃開了！');tPop('star',G.px,70,1)}}
@@ -3324,7 +3442,8 @@ const TRAIN_INIT={
      c.fillStyle='#2a170a';c.beginPath();c.arc(x,y,r+1,0,Math.PI*2);c.fill();c.fillStyle=b.col;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();
      if(r>=2){const a=now/(b.type==='knuckle'?400:70)+b.lane;c.strokeStyle='#e8433f';c.lineWidth=1;for(const sd of[-1,1]){c.beginPath();c.arc(x+Math.cos(a)*r*.9*sd,y+Math.sin(a)*r*.9*sd,r*.65,a+(sd>0?Math.PI*.6:-Math.PI*.4),a+(sd>0?Math.PI*1.4:Math.PI*.4));c.stroke()}}
      else{c.fillStyle='#e8433f';c.fillRect(Math.round(x),Math.round(y),1,1)}};
-    const pre=G.balls.filter(b=>b.p<HIT),post=G.balls.filter(b=>b.p>=HIT);pre.forEach(ball);tPet(c,fr,G.px-24,68);post.forEach(ball)}})},
+    const ball3=b=>{if(b.type==='split'&&b.p<.72&&!b.hit){for(const j of[0,1,2]){b.gx=j;ball(b)}b.gx=null;return}ball(b)};   // 分身球：先分成三顆，快到面前才合成一顆
+    const pre=G.balls.filter(b=>b.p<HIT),post=G.balls.filter(b=>b.p>=HIT);pre.forEach(ball3);tPet(c,fr,G.px-24,68);post.forEach(ball3)}})},
  /* 沙包連打：2 秒內 28 下，寵物跳過去撞沙包 */
  rush(G){const Q=TLV('rush'),GOAL=[70,90,105,118][Q.t]+Q.sub*4;Object.assign(G,{n:0,sw:0,hopT:9,btns:[['P','👊 撞！（點螢幕也可以）']],
    btn(){G.n++;G.hopT=0;G.sw=Math.min(1.3,G.sw+.3);G.dir=-(G.dir||1);sfx(G.n%4===0?'punch':'punchL');buzz(6);tPop(G.n%3?'spark':'star',86+BSH(),56+Math.random()*16,G.n%5===0?3:1);if(G.n%7===0)G.shake=.12},tap(){G.btn()},

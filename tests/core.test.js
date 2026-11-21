@@ -2,6 +2,7 @@
 'use strict';
 const C = require('../game-core.js');
 const assert = require('assert');
+const XPG = C.CONFIG.xpGain; C.CONFIG.xpGain = 1;   // 舊測試用原本的經驗數字；V1.86.7 的 ×0.7 另外測
 const H = 3600000, MIN = 60000;
 let pass = 0, fail = 0;
 function t(name, fn) { try { fn(); pass++; console.log('PASS ' + name); } catch (e) { fail++; console.log('FAIL ' + name + ' — ' + e.message); } }
@@ -543,6 +544,15 @@ t('V1.86.4 新手手冊', () => {
 t('V1.86.6 肉骨頭、魚骨存檔後還是骨頭', () => {
   const s = hatched(); C.addCore(s, 30, T0, 'yard', 'bone'); C.addCore(s, 50, T0, 'yard', 'fbone'); const k = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 1);
   assert.deepEqual(k.cores.map(c => c.k), ['bone', 'fbone']); assert.equal(C.clearCore(k, 1, T0 + 2).kind, 'fbone');
+});
+t('V1.86.7 經驗 ×0.7、存錢筒用最高等的那隻算', () => {
+  C.CONFIG.xpGain = XPG; const s = hatched(); const x0 = s.xp; C.addXP(s, 100); assert.equal(s.xp - x0, 70); C.CONFIG.xpGain = 1;
+  const a = hatched(); a.xp = 0; const big = JSON.parse(JSON.stringify(a)); big.xp = 5000; a.roster = [C.sanitizePet(big, T0)]; const r1 = C.piggyRate(a); a.roster = []; const r0 = C.piggyRate(a); assert.ok(r1 > r0 * 2, [r0, r1]);
+});
+t('V1.86.7 放生', () => {
+  const s = hatched(); const q = JSON.parse(JSON.stringify(s)); q.seed = 555; q.name = '阿福'; const p = C.sanitizePet(q, T0); s.roster = [p]; const id = C.gidOf(p); s.dex.push({ id, route: null, stage: 'adult', petName: '阿福', at: T0 });
+  const r = C.releasePet(s, 'den', 0, T0); assert.ok(r.ok); assert.equal(s.roster.length, 0); assert.equal(C.whereIs(s, id), 'released'); assert.ok(!C.lostPets(s).some(e => e.id === id));
+  const k = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 1); assert.equal(C.whereIs(k, id), 'released');
 });
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

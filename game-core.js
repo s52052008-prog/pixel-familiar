@@ -58,6 +58,7 @@ const CONFIG = {
   poop: { delayMin: 40, rotMin: 3 },                      // 每吃一次，40 分鐘後大便；大便 3 分鐘沒清就發臭
   potion: { price: 40, heal: .5, drop: .15 },
   elixir: { price: 60 },
+  xpGain: .7,   // V1.86.7 升級慢一點：所有經驗 ×0.7
   /* V1.86.4 新手手冊：一步一步帶玩家玩一遍，每完成一步給獎勵 */
   guide: [
     { k: 'hatch', icon: '🥚', t: '孵出你的幻獸', d: '一直點畫面上的蛋，把牠孵出來！', btn: null, coins: 50 },
@@ -146,7 +147,8 @@ const CONFIG = {
   bond: { seconds: 2, steps: [[0, 1], [20, 2.2], [22, 2.5], [25, 2.7], [28, 3]], cost: 10, restHours: 2 },   // 羈絆之力：2 秒內連打；20 下 2.2 倍、22 下 2.5、25 下 2.7、28 下以上 3 倍（中間按比例）。要花 10 金幣買加油棒，之後 2 小時要休息不能冒險
   ballGame: { lives: 3, max: 99, goalCap: 5, coinEvery: 3, coinMax: 10, xpPer: 3, xpMax: 30 },   // V1.64 每進一球 +3 經驗（一場最多 30）   // 頂球：3 條命一直玩到漏接 3 次；每 3 球 1 金幣（最多 10）；冒險路線最多算 5 球
   den: [ { name: '草叢小窩', cap: 1, cost: 0 }, { name: '稻草窩', cap: 2, cost: 120 }, { name: '樹根洞窟', cap: 3, cost: 300 }, { name: '大樹屋', cap: 4, cost: 600 }, { name: '燈籠樹屋', cap: 5, cost: 1000 }, { name: '旗幟樹屋', cap: 6, cost: 1500 }, { name: '星光樹屋', cap: 7, cost: 2200 } ],   // V1.45 最多 7 隻（每個屬性一隻）                            // 商店零食「星星糖」
-  decorSlots: ['paper', 'wall', 'lamp', 'plant', 'bed', 'rug', 'toy', 'toilet'],
+  lounge: [ { name: '基本款', xpH: 0, cost: 0 }, { name: '大容量款', xpH: 3, cost: 400 }, { name: '豪華營養款', xpH: 6, cost: 1200 } ],   // V1.86.7 休息室的自動投餵機＋飲水機：免費，升級後休息的寵物每小時慢慢長經驗
+  decorSlots: ['paper', 'wall', 'window', 'lamp', 'plant', 'bed', 'cushion', 'tower', 'rug', 'toy', 'toilet'],
   decor: {                                                                      // 房間家具：純裝飾，不影響數值
     paper_cream: { slot: 'paper', name: '奶油色壁紙', price: 0 },
     paper_mint:  { slot: 'paper', name: '薄荷色壁紙', price: 30 },
@@ -164,7 +166,10 @@ const CONFIG = {
     rug_star:    { slot: 'rug', name: '星星地毯', price: 60 },
     toy_ball:    { slot: 'toy', name: '彈力球', price: 15 },
     toy_block:   { slot: 'toy', name: '積木', price: 25 },
-    toilet_pot:  { slot: 'toilet', name: '寵物馬桶', price: 150 }
+    toilet_pot:  { slot: 'toilet', name: '寵物馬桶', price: 150 },
+    cushion_soft:{ slot: 'cushion', name: '軟墊', price: 40 },        // V1.86.7 遊戲間家具
+    tower_cat:   { slot: 'tower', name: '貓跳台', price: 120 },
+    window_low:  { slot: 'window', name: '矮窗', price: 60 }
   },
   start: { coins: 50, food: 3, seeds: 2, stat: 80, hunger: 60, mood: 55, clean: 70, energy: 80 },
   foods: {   // 食物：key＝背包欄位；left＝吃剩的東西（會發臭）；fav＝愛吃的屬性（心情 +10、經驗 +5）。V1.21 依玩家設定
@@ -308,7 +313,7 @@ function fresh(now = Date.now()) {
     inv: Object.assign({ food: S.food, seeds: S.seeds, seeds2: 0, seeds3: 0, seeds4: 0, candy: 0, potion: 1, potion2: 0, soup: 0, ember: 0, shards: 0, hearts: 0, relics: {}, fresh: { food: 0, berry: 0, cranberry: 0, blueberry: 0, strawberry: 0 }, mats: {} }, ...Object.keys(CONFIG.foods).filter(k => k !== 'food').map(k => ({ [k]: 0 }))), harvests: 0, trainLog: { dodge: 0, attack: 0, defense: 0 }, trains: 0,
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] }, goalLv: 0,
-    decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
+    decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, lounge: { lv: 1, at: 0, decor: { placed: { paper: 'paper_cream' }, pos: {}, flip: {} } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
     cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, relics: [], relicGot: [], eggBuys: 0, foster: [], fusionHouse: false, fosterPaid: false, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
     events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
     daily: { date: '', adv: 0, gift: false },
@@ -362,13 +367,18 @@ function sanitize(o, now = Date.now()) {
   if (Array.isArray(dc.owned)) r.decor.owned = [...new Set(['paper_cream', 'bed_round', ...dc.owned.filter(id => CONFIG.decor[id])])];
   if (dc.placed && typeof dc.placed === 'object') { r.decor.placed = { paper: 'paper_cream' }; for (const sl of CONFIG.decorSlots) { const id = dc.placed[sl]; if (id && CONFIG.decor[id] && CONFIG.decor[id].slot === sl && r.decor.owned.includes(id)) r.decor.placed[sl] = id; } }
   if (!(Number(o.v) >= 7) && !r.decor.placed.bed) r.decor.placed.bed = 'bed_round';
-  r.decor.pos = {}; if (dc.pos && typeof dc.pos === 'object') for (const k of ['wall', 'toilet', 'toy', 'dresser', 'plant', 'rug', 'bed', 'bed2', 'pig']) { const v = dc.pos[k]; if (Array.isArray(v) && v.length === 2 && v.every(n => Number.isFinite(n) && Math.abs(n) <= 200)) r.decor.pos[k] = [Math.round(v[0]), Math.round(v[1])]; }
-  r.decor.flip = {}; if (dc.flip && typeof dc.flip === 'object') for (const k of ['wall', 'toilet', 'toy', 'dresser', 'plant', 'rug', 'bed', 'bed2', 'pig']) if (dc.flip[k]) r.decor.flip[k] = 1;   // V1.83 家具鏡像   // V1.51 自由佈置的家具位置
+  r.decor.pos = {}; if (dc.pos && typeof dc.pos === 'object') for (const k of ['wall', 'window', 'cushion', 'tower', 'toilet', 'toy', 'dresser', 'plant', 'rug', 'bed', 'bed2', 'pig']) { const v = dc.pos[k]; if (Array.isArray(v) && v.length === 2 && v.every(n => Number.isFinite(n) && Math.abs(n) <= 200)) r.decor.pos[k] = [Math.round(v[0]), Math.round(v[1])]; }
+  r.decor.flip = {}; if (dc.flip && typeof dc.flip === 'object') for (const k of ['wall', 'window', 'cushion', 'tower', 'toilet', 'toy', 'dresser', 'plant', 'rug', 'bed', 'bed2', 'pig']) if (dc.flip[k]) r.decor.flip[k] = 1;   // V1.83 家具鏡像   // V1.51 自由佈置的家具位置
   { const b2 = dc.placed && dc.placed.bed2; if (b2 && CONFIG.decor[b2] && CONFIG.decor[b2].slot === 'bed' && r.decor.owned.includes(b2)) r.decor.placed.bed2 = b2; }   // 右邊第二張床   // 舊存檔：送一張小圓床
-  r.view = o.view === 'room' ? 'room' : 'yard';
+  { const lo = o.lounge && typeof o.lounge === 'object' ? o.lounge : {}, ld = lo.decor && typeof lo.decor === 'object' ? lo.decor : {}, K = ['wall', 'window', 'cushion', 'tower', 'toilet', 'toy', 'dresser', 'plant', 'rug', 'bed', 'bed2', 'feeder', 'water'];
+    r.lounge = { lv: int(lo.lv, 1, 1, CONFIG.lounge.length), at: num(lo.at, now, 0, 9e15), decor: { placed: { paper: 'paper_cream' }, pos: {}, flip: {} } };
+    if (ld.placed && typeof ld.placed === 'object') for (const sl of [...CONFIG.decorSlots, 'bed2']) { const id = ld.placed[sl], it = CONFIG.decor[id]; if (it && (it.slot === sl || (sl === 'bed2' && it.slot === 'bed')) && r.decor.owned.includes(id)) r.lounge.decor.placed[sl] = id; }
+    if (ld.pos && typeof ld.pos === 'object') for (const k of K) { const v = ld.pos[k]; if (Array.isArray(v) && v.length === 2 && v.every(n => Number.isFinite(n) && Math.abs(n) <= 200)) r.lounge.decor.pos[k] = [Math.round(v[0]), Math.round(v[1])]; }
+    if (ld.flip && typeof ld.flip === 'object') for (const k of K) if (ld.flip[k]) r.lounge.decor.flip[k] = 1; }   // V1.86.7 休息室：自己的家具擺法＋投餵機等級
+  r.view = ['room', 'lounge'].includes(o.view) ? o.view : 'yard';
   r.digest = Array.isArray(o.digest) ? o.digest.map(Number).filter(Number.isFinite).slice(0, 10) : [];
   r.toiletUses = int(o.toiletUses, 0, 0, 1e7); r.starveSince = num(o.starveSince, 0, 0, 9e15); r.runaway = o.runaway && typeof o.runaway === 'object' ? { at: num(o.runaway.at, 0, 0, 9e15), got: int(o.runaway.got, 0, 0, 1e7) } : null; r.bondRestUntil = num(o.bondRestUntil, 0, 0, 9e15); r.ballUses = int(o.ballUses, 0, 0, CONFIG.ballLife - 1); r.ballBroken = o.ballBroken === true;
-  r.cores = Array.isArray(o.cores) ? o.cores.filter(c => c && typeof c === 'object').slice(-CONFIG.core.max).map(c => ({ x: num(c.x, 64, 4, 124), at: num(c.at, now, 0, 9e15), v: c.v === 'room' ? 'room' : 'yard', k: CORE_KINDS.includes(c.k) ? c.k : 'core' })) : [];   // V1.86.6 肉骨頭、魚骨存檔後不會變成果核
+  r.cores = Array.isArray(o.cores) ? o.cores.filter(c => c && typeof c === 'object').slice(-CONFIG.core.max).map(c => ({ x: num(c.x, 64, 4, 124), at: num(c.at, now, 0, 9e15), v: ['room', 'lounge'].includes(c.v) ? c.v : 'yard', k: CORE_KINDS.includes(c.k) ? c.k : 'core' })) : [];   // V1.86.6 肉骨頭、魚骨存檔後不會變成果核
   const bl = o.ball && typeof o.ball === 'object' ? o.ball : {}; r.ball = { best: int(bl.best, 0, 0, 99), goals: int(bl.goals, 0, 0, 1e7) };
   r.den = { level: int(o.den && o.den.level, 1, 1, CONFIG.den.length) };
   r.roster = Array.isArray(o.roster) ? o.roster.filter(p => p && typeof p === 'object' && p.hatched).slice(0, CONFIG.den.length - 1).map(p => sanitizePet(p, now)) : [];
@@ -426,7 +436,7 @@ function sanitize(o, now = Date.now()) {
     id: okId(e.id) ? e.id : (Number.isInteger(e.seed) ? 'g:' + e.seed : 'classic'),
     route: ROUTES.includes(e.route) ? e.route : OLD_ROUTE[e.route] || null,
     stage: STAGES.includes(e.stage) && e.stage !== 'egg' ? e.stage : (e.route ? 'adult' : 'juvenile'),
-    petName: typeof e.petName === 'string' ? chars(e.petName).slice(0, 10).join('') : (typeof e.name === 'string' ? chars(e.name).slice(0, 10).join('') : ''),
+    petName: typeof e.petName === 'string' ? chars(e.petName).slice(0, 10).join('') : (typeof e.name === 'string' ? chars(e.name).slice(0, 10).join('') : ''), rel: e.rel ? 1 : 0,
     at: num(e.at, now, 0, now) })) : [];
   r.eggs = Array.isArray(o.eggs) ? o.eggs.filter(e => e && okId(e.id)).slice(0, CONFIG.breed.basket).map(e => ({ id: e.id, from: typeof e.from === 'string' ? chars(e.from).slice(0, 40).join('') : '', at: num(e.at, now, 0, now), ready: num(e.ready, 0, 0, 9e15), told: e.told ? 1 : 0 })) : [];
   r.breedAt = num(o.breedAt, 0, 0, now);
@@ -489,7 +499,7 @@ function applyTime(st, now = Date.now()) {
   ensureCrave(st, now); growTree(st, now);
   if (now < st.lastTick) { st.clockWarn = now; return { warn: 'back', hours: 0, events: [] }; }   // 時間倒退：不回溯，記錄警告
   if (st.nestUntil && st.lastTick < st.nestUntil) st.lastTick = Math.min(now, Math.max(st.lastTick, st.nestUntil));   // V1.86.2 在愛的小窩裡：數值暫停
-  loveTick(st, now);
+  loveTick(st, now); loungeTick(st, now);
   const hours = (now - st.lastTick) / H, eff = Math.min(hours, CONFIG.offlineCapHours);
   const last = st.lastTick; st.lastTick = now;
   const events = digest(st, now);
@@ -516,7 +526,11 @@ function applyTime(st, now = Date.now()) {
 /* 存錢筒：幻獸等級越高，每小時存越多；鋼系 ×1.5；一起出來的第二隻再加牠的一半 */
 function piggyRateOf(p) { const P = CONFIG.piggy, T = traitOf(p.route); return (P.base + P.per * Math.min(level(p.xp), P.maxLv)) * (T.coinX || 1) * (p.awake ? CONFIG.starHeart.piggyX : 1); }
 const pigLevel = st => Math.min(6, 1 + ((st.pigCores && st.pigCores.length) || 0) + (st.pigBought ? 1 : 0));
-function piggyRate(st) { if (!st.hatched) return 0; return (piggyRateOf(st) + (st.pair ? piggyRateOf(st.pair) * CONFIG.piggy.pairShare : 0)) * CONFIG.piggy.rateX[pigLevel(st) - 1]; }
+function piggyRate(st) {   // V1.86.7 以養過最高等的那隻來算（換照顧小隻的不會變少）；第二隻一起出來再加一半
+  if (!st.hatched) return 0; const L = [st, ...(st.pair ? [st.pair] : []), ...(st.roster || []), ...(st.foster || [])].filter(p => p && p.hatched !== false);
+  const best = L.reduce((a, p) => piggyRateOf(p) > piggyRateOf(a) ? p : a, st), extra = st.pair && st.pair !== best ? piggyRateOf(st.pair) * CONFIG.piggy.pairShare : best === st.pair ? piggyRateOf(st) * CONFIG.piggy.pairShare : 0;
+  return (piggyRateOf(best) + extra) * CONFIG.piggy.rateX[pigLevel(st) - 1];
+}
 function piggyCap(st) { return Math.max(1, Math.round(piggyRate(st) * CONFIG.piggy.capH[pigLevel(st) - 1])); }
 function buyPigCore(st) { const P = CONFIG.piggy; if (st.pigBought) return { ok: false, msg: '小豬撲滿核心只有一個，已經買過了' }; if (st.coins < P.corePrice) return { ok: false, msg: `金幣不足（需要 ${P.corePrice}）` };
   st.coins -= P.corePrice; st.pigBought = true; return { ok: true, lv: pigLevel(st), msg: `買了「小豬撲滿核心」！小豬撲滿升到 ${pigLevel(st)} 級${pigLevel(st) >= 6 ? '，變成最肥、會發光的金小豬！' : ''}` }; }
@@ -569,7 +583,7 @@ function gather(st, now = Date.now()) {
 /* ---------------- 照顧行為（GDD 第 3 節表格） ---------------- */
 const trait = st => (CONFIG.traitsOn && st && CONFIG.traits[st.route]) || {};
 const traitOf = route => (CONFIG.traitsOn && CONFIG.traits[route]) || {};
-function addXP(st, n) { n = Math.max(0, Math.round(n * (trait(st).xp || 1) * (!st.awake && hasHeritage(st) ? CONFIG.heritage.xp : 1))); st.xp += n; return n; }
+function addXP(st, n) { n = Math.max(0, Math.round(n * CONFIG.xpGain * (trait(st).xp || 1) * (!st.awake && hasHeritage(st) ? CONFIG.heritage.xp : 1))); st.xp += n; return n; }
 const washCost = st => hasSkill(st, 'tide') ? 0 : trait(st).washCost || CONFIG.washCost;   // V1.83 水系：洗澡免水費
 function act(st, a, now = Date.now(), opt) {
   const tm = applyTime(st, now);
@@ -1065,10 +1079,11 @@ function buyDecor(st, id) {
   if (id === 'toy_ball') { st.ballBroken = false; st.ballUses = 0; return { ok: true, msg: '買了「彈力球」！院子和房間都可以拿來玩' }; }
   return { ok: true, msg: `買了「${it.name}」，已經擺進房間！` };
 }
-function placeDecor(st, id) {
+function placeDecor(st, id, where) {
   const it = CONFIG.decor[id]; if (!it || !st.decor.owned.includes(id)) return { ok: false, msg: '還沒有這個家具' };
-  if (st.decor.placed[it.slot] === id) { if (it.slot === 'paper') return { ok: false, msg: '壁紙不能拿掉，可以換別的' }; delete st.decor.placed[it.slot]; return { ok: true, msg: `收起「${it.name}」` }; }
-  st.decor.placed[it.slot] = id; return { ok: true, msg: `擺上「${it.name}」` };
+  const P = where === 'lounge' && it.slot !== 'paper' ? st.lounge.decor.placed : st.decor.placed;   // 壁紙兩邊同步   // V1.86.7 休息室有自己的擺法（家具共用）
+  if (P[it.slot] === id) { if (it.slot === 'paper') return { ok: false, msg: '壁紙不能拿掉，可以換別的' }; delete P[it.slot]; return { ok: true, msg: `收起「${it.name}」` }; }
+  P[it.slot] = id; return { ok: true, msg: `擺上「${it.name}」` };
 }
 /* 第二張床（兩隻一起睡）：已擁有的床可以擺到左邊的床位，同一張床可以兩邊都擺 */
 function placeBed2(st, id) {
@@ -1199,7 +1214,7 @@ const rotMin = c => c.k === 'poop' ? CONFIG.poop.rotMin : CONFIG.core.rotMin;
 /* V1.86.6 吃完留下的東西：果核、肉骨頭、魚骨、各種果皮果殼 */
 const CORE_KINDS = ['core', 'poop', 'bone', 'fbone', 'banana', 'melonw', 'melon', 'dragon', 'coconut', 'nut', 'potato'];
 const LEFT_NAME = { core: '果核', poop: '大便', bone: '肉骨頭', fbone: '魚骨', banana: '香蕉皮', melonw: '西瓜皮', melon: '哈密瓜皮', dragon: '火龍果皮', coconut: '椰子殼', nut: '堅果殼', potato: '地瓜皮' };
-function addCore(st, x, now = Date.now(), v = 'yard', k = 'core') { st.cores.push({ x: clamp(x, 4, 124), at: now, v: v === 'room' ? 'room' : 'yard', k: CORE_KINDS.includes(k) ? k : 'core' }); while (st.cores.length > CONFIG.core.max) st.cores.shift(); }
+function addCore(st, x, now = Date.now(), v = 'yard', k = 'core') { st.cores.push({ x: clamp(x, 4, 124), at: now, v: ['room', 'lounge'].includes(v) ? v : 'yard', k: CORE_KINDS.includes(k) ? k : 'core' }); while (st.cores.length > CONFIG.core.max) st.cores.shift(); }
 const isRotten = (c, now = Date.now()) => now - c.at >= rotMin(c) * MIN;
 function clearCore(st, i, now = Date.now()) { const c = st.cores[i]; if (!c) return null; applyTime(st, now); const k = st.cores.indexOf(c); if (k >= 0) st.cores.splice(k, 1); st.cleanups++; if (st.hatched) st.path.metal += 1; return { rotten: isRotten(c, now), kind: c.k }; }
 
@@ -1258,22 +1273,44 @@ function fosterSwap(st, j, now = Date.now()) {
   return { ok: true, msg: `${st.name} 回來陪你了！${where === 'den' ? `${old} 搬進小窩休息` : where === 'foster' ? `${old} 去老爺爺家住（免費，隨時能接回）` : ''}` };
 }
 /* 圖鑑：這隻現在在哪裡 */
+/* V1.86.7 放生：小窩或老爺爺家的幻獸可以放生（回到大自然，不能找回）；身上的寶物放回背包 */
+function releasePet(st, where, i, now = Date.now()) {
+  const L = where === 'foster' ? (st.foster || []) : st.roster, p = L[i]; if (!p) return { ok: false, msg: '找不到這隻' }; if (inNest(p, now)) return { ok: false, msg: `${p.name} 正在愛的小窩裡，等牠出來再說` };
+  for (const k of [...(p.relics || [])]) unequipRelic(st, p, k);
+  const id = gidOf(p); L.splice(i, 1); if (st.emberOn === p.seed) st.emberOn = null;
+  const e = (st.dex || []).find(x => x.id === id); if (e) e.rel = 1;
+  journal(st, now, `${p.name} 被放生，回到大自然了 🍃`); return { ok: true, msg: `🍃 ${p.name} 回到大自然了，祝牠一路平安`, p };
+}
 function whereIs(st, id, now = Date.now()) {
   if (st.hatched && gidOf(st) === id) return inNest(st, now) ? 'nest' : 'cur';
   if (st.pair && gidOf(st.pair) === id) return inNest(st.pair, now) ? 'nest' : 'pair';
   if (st.roster.some(p => gidOf(p) === id)) return st.roster.some(p => gidOf(p) === id && inNest(p, now)) ? 'nest' : 'den';
   if ((st.foster || []).some(p => gidOf(p) === id)) return 'foster';
-  return 'gone';
+  return (st.dex || []).some(e => e.id === id && e.rel) ? 'released' : 'gone';
 }
 /* V1.86.2 找回以前告別的幻獸：照圖鑑的紀錄請老爺爺找回來（經驗回到那個階段的起點） */
 function ownedIds(st) { const L = []; if (st.hatched) L.push(gidOf(st)); if (st.pair) L.push(gidOf(st.pair)); for (const p of st.roster) L.push(gidOf(p)); for (const p of st.foster || []) L.push(gidOf(p)); return new Set(L); }
-function lostPets(st) { const own = ownedIds(st); return (st.dex || []).filter(e => e.id && !own.has(e.id) && e.stage && !['egg', 'baby'].includes(e.stage) && e.petName); }
+function lostPets(st) { const own = ownedIds(st); return (st.dex || []).filter(e => e.id && !e.rel && !own.has(e.id) && e.stage && !['egg', 'baby'].includes(e.stage) && e.petName); }
 function recallLost(st, id, now = Date.now()) {
   const e = lostPets(st).find(x => x.id === id); if (!e) return { ok: false, msg: '找不到這隻（可能已經在你身邊了）' };
   const o = { hatched: true, name: e.petName, stage: e.stage, route: e.route || null, hatchedAt: e.at || now, xp: (CONFIG.stages[e.stage] || {}).xp || 0, bond: 0, hunger: 80, mood: 80, clean: 80, energy: 80, lastTick: now };
   if (id.startsWith('x:')) o.genes = id.slice(2); else if (id.startsWith('g:')) o.seed = +id.slice(2); else o.seed = null;
   const p = sanitizePet(o, now); p.fosterPaid = true; (st.foster || (st.foster = [])).push(p); journal(st, now, `神秘老爺爺幫忙找回了 ${p.name}`);
   return { ok: true, msg: `🏡 神秘老爺爺找到「${p.name}」了！牠在老爺爺家等你，到小窩就能接回來`, p };
+}
+/* V1.86.7 休息室：投餵機升級後，在休息的寵物每小時慢慢長經驗（不會升到超過上限、在愛的小窩裡的不算） */
+function loungeTick(st, now = Date.now()) {
+  const L = st.lounge; if (!L) return; if (!L.at || now < L.at) { L.at = now; return; }
+  const xpH = CONFIG.lounge[L.lv - 1].xpH; if (!xpH) { L.at = now; return; }
+  const n = Math.floor((Math.min(now - L.at, CONFIG.offlineCapHours * H) / H) * xpH); if (n < 1) return;
+  L.at += n / xpH * H; if (now - L.at > CONFIG.offlineCapHours * H) L.at = now;
+  for (const p of st.roster) if (p.hatched !== false && !inNest(p, now)) p.xp = Math.min((p.xp || 0) + n, XPK * (MAX_LV - 1) ** 2);
+}
+function upgradeLounge(st, now = Date.now()) {
+  const L = st.lounge, nx = CONFIG.lounge[L.lv]; if (!nx) return { ok: false, msg: '已經是最好的投餵機了' };
+  if (st.coins < nx.cost) return { ok: false, msg: `金幣不足（需要 ${nx.cost}）` };
+  loungeTick(st, now); st.coins -= nx.cost; L.lv++; L.at = now; journal(st, now, `休息室換成「${nx.name}」投餵機`);
+  return { ok: true, msg: `🎉 休息室換成「${nx.name}」投餵機了！休息的夥伴會慢慢變強` };
 }
 function swapPet(st, i, now = Date.now()) {
   const p = st.roster[i]; if (!p) return { ok: false, msg: '小窩裡沒有這隻' };
@@ -1530,8 +1567,8 @@ function wrapStats(api) {
 const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars, dayKey, hourIn, level, rng, makeGenome, CLASSIC_G, encodeGenome, decodeGenome, breedGenome,
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
-  plotState, plant, harvest, buySeed, buyDecor, placeDecor, buyItem, useCandy,
-  toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, PET_NAMES, CORE_KINDS, LEFT_NAME, guideStep, guideDo, fosterSwap, whereIs, inNest, loveTick, moveOut, eggReady, lostPets, recallLost, ownedIds, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
+  plotState, plant, harvest, buySeed, buyDecor, placeDecor, loungeTick, upgradeLounge, buyItem, useCandy,
+  toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, releasePet, PET_NAMES, CORE_KINDS, LEFT_NAME, guideStep, guideDo, fosterSwap, whereIs, inNest, loveTick, moveOut, eggReady, lostPets, recallLost, ownedIds, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, selectRod, allPets, giveEmber, emberShare, setTeam, TRAIN_TIER, trainLvOf, trainTier, trainLvUp, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 Object.assign(API, { EARN_NAME, SPEND_NAME, BADGES, BADGE, statsOf, statAdd, statVal, checkBadges, playTick, weekKey, sumOf }); wrapStats(API);
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PFCore = API;
