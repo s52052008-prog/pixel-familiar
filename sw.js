@@ -36,6 +36,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  if (new URL(req.url).pathname.endsWith('/push-config.json')) return;   // 推播伺服器網址：永遠拿最新的
 
   // 頁面：先試網路（最多等 3 秒），失敗就用快取 → 有網路時拿到最新版，離線也能開
   if (req.mode === 'navigate') {
@@ -61,5 +62,19 @@ self.addEventListener('fetch', e => {
     const hit = await cache.match(req, { ignoreSearch: true });
     const net = fetch(req).then(r => { if (r && r.ok) cache.put(req, r.clone()); return r; }).catch(() => null);
     return hit || (await net) || Response.error();
+  })());
+});
+
+// V1.86.9 推播通知：伺服器推過來的訊息 → 跳出通知；點通知 → 打開遊戲
+self.addEventListener('push', e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.title || '幻獸日記', { body: d.body || '牠在等你喔～', icon: './icon-192.png', badge: './icon-192.png', tag: d.tag || 'pf', renotify: true }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil((async () => {
+    const L = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of L) { if ('focus' in c) return c.focus(); }
+    return self.clients.openWindow('./');
   })());
 });

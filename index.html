@@ -606,7 +606,7 @@ function load(){
 let s,lastBackup=0,lastSave=0;
 /* 多分頁保護：如果別的分頁（例如捷徑開啟的新分頁）已經存了更新的進度，就採用它，不用舊資料覆蓋 */
 let WIPING=false;
-function save(){if(WIPING)return;
+function save(){if(WIPING)return;pushSoon();
  const cur=parse(store.get(SAVE_KEY));if(cur&&Number(cur.rev)>s.rev){s=sanitize(cur);lastSave=Date.now();renderUI();return}
  s.rev++;s.updated=Date.now();lastSave=s.updated;
  if(s.updated-lastBackup>60000){const prev=store.get(SAVE_KEY);if(prev&&parse(prev))store.set(BACKUP_KEY,prev);lastBackup=s.updated}
@@ -2109,6 +2109,48 @@ function wipeDialog(){if(modeBusy()){toast('先完成現在的互動吧');return
  $('wpGo').onclick=()=>{if($('wpIn').value.trim()!==W)return;WIPING=true;try{bgmStop()}catch(e){}
   try{const ks=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('pixel-familiar'))ks.push(k)}ks.forEach(k=>localStorage.removeItem(k))}catch(e){}
   for(const k of[SAVE_KEY,BACKUP_KEY,LEGACY_KEY])store.del(k);store.mem={};toast('🔄 已清除，重新開始…',2000);setTimeout(()=>location.reload(),600)}}
+/* ===== V1.86.9 手機推播通知：算好「幾點會發生什麼」送到推播伺服器，到時間推到手機 ===== */
+const PUSH={url:undefined,last:'',timer:0,busy:false};
+const NK=[['hungry','🍖 肚子很餓'],['egg','🥚 蛋孵好、小窩生蛋'],['farm','🌱 作物成熟'],['piggy','🐷 撲滿存滿'],['energy','⚡ 睡飽、體力回滿']];
+function pushId(){try{let id=localStorage.getItem('pf-push-id');if(!id||!/^[a-z0-9]{12,40}$/.test(id)){id=Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>'abcdefghijklmnopqrstuvwxyz0123456789'[b%36]).join('');localStorage.setItem('pf-push-id',id)}return id}catch(e){return null}}
+async function pushUrl(){if(PUSH.url!==undefined)return PUSH.url;try{const r=await fetch('push-config.json',{cache:'no-store'});const j=r.ok?await r.json():null;PUSH.url=j&&/^https:\/\//.test(j.url||'')?j.url.replace(/\/$/,''):null}catch(e){PUSH.url=null}return PUSH.url}
+const pushPost=async(path,body,keep)=>{const u=await pushUrl();if(!u)throw new Error('no server');const r=await fetch(u+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({id:pushId()},body)),keepalive:!!keep});return r.json()};
+const pushCan=()=>standalone()&&'serviceWorker'in navigator&&'PushManager'in window&&'Notification'in window;
+function quietShift(t){const d=new Date(t),h=d.getHours();if(h>=23||h<8){const q=new Date(t);if(h>=23)q.setDate(q.getDate()+1);q.setHours(8,0,0,0);return q.getTime()}return t}   // 晚上 11 點到早上 8 點不吵你，延到早上 8 點
+function pushPlan(){const N=s.settings.notify,K=N.k,now=Date.now(),out=[],nm=s.name||'牠',add=(k,at,body)=>{if(K[k]&&at>now+60e3)out.push({at:quietShift(at),body,tag:k})};
+ if(s.hatched&&!s.runaway){const c=JSON.parse(JSON.stringify(s));let hun=c.hunger<25,en=c.energy>=99,pig=(c.piggy||0)>=PC.piggyCap(c)-.5;
+  for(let t=now+10*60e3;t<=now+36*3600e3;t+=10*60e3){PC.applyTime(c,t);if(c.runaway)break;
+   if(!hun&&c.hunger<25){hun=true;add('hungry',t,`🍖 ${nm} 肚子好餓，快來餵牠！`)}
+   if(!en&&c.sleeping&&c.energy>=99){en=true;add('energy',t,`⚡ ${nm} 睡飽了，體力滿滿！`)}
+   if(!pig&&(c.piggy||0)>=PC.piggyCap(c)-.5){pig=true;add('piggy',t,'🐷 小豬撲滿存滿了，快來拿金幣')}}}
+ const rip=[];(s.plots||[]).forEach((p,i)=>{const q=PC.plotState(s,i,now);if(q&&!q.empty&&!q.ripe)rip.push(now+q.left)});rip.sort((a,b)=>a-b);let lastF=0;for(const t of rip)if(t-lastF>20*60e3){add('farm',t,'🌱 田裡的作物成熟了，可以收成囉');lastF=t}
+ if(s.loveEgg&&s.loveEgg.end>now)add('egg',s.loveEgg.end,'💞 愛的小窩裡生出一顆蛋了！');
+ (s.eggs||[]).forEach(e=>{if(e.ready>now)add('egg',e.ready,'🥚 有一顆蛋可以孵了！')});
+ return out.sort((a,b)=>a.at-b.at).slice(0,40)}
+function pushSoon(){if(!s.settings||!s.settings.notify||!s.settings.notify.on)return;clearTimeout(PUSH.timer);PUSH.timer=setTimeout(()=>pushSync(),20000)}
+async function pushSync(force,keep){if(!s.settings.notify.on||!pushCan())return;let items;try{items=pushPlan()}catch(e){return}const h=JSON.stringify(items.map(i=>[Math.round(i.at/60e3),i.tag]));if(!force&&h===PUSH.last)return;
+ try{const r=await pushPost('/plan',{items},keep);if(r&&r.ok)PUSH.last=h;else if(r&&r.msg==='no sub'){await pushSubscribe(true)}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&s.settings.notify&&s.settings.notify.on){clearTimeout(PUSH.timer);pushSync(false,true)}});
+async function pushSubscribe(quiet){const u=await pushUrl();if(!u)throw new Error('通知伺服器還沒架好');const reg=await navigator.serviceWorker.ready;
+ let sub=await reg.pushManager.getSubscription();if(!sub){const k=(await (await fetch(u+'/vapid')).json()).key,raw=atob(k.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((k.length+3)%4)),key=Uint8Array.from(raw,c=>c.charCodeAt(0));sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key})}
+ const r=await pushPost('/sub',{sub:sub.toJSON()});if(!r||!r.ok)throw new Error('伺服器沒有回應');PUSH.last='';return true}
+async function notifyDialog(){const N=s.settings.notify,can=pushCan(),url=await pushUrl(),perm=('Notification'in window)?Notification.permission:'none';
+ let body;
+ if(!standalone())body=`<p>通知只有「加入主畫面」的版本收得到。</p><p class="small">用 Safari 打開 <b>${HOME_URL}</b> → 下方「分享」→「加入主畫面」，再從主畫面的圖示進遊戲，就能開啟通知。</p>`;
+ else if(!can)body='<p>這支手機的系統版本太舊，收不到網頁通知（需要 iOS 16.4 以上）。</p>';
+ else if(!url)body='<p>通知伺服器還沒架好，等架好之後這裡就能開啟。</p>';
+ else if(perm==='denied')body='<p>你之前按了「不允許」。</p><p class="small">請到 iPhone 的「設定」→「通知」→ 找到「幻獸日記」→ 打開「允許通知」，再回來這裡。</p>';
+ else body=`<p>${N.on?'🔔 通知已開啟，下面可以選要收哪些：':'牠肚子餓、蛋孵好、作物成熟的時候，手機會跳通知叫你。'}</p>
+<div id="nkList" style="display:grid;gap:6px;margin:8px 0">${NK.map(([k,t])=>`<button class="btn${N.k[k]?' pri':''}" data-nk="${k}" style="margin:0;text-align:left">${N.k[k]?'✅':'⬜'} ${t}</button>`).join('')}</div>
+<p class="small">🌙 晚上 11 點到早上 8 點不會吵你，會等到早上再通知。</p>
+<div class="row">${N.on?'<button class="btn" id="nTest">📨 傳一則測試</button><button class="btn" id="nOff">🔕 關閉通知</button>':'<button class="btn pri" id="nOn">🔔 開啟通知</button>'}</div>`;
+ openModal('🔔 手機通知',body);
+ document.querySelectorAll('[data-nk]').forEach(b=>b.onclick=()=>{const k=b.dataset.nk;N.k[k]=!N.k[k];save();sfx('tap');pushSync(true);notifyDialog()});
+ if($('nOn'))$('nOn').onclick=async()=>{unlockAudio();sfx('tap');try{const p=await Notification.requestPermission();if(p!=='granted'){toast('沒有允許通知，之後可以到 iPhone 設定裡打開',3200);notifyDialog();return}
+   $('nOn').disabled=true;$('nOn').textContent='設定中…';await pushSubscribe();N.on=true;save();await pushSync(true);await pushPost('/test',{});toast('🔔 通知開好了！等一下會收到一則測試通知',3200);sfx('level');notifyDialog()}catch(e){toast('❌ 開啟失敗：'+(e.message||e),3500);notifyDialog()}};
+ if($('nTest'))$('nTest').onclick=async()=>{sfx('tap');try{const r=await pushPost('/test',{});toast(r&&r.ok?'📨 已送出，等一下就會跳出來':'❌ 沒送成功，試試關掉再重開通知',3000)}catch(e){toast('❌ 連不到通知伺服器',3000)}};
+ if($('nOff'))$('nOff').onclick=async()=>{sfx('tap');N.on=false;save();try{await pushPost('/off',{});const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub)await sub.unsubscribe()}catch(e){}toast('🔕 通知關掉了');notifyDialog()}}
+setTimeout(()=>{if(s.settings.notify&&s.settings.notify.on)pushSync(true)},4000);
 function menuDialog(){
  const snd=()=>s.settings.sound?'🔊 音效：開':'🔇 音效：關',mus=()=>musicOn()?'🎵 音樂：開':'🔇 音樂：關',mo=()=>s.settings.reducedMotion?'🐢 減少動畫：開':'✨ 減少動畫：關';
  openModal('⚙️ 選單',`
@@ -2117,11 +2159,12 @@ function menuDialog(){
 <div class="row"><button class="btn" id="mSound">${snd()}</button><button class="btn" id="mMusic">${mus()}</button><button class="btn" id="mMotion">${mo()}</button></div>
 <p style="margin-top:10px"><b>🪄 金手指</b></p><div class="row"><input id="mCheat" placeholder="輸入密碼" autocomplete="off" autocapitalize="off" style="flex:1;min-width:0;font-size:16px;padding:8px;border:3px solid var(--line)"><button class="btn" id="mCheatGo">確定</button></div>
 <div class="row"><button class="btn" id="mBasketM">🧺 蛋籃（${s.eggs.length}）</button></div>
+<div class="row"><button class="btn" id="mNotify">🔔 手機通知：${s.settings.notify.on?'開':'關'}</button></div>
 <div class="row"><button class="btn" id="mGuide">📖 新手手冊</button><button class="btn" id="mUpdate">🔄 檢查更新</button></div>
 <div class="row"><button class="btn pri" id="mReset">🥚 迎接新的蛋（🪙 ${PC.eggPrice(s)}）</button></div>
 <div class="row" style="margin-top:14px"><button class="btn" id="mWipe" style="border-color:#a03a2a;color:#ffb0a0">🔄 全部重新開始</button></div>
 <p class="small" style="margin-top:12px">版本 V${VERSION}｜存檔位置：${standalone()?'主畫面 App':'瀏覽器'}（${location.host||'本機'}）${store.ok?'':'｜⚠️ 無法寫入'}</p>`);
- $('mWipe').onclick=wipeDialog;$('mGuide').onclick=guideListDialog;$('mOwner').onclick=()=>ownerDialog(false);$('mRename').onclick=()=>renameDialog(false);if($('mQuiz'))$('mQuiz').onclick=()=>quizIntro(false);$('mHelp').onclick=helpDialog;$('mSave').onclick=saveDialog;$('mBasketM').onclick=basketDialog;
+ $('mWipe').onclick=wipeDialog;$('mNotify').onclick=notifyDialog;$('mGuide').onclick=guideListDialog;$('mOwner').onclick=()=>ownerDialog(false);$('mRename').onclick=()=>renameDialog(false);if($('mQuiz'))$('mQuiz').onclick=()=>quizIntro(false);$('mHelp').onclick=helpDialog;$('mSave').onclick=saveDialog;$('mBasketM').onclick=basketDialog;
  $('mSound').onclick=()=>{s.settings.sound=!s.settings.sound;save();unlockAudio();sfx('tap');$('mSound').textContent=snd()};
  $('mMusic').onclick=()=>{s.settings.music=!musicOn();if(!musicOn())bgmStop(.4);save();unlockAudio();sfx('tap');$('mMusic').textContent=mus()};
  $('mCheatGo').onclick=()=>{const c=$('mCheat').value.trim().toLowerCase().replace(/\s+/g,' ');$('mCheat').value='';

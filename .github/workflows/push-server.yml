@@ -1,0 +1,43 @@
+# 幻獸日記 推播伺服器：部署到 Cloudflare Workers（免費）
+# 觸發方式：GitHub 網頁 → Actions → 「推播伺服器部署」→ Run workflow
+# 需要的 Secret（Settings → Secrets and variables → Actions）：
+#   CLOUDFLARE_API_TOKEN   Cloudflare 的 API 金鑰（用「Edit Cloudflare Workers」範本建立）
+name: 推播伺服器部署
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - name: 檢查 Secret 有沒有設定
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "::error::還沒設定 CLOUDFLARE_API_TOKEN（Settings → Secrets and variables → Actions）"; exit 1; fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 找帳號、建立儲存空間
+        run: node push-server/setup.mjs
+      - name: 部署推播伺服器
+        working-directory: push-server
+        run: npx --yes wrangler@3 deploy
+      - name: 測試伺服器
+        run: |
+          for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            if curl -fsS "$PUSH_URL/vapid" | grep -q key; then echo "✅ 伺服器正常：$PUSH_URL"; break; fi
+            echo "等網址生效…"; sleep 15
+          done
+      - name: 把伺服器網址告訴遊戲
+        run: |
+          echo "{\"url\":\"$PUSH_URL\"}" > push-config.json
+          git config user.name "github-actions"; git config user.email "github-actions@users.noreply.github.com"
+          git add push-config.json
+          git diff --cached --quiet || (git commit -m "推播伺服器網址" && git push)
+          echo "🎉 完成！回遊戲 → ⚙️ 選單 → 🔔 手機通知 → 開啟通知"
