@@ -1268,6 +1268,7 @@ const ACC_TAB={
  bird0:{ht:23,cx:22,hw:18,ey:32,ew:11},bird1:{ht:20,cx:19,hw:16,ey:25,ew:12},bird2:{ht:16,cx:19,hw:18,ey:24,ew:15},bird3:{ht:14,cx:22,hw:16,ey:22,ew:13},bird4:{ht:16,cx:22,hw:14,ey:22,ew:12},
  elec0:{ht:29,cx:22,hw:18,ey:35,ew:15},elec1:{ht:19,cx:18,hw:16,ey:27,ew:11},elec2:{ht:16,cx:16,hw:18,ey:24,ew:13},elec3:{ht:16,cx:14,hw:16,ey:23,ew:10},elec4:{ht:18,cx:16,hw:15,ey:25,ew:11},
  metal0:{ht:23,cx:20,hw:20,ey:31,ew:12},metal1:{ht:22,cx:14,hw:14,ey:30,ew:9},metal2:{ht:21,cx:13,hw:14,ey:28,ew:9},metal3:{ht:18,cx:13,hw:14,ey:25,ew:9},metal4:{ht:17,cx:14,hw:15,ey:24,ew:12}};
+const ACC_PFIX={};   // 冠宏用「裝飾調整器」細修的：ACC_PFIX[長相][裝飾]=[左右,上下,大小]
 function accBox(S,fi){S.box=S.box||{};if(S.box[fi])return S.box[fi];let d;try{d=S.cv.getContext('2d').getImageData(fi*CELL,0,CELL,CELL).data}catch(e){return null}let t=-1,b=-1,l=99,r=-1;
  for(let y=0;y<CELL;y++)for(let x=0;x<CELL;x++)if(d[(y*CELL+x)*4+3]>110){if(t<0)t=y;b=y;l=Math.min(l,x);r=Math.max(r,x)}return S.box[fi]=t<0?null:{t,b,l,r}}
 function accAnchor(S,fi){S.anc=S.anc||{};if(S.anc[fi]!==undefined)return S.anc[fi];const T=ACC_TAB[S.art||''];let A;
@@ -1283,6 +1284,7 @@ function drawAcc(c,S,fi,x,y,w,flip,list,adj,layer='front'){if(!list||!list.lengt
   else if(it.slot==='face'){aw=Math.max(A.ex1-A.ex0+5,A.hw*.62)*z;cx=A.cx;by=A.ey+im.height*(aw/im.width)*.55}
   else if(it.slot==='mouth'){aw=A.hw*.5*z;cx=A.cx-A.hw*.3;by=A.mouth+3}
   else{aw=A.hw*.62*z;cx=A.cx;by=A.ny+im.height*(aw/im.width)*.75}
+  {const P=(ACC_PFIX[S.art||'']||{})[id];if(P){cx+=P[0];by+=P[1];aw*=1+P[2]*.05}}
   const ah=im.height*(aw/im.width);cx+=J[0];by+=J[1];
   const dw=Math.max(4,Math.round(aw*k)),dh=Math.max(3,Math.round(ah*k)),px=Math.round(flip?x+(CELL-cx)*k-dw/2:x+cx*k-dw/2),py=Math.round(y+by*k-dh);
   // 前層只畫下半部（帽緣）；後層畫整頂
@@ -1434,7 +1436,7 @@ function draw(now){
   else if(e<3.1){ctx.fillStyle='#ffffff';ctx.globalAlpha=1-(e-2.6)/.5;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;ctx.drawImage(sheet(evo.to).cv,0,0,CELL,CELL,PX,PET_Y,CELL,CELL)}
   else{const done=evo.done;evo=null;done&&done()}}
  else{drawAura(ctx,S,fi,PX,PET_Y+LIFT,petFace===1,auraOf(s),now);if(s.hatched)drawAcc(ctx,S,fi,PX,PET_Y+LIFT,CELL,petFace===1,s.acc,s.accAdj,'back');if(petFace===1){ctx.save();ctx.translate(PX+CELL,0);ctx.scale(-1,1);ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,0,PET_Y+LIFT,CELL,CELL);ctx.restore()}   // 往右走時轉身，不會倒退走
- else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,PX,PET_Y+LIFT,CELL,CELL);if(s.hatched)drawAcc(ctx,S,fi,PX,PET_Y+LIFT,CELL,petFace===1,s.acc,s.accAdj)}
+ else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,PX,PET_Y+LIFT,CELL,CELL);if(s.hatched)drawAcc(ctx,S,fi,PX,PET_Y+LIFT,CELL,petFace===1,s.acc,s.accAdj);if(RAINBOW)drawRainbow(now,S,fi,PX,PET_Y+LIFT)}
  if(!gone&&!evo&&s.hatched)drawStatusFx(now,S,fi,PX,LIFT,key);
 
  if(!gone&&!evo&&s.hatched)drawPick(now,key,LIFT);
@@ -3450,9 +3452,15 @@ ${b?`<button class="btn pri" data-me="${k}:ck" style="margin:0;padding:4px 8px">
    if(r.gold){playAnim('happy');sfx('evolve');flashUntil=performance.now()+800;spawn('star',16,{y:66,vy:-30,jx:60,life:1.6,stagger:.04});say(`✨ ${s.name} 全身閃閃發光！經驗 +${r.xp}（光會維持一整天）`);afterChange(x0);return}
    playAnim('eat');sfx('eat');spawn('heart',3,{y:70,life:1.1});const E=r.eff;say(`😋 好好吃！心情 +${E.mood+r.love}${r.love?'（最愛吃蘑菇了！）':''}、飽食 +${E.hunger}、體力 +${E.energy}${r.xp?`、經驗 +${r.xp}`:''}${r.buff?`\n💪 下一場戰鬥${r.buff==='atk'?'攻擊':'防禦'}力 +5%`:''}`);afterChange(x0)};
   if(k==='mushG'&&t!=='ck'&&!s.goldKnown)confirmBox('🌟 吃金色蘑菇？','不知道會發生什麼事…想吃看看嗎？','吃吃看！',()=>{go()});else go()})}
-let DIZZY=0;function mushSick(){DIZZY=performance.now()+5000;playAnim('sad');sfx('no');buzz(80);say(`🤮 嘔…${s.name} 吃到毒蘑菇，中毒了！頭好暈…（心情 -30、體力歸零）`);
- for(let i=0;i<2;i++)setTimeout(()=>{try{PC.addCore(s,petX+16+Math.random()*16,Date.now(),curView(),'poop');save()}catch(e){}},1800+i*1200);spawn('drop',8,{y:76,vy:-10,jx:20,life:1.2,stagger:.1})}
-function drawCores(now){const v=curView(),ms=Date.now();s.cores.forEach((c,i)=>{if((c.v||'yard')!==v)return;const rot=PC.isRotten(c,ms),poo=c.k==='poop',ic=ICV[poo?(rot?'poopRot':'poop'):c.k==='bone'||(c.k==='fbone'&&!ICV.peel_fbone)?(rot?'boneRot':'bone'):ICV['peel_'+c.k]?('peel_'+c.k+(rot?'Rot':'')):(rot?'coreRot':'core')];
+let DIZZY=0;function mushSick(){DIZZY=performance.now()+5000;RAINBOW=performance.now();playAnim('sad');sfx('no');buzz(80);say(`🤮 嘔…${s.name} 吃到毒蘑菇，中毒了！頭好暈…（心情 -30、體力歸零）`);
+ for(let i=0;i<2;i++)setTimeout(()=>{try{PC.addCore(s,petX+16+Math.random()*16,Date.now(),curView(),'poop');const c=s.cores[s.cores.length-1];if(c&&c.k==='poop')c.g=1;save()}catch(e){}},2600+i*1200)}
+/* 🌈 吐彩虹：從嘴巴噴出一道彩虹流到地上 */
+let RAINBOW=0;function drawRainbow(now,S,fi,PX,PY){const t=(now-RAINBOW)/1000;if(!RAINBOW||t>2.4)return;const A=accAnchor(S,fi);if(!A)return;const fl=petFace===1,dir=fl?1:-1;
+ const mx=fl?PX+(CELL-(A.cx-A.hw*.25)):PX+(A.cx-A.hw*.25),my=PY+A.mouth,gx=mx+dir*16,gy=PET_Y+46,grow=Math.min(1,t/.35),fade=t>1.9?1-(t-1.9)/.5:1,C=['#ff5a5a','#ffa040','#ffe066','#6fd86a','#5ab0ff','#a070ff'];
+ ctx.save();ctx.globalAlpha=fade;for(let k=0;k<=1;k+=.02){if(k>grow)break;const x=mx+(gx-mx)*k+dir*Math.sin(k*Math.PI)*6,y=my+(gy-my)*k*k;C.forEach((c,j)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(x+(j-2.5)*(1-k*.3)*dir*.0),Math.round(y)+j-3,2,1)})}
+ if(grow>=1){C.forEach((c,j)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(gx-6+j*2),gy-1,2,1)})}ctx.restore()}
+const GREEN_POO={};function greenPoo(im){if(!im)return im;if(GREEN_POO[im.src||im.width])return GREEN_POO[im.src||im.width];const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);x.globalCompositeOperation='source-atop';x.fillStyle='rgba(90,200,60,.62)';x.fillRect(0,0,c.width,c.height);return GREEN_POO[im.src||im.width]=c}   // 中毒拉的便便是綠色的
+function drawCores(now){const v=curView(),ms=Date.now();s.cores.forEach((c,i)=>{if((c.v||'yard')!==v)return;const rot=PC.isRotten(c,ms),poo=c.k==='poop',ic0=ICV[poo?(rot?'poopRot':'poop'):c.k==='bone'||(c.k==='fbone'&&!ICV.peel_fbone)?(rot?'boneRot':'bone'):ICV['peel_'+c.k]?('peel_'+c.k+(rot?'Rot':'')):(rot?'coreRot':'core')];const ic=poo&&c.g?greenPoo(ic0):ic0;
  ctx.drawImage(ic,Math.round(c.x-ic.width/2),100-ic.height+2);
  if(rot){if(!rm()){for(let k=0;k<2;k++){const a=now/300+k*3+i;ctx.drawImage(ICV.fly,Math.round(c.x+6*Math.cos(a)-2),Math.round(92+3*Math.sin(a*1.7)))}}
   ctx.fillStyle='#8ab84a';const w=Math.floor(now/250)%2;ctx.fillRect(c.x-3+w,88,1,2);ctx.fillRect(c.x+2-w,86,1,2)}})}

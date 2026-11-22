@@ -394,7 +394,7 @@ function sanitize(o, now = Date.now()) {
   r.view = ['room', 'lounge'].includes(o.view) ? o.view : 'yard';
   r.digest = Array.isArray(o.digest) ? o.digest.map(Number).filter(Number.isFinite).slice(0, 10) : [];
   r.toiletUses = int(o.toiletUses, 0, 0, 1e7); r.starveSince = num(o.starveSince, 0, 0, 9e15); r.runaway = o.runaway && typeof o.runaway === 'object' ? { at: num(o.runaway.at, 0, 0, 9e15), got: int(o.runaway.got, 0, 0, 1e7), lure: /^\d{4}-\d\d-\d\d$/.test(o.runaway.lure || '') ? o.runaway.lure : '' } : null; r.bondRestUntil = num(o.bondRestUntil, 0, 0, 9e15); r.ballUses = int(o.ballUses, 0, 0, CONFIG.ballLife - 1); r.ballBroken = o.ballBroken === true;
-  r.cores = Array.isArray(o.cores) ? o.cores.filter(c => c && typeof c === 'object').slice(-CONFIG.core.max).map(c => ({ x: num(c.x, 64, 4, 124), at: num(c.at, now, 0, 9e15), v: ['room', 'lounge'].includes(c.v) ? c.v : 'yard', k: CORE_KINDS.includes(c.k) ? c.k : 'core' })) : [];   // V1.86.6 肉骨頭、魚骨存檔後不會變成果核
+  r.cores = Array.isArray(o.cores) ? o.cores.filter(c => c && typeof c === 'object').slice(-CONFIG.core.max).map(c => ({ x: num(c.x, 64, 4, 124), at: num(c.at, now, 0, 9e15), v: ['room', 'lounge'].includes(c.v) ? c.v : 'yard', k: CORE_KINDS.includes(c.k) ? c.k : 'core', ...(c.g ? { g: 1 } : {}) })) : [];   // V1.86.6 肉骨頭、魚骨存檔後不會變成果核
   const bl = o.ball && typeof o.ball === 'object' ? o.ball : {}; r.ball = { best: int(bl.best, 0, 0, 99), goals: int(bl.goals, 0, 0, 1e7) };
   { const A = CONFIG.acc; r.accOwned = Array.isArray(o.accOwned) ? [...new Set(o.accOwned.filter(k => A[k]))] : [];
     const own = new Set(r.accOwned), seen = {}; r.acc = Array.isArray(o.acc) ? o.acc.filter(k => A[k] && own.has(k) && !seen[A[k].slot] && (seen[A[k].slot] = 1)) : [];
