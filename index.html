@@ -526,7 +526,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.87.0';
+const VERSION='1.87.1';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -2166,6 +2166,7 @@ const QUICK=['你的幻獸好可愛！','一起去冒險吧！','謝謝你的禮
 const pendGet=()=>{try{return JSON.parse(localStorage.getItem('pf-social-pend')||'[]')}catch(e){return[]}},pendSet=a=>{try{localStorage.setItem('pf-social-pend',JSON.stringify(a.slice(-20)))}catch(e){}};
 const agoTxt=t=>{const m=(Date.now()-t)/60000;return m<10?'剛剛在線上':m<60?`${Math.floor(m)} 分鐘前`:m<1440?`${Math.floor(m/60)} 小時前`:`${Math.floor(m/1440)} 天前`};
 /* ===== V1.88 好友第二批：對戰（朋友的幻獸分身）＋排行榜 ===== */
+const PVP_ON=false;   // 好友對戰：等招式系統做好再開
 const FT_KEYS=['level','el','max','atk','def','spd','dodge','critUp','dmgCut','regen','revive','spUp','stageX','tal','talLv','critRes','ultRes','sprout','endure','stunChance','aura','stage'];
 function ftSnap(){const me=PC.mkFighter(s.name,formKey(),lvl(),s.route,tier(),80,s.bond);PC.buffFighter(me,s);me.aura=auraOf(s);me.stage=s.stage;PC.talentOn(me,me.el,PC.talLv(s.stage));
  const o={};for(const k of FT_KEYS)if(me[k]!==undefined&&me[k]!==null)o[k]=typeof me[k]==='number'?Math.round(me[k]*1000)/1000:me[k];return o}
@@ -2188,9 +2189,9 @@ async function pvpEnd(win){B.over=true;bgmJingle(win===true);$('moves').classLis
  $('rRows').innerHTML=r&&r.ok?`<div class="rrow"><canvas class="picon" data-icon="star" data-s="3"></canvas><b>對戰積分</b><span class="rtag">現在 ${r.pts} 分</span><i>${r.d>=0?'+':''}${r.d}</i></div>`:`<p class="small" style="text-align:center">${esc(r&&r.msg||'連不到伺服器，這場不算分')}</p>`;
  $('rNote').innerHTML=win?'打贏比自己強的朋友，拿到的積分比較多':win===false?'輸了只扣積分，不會扣任何東西。訓練、戴寶物都能變強！':'中途逃走也算輸喔';
  $('rRows').querySelectorAll('canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));setTimeout(()=>{if(B&&B.over)$('bResult').classList.remove('hidden')},win?900:500);if(r&&r.ok){SOC.me=Object.assign(SOC.me||{},{pts:r.pts})}}
-function rankDialog(tab){tab=tab||'pts';const me={code:SOC.code,name:ownerName()+'（我）',card:myCard(),pts:(SOC.me&&SOC.me.pts)??1000,w:(SOC.me&&SOC.me.w)||0,l:(SOC.me&&SOC.me.l)||0,mine:1};
+function rankDialog(tab){tab=tab||(PVP_ON?'pts':'lv');const me={code:SOC.code,name:ownerName()+'（我）',card:myCard(),pts:(SOC.me&&SOC.me.pts)??1000,w:(SOC.me&&SOC.me.w)||0,l:(SOC.me&&SOC.me.l)||0,mine:1};
  const L=[me,...SOC.friends],T={pts:['⚔️ 對戰積分',x=>x.pts??1000,x=>`${x.pts??1000} 分（${x.w||0} 勝 ${x.l||0} 敗）`],lv:['⭐ 等級',x=>(x.card.pet&&x.card.pet.lv)||0,x=>x.card.pet?`${x.card.pet.name} Lv.${x.card.pet.lv}`:'還沒孵蛋'],dex:['📖 圖鑑',x=>x.card.dex||0,x=>`${x.card.dex||0} 種`],adv:['🗺️ 冒險',x=>x.card.adv||0,x=>`打過第 ${x.card.adv||0} 關`]};
- const S=L.slice().sort((a,b)=>T[tab][1](b)-T[tab][1](a));
+ if(!PVP_ON)delete T.pts;const S=L.slice().sort((a,b)=>T[tab][1](b)-T[tab][1](a));
  openModal('🏆 好友排行榜',`<div class="row" style="flex-wrap:wrap;gap:4px">${Object.keys(T).map(k=>`<button class="btn${k===tab?' pri':''}" data-rk="${k}" style="margin:0;padding:6px 8px">${T[k][0]}</button>`).join('')}</div>
 ${S.map((x,i)=>`<div class="frow"${x.mine?' style="border-color:#ffe066"':''}><div style="font-size:22px;width:30px;text-align:center">${['🥇','🥈','🥉'][i]||i+1}</div><canvas data-rkk="${x.code||'me'}" width="48" height="48"></canvas><div class="fi"><b>${esc(x.name)}</b><div class="small">${T[tab][2](x)}</div></div></div>`).join('')}
 <div class="row"><button class="btn" id="rkBack">↩ 返回</button></div>`);
@@ -2223,7 +2224,7 @@ async function friendsDialog(){openModal('👥 好友','<p class="small">讀取�
  const P=pendGet(),F=SOC.friends;
  const pend=P.map((x,i)=>`<div class="frow"><div style="font-size:26px">💞</div><div class="fi"><b>${esc(x.name)}</b><div class="small">${x.kind==='mate'?`想讓「${esc(x.pet)}」跟 ${esc(s.name)} 配對`:'答應配對了，按「配對」拿蛋'}</div></div><button class="btn pri" data-pm="${i}">配對</button><button class="btn" data-px="${i}">✕</button></div>`).join('');
  const reqs=SOC.reqs.map(q=>`<div class="frow"><div style="font-size:26px">👋</div><div class="fi"><b>${esc(q.name||'朋友')}</b><div class="small">想加你好友</div></div><button class="btn pri" data-ok="${q.code}">同意</button><button class="btn" data-no="${q.code}">✕</button></div>`).join('');
- const list=F.map(f=>{const p=f.card&&f.card.pet;return`<div class="frow"><canvas data-fk="${f.code}" width="48" height="48"></canvas><div class="fi"><b>${esc(f.name)}</b><div class="small">${p?`${esc(p.name)} Lv.${p.lv||1}`:'還沒孵蛋'}・${agoTxt(f.seen)}</div>${f.card&&f.card.runaway?'<div class="small" style="color:#ff9a8a">😢 幻獸離家出走中，去幫忙找！</div>':''}<div class="small">⚔️ ${f.pts??1000} 分</div></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn pri" data-visit="${f.code}">🏠 拜訪</button><button class="btn" data-duel="${f.code}">⚔️ 挑戰</button></div></div>`}).join('');
+ const list=F.map(f=>{const p=f.card&&f.card.pet;return`<div class="frow"><canvas data-fk="${f.code}" width="48" height="48"></canvas><div class="fi"><b>${esc(f.name)}</b><div class="small">${p?`${esc(p.name)} Lv.${p.lv||1}`:'還沒孵蛋'}・${agoTxt(f.seen)}</div>${f.card&&f.card.runaway?'<div class="small" style="color:#ff9a8a">😢 幻獸離家出走中，去幫忙找！</div>':''}${PVP_ON?`<div class="small">⚔️ ${f.pts??1000} 分</div>`:''}</div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn pri" data-visit="${f.code}">🏠 拜訪</button>${PVP_ON?`<button class="btn" data-duel="${f.code}">⚔️ 挑戰</button>`:''}</div></div>`}).join('');
  openModal('👥 好友',`<p class="small" style="margin:0">我的好友碼</p><div class="row" style="align-items:center;margin-top:2px"><span class="fcode">${SOC.code||'…'}</span><button class="btn" id="frCopy">📋 複製</button></div>
 <div class="row"><input id="frIn" placeholder="輸入朋友的好友碼" maxlength="8" autocomplete="off" autocapitalize="characters" style="flex:1;min-width:0;font-size:18px;padding:8px;border:3px solid var(--line);text-transform:uppercase"><button class="btn pri" id="frAdd">加好友</button></div><div class="err" id="frErr"></div>${s.owner?'':'<div class="row"><button class="btn" id="frName">✏️ 設定你的名字（朋友會看到）</button></div>'}
 ${pend?`<p><b>💞 配對邀請</b></p>${pend}`:''}${reqs?`<p><b>👋 好友邀請</b></p>${reqs}`:''}
@@ -2263,7 +2264,7 @@ function visitCard(){const f=VISIT.f,ra=f.card&&f.card.runaway,p=f.card&&f.card.
  const c=$('vsCv'),x=c.getContext('2d');x.clearRect(0,0,48,48);if(VISIT.key)try{thumb(c,VISIT.key,'happy1')}catch(e){}
  const set=(id,t,ok)=>{const b=$(id);b.textContent=t;b.disabled=!ok};
  set('vsPet',left('pet')>0?'✋ 摸摸':'✋ 摸過了',left('pet')>0&&!!p);set('vsWater',left('water')>0?(f.card.plots?`💧 澆水（${f.card.plots}）`:'💧 沒有田'):'💧 澆過了',left('water')>0&&f.card.plots>0);
- set('vsGift','🎁 送禮',left('gift')>0||left('daily')>0);set('vsMsg','💌 留言',left('msg')>0);set('vsBoard',`📜 留言板（${(f.board||[]).length}）`,true);set('vsMate','💞 配對',!!p&&left('mate')>0);set('vsDuel',left('duel')>0?'⚔️ 挑戰':'⚔️ 打完了',!!p&&left('duel')>0&&!ra);set('vsSearch',ra?(left('search')>0?'🔍 幫忙找':'🔍 找過了'):'🔍 不用找',!!ra&&left('search')>0);
+ set('vsGift','🎁 送禮',left('gift')>0||left('daily')>0);set('vsMsg','💌 留言',left('msg')>0);set('vsBoard',`📜 留言板（${(f.board||[]).length}）`,true);set('vsMate','💞 配對',!!p&&left('mate')>0);$('vsDuel').classList.toggle('hidden',!PVP_ON);set('vsDuel',left('duel')>0?'⚔️ 挑戰':'⚔️ 打完了',!!p&&left('duel')>0&&!ra);set('vsSearch',ra?(left('search')>0?'🔍 幫忙找':'🔍 找過了'):'🔍 不用找',!!ra&&left('search')>0);
  if(ra){$('vsSub').textContent=`😢 ${p?p.name:'牠'} 離家出走了！一起幫忙找：${fmtN(ra.got)} / ${fmtN(ra.need)}`;['vsPet','vsMate'].forEach(id=>$(id).disabled=true)}
  $('vsCard').classList.remove('hidden');pixifyDom($('vsCard'))}
 async function visitAct(kind,data){const f=VISIT.f;const r=await pushPost('/act',{code:f.code,kind,data}).catch(()=>null);if(!r||!r.ok){toast('❌ '+(r&&r.msg||'連不到伺服器'),3000);return null}f.used[kind]=(f.used[kind]||0)+1;visitCard();toast(r.msg,3000);return r}
