@@ -6,6 +6,11 @@ name: 推播伺服器部署
 
 on:
   workflow_dispatch:
+    inputs:
+      notice:
+        description: '要通知所有玩家的話（留空就不通知），例如：🆕 幻獸日記更新了！打開遊戲按「更新」'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -34,6 +39,14 @@ jobs:
             if curl -fsS "$PUSH_URL/vapid" | grep -q key; then echo "✅ 伺服器正常：$PUSH_URL"; break; fi
             echo "等網址生效…"; sleep 15
           done
+      - name: 通知所有玩家（有填才送）
+        if: ${{ github.event.inputs.notice != '' }}
+        env:
+          NOTICE: ${{ github.event.inputs.notice }}
+        run: |
+          node -e "process.stdout.write(JSON.stringify({id:process.env.GITHUB_RUN_ID,body:process.env.NOTICE}))" > bc.json
+          curl -fsS -X PUT "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/storage/kv/namespaces/$KV_ID/values/bc" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: text/plain" --data-binary @bc.json && echo "✅ 已排入通知（5 分鐘內送出；晚上 11 點到早上 8 點會等到早上）"
+          rm -f bc.json
       - name: 把伺服器網址告訴遊戲
         run: |
           echo "{\"url\":\"$PUSH_URL\"}" > push-config.json
