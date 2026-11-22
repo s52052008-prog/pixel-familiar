@@ -10,7 +10,7 @@ const MAX_ITEMS = 40, KEEP_DAYS = 30;
 const GIFT_OK = { food: 10, seeds: 10, candy: 5, potion: 5, fish: 5, cake: 3, coins: 500 };   // 可以送的東西、一次最多幾個
 const DAILY = [['food', 2], ['seeds', 2], ['candy', 1], ['coins', 30], ['potion', 1]];   // 每日免費小禮物（隨機一種）
 const GNAME = { food: '🍎 蘋果', seeds: '🌱 種子', candy: '🍬 糖果', potion: '🧪 回復藥水', fish: '🐟 魚', cake: '🍰 蛋糕', coins: '🪙 金幣' };
-const LIMIT = { pet: 1, water: 1, msg: 5, gift: 3, daily: 1, mate: 3, mateBack: 3, duel: 3 };   // 每天對同一個朋友最多幾次
+const LIMIT = { pet: 1, water: 1, msg: 5, gift: 3, daily: 1, mate: 3, mateBack: 3, duel: 3, search: 1 };   // 每天對同一個朋友最多幾次
 
 const enc = new TextEncoder();
 const b64u = buf => { let s = ''; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
@@ -76,6 +76,7 @@ export class Store extends DurableObject {
       CREATE TABLE IF NOT EXISTS inbox(n INTEGER PRIMARY KEY AUTOINCREMENT, t TEXT, f TEXT, kind TEXT, data TEXT, at INTEGER);
       CREATE TABLE IF NOT EXISTS board(n INTEGER PRIMARY KEY AUTOINCREMENT, t TEXT, f TEXT, text TEXT, at INTEGER);
       CREATE TABLE IF NOT EXISTS lim(k TEXT PRIMARY KEY, v INTEGER);
+      CREATE TABLE IF NOT EXISTS steps(id TEXT, day TEXT, n INTEGER, at INTEGER, PRIMARY KEY(id,day));
       CREATE INDEX IF NOT EXISTS inbox_t ON inbox(t); CREATE INDEX IF NOT EXISTS board_t ON board(t);`);
     for (const c of ['pts INTEGER DEFAULT 1000', 'w INTEGER DEFAULT 0', 'l INTEGER DEFAULT 0']) { try { this.sql.exec('ALTER TABLE users ADD COLUMN ' + c); } catch (_) {} }   // 第二批：對戰積分
   }
@@ -104,6 +105,14 @@ export class Store extends DurableObject {
     const url = new URL(req.url), P = url.pathname;
     if (P === '/cron') return this.cron();
     if (P === '/vapid') return json(req, { key: (await vapidKeys(this.env)).pub });
+    if (P === '/steps') {   // iPhone 捷徑送步數（GET）：先存著，遊戲打開時領走
+      const k = url.searchParams.get('k') || '', n = Math.floor(+String(url.searchParams.get('n') || '').replace(/[^0-9.]/g, '')), d = /^\d{4}-\d\d-\d\d$/.test(url.searchParams.get('d') || '') ? url.searchParams.get('d') : twDay(Date.now());
+      const txt = (t, st = 200) => new Response(t, { status: st, headers: { 'Content-Type': 'text/plain; charset=utf-8', ...cors(req) } });
+      if (!okId(k)) return txt('❌ 網址不對，請到遊戲的「👟 步數」重新複製', 400); if (!(n >= 0 && n <= 200000)) return txt('❌ 步數不對', 400);
+      this.ensure(k); this.sql.exec('INSERT INTO steps(id,day,n,at) VALUES(?,?,?,?) ON CONFLICT(id,day) DO UPDATE SET n=MAX(n,excluded.n), at=excluded.at', k, d, n, Date.now());
+      this.sql.exec('DELETE FROM steps WHERE at<?', Date.now() - 14 * 864e5);
+      return txt(`✅ 幻獸日記：已送出今天 ${n} 步，打開遊戲就會登記`);
+    }
     if (req.method !== 'POST') return json(req, { ok: true, name: 'pixel-familiar' });
     const b = await req.json().catch(() => ({})); if (!okId(b.id)) return json(req, { ok: false, msg: 'bad id' }, 400);
     const now = Date.now();
@@ -129,8 +138,9 @@ export class Store extends DurableObject {
       const sent = this.all('SELECT u.code, u.name FROM reqs r JOIN users u ON u.id=r.t WHERE r.f=? ORDER BY r.at DESC LIMIT 20', b.id);
       const inbox = this.all('SELECT i.n, i.kind, i.data, i.at, u.code, u.name FROM inbox i LEFT JOIN users u ON u.id=i.f WHERE i.t=? ORDER BY i.n LIMIT 50', b.id).map(r => ({ ...r, data: JSON.parse(r.data || '{}') }));
       if (inbox.length) this.sql.exec('DELETE FROM inbox WHERE t=? AND n<=?', b.id, inbox[inbox.length - 1].n);
+      const steps = this.all('SELECT day, n FROM steps WHERE id=? ORDER BY day', b.id); if (steps.length) this.sql.exec('DELETE FROM steps WHERE id=?', b.id);
       const board = this.all('SELECT b.text, b.at, u.name, u.code FROM board b LEFT JOIN users u ON u.id=b.f WHERE b.t=? ORDER BY b.n DESC LIMIT 30', b.id);
-      return json(req, { ok: true, code: me.code, me: this.pub(this.user(b.id)), friends, reqs, sent, inbox, board });
+      return json(req, { ok: true, code: me.code, me: this.pub(this.user(b.id)), friends, reqs, sent, inbox, board, steps });
     }
     const other = this.byCode(b.code);
     if (!other) return json(req, { ok: false, msg: '找不到這個好友碼，請再確認一次' });
@@ -168,7 +178,8 @@ export class Store extends DurableObject {
       const kind = String(b.kind), lim = LIMIT[kind]; if (!lim) return json(req, { ok: false, msg: 'bad kind' }, 400);
       const day = twDay(now), key = `${kind}:${b.id}:${other.id}:${day}`, pn = this.petName(other);
       let data = {}, push = '', msg = '';
-      if (kind === 'pet') { push = `✋ ${myName} 來你家摸了摸 ${pn}，牠好開心！`; msg = `✋ 摸了摸 ${pn}，牠很開心！`; }
+      if (kind === 'search') { push = `🔍 ${myName} 幫你一起找 ${pn}！又靠近一點了`; msg = `🔍 幫忙找 ${pn}，找到一些線索了！`; }
+      else if (kind === 'pet') { push = `✋ ${myName} 來你家摸了摸 ${pn}，牠好開心！`; msg = `✋ 摸了摸 ${pn}，牠很開心！`; }
       else if (kind === 'water') { push = `💧 ${myName} 幫你的田澆了水，作物長快一點了`; msg = '💧 幫忙澆水了！'; }
       else if (kind === 'msg') { const t = str(b.data && b.data.text, 60).trim(); if (!t) return json(req, { ok: false, msg: '留言是空的' }); data = { text: t }; push = `💌 ${myName}：${t}`; msg = '💌 留言送出了'; }
       else if (kind === 'gift') { const it = b.data && b.data.item, n = Math.floor(+(b.data && b.data.n)); if (!GIFT_OK[it] || !(n >= 1 && n <= GIFT_OK[it])) return json(req, { ok: false, msg: '不能送這個' }); data = { item: it, n }; push = `🎁 ${myName} 送你 ${GNAME[it]} ×${n}！`; msg = `🎁 送出 ${GNAME[it]} ×${n}`; }

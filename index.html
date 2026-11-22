@@ -436,7 +436,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
  <div id="arrPanel" class="hidden"><div id="arrHint"></div><div id="arrTray"></div><div class="row">
   <button class="btn ya" id="yaMinus">－ 縮小</button><button class="btn ya" id="yaPlus">＋ 放大</button><button class="btn ya" id="yaFlip">↔ 鏡像</button>
   <button class="btn" id="arrReset">↺ 恢復</button><button class="btn pri" id="arrDone">✅ 完成</button></div></div>
- <div id="vsCard" class="hidden"><div class="lgTop"><canvas id="vsCv" width="48" height="48"></canvas><div class="lgInfo"><b id="vsName"></b><div id="vsSub"></div></div></div><div class="vsBtns"><button class="btn" id="vsPet">✋ 摸摸</button><button class="btn" id="vsWater">💧 澆水</button><button class="btn" id="vsGift">🎁 送禮</button><button class="btn" id="vsMsg">💌 留言</button><button class="btn" id="vsBoard">📜 留言板</button><button class="btn" id="vsMate">💞 配對</button><button class="btn" id="vsDuel">⚔️ 挑戰</button></div><button class="btn pri" id="vsHome">🏠 回家</button></div>
+ <div id="vsCard" class="hidden"><div class="lgTop"><canvas id="vsCv" width="48" height="48"></canvas><div class="lgInfo"><b id="vsName"></b><div id="vsSub"></div></div></div><div class="vsBtns"><button class="btn" id="vsPet">✋ 摸摸</button><button class="btn" id="vsWater">💧 澆水</button><button class="btn" id="vsGift">🎁 送禮</button><button class="btn" id="vsMsg">💌 留言</button><button class="btn" id="vsBoard">📜 留言板</button><button class="btn" id="vsMate">💞 配對</button><button class="btn" id="vsDuel">⚔️ 挑戰</button><button class="btn" id="vsSearch">🔍 幫忙找</button></div><button class="btn pri" id="vsHome">🏠 回家</button></div>
  <div id="lgCard" class="hidden"><div class="lgTop"><canvas id="lgCv" width="48" height="48"></canvas><div class="lgInfo"><b id="lgName"></b><div id="lgSub"></div><div id="lgBars"></div></div><button class="lgx" id="lgClose" aria-label="關閉">✕</button></div><div class="row"><button class="btn" id="lgPet">✋ 摸摸牠</button><button class="btn pri" id="lgSwap">🔁 換牠出來陪你</button></div></div>
  <div id="infoSlot" class="wood">
   <div class="nameplate"><div class="nprow2"><img class="nleaf" src="sprites/ui/leaf.png" alt=""><div id="petname"></div><button id="npEdit" class="npedit" aria-label="改名">✏️</button><img class="nleaf r" src="sprites/ui/leaf.png" alt=""></div><div id="stageText" class="chips"></div><div id="traitText" class="chips"></div><div id="bondRow" class="chips"></div><div id="growText"></div><div id="alertLine" class="hidden"></div></div>
@@ -1857,7 +1857,7 @@ function renderUI(){if(s&&s.inv)PC.markSeen(s);
  $('petname').innerHTML=s.hatched?`${s.awake?'🌟星耀 ':''}${esc(s.name)}${sexMark(s)}　Lv.${lvl()}${tierN?' '+'✦'.repeat(Math.min(5,tierN)):''}`:F.name;$('npEdit').classList.toggle('hidden',!s.hatched);
  {const T=s.hatched&&PC.traitOf(s.route);$('traitText').innerHTML=T&&T.good?`<span class="chip good"><img class="mi" src="sprites/ui2/shield.png" alt="">${esc(T.good)}</span><span class="chip bad"><img class="mi" src="sprites/ui2/warn.png" alt="">${esc(T.bad)}</span>`:''}
  $('stageText').innerHTML=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome&&F.genome.el?' · 會孵出'+ROUTE_LABEL[F.genome.el]+'的新物種':''}`:[s.route?rIcon(s.route)+ROUTE_LABEL[s.route]:'',STAGE_NAME[s.stage],F.name+rar,`第 ${dayCount()} 天`].filter(Boolean).map(x=>`<span class="chip">${x}</span>`).join('');$('bondRow').innerHTML=s.hatched?(s.emberOn===s.seed&&s.emberOwned?'<span class="chip ember"><img class="mi" src="sprites/items/ic_ember.png" alt="">帶著經驗火種</span>':'')+bondRowHTML():'';
- $('growText').textContent=s.runaway?`😢 ${s.name}離家出走了！到「👟 步數」登記走路，找牠回來：${(s.runaway.got||0).toLocaleString()} / ${CONFIG.runaway.steps.toLocaleString()} 步`
+ $('growText').textContent=s.runaway?`😢 ${s.name}離家出走了！到「👟 步數」登記走路、或請好友來幫忙找：${(s.runaway.got||0).toLocaleString()} / ${CONFIG.runaway.steps.toLocaleString()} 步`
   :PC.inNest(s)?`💕 ${esc(s.name)} ${s.loveEgg&&s.loveEgg.away?'去朋友家的愛的小窩':'在愛的小窩裡'}，還要 ${fmtLeft(s.nestUntil-Date.now())}（可到「🪺 小窩」換別隻出來陪你）`:s.starveSince?`⚠️ 餓壞了！再 ${Math.max(0,Math.ceil((s.starveSince+CONFIG.runaway.starveHours*3600000-Date.now())/3600000))} 小時不餵，牠就會離家出走！`:'';$('growText').classList.toggle('hidden',!$('growText').textContent);
  {const al=$('alertLine'),t=!s.hatched?$('stageText').textContent:(s.runaway||s.starveSince)?$('growText').textContent:'';al.textContent='';al.classList.add('hidden')}   // V1.58 重要提示（孵蛋、離家出走）還是直接顯示
  $('stepInfo').innerHTML=`${MI('apple','🍎')}${s.inv.food} · ${MI('seed','🌱')}${s.inv.seeds}${s.inv.seeds2?' · '+MI('seed2','🌟')+s.inv.seeds2:''}${s.inv.candy?' · '+MI('candy','🍬')+s.inv.candy:''}${s.inv.potion?' · '+MI('potion','🧪')+s.inv.potion:''}${s.inv.potion2?' · '+MI('potion2','💖')+s.inv.potion2:''}${s.inv.soup?' · '+MI('soup','🍲')+s.inv.soup:''} · ${MI('shoe','👟')}${fmtN(s.steps.days[PC.dayKey(Date.now())]||0)} 步 · ${MI_UI('swords')}冒險 ${s.daily.adv}${s.eggs.length?' · 🧺 蛋 '+s.eggs.length:''}${s.hatched?` · ${MI('pig1','🐷')}${Math.floor(s.piggy||0)}/${PC.piggyCap(s)}`:''}`;
@@ -2197,7 +2197,7 @@ ${S.map((x,i)=>`<div class="frow"${x.mine?' style="border-color:#ffe066"':''}><d
  document.querySelectorAll('[data-rk]').forEach(b=>b.onclick=()=>{sfx('tap');rankDialog(b.dataset.rk)});$('rkBack').onclick=friendsDialog;
  document.querySelectorAll('[data-rkk]').forEach(c=>{const x=c.dataset.rkk==='me'?me:L.find(q=>q.code===c.dataset.rkk),p=x&&x.card&&x.card.pet;if(x&&x.mine&&s.hatched){thumb(c,formKey(),'happy1');return}if(p&&p.gene)try{thumb(c,petKey('x:'+p.gene,formCode(p.stage,p.route)),'happy1')}catch(e){}})}
 function myCard(){const D=s.decor,pl=(s.plots||[]).filter((p,i)=>{const q=PC.plotState(s,i,Date.now());return q&&!q.empty&&!q.ripe}).length;
- return{v:1,pet:s.hatched?{name:s.name,gene:encodeGenome(curGenome()),stage:s.stage,route:s.route,sex:s.sex,lv:lvl()}:null,ft:s.hatched?ftSnap():null,adv:Math.max(0,((s.adv&&s.adv.stage)||1)-1),decor:{placed:D.placed,pos:D.pos||{},flip:D.flip||{}},plots:pl,dex:(s.dex||[]).length,pets:PC.petCount(s),den:s.den.level}}
+ return{v:1,pet:s.hatched?{name:s.name,gene:encodeGenome(curGenome()),stage:s.stage,route:s.route,sex:s.sex,lv:lvl()}:null,ft:s.hatched?ftSnap():null,runaway:s.runaway?{got:s.runaway.got||0,need:CONFIG.runaway.steps}:null,adv:Math.max(0,((s.adv&&s.adv.stage)||1)-1),decor:{placed:D.placed,pos:D.pos||{},flip:D.flip||{}},plots:pl,dex:(s.dex||[]).length,pets:PC.petCount(s),den:s.den.level}}
 async function cardSync(force,keep){try{if(!await pushUrl())return;const c=myCard(),h=JSON.stringify(c)+ownerName();if(!force&&(h===SOC.cardH||Date.now()-SOC.cardAt<10*60e3))return;
  const r=await pushPost('/me',{name:ownerName(),card:c},keep);if(r&&r.ok){SOC.cardH=h;SOC.cardAt=Date.now();SOC.code=r.code}}catch(e){}}
 function cardSoon(){clearTimeout(SOC.timer);SOC.timer=setTimeout(()=>cardSync(),30000)}
@@ -2209,12 +2209,13 @@ function applyMail(m){const who=m.name||'朋友',d=m.data||{},now=Date.now();
  if(m.kind==='msg'){SOC.unread++;return`💌 ${who}：${d.text||''}`}
  if(m.kind==='gift'||m.kind==='daily'){const n=Math.max(0,Math.min(500,Math.floor(+d.n||0)));if(d.item==='coins')s.coins+=n;else if(GIFTS.some(g=>g[0]===d.item))s.inv[d.item]=(s.inv[d.item]||0)+n;return`🎁 ${who} 送你 ${GN(d.item)} ×${n}`}
  if(m.kind==='friend')return`👥 ${who} 跟你成為好友了！`;
+ if(m.kind==='search'){const q=PC.helpSearch(s,CONFIG.runaway.help,now);if(q.none)return`🔍 ${who} 想幫忙找，不過 ${s.name} 已經在家了`;return q.found?`🎉 ${who} 幫忙找到 ${s.name} 了！牠回家了！`:`🔍 ${who} 幫忙找 ${s.name}：${fmtN(q.got)} / ${fmtN(CONFIG.runaway.steps)}`}
  if(m.kind==='duel')return d.won?`🛡️ ${who} 的 ${d.pet||'幻獸'} 來挑戰，${s.name} 守住了！積分 +${d.d}`:`⚔️ ${who} 的 ${d.pet||'幻獸'} 打贏了 ${s.name}，積分 ${d.d}`;
  if(m.kind==='mate'||m.kind==='mateBack'){const P=pendGet();P.push({kind:m.kind,code:d.code,pet:d.pet||'',name:who,fcode:m.code,at:m.at});pendSet(P);return m.kind==='mate'?`💞 ${who} 邀請 ${s.name} 跟「${d.pet||'牠的幻獸'}」配對，到「好友」看看`:`💞 ${who} 答應配對了！到「好友」完成配對拿蛋`}
  return''}
 async function socialPoll(){try{if(!await pushUrl())return null;if(!SOC.cardAt)await cardSync(true);const r=await pushPost('/social',{});if(!r||!r.ok)return null;SOC.ok=true;
  Object.assign(SOC,{code:r.code,me:r.me||null,friends:r.friends||[],reqs:r.reqs||[],sent:r.sent||[],board:r.board||[]});
- const msgs=(r.inbox||[]).map(applyMail).filter(Boolean);if(msgs.length){save();renderUI();sfx('coin');msgs.forEach((t,i)=>setTimeout(()=>toast(t,3800),i*2600))}frDot();return r}catch(e){return null}}
+ const msgs=(r.inbox||[]).map(applyMail).filter(Boolean);for(const x of(r.steps||[])){const q=creditSteps(x.n,x.day);if(!q.err&&q.delta)msgs.push('👟 '+stepResultMsg(q).split('\n').join(' '))}if(msgs.length){save();renderUI();sfx('coin');msgs.forEach((t,i)=>setTimeout(()=>toast(t,3800),i*2600))}frDot();return r}catch(e){return null}}
 setTimeout(()=>socialPoll(),5000);setInterval(()=>{if(document.visibilityState==='visible')socialPoll()},120000);
 async function friendsDialog(){openModal('👥 好友','<p class="small">讀取中…</p>');const url=await pushUrl();
  if(!url){openModal('👥 好友',`<p>好友功能要用遊戲網址開才能用：<b>${HOME_URL}</b>（建議「加入主畫面」）。</p><div class="row"><button class="btn pri" id="frMate">💞 配對・蛋籃</button></div>`);$('frMate').onclick=mateDialog;return}
@@ -2222,7 +2223,7 @@ async function friendsDialog(){openModal('👥 好友','<p class="small">讀取�
  const P=pendGet(),F=SOC.friends;
  const pend=P.map((x,i)=>`<div class="frow"><div style="font-size:26px">💞</div><div class="fi"><b>${esc(x.name)}</b><div class="small">${x.kind==='mate'?`想讓「${esc(x.pet)}」跟 ${esc(s.name)} 配對`:'答應配對了，按「配對」拿蛋'}</div></div><button class="btn pri" data-pm="${i}">配對</button><button class="btn" data-px="${i}">✕</button></div>`).join('');
  const reqs=SOC.reqs.map(q=>`<div class="frow"><div style="font-size:26px">👋</div><div class="fi"><b>${esc(q.name||'朋友')}</b><div class="small">想加你好友</div></div><button class="btn pri" data-ok="${q.code}">同意</button><button class="btn" data-no="${q.code}">✕</button></div>`).join('');
- const list=F.map(f=>{const p=f.card&&f.card.pet;return`<div class="frow"><canvas data-fk="${f.code}" width="48" height="48"></canvas><div class="fi"><b>${esc(f.name)}</b><div class="small">${p?`${esc(p.name)} Lv.${p.lv||1}`:'還沒孵蛋'}・${agoTxt(f.seen)}</div><div class="small">⚔️ ${f.pts??1000} 分</div></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn pri" data-visit="${f.code}">🏠 拜訪</button><button class="btn" data-duel="${f.code}">⚔️ 挑戰</button></div></div>`}).join('');
+ const list=F.map(f=>{const p=f.card&&f.card.pet;return`<div class="frow"><canvas data-fk="${f.code}" width="48" height="48"></canvas><div class="fi"><b>${esc(f.name)}</b><div class="small">${p?`${esc(p.name)} Lv.${p.lv||1}`:'還沒孵蛋'}・${agoTxt(f.seen)}</div>${f.card&&f.card.runaway?'<div class="small" style="color:#ff9a8a">😢 幻獸離家出走中，去幫忙找！</div>':''}<div class="small">⚔️ ${f.pts??1000} 分</div></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn pri" data-visit="${f.code}">🏠 拜訪</button><button class="btn" data-duel="${f.code}">⚔️ 挑戰</button></div></div>`}).join('');
  openModal('👥 好友',`<p class="small" style="margin:0">我的好友碼</p><div class="row" style="align-items:center;margin-top:2px"><span class="fcode">${SOC.code||'…'}</span><button class="btn" id="frCopy">📋 複製</button></div>
 <div class="row"><input id="frIn" placeholder="輸入朋友的好友碼" maxlength="8" autocomplete="off" autocapitalize="characters" style="flex:1;min-width:0;font-size:18px;padding:8px;border:3px solid var(--line);text-transform:uppercase"><button class="btn pri" id="frAdd">加好友</button></div><div class="err" id="frErr"></div>${s.owner?'':'<div class="row"><button class="btn" id="frName">✏️ 設定你的名字（朋友會看到）</button></div>'}
 ${pend?`<p><b>💞 配對邀請</b></p>${pend}`:''}${reqs?`<p><b>👋 好友邀請</b></p>${reqs}`:''}
@@ -2257,18 +2258,19 @@ async function startVisit(code){const r=await pushPost('/visit',{code}).catch(()
  VISIT.r={x:PET_X,tx:null,face:0,act:'idle',until:performance.now()+1500,hop:0,dep:2,key:'v'};VISIT.on=true;roomKey=null;document.body.classList.add('visitMode');visitCard();renderUI();sfx('tap');
  say(p?`來到 ${r.name} 的家！${p.name} 在這裡～`:`來到 ${r.name} 的家！`,{log:false});try{fitStage()}catch(e){}}
 function endVisit(){VISIT.on=false;VISIT.f=null;roomKey=null;document.body.classList.remove('visitMode');$('vsCard').classList.add('hidden');renderUI();say('回到家了～',{log:false});try{fitStage()}catch(e){}socialPoll()}
-function visitCard(){const f=VISIT.f,p=f.card&&f.card.pet,U=f.used||{},L=f.limit||{},left=k=>(L[k]||0)-(U[k]||0);
+function visitCard(){const f=VISIT.f,ra=f.card&&f.card.runaway,p=f.card&&f.card.pet,U=f.used||{},L=f.limit||{},left=k=>(L[k]||0)-(U[k]||0);
  $('vsName').textContent=`🏠 ${f.name} 的家`;$('vsSub').textContent=p?`${p.name}${p.sex==='m'?' ♂':p.sex==='f'?' ♀':''}・Lv.${p.lv||1}・圖鑑 ${f.card.dex||0} 種`:'還沒孵蛋';
  const c=$('vsCv'),x=c.getContext('2d');x.clearRect(0,0,48,48);if(VISIT.key)try{thumb(c,VISIT.key,'happy1')}catch(e){}
  const set=(id,t,ok)=>{const b=$(id);b.textContent=t;b.disabled=!ok};
  set('vsPet',left('pet')>0?'✋ 摸摸':'✋ 摸過了',left('pet')>0&&!!p);set('vsWater',left('water')>0?(f.card.plots?`💧 澆水（${f.card.plots}）`:'💧 沒有田'):'💧 澆過了',left('water')>0&&f.card.plots>0);
- set('vsGift','🎁 送禮',left('gift')>0||left('daily')>0);set('vsMsg','💌 留言',left('msg')>0);set('vsBoard',`📜 留言板（${(f.board||[]).length}）`,true);set('vsMate','💞 配對',!!p&&left('mate')>0);set('vsDuel',left('duel')>0?'⚔️ 挑戰':'⚔️ 打完了',!!p&&left('duel')>0);
+ set('vsGift','🎁 送禮',left('gift')>0||left('daily')>0);set('vsMsg','💌 留言',left('msg')>0);set('vsBoard',`📜 留言板（${(f.board||[]).length}）`,true);set('vsMate','💞 配對',!!p&&left('mate')>0);set('vsDuel',left('duel')>0?'⚔️ 挑戰':'⚔️ 打完了',!!p&&left('duel')>0&&!ra);set('vsSearch',ra?(left('search')>0?'🔍 幫忙找':'🔍 找過了'):'🔍 不用找',!!ra&&left('search')>0);
+ if(ra){$('vsSub').textContent=`😢 ${p?p.name:'牠'} 離家出走了！一起幫忙找：${fmtN(ra.got)} / ${fmtN(ra.need)}`;['vsPet','vsMate'].forEach(id=>$(id).disabled=true)}
  $('vsCard').classList.remove('hidden');pixifyDom($('vsCard'))}
 async function visitAct(kind,data){const f=VISIT.f;const r=await pushPost('/act',{code:f.code,kind,data}).catch(()=>null);if(!r||!r.ok){toast('❌ '+(r&&r.msg||'連不到伺服器'),3000);return null}f.used[kind]=(f.used[kind]||0)+1;visitCard();toast(r.msg,3000);return r}
 function visitPetHop(){const r=VISIT.r,t=performance.now();r.tx=null;r.act='idle';r.hop=t+800;r.until=t+2500;spawn('heart',5,{x:r.x+24,y:PET_Y+8,vy:-18,spread:14});sfx('pet')}
 async function visitPet(){if(!VISIT.f.card.pet)return;if((VISIT.f.used.pet||0)>=(VISIT.f.limit.pet||1)){visitPetHop();say(`${VISIT.f.card.pet.name}：嘿嘿～`,{log:false});return}const r=await visitAct('pet');if(r){visitPetHop();say(`${VISIT.f.card.pet.name}：好舒服～謝謝你！`,{log:false})}}
 function visitTap(x,y){const r=VISIT.r;if(r&&VISIT.key&&x>=r.x+6&&x<=r.x+42&&y>=PET_Y+r.dep+8&&y<=PET_Y+r.dep+46)visitPet()}
-function drawVisit(now,dt){const r=VISIT.r;if(!r||!VISIT.key)return;
+function drawVisit(now,dt){const r=VISIT.r;if(!r||!VISIT.key||(VISIT.f&&VISIT.f.card&&VISIT.f.card.runaway))return;
  if(r.tx!=null){const d=r.tx-r.x,st=20*dt;if(Math.abs(d)<=st){r.x=r.tx;r.tx=null;r.act=r.next||'idle';r.until=now+(r.act==='sleep'?8000:2000)+Math.random()*3000}else{r.x+=Math.sign(d)*st;r.face=d>0?1:0}}
  else if(now>r.until){const q=Math.random();r.next='idle';if(q<.15&&VISIT.decor.placed.bed){r.next='sleep';r.tx=clamp(Math.round(bedX()),2,W-CELL-2)}else if(q<.75)r.tx=clamp(Math.round(4+Math.random()*(W-CELL-8)),2,W-CELL-2);else r.until=now+2000}
  const S=sheet(VISIT.key),fn=lgFrame(r,now),fi=S.idx[fn]??S.idx.idle0??0,x=Math.round(r.x),y=PET_Y+r.dep;
@@ -2287,7 +2289,7 @@ function msgDialog(){openModal(`💌 留言給 ${esc(VISIT.f.name)}`,`<textarea 
  document.querySelectorAll('[data-qm]').forEach(b=>b.onclick=()=>{$('msIn').value=QUICK[+b.dataset.qm]});
  $('msGo').onclick=async()=>{const t=$('msIn').value.trim();if(!t)return;$('msGo').disabled=true;const r=await visitAct('msg',{text:t});if(r){closeModal();(VISIT.f.board=VISIT.f.board||[]).unshift({text:t,at:Date.now(),name:ownerName()});visitCard()}else $('msGo').disabled=false}}
 $('vsHome').onclick=()=>{sfx('tap');endVisit()};$('vsPet').onclick=visitPet;$('vsWater').onclick=async()=>{const r=await visitAct('water');if(r){sfx('splash');spawn('bubble',8,{x:64,y:60,vy:-10,spread:40})}};
-$('vsGift').onclick=giftDialog;$('vsDuel').onclick=()=>duelAsk(VISIT.f.code);$('vsMsg').onclick=msgDialog;$('vsBoard').onclick=()=>boardDialog(VISIT.f.board,`📜 ${esc(VISIT.f.name)} 的留言板`);
+$('vsGift').onclick=giftDialog;$('vsSearch').onclick=async()=>{const r=await visitAct('search');if(r){const ra=VISIT.f.card.runaway;if(ra)ra.got=Math.min(ra.need,ra.got+CONFIG.runaway.help);visitCard();spawn('shoe',4,{x:64,y:70,vy:-16,spread:30});sfx('level')}};$('vsDuel').onclick=()=>duelAsk(VISIT.f.code);$('vsMsg').onclick=msgDialog;$('vsBoard').onclick=()=>boardDialog(VISIT.f.board,`📜 ${esc(VISIT.f.name)} 的留言板`);
 $('vsMate').onclick=()=>{if(!isAdult()){toast(`${s.name} 要先長到成年期才能配對`,3000);return}const fp=VISIT.f.card.pet;if(fp&&fp.sex===s.sex){toast('要一公一母才能配對喔',3000);return}
  confirmBox('💞 邀請配對',`邀請 ${esc(VISIT.f.name)} 的「${esc(fp.name)}」跟 ${esc(s.name)} 配對？<br><span class="small">對方答應後，你們會各拿到一顆蛋（各自付 ${BREED_COST} 金幣）。</span>`,'送出邀請',()=>{visitAct('mate',{code:mateCode(),pet:s.name})})};
 function menuDialog(){
@@ -2361,7 +2363,7 @@ const tier=()=>PC.stepTier(s),todayKey=()=>PC.dayKey(Date.now());
 function creditSteps(raw,date){const x0=s.xp,r=PC.creditSteps(s,raw,date,Date.now());if(!r.err&&r.delta){save();renderUI();afterChange(x0)}return r}
 function stepResultMsg(r){if(r.err)return'❌ '+r.err;if(!r.delta)return`今天已登記 ${fmtN(r.v)} 步，沒有新增的步數`;
  return`👟 新增 ${fmtN(r.delta)} 步！`+(r.xp?`經驗 +${r.xp}`:'')+(r.earth?`、🪨 岩系 +${r.earth}`:'')+(!r.xp&&!r.earth?'（累積到 1,000 步就有獎勵）':'')+(r.up?`\n🌟 累積 ${fmtN(tier()*STEP_TIER)} 步，突破成功！金幣 +${CONFIG.steps.tierCoins*r.up}`:'')+(r.found?`\n🎉 走了好遠的路，終於找到${s.name}了！牠回家了`:r.search!=null?`\n🔍 尋找${s.name}中：${fmtN(r.search)} / ${fmtN(CONFIG.runaway.steps)} 步`:'')}
-function stepsDialog(){
+async function stepsDialog(){const SV=NATIVE?null:await pushUrl(),surl=SV?`${SV}/steps?k=${pushId()}&n=`:'';
  const td=s.steps.days[todayKey()]||0,tot=s.steps.total,nx=(tier()+1)*STEP_TIER,url=(inFrame?HOME_URL:location.origin+location.pathname)+'?steps=';
  openModal('👟 步數冒險',`
 <p>今天：<b>${fmtN(td)}</b> 步　累積：<b>${fmtN(tot)}</b> 步</p>
@@ -2370,7 +2372,26 @@ function stepsDialog(){
 <p class="small">每 1,000 步 → 經驗 +10；每 2,000 步 → 🪨 岩系點數 +1。每天最多計算 5 萬步，可以補登最近 7 天。</p>
 ${NATIVE?`<p class="small">❤️ <b>已連接「健康」App</b>：每次打開遊戲都會自動同步最近 7 天的步數。健康 App 裡手動新增的步數不算。</p><div class="row"><button class="btn pri" id="sSync">🔄 立即同步步數</button></div>`:'<p class="small">🔒 步數只能從 iPhone「健康」App 透過捷徑自動帶進來，不能手動輸入，這樣才公平。</p>'}
 <div class="err" id="sErr"></div>
-<details style="margin-top:8px;${NATIVE?'display:none':''}" ${td?'':'open'}><summary><b>📱 設定捷徑，自動登記步數（點我看做法）</b></summary>
+${SV?`<details style="margin-top:8px" ${td?'':'open'}><summary><b>📱 設定捷徑，每天自動送步數（點我看做法）</b></summary>
+<p class="small">做一個 iPhone「捷徑」，讀健康 App 的步數，送到遊戲的伺服器。<b>主畫面版、Safari 版都收得到</b>，下次打開遊戲就會自動登記。</p>
+<p><b>A. 做捷徑（只做一次，約 3 分鐘）</b></p>
+<ol class="howto">
+<li>先按這裡複製你的<b>專屬網址</b>（不要給別人）：<button class="btn" id="sCopySv" style="margin-top:4px">📋 複製專屬網址</button></li>
+<li>打開 iPhone 的「<b>捷徑</b>」App → 右上角「<b>＋</b>」。</li>
+<li>點「<b>加入動作</b>」，搜尋「<b>尋找健康樣本</b>」加入。把「類型」改成「<b>步數</b>」，再點「加入過濾條件」設成「<b>開始日期</b>」「<b>是今天</b>」。</li>
+<li>再搜尋「<b>計算統計資料</b>」加入，選「<b>總和</b>」。</li>
+<li>再搜尋「<b>取得 URL 內容</b>」加入。點藍色的「URL」→ 貼上剛剛複製的網址 → 鍵盤上方點「<b>統計資料</b>」，讓它接在網址最後面。</li>
+<li>點最上面的名稱改成「<b>幻獸日記步數</b>」，按「完成」。按一次 ▶️ 執行，第一次會問能不能讀取健康資料，選<b>允許</b>。</li>
+</ol>
+<p><b>B. 每天自動送（不用自己按）</b></p>
+<ol class="howto">
+<li>捷徑 App 下面點「<b>自動化</b>」→ 右上角「<b>＋</b>」→「<b>特定時間</b>」。</li>
+<li>時間設<b>晚上 10:00</b>、每天，選「<b>立即執行</b>」（不要選「執行前確認」）。</li>
+<li>下一步選「<b>幻獸日記步數</b>」，完成。想更即時可以再加一個中午 12:00 的。</li>
+</ol>
+<p class="small">💡 想馬上登記：在捷徑 App 點一下「幻獸日記步數」，再回遊戲就好。<br>🐾 幻獸離家出走時，好友也可以來你家按「🔍 幫忙找」。</p>
+</details>`:''}
+<details style="margin-top:8px;${NATIVE||SV?'display:none':''}" ${td?'':'open'}><summary><b>📱 設定捷徑，自動登記步數（點我看做法）</b></summary>
 <p class="small"><b>做法：</b>做一個 iPhone「捷徑」，它會讀健康 App 的步數，再幫你打開遊戲。以後<b>從這個捷徑圖示開遊戲</b>，步數就自動算進去，不用再輸入。</p>
 <p><b>A. 做捷徑（只做一次，約 3 分鐘）</b></p>
 <ol class="howto">
@@ -2391,6 +2412,7 @@ ${NATIVE?`<p class="small">❤️ <b>已連接「健康」App</b>：每次打開
 </details>`);
  const done=r=>{const m=stepResultMsg(r);if(r.err){$('sErr').textContent=m;return}closeModal();toast(m,4000);say(m.split('\n')[0]);if(r.delta)spawn('shoe',3,{y:70,life:1.2,stagger:.2})};
  if($('sSync'))$('sSync').onclick=async()=>{$('sSync').disabled=true;$('sSync').textContent='同步中…';const r=await syncHealth(true);closeModal();void r};
+ if($('sCopySv'))$('sCopySv').onclick=async()=>{try{await navigator.clipboard.writeText(surl);toast('✅ 已複製專屬網址')}catch(e){toast('複製失敗，請再按一次')}};
  $('sCopyUrl').onclick=async()=>{try{await navigator.clipboard.writeText(url);toast('✅ 已複製網址')}catch(e){toast('請長按網址手動複製')}};
  void done}
 
