@@ -1311,7 +1311,7 @@ function drawRoomFront(now,ph){const P=DEC().placed;
 const anim={once:null,t0:0,onEnd:null};let nextBlink=0,busyUntil=0,wobbleUntil=0,flashUntil=0,evo=null;
 const parts=[];
 function playAnim(name,ms){anim.once=name;anim.t0=performance.now();busyUntil=Date.now()+(ms||Math.round(ANIMS[name].f.length/ANIMS[name].fps*1000))}
-function formKey(){const id=gidOf(s);return!s.hatched?eggKey(id):petKey(id,formCode(s.stage,s.route))}
+function formKey(){const id=gidOf(s);return!s.hatched?(s.eggKnown===false?'egg':eggKey(id)):petKey(id,formCode(s.stage,s.route))}
 const rm=()=>!!(s&&s.settings&&s.settings.reducedMotion);
 function baseAnim(){if(s.sleeping)return'sleep';if(s.mood<25||s.hunger<15||s.clean<10)return'sad';if(s.energy<20)return'tired';return'idle'}
 function currentFrame(now){
@@ -1793,6 +1793,7 @@ function act(a){
  const r=cv.getBoundingClientRect();if(r.top<0||r.bottom>innerHeight)cv.scrollIntoView({block:'start',behavior:rm()?'auto':'smooth'})}
 function tapPet(){
  unlockAudio();requestPersist();if(evo||Date.now()<busyUntil)return;
+ if(!s.hatched&&s.eggKnown===false){say('先做性格測驗，看看是什麼蛋吧！');if($('modal').classList.contains('hidden'))quizIntro(true);return}
  if(!s.hatched){tick();s.eggTaps++;wobbleUntil=performance.now()+450;sfx(s.eggTaps>=2?'crack':'tap');buzz(10);
   if(s.eggTaps>=5){hatch();return}say(['蛋動了一下！','喀…出現裂痕了！','裂得更大了！','快出來了！再一下！'][s.eggTaps-1]);save();renderUI();return}
  const x0=s.xp,r=PC.pet(s,Date.now());handleTime(r.tm);
@@ -1856,7 +1857,7 @@ function renderUI(){if(s&&s.inv)PC.markSeen(s);
  const F=formOf(formKey()),rar=F.genome&&F.genome.rarity>1&&!F.classic?` · ${STARS[F.genome.rarity]}${RARITY[F.genome.rarity]}`:'',tierN=PC.stepTier(s);
  $('petname').innerHTML=s.hatched?`${s.awake?'🌟星耀 ':''}${esc(s.name)}${sexMark(s)}　Lv.${lvl()}${tierN?' '+'✦'.repeat(Math.min(5,tierN)):''}`:F.name;$('npEdit').classList.toggle('hidden',!s.hatched);
  {const T=s.hatched&&PC.traitOf(s.route);$('traitText').innerHTML=T&&T.good?`<span class="chip good"><img class="mi" src="sprites/ui2/shield.png" alt="">${esc(T.good)}</span><span class="chip bad"><img class="mi" src="sprites/ui2/warn.png" alt="">${esc(T.bad)}</span>`:''}
- $('stageText').innerHTML=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome&&F.genome.el?' · 會孵出'+ROUTE_LABEL[F.genome.el]+'的新物種':''}`:[s.route?rIcon(s.route)+ROUTE_LABEL[s.route]:'',STAGE_NAME[s.stage],F.name+rar,`第 ${dayCount()} 天`].filter(Boolean).map(x=>`<span class="chip">${x}</span>`).join('');$('bondRow').innerHTML=s.hatched?(s.emberOn===s.seed&&s.emberOwned?'<span class="chip ember"><img class="mi" src="sprites/items/ic_ember.png" alt="">帶著經驗火種</span>':'')+bondRowHTML():'';
+ $('stageText').innerHTML=!s.hatched&&s.eggKnown===false?'先做完性格測驗，就知道會孵出什麼蛋！':!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome&&F.genome.el?' · 會孵出'+ROUTE_LABEL[F.genome.el]+'的新物種':''}`:[s.route?rIcon(s.route)+ROUTE_LABEL[s.route]:'',STAGE_NAME[s.stage],F.name+rar,`第 ${dayCount()} 天`].filter(Boolean).map(x=>`<span class="chip">${x}</span>`).join('');$('bondRow').innerHTML=s.hatched?(s.emberOn===s.seed&&s.emberOwned?'<span class="chip ember"><img class="mi" src="sprites/items/ic_ember.png" alt="">帶著經驗火種</span>':'')+bondRowHTML():'';
  $('growText').textContent=s.runaway?`😢 ${s.name}離家出走了！點「餵食」看找回來的方法（放蘋果、好友幫忙、走路）：${(s.runaway.got||0).toLocaleString()} / ${CONFIG.runaway.steps.toLocaleString()} 步`
   :PC.inNest(s)?`💕 ${esc(s.name)} ${s.loveEgg&&s.loveEgg.away?'去朋友家的愛的小窩':'在愛的小窩裡'}，還要 ${fmtLeft(s.nestUntil-Date.now())}（可到「🪺 小窩」換別隻出來陪你）`:s.starveSince?`⚠️ 餓壞了！再 ${Math.max(0,Math.ceil((s.starveSince+CONFIG.runaway.starveHours*3600000-Date.now())/3600000))} 小時不餵，牠就會離家出走！`:'';$('growText').classList.toggle('hidden',!$('growText').textContent);
  {const al=$('alertLine'),t=!s.hatched?$('stageText').textContent:(s.runaway||s.starveSince)?$('growText').textContent:'';al.textContent='';al.classList.add('hidden')}   // V1.58 重要提示（孵蛋、離家出走）還是直接顯示
@@ -1933,7 +1934,7 @@ let QLOCK=false,QSKIP=0;
 function quizSkip(){if(!QLOCK)return true;QSKIP++;
  if(QSKIP<2){setTimeout(()=>openModal('🥚 真的不做測驗嗎？',`<p>測驗只要 2 分鐘，會幫你挑一顆<b>最合拍的蛋</b>喔！</p><p class="small">不做的話，就只能拿一顆隨機的蛋。</p>`,
   [{t:'不做，給我隨機的蛋',fn:()=>{quizSkip();return true}},{t:'好啦，來做測驗',cls:'pri',fn:()=>{setTimeout(()=>quizStep([]),50);return true}}]),50);return true}
- QLOCK=false;const U=PC.unplayedRoutes(s);if(U&&U.length&&!s.hatched&&s.eggTaps===0){const sd=seedFor(U[Math.floor(Math.random()*U.length)]);if(sd!==null){s.seed=sd;s.genes=null;save();renderUI()}}
+ QLOCK=false;s.eggKnown=true;const U=PC.unplayedRoutes(s);if(U&&U.length&&!s.hatched&&s.eggTaps===0){const sd=seedFor(U[Math.floor(Math.random()*U.length)]);if(sd!==null){s.seed=sd;s.genes=null}}save();renderUI();
  setTimeout(()=>{toast('🎲 隨機的蛋來了！之後在「設定」裡也可以補做測驗',3200);say('蛋好像動了一下…',{log:false})},120);return true}
 function quizIntro(first){if(s.hatched||s.eggTaps>0)return;if(first){QLOCK=true;QSKIP=0}
  openModal('🔮 性格小測驗',`<p>${esc(ownerName())}，回答 ${QUIZ.length} 個小問題，看看你是什麼性格、和哪一種幻獸最合拍！</p><p class="small">大約 2 分鐘。結果會決定你拿到哪一顆蛋（保留一點點隨機的驚喜）。</p>`,
@@ -1943,7 +1944,7 @@ function quizStep(ans){const i=ans.length;if(i>=QUIZ.length){quizDone(ans);retur
  <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">${ops.map(([txt],k)=>`<button class="btn" data-qa="${k}" style="text-align:left;padding:12px 14px">${txt}</button>`).join('')}</div>`,
   i?[{t:'⬅ 上一題',fn:()=>{setTimeout(()=>quizStep(ans.slice(0,-1)),50);return true}}]:[{t:'離開',fn:()=>quizSkip()}]);
  document.querySelectorAll('[data-qa]').forEach(b=>b.onclick=()=>{sfx('tap');quizStep(ans.concat(+b.dataset.qa))})}
-function quizDone(ans){QLOCK=false;const R2=quizResult(ans),P=PERSONA[R2.top],sd=seedFor(R2.pick);
+function quizDone(ans){QLOCK=false;s.eggKnown=true;const R2=quizResult(ans),P=PERSONA[R2.top],sd=seedFor(R2.pick);
  if(sd!==null&&!s.hatched&&s.eggTaps===0){s.seed=sd;s.genes=null;save();renderUI()}
  PC.journal(s,Date.now(),`性格測驗：${P[0].replace(/^\S+ /,'')}`);save();
  const surprise=R2.pick!==R2.top;
@@ -3545,6 +3546,7 @@ function init(){
  else if(isIOS&&!standalone()&&!NATIVE&&!store.get(TIP_KEY))$('homeTip').classList.remove('hidden');
  if(HEALTH)setTimeout(()=>syncHealth(false),1200);   // App 版：一打開就同步步數
  setTimeout(()=>say(s.hatched?(s.sleeping?'Zzz…':`${s.name}：${s.owner?s.owner+'，':''}歡迎回來！`):'輕點蛋看看？',{log:false}),400);
+ if(window.PF_SKIP_INTRO&&!s.hatched)s.eggKnown=true;   // 測試用：跳過開場
  if(!s.owner&&!window.PF_SKIP_INTRO)setTimeout(()=>{if($('modal').classList.contains('hidden'))ownerDialog(true)},700);
  let secs=0;setInterval(()=>{if(document.hidden)return;tick();renderUI();if(Date.now()-lastSave>15000)save();if(++secs%5===0&&!evo&&!B)runStages();
   if(Date.now()>nextChat&&!msgTimer&&$('modal').classList.contains('hidden'))say(chatter(),{log:false})},1000);

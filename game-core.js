@@ -306,7 +306,7 @@ function newSeed() { try { return (globalThis.crypto || require('crypto').webcry
 const PET_NAMES = ['小黃', '小白', '小黑', '小花', '阿福', '旺財', '球球', '豆豆', '咪咪', '胖胖', '小美', '阿弟', '妞妞', '毛毛', '來福', '皮皮', '小乖', '寶寶', '多多', '丸子'];
 function fresh(now = Date.now()) {
   const S = CONFIG.start;
-  return { v: 7, rev: 0, seed: newSeed(), genes: null, sex: null, name: PET_NAMES[Math.floor(Math.random() * PET_NAMES.length)], hatched: false, eggTaps: 0, stage: 'egg', route: null,
+  return { v: 7, rev: 0, seed: newSeed(), genes: null, sex: null, name: PET_NAMES[Math.floor(Math.random() * PET_NAMES.length)], hatched: false, eggTaps: 0, eggKnown: false, stage: 'egg', route: null,
     xp: 0, coins: S.coins, hunger: S.hunger, mood: S.mood, clean: S.clean, energy: S.energy, bond: 0, sleeping: false,
     path: { flame: 0, tide: 0, forest: 0, earth: 0, bird: 0, elec: 0, metal: 0 }, bondUses: 0, cleanups: 0,
     care: { petLastRewardAt: 0, bathLastAt: 0, playXpAt: [], gatherAt: 0 },
@@ -336,6 +336,7 @@ function sanitize(o, now = Date.now()) {
   if (typeof o.name === 'string') { const n = chars(o.name.trim()).slice(0, 10).join(''); if (n) r.name = n; }
   r.sex = o.sex === 'm' || o.sex === 'f' ? o.sex : sexOfId(gidOf(r));   // 性別：舊存檔用基因決定（每隻固定）
   r.eggTaps = int(o.eggTaps, 0, 0, 4);
+  r.eggKnown = !(o.eggKnown === false && !o.hatched && !(r.eggTaps > 0));   // V1.87.1 做完性格測驗前，不知道是什麼蛋
   // 經驗值：V1.x 是「目前等級內的 XP」，V1.6 起改為累積總 XP
   if (legacy) { const lv = int(o.level, 1, 1, 99); let tot = int(o.xp, 0, 0, 1e7); for (let l = 1; l < lv; l++) tot += l * 50; r.xp = tot; }
   else r.xp = int(o.xp, 0, 0, 1e9);
