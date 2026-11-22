@@ -10,7 +10,7 @@ const MAX_ITEMS = 40, KEEP_DAYS = 30;
 const GIFT_OK = { food: 10, seeds: 10, candy: 5, potion: 5, fish: 5, cake: 3, coins: 500 };   // 可以送的東西、一次最多幾個
 const DAILY = [['food', 2], ['seeds', 2], ['candy', 1], ['coins', 30], ['potion', 1]];   // 每日免費小禮物（隨機一種）
 const GNAME = { food: '🍎 蘋果', seeds: '🌱 種子', candy: '🍬 糖果', potion: '🧪 回復藥水', fish: '🐟 魚', cake: '🍰 蛋糕', coins: '🪙 金幣' };
-const LIMIT = { pet: 1, water: 1, msg: 5, gift: 3, daily: 1, mate: 3, mateBack: 3, duel: 3, search: 1 };   // 每天對同一個朋友最多幾次
+const LIMIT = { pet: 1, water: 1, msg: 5, gift: 3, daily: 1, mate: 3, mateBack: 3, duel: 3, search: 1, pk: 5 };   // 每天對同一個朋友最多幾次
 
 const enc = new TextEncoder();
 const b64u = buf => { let s = ''; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
@@ -178,7 +178,8 @@ export class Store extends DurableObject {
       const kind = String(b.kind), lim = LIMIT[kind]; if (!lim) return json(req, { ok: false, msg: 'bad kind' }, 400);
       const day = twDay(now), key = `${kind}:${b.id}:${other.id}:${day}`, pn = this.petName(other);
       let data = {}, push = '', msg = '';
-      if (kind === 'search') { push = `🔍 ${myName} 幫你一起找 ${pn}！又靠近一點了`; msg = `🔍 幫忙找 ${pn}，找到一些線索了！`; }
+      if (kind === 'pk') { const sv = Math.max(0, Math.min(5, Math.floor(+(b.data && b.data.saves) || 0))), gl = Math.max(0, Math.min(5, Math.floor(+(b.data && b.data.goals) || 0))); data = { saves: sv, goals: gl }; push = sv ? `🧤 ${myName} 來踢 PK，${pn} 撲出了 ${sv} 球！` : `⚽ ${myName} 踢 PK 進了 ${gl} 球，${pn} 下次加油！`; msg = ''; }
+      else if (kind === 'search') { push = `🔍 ${myName} 幫你一起找 ${pn}！又靠近一點了`; msg = `🔍 幫忙找 ${pn}，找到一些線索了！`; }
       else if (kind === 'pet') { push = `✋ ${myName} 來你家摸了摸 ${pn}，牠好開心！`; msg = `✋ 摸了摸 ${pn}，牠很開心！`; }
       else if (kind === 'water') { push = `💧 ${myName} 幫你的田澆了水，作物長快一點了`; msg = '💧 幫忙澆水了！'; }
       else if (kind === 'msg') { const t = str(b.data && b.data.text, 60).trim(); if (!t) return json(req, { ok: false, msg: '留言是空的' }); data = { text: t }; push = `💌 ${myName}：${t}`; msg = '💌 留言送出了'; }

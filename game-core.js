@@ -191,6 +191,11 @@ const CONFIG = {
   },
   sellFruit: { food: 15, berry: 15, cranberry: 15, blueberry: 20, strawberry: 30 },
   freshBonus: { energy: 5 },               // 自己種的水果品質好：吃了體力再 +5
+  acc: {   // V1.88 寵物裝飾：friends＝加幾位好友送、price＝商店價錢
+    santa: { slot: 'head', friends: 1 }, bow: { slot: 'head', friends: 2 }, tophat: { slot: 'head', friends: 3 }, crown: { slot: 'head', friends: 5 },
+    antler: { slot: 'head', price: 300 }, wreath: { slot: 'head', price: 300 }, chef: { slot: 'head', price: 300 }, turkey: { slot: 'head', price: 350 },
+    glasses: { slot: 'face', price: 400 }, cigar: { slot: 'mouth', price: 500 }, necklace: { slot: 'neck', price: 800 } },
+  pk: { shots: 5, energy: 6, hunger: 3, coin: 5, xp: 2, mood: 2, perfect: 20 },   // V1.88 射門 PK：每進一球的獎勵、5 球全進加碼
   runaway: { starveHours: 12, steps: 10000, help: 1500, lure: 2500, back: { hunger: 40, mood: 35, clean: 40 }, bondLoss: 15 },   // 餓肚子（飽食 0）超過 12 小時就離家出走；走 1 萬步才找得回來
   washCost: 3,                              // 洗澡要付水費
   ballLife: 3, ballCost: 3,                 // 球每玩 3 次就會爆掉，換新球 3 金幣
@@ -314,7 +319,7 @@ function fresh(now = Date.now()) {
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] }, goalLv: 0,
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, lounge: { lv: 1, at: 0, decor: { placed: { paper: 'paper_cream' }, pos: {}, flip: {} } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
-    cores: [], ball: { best: 0, goals: 0 }, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, relics: [], relicGot: [], eggBuys: 0, foster: [], fusionHouse: false, fosterPaid: false, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
+    cores: [], ball: { best: 0, goals: 0 }, pk: { best: 0, games: 0, goals: 0 }, acc: [], accAdj: {}, accOwned: [], den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, relics: [], relicGot: [], eggBuys: 0, foster: [], fusionHouse: false, fosterPaid: false, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
     events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
@@ -381,6 +386,10 @@ function sanitize(o, now = Date.now()) {
   r.toiletUses = int(o.toiletUses, 0, 0, 1e7); r.starveSince = num(o.starveSince, 0, 0, 9e15); r.runaway = o.runaway && typeof o.runaway === 'object' ? { at: num(o.runaway.at, 0, 0, 9e15), got: int(o.runaway.got, 0, 0, 1e7), lure: /^\d{4}-\d\d-\d\d$/.test(o.runaway.lure || '') ? o.runaway.lure : '' } : null; r.bondRestUntil = num(o.bondRestUntil, 0, 0, 9e15); r.ballUses = int(o.ballUses, 0, 0, CONFIG.ballLife - 1); r.ballBroken = o.ballBroken === true;
   r.cores = Array.isArray(o.cores) ? o.cores.filter(c => c && typeof c === 'object').slice(-CONFIG.core.max).map(c => ({ x: num(c.x, 64, 4, 124), at: num(c.at, now, 0, 9e15), v: ['room', 'lounge'].includes(c.v) ? c.v : 'yard', k: CORE_KINDS.includes(c.k) ? c.k : 'core' })) : [];   // V1.86.6 肉骨頭、魚骨存檔後不會變成果核
   const bl = o.ball && typeof o.ball === 'object' ? o.ball : {}; r.ball = { best: int(bl.best, 0, 0, 99), goals: int(bl.goals, 0, 0, 1e7) };
+  { const A = CONFIG.acc; r.accOwned = Array.isArray(o.accOwned) ? [...new Set(o.accOwned.filter(k => A[k]))] : [];
+    const own = new Set(r.accOwned), seen = {}; r.acc = Array.isArray(o.acc) ? o.acc.filter(k => A[k] && own.has(k) && !seen[A[k].slot] && (seen[A[k].slot] = 1)) : [];
+    r.accAdj = {}; if (o.accAdj && typeof o.accAdj === 'object') for (const sl of ['head', 'face', 'mouth', 'neck']) { const v = o.accAdj[sl]; if (Array.isArray(v) && v.length === 3 && v.every(n => Number.isFinite(n))) r.accAdj[sl] = [clamp(Math.round(v[0]), -8, 8), clamp(Math.round(v[1]), -8, 8), clamp(Math.round(v[2]), -5, 5)]; } }   // V1.88 寵物裝飾
+  { const k = o.pk && typeof o.pk === 'object' ? o.pk : {}; r.pk = { best: int(k.best, 0, 0, 5), games: int(k.games, 0, 0, 1e7), goals: int(k.goals, 0, 0, 1e7) }; }   // V1.88 射門 PK
   r.den = { level: int(o.den && o.den.level, 1, 1, CONFIG.den.length) };
   r.roster = Array.isArray(o.roster) ? o.roster.filter(p => p && typeof p === 'object' && p.hatched).slice(0, CONFIG.den.length - 1).map(p => sanitizePet(p, now)) : [];
   r.foster = Array.isArray(o.foster) ? o.foster.filter(p => p && typeof p === "object" && p.hatched).slice(0, 60).map(p => sanitizePet(p, now)) : [];
@@ -1241,7 +1250,7 @@ function finishBallGame(st, score, now = Date.now()) {
 }
 
 /* ---------------- 小窩：升級、讓多隻寵物住進來 ---------------- */
-const PET_FIELDS = ['nestUntil', 'trainLv', 'relics', 'fosterPaid', 'trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
+const PET_FIELDS = ['acc', 'accAdj', 'nestUntil', 'trainLv', 'relics', 'fosterPaid', 'trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
 function snapshotPet(st) { const p = {}; for (const k of PET_FIELDS) if (st[k] !== undefined) p[k] = JSON.parse(JSON.stringify(st[k])); p.sleeping = false; return p; }
 function sanitizePet(p, now = Date.now()) { const r = sanitize(Object.assign({ v: 6 }, p, { roster: [], dex: [], pair: null }), now); return snapshotPet(r); }
 /* V1.45 神秘老爺爺的家：寄養不想養的幻獸（不佔小窩、數值不會變），每隻付一次錢 */
