@@ -1793,7 +1793,7 @@ function act(a){
  const r=cv.getBoundingClientRect();if(r.top<0||r.bottom>innerHeight)cv.scrollIntoView({block:'start',behavior:rm()?'auto':'smooth'})}
 function tapPet(){
  unlockAudio();requestPersist();if(evo||Date.now()<busyUntil)return;
- if(!s.hatched&&s.eggKnown===false){say('先做性格測驗，看看是什麼蛋吧！');if($('modal').classList.contains('hidden'))quizIntro(true);return}
+ if(!s.hatched&&s.eggKnown===false){if(!(s.dex||[]).length){say('先做性格測驗，看看是什麼蛋吧！');if($('modal').classList.contains('hidden'))quizIntro(true);return}s.eggKnown=true}   // 第一顆蛋：要先做測驗；之後的蛋：點一下就揭曉
  if(!s.hatched){tick();s.eggTaps++;wobbleUntil=performance.now()+450;sfx(s.eggTaps>=2?'crack':'tap');buzz(10);
   if(s.eggTaps>=5){hatch();return}say(['蛋動了一下！','喀…出現裂痕了！','裂得更大了！','快出來了！再一下！'][s.eggTaps-1]);save();renderUI();return}
  const x0=s.xp,r=PC.pet(s,Date.now());handleTime(r.tm);
@@ -1931,7 +1931,7 @@ function quizResult(ans){const cnt={},sc={},U=PC.unplayedRoutes(s);for(const[,op
 function seedFor(el){for(let i=0;i<500;i++){const sd=crypto.getRandomValues(new Uint32Array(1))[0];if(PC.genomeOfSeed(sd).el===el)return sd}return null}
 /* V1.66 第一次一定要做測驗：跳過會再問一次，第二次還是跳過才給隨機的蛋 */
 let QLOCK=false,QSKIP=0;
-function quizSkip(){if(!QLOCK)return true;QSKIP++;
+function quizSkip(){if(!QLOCK){if(!s.hatched){s.eggKnown=true;save();renderUI()}return true}QSKIP++;
  if(QSKIP<2){setTimeout(()=>openModal('🥚 真的不做測驗嗎？',`<p>測驗只要 2 分鐘，會幫你挑一顆<b>最合拍的蛋</b>喔！</p><p class="small">不做的話，就只能拿一顆隨機的蛋。</p>`,
   [{t:'不做，給我隨機的蛋',fn:()=>{quizSkip();return true}},{t:'好啦，來做測驗',cls:'pri',fn:()=>{setTimeout(()=>quizStep([]),50);return true}}]),50);return true}
  QLOCK=false;s.eggKnown=true;const U=PC.unplayedRoutes(s);if(U&&U.length&&!s.hatched&&s.eggTaps===0){const sd=seedFor(U[Math.floor(Math.random()*U.length)]);if(sd!==null){s.seed=sd;s.genes=null}}save();renderUI();
