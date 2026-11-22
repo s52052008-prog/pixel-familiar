@@ -191,7 +191,7 @@ const CONFIG = {
   },
   sellFruit: { food: 15, berry: 15, cranberry: 15, blueberry: 20, strawberry: 30 },
   freshBonus: { energy: 5 },               // 自己種的水果品質好：吃了體力再 +5
-  runaway: { starveHours: 12, steps: 10000, help: 1500, back: { hunger: 40, mood: 35, clean: 40 }, bondLoss: 15 },   // 餓肚子（飽食 0）超過 12 小時就離家出走；走 1 萬步才找得回來
+  runaway: { starveHours: 12, steps: 10000, help: 1500, lure: 2500, back: { hunger: 40, mood: 35, clean: 40 }, bondLoss: 15 },   // 餓肚子（飽食 0）超過 12 小時就離家出走；走 1 萬步才找得回來
   washCost: 3,                              // 洗澡要付水費
   ballLife: 3, ballCost: 3,                 // 球每玩 3 次就會爆掉，換新球 3 金幣
   traitsOn: true,
@@ -377,7 +377,7 @@ function sanitize(o, now = Date.now()) {
     if (ld.flip && typeof ld.flip === 'object') for (const k of K) if (ld.flip[k]) r.lounge.decor.flip[k] = 1; }   // V1.86.7 休息室：自己的家具擺法＋投餵機等級
   r.view = ['room', 'lounge'].includes(o.view) ? o.view : 'yard';
   r.digest = Array.isArray(o.digest) ? o.digest.map(Number).filter(Number.isFinite).slice(0, 10) : [];
-  r.toiletUses = int(o.toiletUses, 0, 0, 1e7); r.starveSince = num(o.starveSince, 0, 0, 9e15); r.runaway = o.runaway && typeof o.runaway === 'object' ? { at: num(o.runaway.at, 0, 0, 9e15), got: int(o.runaway.got, 0, 0, 1e7) } : null; r.bondRestUntil = num(o.bondRestUntil, 0, 0, 9e15); r.ballUses = int(o.ballUses, 0, 0, CONFIG.ballLife - 1); r.ballBroken = o.ballBroken === true;
+  r.toiletUses = int(o.toiletUses, 0, 0, 1e7); r.starveSince = num(o.starveSince, 0, 0, 9e15); r.runaway = o.runaway && typeof o.runaway === 'object' ? { at: num(o.runaway.at, 0, 0, 9e15), got: int(o.runaway.got, 0, 0, 1e7), lure: /^\d{4}-\d\d-\d\d$/.test(o.runaway.lure || '') ? o.runaway.lure : '' } : null; r.bondRestUntil = num(o.bondRestUntil, 0, 0, 9e15); r.ballUses = int(o.ballUses, 0, 0, CONFIG.ballLife - 1); r.ballBroken = o.ballBroken === true;
   r.cores = Array.isArray(o.cores) ? o.cores.filter(c => c && typeof c === 'object').slice(-CONFIG.core.max).map(c => ({ x: num(c.x, 64, 4, 124), at: num(c.at, now, 0, 9e15), v: ['room', 'lounge'].includes(c.v) ? c.v : 'yard', k: CORE_KINDS.includes(c.k) ? c.k : 'core' })) : [];   // V1.86.6 肉骨頭、魚骨存檔後不會變成果核
   const bl = o.ball && typeof o.ball === 'object' ? o.ball : {}; r.ball = { best: int(bl.best, 0, 0, 99), goals: int(bl.goals, 0, 0, 1e7) };
   r.den = { level: int(o.den && o.den.level, 1, 1, CONFIG.den.length) };
@@ -742,6 +742,13 @@ function creditSteps(st, raw, date, now = Date.now()) {
 }
 /* V1.87.1 好友幫忙找離家出走的幻獸：算你走了一段路 */
 function helpSearch(st, n, now = Date.now()) { if (!st.runaway) return { found: false, none: true }; st.runaway.got += Math.max(0, n | 0); const found = st.runaway.got >= CONFIG.runaway.steps ? comeHome(st, now) : false; return { found, got: st.runaway ? st.runaway.got : CONFIG.runaway.steps }; }
+/* V1.87.1 在門口放一顆蘋果：每天一次，牠會慢慢循著香味靠近家 */
+function lureFood(st, now = Date.now()) {
+  if (!st.runaway) return { ok: false, msg: '牠在家呀' }; const d = dayKey(now);
+  if (st.runaway.lure === d) return { ok: false, msg: '今天已經放過了，明天再放吧' };
+  if ((st.inv.food || 0) < 1) return { ok: false, msg: '沒有蘋果了…可以到商店買' };
+  st.inv.food--; st.runaway.lure = d; const r = helpSearch(st, CONFIG.runaway.lure, now); journal(st, now, '在門口放了一顆蘋果'); return { ok: true, ...r };
+}
 function comeHome(st, now = Date.now()) {
   const B = CONFIG.runaway.back; st.runaway = null; st.starveSince = 0; st.lastTick = now;
   st.hunger = B.hunger; st.mood = B.mood; st.clean = B.clean; st.bond = clamp(st.bond - CONFIG.runaway.bondLoss);
@@ -1570,7 +1577,7 @@ function wrapStats(api) {
 const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars, dayKey, hourIn, level, rng, makeGenome, CLASSIC_G, encodeGenome, decodeGenome, breedGenome,
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
-  plotState, plant, harvest, buySeed, buyDecor, placeDecor, loungeTick, upgradeLounge, helpSearch, buyItem, useCandy,
+  plotState, plant, harvest, buySeed, buyDecor, placeDecor, loungeTick, upgradeLounge, helpSearch, lureFood, buyItem, useCandy,
   toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, releasePet, PET_NAMES, CORE_KINDS, LEFT_NAME, guideStep, guideDo, fosterSwap, whereIs, inNest, loveTick, moveOut, eggReady, lostPets, recallLost, ownedIds, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, selectRod, allPets, giveEmber, emberShare, setTeam, TRAIN_TIER, trainLvOf, trainTier, trainLvUp, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 Object.assign(API, { EARN_NAME, SPEND_NAME, BADGES, BADGE, statsOf, statAdd, statVal, checkBadges, playTick, weekKey, sumOf }); wrapStats(API);

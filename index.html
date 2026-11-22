@@ -1775,7 +1775,7 @@ function nextEvo(){
   setTimeout(()=>{$('evoCap').classList.add('hidden');$('evoBlock').classList.add('hidden');$('bubble').style.visibility='';nextEvo()},rm()?800:2600)}}}
 function gatherOffer(){confirmBox('🌿 去採集？','沒有食物、金幣也不夠時，可以免費採集果子（每 2 分鐘一次），不會卡關。','採集',()=>{const g=PC.gather(s,Date.now());toast(g.msg);save();renderUI()})}
 function act(a){
- if(!s.hatched||evo)return;unlockAudio();if(VISIT.on){toast('在朋友家喔，先按「🏠 回家」');return}if(nestBusy())return;
+ if(!s.hatched||evo)return;unlockAudio();if(s.runaway&&!['sleep'].includes(a)){runawayDialog();return}if(VISIT.on){toast('在朋友家喔，先按「🏠 回家」');return}if(nestBusy())return;
  if(curView()==='lounge'&&a!=='sleep'){if(modeBusy())return;cancelMode();lgClose();s.view='room';petX=PET_X;petTarget=null;save();renderUI();toast('🏠 回房間照顧牠',1600);setTimeout(()=>act(a),450);return}   // V1.86.7 主寵不在休息室：先回房間
  if(a==='sleep'){if(Date.now()<busyUntil||modeBusy()||petTarget!==null)return;cancelMode();
   if(!s.sleeping&&curView()!=='room'){toast('🪺 外面不能睡覺，帶牠回小窩睡囉',2500);s.view='room';petX=PET_X;save();renderUI();setTimeout(()=>act('sleep'),700);return}
@@ -1857,7 +1857,7 @@ function renderUI(){if(s&&s.inv)PC.markSeen(s);
  $('petname').innerHTML=s.hatched?`${s.awake?'🌟星耀 ':''}${esc(s.name)}${sexMark(s)}　Lv.${lvl()}${tierN?' '+'✦'.repeat(Math.min(5,tierN)):''}`:F.name;$('npEdit').classList.toggle('hidden',!s.hatched);
  {const T=s.hatched&&PC.traitOf(s.route);$('traitText').innerHTML=T&&T.good?`<span class="chip good"><img class="mi" src="sprites/ui2/shield.png" alt="">${esc(T.good)}</span><span class="chip bad"><img class="mi" src="sprites/ui2/warn.png" alt="">${esc(T.bad)}</span>`:''}
  $('stageText').innerHTML=!s.hatched?`輕點蛋 5 下來孵化（${s.eggTaps}/5）${F.genome&&F.genome.el?' · 會孵出'+ROUTE_LABEL[F.genome.el]+'的新物種':''}`:[s.route?rIcon(s.route)+ROUTE_LABEL[s.route]:'',STAGE_NAME[s.stage],F.name+rar,`第 ${dayCount()} 天`].filter(Boolean).map(x=>`<span class="chip">${x}</span>`).join('');$('bondRow').innerHTML=s.hatched?(s.emberOn===s.seed&&s.emberOwned?'<span class="chip ember"><img class="mi" src="sprites/items/ic_ember.png" alt="">帶著經驗火種</span>':'')+bondRowHTML():'';
- $('growText').textContent=s.runaway?`😢 ${s.name}離家出走了！到「👟 步數」登記走路、或請好友來幫忙找：${(s.runaway.got||0).toLocaleString()} / ${CONFIG.runaway.steps.toLocaleString()} 步`
+ $('growText').textContent=s.runaway?`😢 ${s.name}離家出走了！點「餵食」看找回來的方法（放蘋果、好友幫忙、走路）：${(s.runaway.got||0).toLocaleString()} / ${CONFIG.runaway.steps.toLocaleString()} 步`
   :PC.inNest(s)?`💕 ${esc(s.name)} ${s.loveEgg&&s.loveEgg.away?'去朋友家的愛的小窩':'在愛的小窩裡'}，還要 ${fmtLeft(s.nestUntil-Date.now())}（可到「🪺 小窩」換別隻出來陪你）`:s.starveSince?`⚠️ 餓壞了！再 ${Math.max(0,Math.ceil((s.starveSince+CONFIG.runaway.starveHours*3600000-Date.now())/3600000))} 小時不餵，牠就會離家出走！`:'';$('growText').classList.toggle('hidden',!$('growText').textContent);
  {const al=$('alertLine'),t=!s.hatched?$('stageText').textContent:(s.runaway||s.starveSince)?$('growText').textContent:'';al.textContent='';al.classList.add('hidden')}   // V1.58 重要提示（孵蛋、離家出走）還是直接顯示
  $('stepInfo').innerHTML=`${MI('apple','🍎')}${s.inv.food} · ${MI('seed','🌱')}${s.inv.seeds}${s.inv.seeds2?' · '+MI('seed2','🌟')+s.inv.seeds2:''}${s.inv.candy?' · '+MI('candy','🍬')+s.inv.candy:''}${s.inv.potion?' · '+MI('potion','🧪')+s.inv.potion:''}${s.inv.potion2?' · '+MI('potion2','💖')+s.inv.potion2:''}${s.inv.soup?' · '+MI('soup','🍲')+s.inv.soup:''} · ${MI('shoe','👟')}${fmtN(s.steps.days[PC.dayKey(Date.now())]||0)} 步 · ${MI_UI('swords')}冒險 ${s.daily.adv}${s.eggs.length?' · 🧺 蛋 '+s.eggs.length:''}${s.hatched?` · ${MI('pig1','🐷')}${Math.floor(s.piggy||0)}/${PC.piggyCap(s)}`:''}`;
@@ -2363,6 +2363,17 @@ const tier=()=>PC.stepTier(s),todayKey=()=>PC.dayKey(Date.now());
 function creditSteps(raw,date){const x0=s.xp,r=PC.creditSteps(s,raw,date,Date.now());if(!r.err&&r.delta){save();renderUI();afterChange(x0)}return r}
 function stepResultMsg(r){if(r.err)return'❌ '+r.err;if(!r.delta)return`今天已登記 ${fmtN(r.v)} 步，沒有新增的步數`;
  return`👟 新增 ${fmtN(r.delta)} 步！`+(r.xp?`經驗 +${r.xp}`:'')+(r.earth?`、🪨 岩系 +${r.earth}`:'')+(!r.xp&&!r.earth?'（累積到 1,000 步就有獎勵）':'')+(r.up?`\n🌟 累積 ${fmtN(tier()*STEP_TIER)} 步，突破成功！金幣 +${CONFIG.steps.tierCoins*r.up}`:'')+(r.found?`\n🎉 走了好遠的路，終於找到${s.name}了！牠回家了`:r.search!=null?`\n🔍 尋找${s.name}中：${fmtN(r.search)} / ${fmtN(CONFIG.runaway.steps)} 步`:'')}
+/* V1.87.1 離家出走：三種找回來的方法 */
+function runawayDialog(){const R0=s.runaway;if(!R0)return;const need=CONFIG.runaway.steps,got=R0.got||0,lured=R0.lure===todayKey();
+ openModal(`😢 ${esc(s.name)} 離家出走了`,`<p>牠餓太久，跑出去了。用下面的方法讓牠回家：</p>
+<div class="prog"><i style="width:${Math.min(100,got/need*100)}%"></i></div><p class="small" style="text-align:center">找回進度 ${fmtN(got)} / ${fmtN(need)}</p>
+<div class="frow"><div style="font-size:26px">🍎</div><div class="fi"><b>在門口放蘋果</b><div class="small">每天一次，牠會循著香味慢慢靠近（進度 +${fmtN(CONFIG.runaway.lure)}）。你有 ${s.inv.food||0} 顆蘋果</div></div><button class="btn pri" id="raLure" ${lured||!(s.inv.food>0)?'disabled':''}>${lured?'放過了':'放蘋果'}</button></div>
+<div class="frow"><div style="font-size:26px">🔍</div><div class="fi"><b>請好友幫忙找</b><div class="small">每位好友每天可以來幫忙一次（進度 +${fmtN(CONFIG.runaway.help)}）</div></div><button class="btn" id="raFr">找好友</button></div>
+<div class="frow"><div style="font-size:26px">👟</div><div class="fi"><b>出門走路</b><div class="small">走多少步就前進多少，最快的方法</div></div><button class="btn" id="raSt">步數</button></div>`);
+ $('raLure').onclick=()=>{const r=PC.lureFood(s,Date.now());if(!r.ok){toast('❌ '+r.msg,2600);return}save();renderUI();sfx('coin');closeModal();if(r.found){toast(`🎉 ${s.name} 聞到蘋果的香味，回家了！`,5000);playAnim('happy')}else toast(`🍎 放好蘋果了，${s.name} 好像靠近了一點…（${fmtN(r.got)} / ${fmtN(need)}）`,4000);cardSync(true)};
+ $('raFr').onclick=async()=>{const t=`我的幻獸「${s.name}」離家出走了😢 可以來《幻獸日記》我家按「🔍 幫忙找」嗎？${SOC.code?'我的好友碼：'+SOC.code:''}`;try{if(navigator.share&&!inFrame)await navigator.share({text:t});else{await navigator.clipboard.writeText(t);toast('✅ 已複製，貼到 LINE 請朋友幫忙')}}catch(e){}};
+ $('raSt').onclick=()=>stepsDialog()}
+const SHORTCUT_URL='';   // 冠宏分享的 iCloud 捷徑連結（有了就給大家一鍵加入）
 async function stepsDialog(){const SV=NATIVE?null:await pushUrl(),surl=SV?`${SV}/steps?k=${pushId()}&n=`:'';
  const td=s.steps.days[todayKey()]||0,tot=s.steps.total,nx=(tier()+1)*STEP_TIER,url=(inFrame?HOME_URL:location.origin+location.pathname)+'?steps=';
  openModal('👟 步數冒險',`
@@ -2374,6 +2385,11 @@ ${NATIVE?`<p class="small">❤️ <b>已連接「健康」App</b>：每次打開
 <div class="err" id="sErr"></div>
 ${SV?`<details style="margin-top:8px" ${td?'':'open'}><summary><b>📱 設定捷徑，每天自動送步數（點我看做法）</b></summary>
 <p class="small">做一個 iPhone「捷徑」，讀健康 App 的步數，送到遊戲的伺服器。<b>主畫面版、Safari 版都收得到</b>，下次打開遊戲就會自動登記。</p>
+${SHORTCUT_URL?`<ol class="howto"><li>按這裡複製你的<b>專屬網址</b>（不要給別人）：<button class="btn" id="sCopySv2" style="margin-top:4px">📋 複製專屬網址</button></li>
+<li>按這裡加入捷徑：<a class="btn pri" href="${SHORTCUT_URL}" target="_blank" rel="noopener" style="display:inline-block;margin-top:4px">➕ 加入捷徑</a><br>跳到「捷徑」App 後，在問題框<b>貼上剛剛的網址</b>，按「加入捷徑」。</li>
+<li>完成！想登記步數時點一下「幻獸日記步數」再回遊戲就好。第一次會問能不能讀取健康資料，選<b>允許</b>。</li></ol>
+<details><summary class="small">進階：每天自動送（不用自己按）</summary><ol class="howto"><li>捷徑 App 下面點「<b>自動化</b>」→「<b>＋</b>」→「<b>特定時間</b>」。</li><li>設<b>晚上 10:00</b>、每天，選「<b>立即執行</b>」。</li><li>選「<b>幻獸日記步數</b>」，完成。</li></ol></details>
+<details><summary class="small">自己從頭做捷徑</summary>`:''}
 <p><b>A. 做捷徑（只做一次，約 3 分鐘）</b></p>
 <ol class="howto">
 <li>先按這裡複製你的<b>專屬網址</b>（不要給別人）：<button class="btn" id="sCopySv" style="margin-top:4px">📋 複製專屬網址</button></li>
@@ -2390,7 +2406,7 @@ ${SV?`<details style="margin-top:8px" ${td?'':'open'}><summary><b>📱 設定捷
 <li>下一步選「<b>幻獸日記步數</b>」，完成。想更即時可以再加一個中午 12:00 的。</li>
 </ol>
 <p class="small">💡 想馬上登記：在捷徑 App 點一下「幻獸日記步數」，再回遊戲就好。<br>🐾 幻獸離家出走時，好友也可以來你家按「🔍 幫忙找」。</p>
-</details>`:''}
+${SHORTCUT_URL?'</details>':''}</details>`:''}
 <details style="margin-top:8px;${NATIVE||SV?'display:none':''}" ${td?'':'open'}><summary><b>📱 設定捷徑，自動登記步數（點我看做法）</b></summary>
 <p class="small"><b>做法：</b>做一個 iPhone「捷徑」，它會讀健康 App 的步數，再幫你打開遊戲。以後<b>從這個捷徑圖示開遊戲</b>，步數就自動算進去，不用再輸入。</p>
 <p><b>A. 做捷徑（只做一次，約 3 分鐘）</b></p>
@@ -2412,6 +2428,7 @@ ${SV?`<details style="margin-top:8px" ${td?'':'open'}><summary><b>📱 設定捷
 </details>`);
  const done=r=>{const m=stepResultMsg(r);if(r.err){$('sErr').textContent=m;return}closeModal();toast(m,4000);say(m.split('\n')[0]);if(r.delta)spawn('shoe',3,{y:70,life:1.2,stagger:.2})};
  if($('sSync'))$('sSync').onclick=async()=>{$('sSync').disabled=true;$('sSync').textContent='同步中…';const r=await syncHealth(true);closeModal();void r};
+ if($('sCopySv2'))$('sCopySv2').onclick=async()=>{try{await navigator.clipboard.writeText(surl);toast('✅ 已複製專屬網址')}catch(e){toast('複製失敗，請再按一次')}};
  if($('sCopySv'))$('sCopySv').onclick=async()=>{try{await navigator.clipboard.writeText(surl);toast('✅ 已複製專屬網址')}catch(e){toast('複製失敗，請再按一次')}};
  $('sCopyUrl').onclick=async()=>{try{await navigator.clipboard.writeText(url);toast('✅ 已複製網址')}catch(e){toast('請長按網址手動複製')}};
  void done}
