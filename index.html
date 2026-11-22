@@ -1927,7 +1927,7 @@ const PERSONA={flame:['🔥 熱血行動家','想到就做、勇往直前，你�
 function quizResult(ans){const cnt={},sc={},U=PC.unplayedRoutes(s);for(const[,ops]of QUIZ)for(const[,e]of ops)cnt[e]=(cnt[e]||0)+1;
  ans.forEach((a,i)=>{const e=QUIZ[i][1][a][1];sc[e]=(sc[e]||0)+1});
  const all=Object.keys(cnt).map(e=>[e,(sc[e]||0)/cnt[e]+Math.random()*1e-6]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]),rank=all.filter(e=>U.includes(e));   // 玩過的屬性不會再抽到
- const r=Math.random(),pick=rank.length<2?rank[0]:r<.7?rank[0]:r<.9||rank.length<3?rank[1]:rank[2+Math.floor(Math.random()*(rank.length-2))];return{top:all[0],pick,rank}}
+ const r=Math.random(),pick=rank.length<2?rank[0]:r<.7?rank[0]:r<.9||rank.length<3?rank[1]:rank[2+Math.floor(Math.random()*(rank.length-2))];return{sc,top:all[0],pick,rank}}
 function seedFor(el){for(let i=0;i<500;i++){const sd=crypto.getRandomValues(new Uint32Array(1))[0];if(PC.genomeOfSeed(sd).el===el)return sd}return null}
 /* V1.66 第一次一定要做測驗：跳過會再問一次，第二次還是跳過才給隨機的蛋 */
 let QLOCK=false,QSKIP=0;
@@ -1949,6 +1949,7 @@ function quizDone(ans){QLOCK=false;s.eggKnown=true;const R2=quizResult(ans),P=PE
  PC.journal(s,Date.now(),`性格測驗：${P[0].replace(/^\S+ /,'')}`);save();
  const surprise=R2.pick!==R2.top;
  openModal('🔮 你的性格分析',`<p style="font-size:20px;text-align:center;margin:4px 0"><b>${P[0]}</b></p><p>${P[1]}</p>
+ <div class="frow" style="display:block"><b>🥚 為什麼是這顆蛋？</b><div class="small" style="margin-top:4px">你的 ${QUIZ.length} 題回答裡，有 <b>${R2.sc[R2.top]||0} 題</b>選的是「${P[0].replace(/^\S+ /,'')}」的答案，所以你和 <b>${ROUTE_ICON[R2.top]} ${EGG_EL[R2.top]}幻獸</b>最合拍${surprise?'。':`，這顆 ${EGG_EL[R2.top]}之蛋就來找你了！`}</div></div>
  ${surprise?`<p class="small">✨ ${PC.playedRoutes(s).includes(R2.top)?`${EGG_EL[R2.top]}的幻獸你已經養過了，`:'不過…命運給了你一點驚喜：'}這次來找你的是 <b>${ROUTE_ICON[R2.pick]} ${EGG_EL[R2.pick]}之蛋</b>！</p>`:''}
  <div style="text-align:center;margin-top:10px"><canvas id="qEgg" width="48" height="48" style="width:120px;height:120px;image-rendering:pixelated"></canvas><div><b>${esc(formOf(formKey()).name)}</b></div></div>`,
   [{t:'收下這顆蛋！',cls:'pri',fn:()=>{say('輕點蛋看看？',{log:false});return true}}]);
