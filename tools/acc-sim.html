@@ -11,7 +11,7 @@ textarea{width:100%;height:90px;font-size:12px;border-radius:6px;box-sizing:bord
 .small{font-size:12px;color:#d8c0a0}
 </style></head><body><div class="wrap">
 <h1>🎀 幻獸日記・裝飾調整器</h1>
-<div class="small">選幻獸、選裝飾，用按鈕調到你覺得剛好，最後按「複製設定」貼給 Claude。會自動存在這支手機。</div>
+<div class="small">選幻獸、選裝飾，用按鈕調到你覺得剛好（也可以調吐彩虹的嘴巴位置），最後按「複製設定」貼給 Claude。會自動存在這支手機。</div>
 <div class="lbl">屬性</div><div class="chips" id="cEl"></div>
 <div class="lbl">階段</div><div class="chips" id="cSt"></div>
 <div class="lbl">裝飾</div><div class="chips" id="cAc"></div>
@@ -19,8 +19,11 @@ textarea{width:100%;height:90px;font-size:12px;border-radius:6px;box-sizing:bord
 <div class="chips"><button class="chip" id="bGuide">輔助線：開</button><button class="chip" id="bFace">朝向：左</button></div>
 <div class="tabs"><button class="chip on" id="tHead">🧠 調頭型（這隻的全部裝飾一起動）</button><button class="chip" id="tOne">🎯 只調這個裝飾</button></div>
 <div id="pHead"><div class="lbl">頭頂（帽子坐的地方）</div><div class="pad"><button data-h="ht,-1">▲ 往上</button><button data-h="ht,1">▼ 往下</button><button data-h="cx,-1">◀ 中心往左</button><button data-h="cx,1">▶ 中心往右</button></div>
-<div class="lbl">頭的大小、眼睛</div><div class="pad"><button data-h="hw,1">頭寬 ＋</button><button data-h="hw,-1">頭寬 −</button><button data-h="ey,-1">眼睛 ▲</button><button data-h="ey,1">眼睛 ▼</button><button data-h="ew,1">眼距 ＋</button><button data-h="ew,-1">眼距 −</button><button data-h="reset">這隻重設</button></div></div>
-<div id="pOne" style="display:none"><div class="lbl">只動「這隻 × 這個裝飾」</div><div class="pad"><button data-o="0,-1">◀ 左</button><button data-o="0,1">▶ 右</button><button data-o="1,-1">▲ 上</button><button data-o="1,1">▼ 下</button><button data-o="2,1">放大</button><button data-o="2,-1">縮小</button><button data-o="reset">重設</button></div></div>
+<div class="lbl">頭的大小、眼睛</div><div class="pad"><button data-h="hw,1">頭寬 ＋</button><button data-h="hw,-1">頭寬 −</button><button data-h="ey,-1">眼睛 ▲</button><button data-h="ey,1">眼睛 ▼</button><button data-h="ew,1">眼距 ＋</button><button data-h="ew,-1">眼距 −</button><button data-h="reset">這隻重設</button></div>
+<div class="lbl">👄 嘴巴（吐彩虹張嘴的位置，先選「張嘴」看）</div><div class="pad"><button data-h="my,-1">嘴 ▲</button><button data-h="my,1">嘴 ▼</button><button data-h="mx,-1">嘴 ◀</button><button data-h="mx,1">嘴 ▶</button></div></div>
+<div id="pOne" style="display:none"><div class="lbl">只動「這隻 × 這個裝飾」</div><div class="pad"><button data-o="0,-1">◀ 左</button><button data-o="0,1">▶ 右</button><button data-o="1,-1">▲ 上</button><button data-o="1,1">▼ 下</button><button data-o="2,1">放大</button><button data-o="2,-1">縮小</button><button data-o="reset">重設</button></div>
+<div class="lbl">圖層、歪一邊</div><div class="pad"><button data-o="L">🔼 圖層切換</button><button data-o="4,-5">↺ 往左歪</button><button data-o="4,5">↻ 往右歪</button><button data-o="4,0">擺正</button></div>
+<div class="small">圖層切換：預設（帽緣壓在頭上）→ 整個在前面 → 整個在後面</div></div>
 <div class="lbl">全部 35 隻（點一下切換）</div><div id="grid"></div>
 <button class="big" id="bCopy">📋 複製設定（貼給 Claude）</button>
 <textarea id="out" readonly></textarea>
@@ -44,30 +47,31 @@ try{const sv=JSON.parse(localStorage.getItem('pf-acc-sim')||'null');if(sv){Objec
 const IMG={},PIM={};let pend=0;const load=(src,cb)=>{pend++;const im=new Image();im.onload=()=>{cb(im);if(--pend===0)all()};im.src='data:image/png;base64,'+src};
 for(const k in ACC_B64)load(ACC_B64[k],im=>IMG[k]=im);for(const k in PETS)load(PETS[k],im=>PIM[k]=im);
 const key=()=>cur.el+cur.st,CELL=48;
-function anchor(k){const T=TAB[k];return{ht:T.ht,cx:T.cx,hw:T.hw,ey:T.ey,ex0:T.cx-T.ew/2,ex1:T.cx+T.ew/2,ny:T.ey+(T.ey-T.ht)*.95+1,mouth:T.ey+Math.max(3,(T.ey-T.ht)*.45),bot:45}}
-function drawAcc(c,k,x,y,w,fl,list,layer){const A=anchor(k),s=w/CELL;for(const id of list){const it=ACC[id],im=it&&IMG[it.img];if(!im)continue;const fr=it.front??1;if(layer==='back'&&fr>=1)continue;if(layer==='front'&&fr<=0)continue;
- const F=(FIX[k]&&FIX[k][id])||[0,0,0];let aw,cx,by;
+function anchor(k){const T=TAB[k];return{ht:T.ht,cx:T.cx,hw:T.hw,ey:T.ey,ex0:T.cx-T.ew/2,ex1:T.cx+T.ew/2,ny:T.ey+(T.ey-T.ht)*.95+1,mouth:T.ey+Math.max(3,(T.ey-T.ht)*.45)+(T.my||0),mcx:T.cx+(T.mx||0),bot:45}}
+function drawAcc(c,k,x,y,w,fl,list,layer){const A=anchor(k),s=w/CELL;for(const id of list){const it=ACC[id],im=it&&IMG[it.img];if(!im)continue;const F=(FIX[k]&&FIX[k][id])||[0,0,0,0,0],fr=F[3]===1?1:F[3]===-1?0:(it.front??1);if(layer==='back'&&fr>=1)continue;if(layer==='front'&&fr<=0)continue;
+let aw,cx,by;
  if(it.slot==='head'){aw=A.hw*it.w;cx=A.cx+(it.side||0)*A.hw+(it.dx||0)*aw;const ah0=im.height*(aw/im.width);by=Math.min(A.ht+ah0*it.sink,A.ey-(it.side?0:2))}
  else if(it.slot==='face'){aw=Math.max(A.ex1-A.ex0+5,A.hw*.62);cx=A.cx;by=A.ey+im.height*(aw/im.width)*.55}
- else if(it.slot==='mouth'){aw=A.hw*.5;cx=A.cx-A.hw*.3;by=A.mouth+3}
+ else if(it.slot==='mouth'){aw=A.hw*.5;cx=A.mcx-A.hw*.3;by=A.mouth+3}
  else{aw=A.hw*.62;cx=A.cx;by=A.ny+im.height*(aw/im.width)*.75}
  cx+=F[0];by+=F[1];aw*=1+F[2]*.05;const ah=im.height*(aw/im.width);
  const dw=Math.max(4,Math.round(aw*s)),dh=Math.max(3,Math.round(ah*s)),px=Math.round(fl?x+(CELL-cx)*s-dw/2:x+cx*s-dw/2),py=Math.round(y+by*s-dh);
  let sy=0,sh=im.height,oy=0,oh=dh;if(layer==='front'&&fr<1){sy=Math.floor(im.height*(1-fr));sh=im.height-sy;oy=Math.round(dh*(sy/im.height));oh=dh-oy}
- c.save();c.imageSmoothingEnabled=false;if(fl){c.translate(px+dw,py);c.scale(-1,1);c.drawImage(im,0,sy,im.width,sh,0,oy,dw,oh)}else c.drawImage(im,0,sy,im.width,sh,px,py+oy,dw,oh);c.restore()}}
-function paint(c,k,x,y,w,fl,list){const im=PIM[k];if(!im)return;drawAcc(c,k,x,y,w,fl,list,'back');c.save();if(fl){c.translate(x+w,y);c.scale(-1,1);c.drawImage(im,0,0,w,w)}else c.drawImage(im,x,y,w,w);c.restore();drawAcc(c,k,x,y,w,fl,list,'front')}
-const lst=()=>cur.acc==='glasses'?['glasses']:cur.acc?[cur.acc]:[];
+ c.save();c.imageSmoothingEnabled=false;c.translate(px+dw/2,py+dh);if(fl)c.scale(-1,1);if(F[4])c.rotate(F[4]*Math.PI/180);c.drawImage(im,0,sy,im.width,sh,-dw/2,-dh+oy,dw,oh);c.restore()}}
+function drawMouth(c,k,x,y,s,fl){const A=anchor(k),mx=fl?CELL-A.mcx:A.mcx,ox=Math.round(mx)-2,oy=Math.round(A.mouth+1)-2,P=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(x+a*s,y+b*s,w*s,h*s)};P(ox,oy,5,4,'#2a0a0a');P(ox+1,oy-1,3,6,'#2a0a0a');P(ox+1,oy,3,3,'#7a1a2a');P(ox+1,oy+2,3,1,'#e8607a')}
+function paint(c,k,x,y,w,fl,list){const im=PIM[k];if(!im)return;drawAcc(c,k,x,y,w,fl,list,'back');c.save();if(fl){c.translate(x+w,y);c.scale(-1,1);c.drawImage(im,0,0,w,w)}else c.drawImage(im,x,y,w,w);c.restore();drawAcc(c,k,x,y,w,fl,list,'front');if(cur.acc==='MOUTH')drawMouth(c,k,x,y,w/CELL,fl)}
+const lst=()=>cur.acc&&ACC[cur.acc]?[cur.acc]:[];
 function draw(){const c=document.getElementById('cv').getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,240,240);c.fillStyle='#77a877';c.fillRect(0,0,240,240);const k=key(),s=4,x=(240-CELL*s)/2,y=36;
  paint(c,k,x,y,CELL*s,flip,lst());if(guide){const A=anchor(k),X=v=>flip?x+(CELL-v)*s:x+v*s;c.fillStyle='rgba(0,80,255,.7)';c.fillRect(0,y+A.ht*s,240,1);c.fillStyle='rgba(255,0,0,.8)';c.fillRect(Math.min(X(A.ex0),X(A.ex1)),y+A.ey*s,Math.abs(X(A.ex1)-X(A.ex0)),2);c.fillStyle='rgba(255,230,0,.9)';c.fillRect(X(A.cx),y,1,240);c.fillStyle='rgba(255,230,0,.5)';c.fillRect(Math.min(X(A.cx-A.hw/2),X(A.cx+A.hw/2)),y+A.ht*s-3,A.hw*s,2)}
- const T=TAB[k],F=(FIX[k]&&FIX[k][cur.acc])||[0,0,0];c.fillStyle='#000a';c.fillRect(0,222,240,18);c.fillStyle='#fff';c.font='11px sans-serif';c.fillText(`${k}  頭頂${T.ht} 中心${T.cx} 頭寬${T.hw} 眼${T.ey}/${T.ew}  細修${F.join(',')}`,4,235);grid();out()}
+ const T=TAB[k],F=(FIX[k]&&FIX[k][cur.acc])||[0,0,0,0,0];c.fillStyle='#000a';c.fillRect(0,212,240,28);c.fillStyle='#fff';c.font='10px sans-serif';c.fillText(`${k}  頭頂${T.ht} 中心${T.cx} 頭寬${T.hw} 眼${T.ey}/${T.ew}  嘴${T.mx||0},${T.my||0}`,4,224);c.fillText(`細修${F[0]||0},${F[1]||0},${F[2]||0} 圖層${['預設','前面','後面'][F[3]===1?1:F[3]===-1?2:0]} 歪${F[4]||0}°`,4,236);grid();out()}
 function grid(){const g=document.getElementById('grid');if(!g.children.length){for(let n=0;n<5;n++)for(const[e]of EL){}for(const[e]of EL)for(let n=0;n<5;n++){const cv=document.createElement('canvas');cv.width=96;cv.height=96;cv.dataset.k=e+n;cv.onclick=()=>{cur.el=e;cur.st=n;chips();draw()};g.appendChild(cv)}}
  for(const cv of g.children){const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,96,96);paint(c,cv.dataset.k,8,14,80,false,lst());cv.classList.toggle('on',cv.dataset.k===key())}}
 function out(){const fix={};for(const k in FIX)for(const a in FIX[k]){const v=FIX[k][a];if(v&&v.some(n=>n)){(fix[k]=fix[k]||{})[a]=v}}const o={tab:TAB,fix};document.getElementById('out').value=JSON.stringify(o);try{localStorage.setItem('pf-acc-sim',JSON.stringify(o))}catch(e){}}
 function chips(){const mk=(id,L,on,fn)=>{const el=document.getElementById(id);el.innerHTML='';for(const[v,t]of L){const b=document.createElement('button');b.className='chip'+(v===on?' on':'');b.textContent=t;b.onclick=()=>{fn(v);chips();draw()};el.appendChild(b)}};
- mk('cEl',EL,cur.el,v=>cur.el=v);mk('cSt',ST.map((t,i)=>[i,t]),cur.st,v=>cur.st=v);mk('cAc',[...Object.keys(ACC).filter(k=>IMG[ACC[k].img]).map(k=>[k,ACC[k].n]),['','（不戴）']],cur.acc,v=>cur.acc=v)}
+ mk('cEl',EL,cur.el,v=>cur.el=v);mk('cSt',ST.map((t,i)=>[i,t]),cur.st,v=>cur.st=v);mk('cAc',[...Object.keys(ACC).filter(k=>IMG[ACC[k].img]).map(k=>[k,ACC[k].n]),['MOUTH','👄 張嘴（吐彩虹）'],['','（不戴）']],cur.acc,v=>cur.acc=v)}
 function all(){chips();draw()}
-document.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{const k=key();if(b.dataset.h==='reset'){TAB[k]=JSON.parse(JSON.stringify(TAB0[k]));draw();return}const[p,d]=b.dataset.h.split(',');TAB[k][p]+=+d;draw()});
-document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{const k=key();if(!cur.acc)return;FIX[k]=FIX[k]||{};if(b.dataset.o==='reset'){delete FIX[k][cur.acc];draw();return}const[i,d]=b.dataset.o.split(',').map(Number),F=FIX[k][cur.acc]||[0,0,0];F[i]+=d;FIX[k][cur.acc]=F;draw()});
+document.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{const k=key();if(b.dataset.h==='reset'){TAB[k]=JSON.parse(JSON.stringify(TAB0[k]));draw();return}const[p,d]=b.dataset.h.split(',');TAB[k][p]=(TAB[k][p]||0)+(+d);draw()});
+document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{const k=key();if(!ACC[cur.acc])return;FIX[k]=FIX[k]||{};if(b.dataset.o==='reset'){delete FIX[k][cur.acc];draw();return}const F=FIX[k][cur.acc]||[0,0,0,0,0];while(F.length<5)F.push(0);if(b.dataset.o==='L')F[3]=F[3]===0?1:F[3]===1?-1:0;else{const[i,d]=b.dataset.o.split(',').map(Number);if(i===4&&d===0)F[4]=0;else F[i]+=d}FIX[k][cur.acc]=F;draw()});
 document.getElementById('tHead').onclick=()=>{mode='head';document.getElementById('pHead').style.display='';document.getElementById('pOne').style.display='none';document.getElementById('tHead').classList.add('on');document.getElementById('tOne').classList.remove('on')};
 document.getElementById('tOne').onclick=()=>{mode='one';document.getElementById('pHead').style.display='none';document.getElementById('pOne').style.display='';document.getElementById('tOne').classList.add('on');document.getElementById('tHead').classList.remove('on')};
 document.getElementById('bGuide').onclick=e=>{guide=!guide;e.target.textContent='輔助線：'+(guide?'開':'關');draw()};
