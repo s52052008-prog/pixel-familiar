@@ -2206,7 +2206,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&SOC.code)c
 function frDot(){const n=SOC.reqs.length+pendGet().length+SOC.unread;const d=$('frDot');if(d)d.classList.toggle('hidden',!n)}
 function applyMail(m){const who=m.name||'朋友',d=m.data||{},now=Date.now();
  if(m.kind==='pet'){if(s.hatched){s.mood=Math.min(100,s.mood+8);s.bond=Math.min(100,(s.bond||0)+1)}return`✋ ${who} 來家裡摸了摸 ${s.name}，牠心情變好了`}
- if(m.kind==='water'){let n=0;(s.plots||[]).forEach((p,i)=>{const q=PC.plotState(s,i,now);if(q&&!q.empty&&!q.ripe&&q.progress<1){p.at-=Math.round(q.left/(1-q.progress)*.15);n++}});return`💧 ${who} 幫你澆了水${n?'，田裡的作物長快一點了':''}`}
+ if(m.kind==='water'){let n=0;(s.plots||[]).forEach((p,i)=>{const q=PC.plotState(s,i,now);if(q&&!q.empty&&!q.ripe&&q.progress<1){p.at-=Math.round(Math.max(30*60e3,q.left/(1-q.progress)*.15));n++}});return`💧 ${who} 幫你澆了水${n?'，田裡的作物長快一點了':''}`}
  if(m.kind==='msg'){SOC.unread++;return`💌 ${who}：${d.text||''}`}
  if(m.kind==='gift'||m.kind==='daily'){const n=Math.max(0,Math.min(500,Math.floor(+d.n||0)));if(d.item==='coins')s.coins+=n;else if(GIFTS.some(g=>g[0]===d.item))s.inv[d.item]=(s.inv[d.item]||0)+n;return`🎁 ${who} 送你 ${GN(d.item)} ×${n}`}
  if(m.kind==='friend')return`👥 ${who} 跟你成為好友了！`;
