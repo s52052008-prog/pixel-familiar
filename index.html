@@ -390,7 +390,7 @@ header{padding-top:10px}
 body.arrMode .snav{display:none}
 #vsCard{flex:0 0 auto;background:#3a2414;border:3px solid #2a170a;box-shadow:0 0 0 2px #b8854e;border-radius:6px;padding:10px;margin:0 6px 4px;display:flex;flex-direction:column;gap:8px;color:#fff3d8}
 #vsCard .lgTop{display:flex;gap:10px;align-items:center}#vsCv{width:64px;height:64px;image-rendering:pixelated;background:#5a3a20;border:2px solid #2a170a;border-radius:6px}#vsName{font-size:18px}#vsSub{font-size:13px;color:#f0d8a8}
-.vsBtns{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}#vsCard .btn{margin:0;min-height:46px;font-size:16px;padding:4px}#vsCard .btn:disabled{opacity:.45}
+.vsBtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}#vsCard .btn{margin:0;min-height:46px;font-size:16px;padding:4px}#vsCard .btn:disabled{opacity:.45}
 .frow{display:flex;gap:8px;align-items:center;background:#4a2e18;border:2px solid #2a170a;border-radius:6px;padding:6px;margin:6px 0}.frow canvas{width:48px;height:48px;image-rendering:pixelated;flex:0 0 auto}.frow .fi{flex:1;min-width:0}.frow .btn{margin:0;flex:0 0 auto;padding:6px 10px}
 .fcode{font-size:24px;letter-spacing:3px;color:#ffe066;font-family:monospace}.gift-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.gift-grid .btn{margin:0;font-size:15px}
 #lgCard{flex:0 0 auto;background:#3a2414;border:3px solid #2a170a;box-shadow:0 0 0 2px #b8854e;border-radius:6px;padding:10px;margin:0 6px 4px;display:flex;flex-direction:column;gap:10px;color:#fff3d8}
@@ -408,7 +408,10 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
 /* V1.84 組合拳方向鍵放大 */.tctl.pad{padding:2px 8px 10px!important}.tctl.pad .dpad{width:174px!important;height:174px!important}.tctl.pad .dpad::before{left:58px!important;width:58px!important;height:174px!important}.tctl.pad .dpad::after{top:58px!important;width:174px!important;height:58px!important}.tctl.pad .dpad .pk{width:58px!important;height:58px!important}.tctl.pad .dpad .pk svg{width:34px!important;height:34px!important}.tctl.pad .pkU{left:58px!important;top:0!important}.tctl.pad .pkD{left:58px!important;top:116px!important}.tctl.pad .pkL{left:0!important;top:58px!important}.tctl.pad .pkR{left:116px!important;top:58px!important}
 
 /* V1.86.4 字大一點 */
-.sheet{font-size:16px}.sheet h2{font-size:20px}.small{font-size:13.5px!important;line-height:1.5}
+.sheet{font-size:16px}
+/* V1.87.1 視窗放在畫面中間（不再貼在最下面） */
+#modal{align-items:center;padding:calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 10px)}
+#modal .sheet{width:100%;max-height:100%;border:4px solid #b8854e;border-radius:10px;box-shadow:0 0 0 3px #2a170a,0 10px 30px #000a;padding:16px}.sheet h2{font-size:20px}.small{font-size:13.5px!important;line-height:1.5}
 #petname{font-size:22px!important}.chip{font-size:13px!important}.sh .sl{font-size:12.5px!important}.sh{font-size:14px!important}
 .act{font-size:15.5px!important}.toolbar.five .tool{font-size:13.5px!important}#growText,#stepInfo{font-size:13.5px!important}
 .panel{font-size:14.5px}#blog{font-size:16px!important}.btn{font-size:14.5px}
@@ -2266,10 +2269,14 @@ function visitCard(){const f=VISIT.f,ra=f.card&&f.card.runaway,p=f.card&&f.card.
  const c=$('vsCv'),x=c.getContext('2d');x.clearRect(0,0,48,48);if(VISIT.key)try{thumb(c,VISIT.key,'happy1')}catch(e){}
  const set=(id,t,ok)=>{const b=$(id);b.textContent=t;b.disabled=!ok};
  set('vsPet',left('pet')>0?'✋ 摸摸':'✋ 摸過了',left('pet')>0&&!!p);set('vsWater',left('water')>0?(f.card.plots?`💧 澆水（${f.card.plots}）`:'💧 沒有田'):'💧 澆過了',left('water')>0&&f.card.plots>0);
- set('vsGift','🎁 送禮',left('gift')>0||left('daily')>0);set('vsMsg','💌 留言',left('msg')>0);set('vsBoard',`📜 留言板（${(f.board||[]).length}）`,true);set('vsMate','💞 配對',!!p&&left('mate')>0);$('vsDuel').classList.toggle('hidden',!PVP_ON);set('vsDuel',left('duel')>0?'⚔️ 挑戰':'⚔️ 打完了',!!p&&left('duel')>0&&!ra);set('vsSearch',ra?(left('search')>0?'🔍 幫忙找':'🔍 找過了'):'🔍 不用找',!!ra&&left('search')>0);
+ set('vsGift','🎁 送禮',left('gift')>0||left('daily')>0);set('vsMsg','💌 留言',left('msg')>0);set('vsBoard',`📜 留言板（${(f.board||[]).length}）`,true);set('vsMate','💞 配對',!!p&&left('mate')>0);$('vsDuel').classList.toggle('hidden',!PVP_ON);set('vsDuel',left('duel')>0?'⚔️ 挑戰':'⚔️ 打完了',!!p&&left('duel')>0&&!ra);set('vsSearch',ra?(left('search')>0?'🔍 幫忙找':'🔍 找過了'):'',!!ra&&left('search')>0);$('vsSearch').classList.toggle('hidden',!ra);
  if(ra){$('vsSub').textContent=`😢 ${p?p.name:'牠'} 離家出走了！一起幫忙找：${fmtN(ra.got)} / ${fmtN(ra.need)}`;['vsPet','vsMate'].forEach(id=>$(id).disabled=true)}
  $('vsCard').classList.remove('hidden');pixifyDom($('vsCard'))}
-async function visitAct(kind,data){const f=VISIT.f;const r=await pushPost('/act',{code:f.code,kind,data}).catch(()=>null);if(!r||!r.ok){toast('❌ '+(r&&r.msg||'連不到伺服器'),3000);return null}f.used[kind]=(f.used[kind]||0)+1;visitCard();toast(r.msg,3000);return r}
+/* V1.87.1 互助互惠：幫朋友的人自己也有回報 */
+const HELP_REWARD={pet:{coins:10,mood:5,t:'摸摸讓你的幻獸也開心'},water:{coins:10,seeds:1,t:'澆完水朋友分你一包種子'},search:{coins:15,bond:1,t:'一起找寵物，感情更好了'},daily:{coins:5,t:'送禮的人也會收到回禮'},gift:{coins:5,t:'送禮的人也會收到回禮'}};
+function helpReward(kind){const R=HELP_REWARD[kind];if(!R)return'';const L=[];if(R.coins){s.coins+=R.coins;L.push(`🪙+${R.coins}`)}if(R.seeds){s.inv.seeds=(s.inv.seeds||0)+R.seeds;L.push(`🌱種子+${R.seeds}`)}
+ if(s.hatched&&R.mood){s.mood=Math.min(100,s.mood+R.mood);L.push(`💗${s.name} 心情+${R.mood}`)}if(s.hatched&&R.bond){s.bond=Math.min(100,(s.bond||0)+R.bond);L.push(`💞親密度+${R.bond}`)}save();renderUI();return`\n🤝 ${R.t}：${L.join('、')}`}
+async function visitAct(kind,data){const f=VISIT.f;const r=await pushPost('/act',{code:f.code,kind,data}).catch(()=>null);if(!r||!r.ok){toast('❌ '+(r&&r.msg||'連不到伺服器'),3000);return null}f.used[kind]=(f.used[kind]||0)+1;visitCard();toast(r.msg+helpReward(kind),4200);return r}
 function visitPetHop(){const r=VISIT.r,t=performance.now();r.tx=null;r.act='idle';r.hop=t+800;r.until=t+2500;spawn('heart',5,{x:r.x+24,y:PET_Y+8,vy:-18,spread:14});sfx('pet')}
 async function visitPet(){if(!VISIT.f.card.pet)return;if((VISIT.f.used.pet||0)>=(VISIT.f.limit.pet||1)){visitPetHop();say(`${VISIT.f.card.pet.name}：嘿嘿～`,{log:false});return}const r=await visitAct('pet');if(r){visitPetHop();say(`${VISIT.f.card.pet.name}：好舒服～謝謝你！`,{log:false})}}
 function visitTap(x,y){const r=VISIT.r;if(r&&VISIT.key&&x>=r.x+6&&x<=r.x+42&&y>=PET_Y+r.dep+8&&y<=PET_Y+r.dep+46)visitPet()}
