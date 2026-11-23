@@ -10,7 +10,7 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 .th{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;background:#4a301a;border:2px solid #2a170a;border-radius:10px;padding:3px;font-size:11px;color:#f0d8a8}
 .th canvas{width:58px;height:58px;image-rendering:pixelated}.th.on{background:#ffe066;color:#3a2414;border-color:#b8854e}.th img{width:40px;height:40px;object-fit:contain;image-rendering:pixelated;margin:9px}
 .stage{position:sticky;top:0;z-index:5;background:#2a1a0e;padding:4px 0 6px;box-shadow:0 6px 10px -6px #000}
-.cvw{position:relative;width:min(100%,40vh);margin:0 auto}
+.cvw{position:relative;width:min(100%,44vh);margin:0 auto}
 #cv{width:100%;aspect-ratio:1;image-rendering:pixelated;background:#77a877;border:3px solid #2a170a;border-radius:10px;display:block;touch-action:none}
 .cvb{position:absolute;top:6px;display:flex;gap:5px}.cvb.l{left:6px}.cvb.r{right:6px}.cvb button{background:#2a170acc;border:none;color:#fff;border-radius:8px;padding:5px 8px;font-size:13px}.cvb button.off{opacity:.5}
 #hint{text-align:center;font-size:12px;color:#d8c0a0;margin:4px 0 0;min-height:16px}
@@ -32,6 +32,7 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 .note{font-size:12px;color:#d8c0a0;text-align:center;margin-top:6px}
 .foot{margin-top:14px}.big{width:100%;background:#ffe066;color:#3a2414;border:3px solid #2a170a;border-radius:12px;padding:12px;font-size:16px;font-weight:700}
 textarea{width:100%;height:70px;font-size:11px;border-radius:8px;margin-top:6px}details{margin-top:8px;font-size:13px;color:#d8c0a0}
+.dpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:4px;max-height:170px;overflow-y:auto;background:#1a0f06;border-radius:10px;padding:5px;margin:4px 0 8px}.dpick button{position:relative;aspect-ratio:1;background:#77a877;border:2px solid transparent;border-radius:6px;padding:2px}.dpick button.on{border-color:#ffe066}.dpick img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.dpick i{position:absolute;right:1px;top:-2px;font-style:normal;font-size:11px}
 #grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-top:8px}#grid canvas{width:100%;aspect-ratio:1;image-rendering:pixelated;background:#77a877;border-radius:4px;border:2px solid transparent}#grid canvas.on{border-color:#ffe066}
 </style></head><body><div class="wrap">
 <div class="top"><h1>🎀 裝飾調整器</h1><div class="pill" id="cloud">☁️ 連線中…</div></div>
@@ -41,7 +42,7 @@ textarea{width:100%;height:70px;font-size:11px;border-radius:8px;margin-top:6px}
 <div class="stage">
  <div class="cvw"><canvas id="cv" width="240" height="240"></canvas>
   <div class="cvb l"><button id="bUndo">↩️ 上一步</button></div>
-  <div class="cvb r"><button id="bFace">↔️ 轉向</button><button id="bGuide">📐 線</button></div></div>
+  <div class="cvb r"><button id="bZo" class="zb">🔍－</button><button id="bZi" class="zb">🔍＋</button><button id="bFace">↔️ 轉向</button><button id="bGuide">📐 線</button></div></div>
  <div id="hint"></div>
  <div class="seg" id="modes"><button data-mode="acc"><b>🎀</b>裝飾位置</button><button data-mode="head"><b>🧠</b>頭型</button><button data-mode="mouth"><b>👄</b>嘴巴</button><button data-mode="draw"><b>🖌️</b>修圖</button></div>
 </div>
@@ -70,10 +71,12 @@ textarea{width:100%;height:70px;font-size:11px;border-radius:8px;margin-top:6px}
 </div>
 
 <div class="panel" id="p-draw">
+ <div class="lab">要修哪一種素材</div><div class="scr" id="dCat" style="padding-top:0"></div>
+ <div id="dPickWrap" style="display:none"><div class="dpick" id="dPick"></div></div>
  <div class="seg3" id="tool"><button data-tool="pen">✏️ 畫筆</button><button data-tool="pick">💧 吸色</button><button data-tool="erase">🧽 橡皮擦</button></div>
  <div class="row" style="margin-top:10px"><div class="dpad"><button data-dm="-1,-1">↖</button><button data-dm="0,-1">▲</button><button data-dm="1,-1">↗</button><button data-dm="-1,0">◀</button><button class="go" id="dGo">👆<br>點下去</button><button data-dm="1,0">▶</button><button data-dm="-1,1">↙</button><button data-dm="0,1">▼</button><button data-dm="1,1">↘</button></div>
- <div class="side"><div><div class="lab">手指點畫面時</div><div class="seg3" id="touch" style="grid-template-columns:1fr 1fr"><button data-tc="move">只移框框</button><button data-tc="paint">直接畫</button></div></div>
-  <div><div class="lab">要改哪一張</div><div class="seg3" id="eyes"><button data-eye="o">睜眼</button><button data-eye="c">閉眼</button><button data-eye="b">兩張</button></div></div></div></div>
+ <div class="side"><div><div class="lab">手指在畫面上</div><div class="seg3" id="touch"><button data-tc="move">移框框</button><button data-tc="paint">直接畫</button><button data-tc="pan">✋拖畫面</button></div></div>
+  <div id="eyesWrap"><div class="lab">要改哪一張</div><div class="seg3" id="eyes"><button data-eye="o">睜眼</button><button data-eye="c">閉眼</button><button data-eye="b">兩張</button></div></div></div></div>
  <div class="colr"><div id="curC"></div><div style="flex:1"><div class="lab">目前顏色 <b id="curHex"></b></div><div class="small" style="font-size:11px;color:#d8c0a0">點右邊色塊開大色盤 →</div></div><input type="color" id="dCol"></div>
  <div class="lab">這隻身上的顏色</div><div class="sw" id="swPet"></div>
  <div class="lab">常用色</div><div class="sw" id="swBase"></div>
@@ -111,7 +114,7 @@ const UNDO=[];const snap=()=>JSON.stringify({tab:TAB,fix:FIX,px:PX});
 function mark(){const s=snap();if(UNDO[UNDO.length-1]!==s)UNDO.push(s);if(UNDO.length>80)UNDO.shift()}
 function undo(){const s=UNDO.pop();if(!s){hint('沒有可以退回的了');return}const o=JSON.parse(s);TAB=o.tab;FIX=o.fix;PX=o.px;for(const k in PC)delete PC[k];draw();hint('↩️ 退回一步')}
 let hintT=0;function hint(t,keep){$('hint').textContent=t;clearTimeout(hintT);if(!keep)hintT=setTimeout(baseHint,1800)}
-function baseHint(){$('hint').textContent={acc:ACC[cur.acc]?'👆 直接用手指拖裝飾，或用下面的按鈕微調':'先在上面選一個裝飾',head:'👆 手指拖動＝移動頭頂位置（藍線、黃線）',mouth:'👆 手指拖動＝移動嘴巴',draw:ED.tc==='paint'?'👆 手指點哪裡就畫哪裡':'👆 點畫面移框框 → 方向鍵微調 → 按「點下去」'}[mode]}
+function baseHint(){$('hint').textContent={acc:ACC[cur.acc]?'👆 直接用手指拖裝飾，或用下面的按鈕微調':'先在上面選一個裝飾',head:'👆 手指拖動＝移動頭頂位置（藍線、黃線）',mouth:'👆 手指拖動＝移動嘴巴',draw:ED.tc==='paint'?'👆 手指點哪裡就畫哪裡':ED.tc==='pan'?'✋ 手指拖動畫面（圖很大時用）':'👆 點畫面移框框 → 方向鍵微調 → 按「點下去」'}[mode]}
 /* ---------- 錨點、畫裝飾 ---------- */
 function anchor(k){const T=TAB[k];return{ht:T.ht,cx:T.cx,hw:T.hw,ey:T.ey,ex0:T.cx-T.ew/2,ex1:T.cx+T.ew/2,ny:T.ey+(T.ey-T.ht)*.95+1,mouth:T.ey+Math.max(3,(T.ey-T.ht)*.45)+(T.my||0),mcx:T.cx+(T.mx||0),bot:45}}
 const getF=(k,id)=>{const F=(FIX[k]&&FIX[k][id])||[];while(F.length<5)F.push(0);return F};
@@ -130,7 +133,7 @@ const lst=()=>ACC[cur.acc]?[cur.acc]:[];
 function paint(c,k,x,y,w,fl,list,mouth){const im=petCv(k,'o');if(!im)return;drawAcc(c,k,x,y,w,fl,list,'back');c.save();c.imageSmoothingEnabled=false;if(fl){c.translate(x+w,y);c.scale(-1,1);c.drawImage(im,0,0,w,w)}else c.drawImage(im,x,y,w,w);c.restore();drawAcc(c,k,x,y,w,fl,list,'front');if(mouth)drawMouth(c,k,x,y,w/CELL,fl)}
 /* ---------- 主畫面 ---------- */
 const VS=4,VX=(240-CELL*VS)/2,VY=28;   // 一般模式：寵物畫在 (VX,VY) 放大 4 倍
-function draw(){if(mode==='draw')drawEd();else drawView();thumbs();out()}
+function draw(){if(mode==='draw')drawEd();else drawView();if(mode==='draw'||document.querySelector('.zb'))edUI();thumbs();out()}
 function drawView(){const c=$('cv').getContext('2d'),k=key();c.imageSmoothingEnabled=false;c.fillStyle='#77a877';c.fillRect(0,0,240,240);
  paint(c,k,VX,VY,CELL*VS,flip,mode==='mouth'?[]:lst(),mode==='mouth');
  if(guide){const A=anchor(k),X=v=>flip?VX+(CELL-v)*VS:VX+v*VS;
@@ -144,13 +147,13 @@ function drawView(){const c=$('cv').getContext('2d'),k=key();c.imageSmoothingEna
 /* ---------- 選擇列 ---------- */
 function chips(){const mk=(id,L,on,fn)=>{const el=$(id);el.innerHTML='';for(const[v,t]of L){const b=document.createElement('button');b.className='chip'+(v===on?' on':'');b.textContent=t;b.onclick=()=>{fn(v);chips();draw()};el.appendChild(b)}};
  mk('cEl',EL,cur.el,v=>cur.el=v);
- const st=$('cSt');st.innerHTML='';ST.forEach((t,i)=>{const b=document.createElement('button');b.className='th'+(i===cur.st?' on':'');const cv=document.createElement('canvas');cv.width=cv.height=96;cv.dataset.k=cur.el+i;b.append(cv,t);b.onclick=()=>{cur.st=i;chips();draw()};st.appendChild(b)});
+ const st=$('cSt');st.innerHTML='';ST.forEach((t,i)=>{const b=document.createElement('button');b.className='th'+(i===cur.st?' on':'');const cv=document.createElement('canvas');cv.width=cv.height=96;cv.dataset.k=cur.el+i;b.append(cv,t);b.onclick=()=>{cur.st=i;chips();if(mode==='draw'&&ED.cat==='pet')swatches();draw()};st.appendChild(b)});
  const ac=$('cAc');ac.innerHTML='';for(const id of[...Object.keys(ACC).filter(k=>IMG[ACC[k].img]),'']){const b=document.createElement('button');b.className='th'+(id===cur.acc?' on':'');if(id){const im=new Image();im.src=IMG[ACC[id].img].src;b.append(im,ACC[id].n)}else{const sp=document.createElement('span');sp.style.cssText='font-size:26px;margin:15px 12px';sp.textContent='🚫';b.append(sp,'不戴')}b.onclick=()=>{cur.acc=id;chips();draw();baseHint()};ac.appendChild(b)}
  const on=ac.querySelector('.on');if(on)on.scrollIntoView({inline:'nearest',block:'nearest'})}
 function thumbs(){for(const cv of $$('#cSt canvas')){const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,96,96);paint(c,cv.dataset.k,4,8,88,false,lst())}
  const g=$('grid');if(!g.parentNode.open)return;if(!g.children.length)for(const[e]of EL)for(let n=0;n<5;n++){const cv=document.createElement('canvas');cv.width=cv.height=96;cv.dataset.k=e+n;cv.onclick=()=>{cur.el=e;cur.st=n;chips();draw();window.scrollTo({top:0,behavior:'smooth'})};g.appendChild(cv)}
  for(const cv of g.children){const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,96,96);paint(c,cv.dataset.k,4,8,88,false,lst());cv.classList.toggle('on',cv.dataset.k===key())}}
-function setMode(m){mode=m;$$('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));for(const p of['acc','head','mouth','draw'])$('p-'+p).style.display=p===m?'':'none';if(m==='draw')swatches();baseHint();draw()}
+function setMode(m){mode=m;$$('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));for(const p of['acc','head','mouth','draw'])$('p-'+p).style.display=p===m?'':'none';if(m==='draw'){cats();if(ED.cat==='pet')fitView();swatches()}baseHint();draw()}
 /* ---------- 調整動作 ---------- */
 function moveAcc(dx,dy){if(!ACC[cur.acc]){hint('先在上面選一個裝飾');return false}const k=key();FIX[k]=FIX[k]||{};const F=getF(k,cur.acc);F[0]+=flip?-dx:dx;F[1]+=dy;FIX[k][cur.acc]=F;return true}
 function moveHead(dx,dy){const T=TAB[key()];T.cx+=flip?-dx:dx;T.ht+=dy}
@@ -163,49 +166,71 @@ $$('[data-hd]').forEach(b=>b.onclick=()=>{const[p,d]=b.dataset.hd.split(',');mar
 $$('[data-mo]').forEach(b=>b.onclick=()=>{const[p,d]=b.dataset.mo.split(',');mark();if(p==='mx')moveMouth(+d,0);else moveMouth(0,+d);draw()});
 $$('[data-reset]').forEach(b=>b.onclick=()=>{const k=key(),r=b.dataset.reset;mark();
  if(r==='acc'){if(FIX[k])delete FIX[k][cur.acc]}else if(r==='head'){const T=TAB[k],o=TAB0[k];for(const p of['ht','cx','hw','ey','ew'])T[p]=o[p]}else if(r==='mouth'){delete TAB[k].mx;delete TAB[k].my}
- else{for(const e of ED.eye==='b'?['o','c']:[ED.eye]){delete PX[k+e];delete PC[k+e]}swatches()}draw();hint('已重設（按 ↩️ 可以反悔）')});
+ else{for(const id of writeIds()){delete PX[id];delete PC[id]}swatches();if(ED.cat!=='pet')picker()}draw();hint('已重設（按 ↩️ 可以反悔）')});
 /* 手指直接拖 */
 let drag=null;const cvXY=e=>{const r=$('cv').getBoundingClientRect();return[(e.clientX-r.left)/r.width*240,(e.clientY-r.top)/r.height*240]};
-$('cv').addEventListener('pointerdown',e=>{e.preventDefault();$('cv').setPointerCapture(e.pointerId);const[x,y]=cvXY(e);if(mode==='draw'){mark();edPoint(x,y,true);drag={draw:1};return}mark();drag={x,y,ax:0,ay:0}});
-$('cv').addEventListener('pointermove',e=>{if(!drag)return;const[x,y]=cvXY(e);if(drag.draw){edPoint(x,y,false);return}
+$('cv').addEventListener('pointerdown',e=>{e.preventDefault();$('cv').setPointerCapture(e.pointerId);const[x,y]=cvXY(e);if(mode==='draw'){if(ED.tc==='pan'){drag={pan:1,x,y};return}mark();edPoint(x,y,true);drag={draw:1};return}mark();drag={x,y,ax:0,ay:0}});
+$('cv').addEventListener('pointermove',e=>{if(!drag)return;const[x,y]=cvXY(e);if(drag.pan){const[W,H]=dims(),v=240/ED.S;ED.ox=Math.max(0,Math.min(Math.max(0,W-v),ED.ox-(x-drag.x)/ED.S));ED.oy=Math.max(0,Math.min(Math.max(0,H-v),ED.oy-(y-drag.y)/ED.S));drag.x=x;drag.y=y;draw();return}if(drag.draw){edPoint(x,y,false);return}
  const fx=(x-drag.x)/VS+drag.ax,fy=(y-drag.y)/VS+drag.ay,ix=Math.trunc(fx),iy=Math.trunc(fy);drag.x=x;drag.y=y;drag.ax=fx-ix;drag.ay=fy-iy;if(!ix&&!iy)return;
  if(mode==='acc')moveAcc(ix,iy);else if(mode==='head')moveHead(ix,iy);else moveMouth(ix,iy);draw()});
-const endDrag=()=>{if(drag&&drag.draw){ED.mag=false;draw()}drag=null};$('cv').addEventListener('pointerup',endDrag);$('cv').addEventListener('pointercancel',endDrag);
-/* ---------- 修圖 ---------- */
-const PC={};
-function baseData(k,e){const im=PIM[e==='c'?k+'c':k];if(!im)return null;const cv=document.createElement('canvas');cv.width=cv.height=CELL;const c=cv.getContext('2d');c.drawImage(im,0,0);return c}
-function petCv(k,e){const id=k+e;if(PC[id])return PC[id];const c=baseData(k,e);if(!c)return null;const E=PX[id];if(E){const d=c.getImageData(0,0,CELL,CELL);for(const i in E){const v=E[i],o=i*4;if(v==='x')d.data[o+3]=0;else{d.data[o]=parseInt(v.slice(1,3),16);d.data[o+1]=parseInt(v.slice(3,5),16);d.data[o+2]=parseInt(v.slice(5,7),16);d.data[o+3]=255}}c.putImageData(d,0,0)}return PC[id]=c.canvas}
-const ED={x:24,y:24,eye:'o',col:'#1a0a0a',tool:'pen',tc:'move',grid:true,mag:false,recent:[]};
+const endDrag=()=>{drag=null};$('cv').addEventListener('pointerup',endDrag);$('cv').addEventListener('pointercancel',endDrag);
+/* ---------- 修圖（寵物＋全部素材） ---------- */
+const PC={},AIMG={},AREADY={};
+const isPet=id=>/^[a-z]+\d[oc]$/.test(id);
+const srcImg=id=>isPet(id)?PIM[id.endsWith('o')?id.slice(0,-1):id]:AIMG[id];
+function baseData(id){const im=srcImg(id);if(!im)return null;const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const c=cv.getContext('2d');c.drawImage(im,0,0);return c}
+function edited(id){if(PC[id])return PC[id];const c=baseData(id);if(!c)return null;const E=PX[id],W=c.canvas.width;if(E){const d=c.getImageData(0,0,W,c.canvas.height);for(const i in E){const v=E[i],o=i*4;if(v==='x')d.data[o+3]=0;else{d.data[o]=parseInt(v.slice(1,3),16);d.data[o+1]=parseInt(v.slice(3,5),16);d.data[o+2]=parseInt(v.slice(5,7),16);d.data[o+3]=255}}c.putImageData(d,0,0)}return PC[id]=c.canvas}
+const petCv=(k,e)=>edited(k+e);
+const ED={x:24,y:24,eye:'o',col:'#1a0a0a',tool:'pen',tc:'move',recent:[],cat:'pet',src:null,S:5,ox:0,oy:0};
 try{const r=JSON.parse(localStorage.getItem('pf-acc-sim-recent')||'[]');if(Array.isArray(r))ED.recent=r}catch(e){}
+const CATS=[['pet','🐣 寵物'],['fusion','🧬 融合'],['items','🍎 道具'],['sk','⚔️ 招式'],['arena','🏞️ 場地背景'],['fx','💥 特效'],['plots','🌱 田地'],['decor','🛋️ 休息室'],['acc','🎀 裝飾圖'],['train','🏋️ 訓練'],['ui','🔘 圖示1'],['ui2','🔘 圖示2'],['misc','🥚 蛋／野生']];
+const pairOf=id=>isPet(id)?id.slice(0,-1)+(id.endsWith('o')?'c':'o'):/_open$/.test(id)?id.replace(/_open$/,'_closed'):/_closed$/.test(id)?id.replace(/_closed$/,'_open'):null;
+function tgtBase(){return ED.cat==='pet'?key()+'o':ED.src}
+function viewId(){const b=tgtBase();if(!b)return null;const p=pairOf(b);if(ED.eye==='c'&&p&&(isPet(b)||AIMG[p]))return /_open$/.test(b)||isPet(b)?p:b;if(ED.eye!=='c'&&/_closed$/.test(b)&&AIMG[pairOf(b)])return pairOf(b);return b}
+function writeIds(){const v=viewId(),p=pairOf(v);return ED.eye==='b'&&p&&(isPet(v)||AIMG[p])?[v,p]:[v]}
+function dims(){const cv=edited(viewId()||'');return cv?[cv.width,cv.height]:[CELL,CELL]}
+function fitView(){const[W,H]=dims();ED.S=Math.max(2,Math.min(12,Math.floor(240/Math.max(W,H))||2));ED.x=Math.min(ED.x,W-1);ED.y=Math.min(ED.y,H-1);if(ED.cat!=='pet'){ED.x=W>>1;ED.y=H>>1}follow(true)}
+function follow(center){const[W,H]=dims(),v=240/ED.S;const fix=(p,o,N)=>{if(N<=v)return 0;if(center)o=p-v/2;else{if(p-o<2)o=p-2;if(p-o>v-3)o=p-v+3}return Math.max(0,Math.min(N-v,o))};ED.ox=fix(ED.x,ED.ox,W);ED.oy=fix(ED.y,ED.oy,H)}
+function geo(){const[W,H]=dims(),S=ED.S;return{W,H,S,X:W*S<=240?(240-W*S)/2:-ED.ox*S,Y:H*S<=240?(240-H*S)/2:-ED.oy*S}}
 const hex=(d,o=0)=>d[o+3]<40?null:'#'+[d[o],d[o+1],d[o+2]].map(v=>v.toString(16).padStart(2,'0')).join('');
-const viewEye=()=>ED.eye==='c'?'c':'o';
-function pxAt(k,e,x,y){return hex(petCv(k,e).getContext('2d').getImageData(x,y,1,1).data)}
-function drawEd(){const c=$('cv').getContext('2d'),k=key(),cv=petCv(k,viewEye()),S=5;c.imageSmoothingEnabled=false;
- for(let y=0;y<CELL;y++)for(let x=0;x<CELL;x++){c.fillStyle=(x+y)%2?'#86b386':'#77a877';c.fillRect(x*S,y*S,S,S)}
- if(cv)c.drawImage(cv,0,0,CELL*S,CELL*S);
- if(guide){c.fillStyle='rgba(0,0,0,.13)';for(let i=0;i<=CELL;i++){c.fillRect(i*S,0,1,240);c.fillRect(0,i*S,240,1)}}
- c.strokeStyle='#fff';c.lineWidth=2;c.strokeRect(ED.x*S-1,ED.y*S-1,S+2,S+2);c.strokeStyle='#000';c.lineWidth=1;c.strokeRect(ED.x*S-2.5,ED.y*S-2.5,S+5,S+5);
- // 放大鏡（放在框框的另一邊角落）
- const N=9,Z=10,h=4,W=N*Z,mx=ED.x<24?240-W-6:6,my=ED.y<24?240-W-24:34;c.fillStyle='#2a170a';c.fillRect(mx-3,my-3,W+6,W+6);
- for(let j=0;j<N;j++)for(let i=0;i<N;i++){const x=ED.x-h+i,y=ED.y-h+j;if(x<0||y<0||x>=CELL||y>=CELL){c.fillStyle='#2a170a';c.fillRect(mx+i*Z,my+j*Z,Z,Z);continue}c.fillStyle=(x+y)%2?'#86b386':'#77a877';c.fillRect(mx+i*Z,my+j*Z,Z,Z);const v=pxAt(k,viewEye(),x,y);if(v){c.fillStyle=v;c.fillRect(mx+i*Z,my+j*Z,Z,Z)}}
- c.strokeStyle='#fff';c.lineWidth=2;c.strokeRect(mx+h*Z,my+h*Z,Z,Z);
- // 下方：目前工具與顏色
- const here=pxAt(k,viewEye(),ED.x,ED.y);c.fillStyle='#000a';c.fillRect(0,222,240,18);c.fillStyle=ED.col;c.fillRect(4,225,12,12);c.strokeStyle='#fff';c.lineWidth=1;c.strokeRect(4.5,225.5,11,11);
- c.fillStyle='#fff';c.font='11px sans-serif';c.fillText(`${{pen:'✏️ 畫筆',pick:'💧 吸色',erase:'🧽 橡皮擦'}[ED.tool]}　這格 ${here||'透明'}　已改 ${Object.keys(PX[k+viewEye()]||{}).length} 格`,22,235);
- $('curC').style.background=ED.col;$('curHex').textContent=ED.col;$('dCol').value=ED.col;
- $$('#tool button').forEach(b=>b.classList.toggle('on',b.dataset.tool===ED.tool));$$('#touch button').forEach(b=>b.classList.toggle('on',b.dataset.tc===ED.tc));$$('#eyes button').forEach(b=>b.classList.toggle('on',b.dataset.eye===ED.eye))}
-function edPoint(x,y,first){const nx=Math.max(0,Math.min(CELL-1,Math.floor(x/5))),ny=Math.max(0,Math.min(CELL-1,Math.floor(y/5)));if(!first&&nx===ED.x&&ny===ED.y)return;ED.x=nx;ED.y=ny;if(ED.tc==='paint')act(false);else draw()}
-function setPx(v){const k=key(),i=ED.y*CELL+ED.x;for(const e of ED.eye==='b'?['o','c']:[ED.eye]){const id=k+e;PX[id]=PX[id]||{};const b=baseData(k,e).getImageData(ED.x,ED.y,1,1).data,orig=hex(b)||'x';if(v===orig)delete PX[id][i];else PX[id][i]=v;delete PC[id]}}
-function act(withMark){const k=key();if(ED.tool==='pick'){const v=pxAt(k,viewEye(),ED.x,ED.y);if(v){ED.col=v;ED.tool='pen';swatches();hint('💧 吸到顏色了，換回畫筆')}else hint('這格是透明的');draw();return}
+function pxAt(id,x,y){const cv=edited(id);if(!cv||x<0||y<0||x>=cv.width||y>=cv.height)return null;return hex(cv.getContext('2d').getImageData(x,y,1,1).data)}
+function drawEd(){const c=$('cv').getContext('2d'),id=viewId();c.imageSmoothingEnabled=false;c.fillStyle='#4a6a4a';c.fillRect(0,0,240,240);
+ if(!id||!edited(id)){c.fillStyle='#fff';c.font='14px sans-serif';c.textAlign='center';c.fillText(AREADY[ED.cat]===0?'載入中…':'從下面選一張圖',120,120);c.textAlign='left';return}
+ const g=geo(),{W,H,S,X,Y}=g,cv=edited(id);
+ const x0=Math.max(0,Math.floor(-X/S)),y0=Math.max(0,Math.floor(-Y/S)),x1=Math.min(W,Math.ceil((240-X)/S)),y1=Math.min(H,Math.ceil((240-Y)/S));
+ for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){c.fillStyle=(x+y)%2?'#86b386':'#77a877';c.fillRect(X+x*S,Y+y*S,S,S)}
+ c.drawImage(cv,X,Y,W*S,H*S);
+ if(guide&&S>=4){c.fillStyle='rgba(0,0,0,.13)';for(let x=x0;x<=x1;x++)c.fillRect(X+x*S,Math.max(0,Y),1,Math.min(240,H*S));for(let y=y0;y<=y1;y++)c.fillRect(Math.max(0,X),Y+y*S,Math.min(240,W*S),1)}
+ const cx=X+ED.x*S,cy=Y+ED.y*S;c.strokeStyle='#fff';c.lineWidth=2;c.strokeRect(cx-1,cy-1,S+2,S+2);c.strokeStyle='#000';c.lineWidth=1;c.strokeRect(cx-2.5,cy-2.5,S+5,S+5);
+ if(S<10){const N=9,Z=10,h=4,M=N*Z,mx=cx<120?240-M-6:6,my=cy<120?240-M-24:34;c.fillStyle='#2a170a';c.fillRect(mx-3,my-3,M+6,M+6);
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const x=ED.x-h+i,y=ED.y-h+j;if(x<0||y<0||x>=W||y>=H){c.fillStyle='#2a170a';c.fillRect(mx+i*Z,my+j*Z,Z,Z);continue}c.fillStyle=(x+y)%2?'#86b386':'#77a877';c.fillRect(mx+i*Z,my+j*Z,Z,Z);const v=pxAt(id,x,y);if(v){c.fillStyle=v;c.fillRect(mx+i*Z,my+j*Z,Z,Z)}}
+  c.strokeStyle='#fff';c.lineWidth=2;c.strokeRect(mx+h*Z,my+h*Z,Z,Z)}
+ const here=pxAt(id,ED.x,ED.y);c.fillStyle='#000a';c.fillRect(0,222,240,18);c.fillStyle=ED.col;c.fillRect(4,225,12,12);c.strokeStyle='#fff';c.lineWidth=1;c.strokeRect(4.5,225.5,11,11);
+ c.fillStyle='#fff';c.font='11px sans-serif';c.fillText(`${{pen:'✏️',pick:'💧',erase:'🧽'}[ED.tool]} ${ED.x},${ED.y}　這格 ${here||'透明'}　已改 ${Object.keys(PX[id]||{}).length} 格`,22,235)}
+function edUI(){$('curC').style.background=ED.col;$('curHex').textContent=ED.col;$('dCol').value=ED.col;
+ $$('#tool button').forEach(b=>b.classList.toggle('on',b.dataset.tool===ED.tool));$$('#touch button').forEach(b=>b.classList.toggle('on',b.dataset.tc===ED.tc));$$('#eyes button').forEach(b=>b.classList.toggle('on',b.dataset.eye===ED.eye));
+ const b=tgtBase(),p=b&&pairOf(b);$('eyesWrap').style.display=p&&(isPet(b)||AIMG[p])?'':'none';$$('.zb').forEach(z=>z.style.display=mode==='draw'?'':'none');for(const s of['cEl','cSt','cAc'])$(s).style.display=mode==='draw'&&ED.cat!=='pet'?'none':'';$('bFace').style.display=mode==='draw'?'none':''}
+function edPoint(x,y,first){if(!viewId())return;const g=geo(),nx=Math.max(0,Math.min(g.W-1,Math.floor((x-g.X)/g.S))),ny=Math.max(0,Math.min(g.H-1,Math.floor((y-g.Y)/g.S)));if(!first&&nx===ED.x&&ny===ED.y)return;ED.x=nx;ED.y=ny;if(ED.tc==='paint')act(false);else draw()}
+function setPx(v){const i=ED.y*dims()[0]+ED.x;for(const id of writeIds()){PX[id]=PX[id]||{};const orig=hex(baseData(id).getImageData(ED.x,ED.y,1,1).data)||'x';if(v===orig)delete PX[id][i];else PX[id][i]=v;if(!Object.keys(PX[id]).length)delete PX[id];delete PC[id]}markPick()}
+function act(withMark){if(!viewId())return;if(ED.tool==='pick'){const v=pxAt(viewId(),ED.x,ED.y);if(v){ED.col=v;ED.tool='pen';swatches();hint('💧 吸到顏色了，換回畫筆')}else hint('這格是透明的');draw();return}
  if(withMark)mark();if(ED.tool==='erase')setPx('x');else{setPx(ED.col);addRecent(ED.col)}draw()}
 function addRecent(v){if(ED.recent[0]===v)return;ED.recent=[v,...ED.recent.filter(q=>q!==v)].slice(0,10);try{localStorage.setItem('pf-acc-sim-recent',JSON.stringify(ED.recent))}catch(e){}swatches()}
 function setCol(v){ED.col=v;if(ED.tool!=='pen')ED.tool='pen';swatches();draw()}
 const BASE=['#1a0a0a','#2a170a','#3a2414','#5a3a20','#8a5a34','#c08040','#f0e0c0','#fff3d8','#ffffff','#000000','#ffe066','#ffb020','#ff7a30','#e8402a','#a01a2a','#ff8aa8','#e8607a','#a070ff','#5a2a9a','#2a1a5a','#7ae8ff','#5ab0ff','#2a6ad8','#1a2a7a','#6fd86a','#2a9a4a','#1a5a3a','#c0c0c8','#808090','#404050'];
 function swatches(){const mk=(id,L)=>{const el=$(id);el.innerHTML='';for(const v of L){const b=document.createElement('button');b.style.background=v;b.className=v===ED.col?'on':'';b.onclick=()=>setCol(v);el.appendChild(b)}};
- mk('swBase',BASE);mk('swRecent',ED.recent);const cnt={},cv=petCv(key(),viewEye());if(cv){const d=cv.getContext('2d').getImageData(0,0,CELL,CELL).data;for(let i=0;i<d.length;i+=4){const v=hex(d,i);if(v)cnt[v]=(cnt[v]||0)+1}}
+ mk('swBase',BASE);mk('swRecent',ED.recent);const cnt={},cv=edited(viewId()||'');if(cv){const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;for(let i=0;i<d.length;i+=4){const v=hex(d,i);if(v)cnt[v]=(cnt[v]||0)+1}}
  mk('swPet',Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,30))}
-$$('[data-dm]').forEach(b=>b.onclick=()=>{const[dx,dy]=b.dataset.dm.split(',').map(Number);ED.x=Math.max(0,Math.min(CELL-1,ED.x+dx));ED.y=Math.max(0,Math.min(CELL-1,ED.y+dy));draw()});
+/* 素材種類與挑圖 */
+function cats(){const el=$('dCat');el.innerHTML='';for(const[c,t]of CATS){const n=Object.keys(PX).filter(k=>c==='pet'?isPet(k):k.startsWith('s:'+(c==='misc'?'':c+'/'))&&(c!=='misc'||!k.includes('/'))).length;const b=document.createElement('button');b.className='chip'+(c===ED.cat?' on':'');b.textContent=t+(n?' ✏️':'');b.onclick=()=>pickCat(c);el.appendChild(b)}}
+async function pickCat(c){ED.cat=c;ED.src=null;cats();$('dPickWrap').style.display=c==='pet'?'none':'';if(c==='pet'){fitView();swatches();draw();hint('寵物用最上面的屬性、階段來選');return}
+ if(!AREADY[c]){AREADY[c]=0;$('dPick').innerHTML='<div class="note">載入中…</div>';draw();try{const r=await fetch('assets/'+c+'.json');const J=await r.json();await Promise.all(Object.entries(J).map(([k,v])=>new Promise(ok=>{const im=new Image();im.onload=ok;im.onerror=ok;im.src='data:image/png;base64,'+v;AIMG['s:'+k]=im})));AREADY[c]=1}catch(e){AREADY[c]=undefined;$('dPick').innerHTML='<div class="note">載入失敗，再點一次試試</div>';return}}
+ if(ED.cat!==c)return;picker();draw()}
+function catIds(c){return Object.keys(AIMG).filter(k=>c==='misc'?!k.slice(2).includes('/'):k.startsWith('s:'+c+'/')).filter(k=>!/_closed$/.test(k)||!AIMG[k.replace(/_closed$/,'_open')]).sort()}
+function picker(){const el=$('dPick');el.innerHTML='';for(const id of catIds(ED.cat)){const b=document.createElement('button');b.className=id===ED.src?'on':'';const im=new Image();im.src=AIMG[id].src;b.appendChild(im);const p=pairOf(id);if(PX[id]||(p&&PX[p])){const i=document.createElement('i');i.textContent='✏️';b.appendChild(i)}b.title=id.slice(2);b.onclick=()=>{ED.src=id;ED.eye='o';PC[id]=null;delete PC[id];fitView();picker();swatches();draw();hint(id.slice(2))};el.appendChild(b)}}
+function markPick(){if(ED.cat!=='pet'&&mode==='draw'){const on=$('dPick').querySelector('.on');if(on&&!on.querySelector('i')){const i=document.createElement('i');i.textContent='✏️';on.appendChild(i)}}}
+$$('[data-dm]').forEach(b=>b.onclick=()=>{if(!viewId())return;const[W,H]=dims(),[dx,dy]=b.dataset.dm.split(',').map(Number);ED.x=Math.max(0,Math.min(W-1,ED.x+dx));ED.y=Math.max(0,Math.min(H-1,ED.y+dy));follow();draw()});
 $('dGo').onclick=()=>act(true);
+$('bZi').onclick=()=>{ED.S=Math.min(16,ED.S+1);follow(true);draw()};$('bZo').onclick=()=>{ED.S=Math.max(1,ED.S-1);follow(true);draw()};
 $$('#tool button').forEach(b=>b.onclick=()=>{ED.tool=b.dataset.tool;draw();hint({pen:'✏️ 畫筆',pick:'💧 吸色：移到要吸的格子按「點下去」',erase:'🧽 橡皮擦：把格子變透明'}[ED.tool])});
 $$('#touch button').forEach(b=>b.onclick=()=>{ED.tc=b.dataset.tc;draw();baseHint()});
 $$('#eyes button').forEach(b=>b.onclick=()=>{ED.eye=b.dataset.eye;swatches();draw();if(ED.eye==='b')hint('兩張一起改：改身體用，眨眼才不會閃回舊顏色')});
@@ -228,4 +253,5 @@ function cloudSave(j){if(!DB||!cloudReady||j===cloudLast)return;clearTimeout(clo
  if(d&&d.json&&d.json!==loc){const o=JSON.parse(d.json);TAB=JSON.parse(JSON.stringify(TAB0));Object.assign(TAB,o.tab||{});FIX=o.fix||{};PX=o.px||{};for(const k in PC)delete PC[k];cloudLast=d.json;cloudReady=true;cl('☁️ 已讀取雲端 '+hm(d.at));if(pend===0)draw()}
  else{cloudLast=d&&d.json||null;cloudReady=true;cl('☁️ 已連上雲端');if(pend===0)out()}}catch(e){clearTimeout(to);off()}})();
 function all(){chips();setMode('acc')}
+$$('.zb').forEach(z=>z.style.display='none');
 </script></body></html>
