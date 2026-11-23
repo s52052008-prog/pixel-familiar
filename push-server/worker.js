@@ -10,7 +10,9 @@ const MAX_ITEMS = 40, KEEP_DAYS = 30;
 const GIFT_OK = { food: 10, seeds: 10, candy: 5, potion: 5, fish: 5, cake: 3, coins: 500, mush: 3, mush_c: 3, mushN: 1 };   // 可以送的東西、一次最多幾個
 const DAILY = [['food', 2], ['seeds', 2], ['candy', 1], ['coins', 30], ['potion', 1]];   // 每日免費小禮物（隨機一種）
 const GNAME = { mush: '🍄 飄香菇', mush_c: '🍢 烤飄香菇', mushN: '✨ 夜光菇', food: '🍎 蘋果', seeds: '🌱 種子', candy: '🍬 糖果', potion: '🧪 回復藥水', fish: '🐟 魚', cake: '🍰 蛋糕', coins: '🪙 金幣' };
-const LIMIT = { pet: 1, water: 1, msg: 5, gift: 3, daily: 1, mate: 3, mateBack: 3, duel: 3, search: 1, pk: 5, mush: 1 };   // 每天對同一個朋友最多幾次
+const LIMIT = { pet: 1, water: 1, msg: 5, gift: 3, daily: 1, mate: 3, mateBack: 3, duel: 3, search: 1, pk: 5, mush: 1, call: 1, care: 1 };
+const SPARK_MS = [3, 7, 14, 30, 50, 100];   // V1.89 好友火花：連續幾天時兩人都拿獎勵
+const AWAY_CALL = 864e5, AWAY_CARE = 12 * 3600e3;   // 朋友多久沒上線才能「叫他回來」、「幫忙照顧」   // 每天對同一個朋友最多幾次
 
 const enc = new TextEncoder();
 const b64u = buf => { let s = ''; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
@@ -77,6 +79,8 @@ export class Store extends DurableObject {
       CREATE TABLE IF NOT EXISTS board(n INTEGER PRIMARY KEY AUTOINCREMENT, t TEXT, f TEXT, text TEXT, at INTEGER);
       CREATE TABLE IF NOT EXISTS lim(k TEXT PRIMARY KEY, v INTEGER);
       CREATE TABLE IF NOT EXISTS steps(id TEXT, day TEXT, n INTEGER, at INTEGER, PRIMARY KEY(id,day));
+      CREATE TABLE IF NOT EXISTS calls(f TEXT, t TEXT, at INTEGER, PRIMARY KEY(f,t));
+      CREATE TABLE IF NOT EXISTS spark(a TEXT, b TEXT, n INTEGER, last TEXT, da TEXT, db TEXT, PRIMARY KEY(a,b));
       CREATE INDEX IF NOT EXISTS inbox_t ON inbox(t); CREATE INDEX IF NOT EXISTS board_t ON board(t);`);
     for (const c of ['pts INTEGER DEFAULT 1000', 'w INTEGER DEFAULT 0', 'l INTEGER DEFAULT 0']) { try { this.sql.exec('ALTER TABLE users ADD COLUMN ' + c); } catch (_) {} }   // 第二批：對戰積分
   }
@@ -92,6 +96,20 @@ export class Store extends DurableObject {
   }
   isFriend(a, b) { return !!this.one('SELECT 1 AS x FROM friends WHERE a=? AND b=?', a, b); }
   petName(u) { try { return JSON.parse(u.card || '{}').pet.name || '牠'; } catch (_) { return '牠'; } }
+  // V1.89 好友火花：兩個人同一天都有互動就 +1 天，斷一天就歸零
+  sparkTouch(me, other, now) {
+    const [a, b] = me < other ? [me, other] : [other, me], day = twDay(now), y = twDay(now - 864e5);
+    let r = this.one('SELECT * FROM spark WHERE a=? AND b=?', a, b) || { n: 0, last: '', da: '', db: '' };
+    if (me === a) r.da = day; else r.db = day;
+    let hit = 0; if (r.da === day && r.db === day && r.last !== day) { r.n = r.last === y ? r.n + 1 : 1; r.last = day; hit = r.n; }
+    this.sql.exec('INSERT OR REPLACE INTO spark(a,b,n,last,da,db) VALUES(?,?,?,?,?,?)', a, b, r.n, r.last, r.da, r.db); return hit;
+  }
+  sparkOf(me, other, now) {
+    const [a, b] = me < other ? [me, other] : [other, me], day = twDay(now), y = twDay(now - 864e5), r = this.one('SELECT * FROM spark WHERE a=? AND b=?', a, b);
+    if (!r) return { n: 0, me: false, them: false };
+    const mine = me === a ? r.da : r.db, theirs = me === a ? r.db : r.da;
+    return { n: r.last === day || r.last === y ? r.n : 0, me: mine === day, them: theirs === day };
+  }
   async notify(u, body, tag) {   // 好友互動：馬上推一則（晚上不吵）
     if (!u || !u.sub || quiet(Date.now())) return;
     try { const st = await sendPush(this.env, JSON.parse(u.sub), { title: '幻獸日記', body, tag: tag || 'friend' }); if (st === 404 || st === 410) this.sql.exec('UPDATE users SET sub=NULL WHERE id=?', u.id); } catch (_) {}
@@ -133,7 +151,11 @@ export class Store extends DurableObject {
     const me = this.ensure(b.id);
     if (P === '/social') {   // 好友名單、邀請、信箱（信箱拿了就清掉）
       this.sql.exec('UPDATE users SET seen=? WHERE id=?', now, b.id);
-      const friends = this.all('SELECT u.* FROM friends f JOIN users u ON u.id=f.b WHERE f.a=? ORDER BY u.seen DESC', b.id).map(u => this.pub(u));
+      for (const c of this.all('SELECT f FROM calls WHERE t=?', b.id)) {   // 被朋友叫回來了：兩個人都拿回歸禮物
+        this.mail(b.id, c.f, 'callGift', {}); this.mail(c.f, b.id, 'callBack', {}); await this.notify(this.user(c.f), `🎉 ${me.name || '朋友'} 回來了！你們都拿到回歸禮物`, 'call');
+      }
+      this.sql.exec('DELETE FROM calls WHERE t=?', b.id);
+      const friends = this.all('SELECT u.* FROM friends f JOIN users u ON u.id=f.b WHERE f.a=? ORDER BY u.seen DESC', b.id).map(u => ({ ...this.pub(u), spark: this.sparkOf(b.id, u.id, now) }));
       const reqs = this.all('SELECT u.code, u.name FROM reqs r JOIN users u ON u.id=r.f WHERE r.t=? ORDER BY r.at DESC LIMIT 20', b.id);
       const sent = this.all('SELECT u.code, u.name FROM reqs r JOIN users u ON u.id=r.t WHERE r.f=? ORDER BY r.at DESC LIMIT 20', b.id);
       const inbox = this.all('SELECT i.n, i.kind, i.data, i.at, u.code, u.name FROM inbox i LEFT JOIN users u ON u.id=i.f WHERE i.t=? ORDER BY i.n LIMIT 50', b.id).map(r => ({ ...r, data: JSON.parse(r.data || '{}') }));
@@ -162,7 +184,7 @@ export class Store extends DurableObject {
     if (P === '/visit') {
       const board = this.all('SELECT b.text, b.at, u.name FROM board b LEFT JOIN users u ON u.id=b.f WHERE b.t=? ORDER BY b.n DESC LIMIT 20', other.id);
       const day = twDay(now), used = {}; for (const k of Object.keys(LIMIT)) { const r = this.one('SELECT v FROM lim WHERE k=?', `${k}:${b.id}:${other.id}:${day}`); used[k] = r ? r.v : 0; }
-      return json(req, { ok: true, ...this.pub(other), board, used, limit: LIMIT });
+      return json(req, { ok: true, ...this.pub(other), board, used, limit: LIMIT, spark: this.sparkOf(b.id, other.id, now) });
     }
     if (P === '/duel') {   // 對戰結果：積分（像西洋棋那樣，打贏比自己強的拿比較多）
       const day = twDay(now); if (!this.bump(`duel:${b.id}:${other.id}:${day}`, LIMIT.duel)) return json(req, { ok: false, msg: '今天跟這位朋友的對戰次數用完了，明天再來吧' });
@@ -178,7 +200,10 @@ export class Store extends DurableObject {
       const kind = String(b.kind), lim = LIMIT[kind]; if (!lim) return json(req, { ok: false, msg: 'bad kind' }, 400);
       const day = twDay(now), key = `${kind}:${b.id}:${other.id}:${day}`, pn = this.petName(other);
       let data = {}, push = '', msg = '';
-      if (kind === 'mush') { data = { k: str(b.data && b.data.k, 8) }; push = `🍄 ${myName} 來幫你採蘑菇，你們各拿到一朵！`; msg = '🍄 幫忙採蘑菇了！'; }
+      const away = now - (other.seen || 0);
+      if (kind === 'call') { if (away < AWAY_CALL) return json(req, { ok: false, msg: `${other.name || '朋友'} 最近有上線喔，不用叫啦` }); push = `📣 ${myName} 想你了！${pn} 在門口等你，回來你們兩個都有禮物～`; msg = `📣 叫 ${other.name || '朋友'} 回來了！他一上線，你們都會拿到回歸禮物`; }
+      else if (kind === 'care') { if (away < AWAY_CARE) return json(req, { ok: false, msg: `${other.name || '朋友'} 最近有上線，${pn} 吃得飽飽的` }); push = `🍖 ${myName} 趁你不在，幫你餵了 ${pn}、陪牠玩了一下`; msg = `🍖 餵飽 ${pn}、陪牠玩了一下！`; }
+      else if (kind === 'mush') { data = { k: str(b.data && b.data.k, 8) }; push = `🍄 ${myName} 來幫你採蘑菇，你們各拿到一朵！`; msg = '🍄 幫忙採蘑菇了！'; }
       else if (kind === 'pk') { const sv = Math.max(0, Math.min(5, Math.floor(+(b.data && b.data.saves) || 0))), gl = Math.max(0, Math.min(5, Math.floor(+(b.data && b.data.goals) || 0))); data = { saves: sv, goals: gl }; push = sv ? `🧤 ${myName} 來踢 PK，${pn} 撲出了 ${sv} 球！` : `⚽ ${myName} 踢 PK 進了 ${gl} 球，${pn} 下次加油！`; msg = ''; }
       else if (kind === 'search') { push = `🔍 ${myName} 幫你一起找 ${pn}！又靠近一點了`; msg = `🔍 幫忙找 ${pn}，找到一些線索了！`; }
       else if (kind === 'pet') { push = `✋ ${myName} 來你家摸了摸 ${pn}，牠好開心！`; msg = `✋ 摸了摸 ${pn}，牠很開心！`; }
@@ -189,8 +214,11 @@ export class Store extends DurableObject {
       else if (kind === 'mate' || kind === 'mateBack') { const c = str(b.data && b.data.code, 3000); if (!/^PFM1\./.test(c)) return json(req, { ok: false, msg: '配對碼不對' }); data = { code: c, pet: str(b.data.pet, 16) }; push = kind === 'mate' ? `💞 ${myName} 想讓牠的幻獸跟 ${pn} 配對！` : `💞 ${myName} 答應配對了！打開遊戲完成配對`; msg = kind === 'mate' ? '💞 配對邀請送出了，等對方答應' : '💞 已經答應，對方也會拿到蛋'; }
       if (!this.bump(key, lim)) return json(req, { ok: false, msg: lim === 1 ? '今天已經做過了，明天再來吧' : '今天的次數用完了，明天再來吧' });
       if (kind === 'msg') { this.sql.exec('INSERT INTO board(t,f,text,at) VALUES(?,?,?,?)', other.id, b.id, data.text, now); this.sql.exec('DELETE FROM board WHERE t=? AND n NOT IN (SELECT n FROM board WHERE t=? ORDER BY n DESC LIMIT 30)', other.id, other.id); }
+      if (kind === 'call') { this.sql.exec('INSERT OR REPLACE INTO calls(f,t,at) VALUES(?,?,?)', b.id, other.id, now); await this.notify(other, push, 'call'); return json(req, { ok: true, msg }); }
       this.mail(other.id, b.id, kind, data); await this.notify(other, push, kind);
-      return json(req, { ok: true, msg, data });
+      const hit = this.sparkTouch(b.id, other.id, now);   // 好友火花
+      if (hit && SPARK_MS.includes(hit)) { this.mail(other.id, b.id, 'spark', { n: hit }); this.mail(b.id, other.id, 'spark', { n: hit }); await this.notify(other, `🔥 你和 ${myName} 的好友火花連續 ${hit} 天了！打開遊戲領獎勵`, 'spark'); }
+      return json(req, { ok: true, msg, data, spark: this.sparkOf(b.id, other.id, now), hit });
     }
     return json(req, { ok: false }, 404);
   }
