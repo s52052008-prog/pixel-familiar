@@ -87,6 +87,7 @@ async def main():
             await p.wait_for_timeout(100)
         s = await st(p); ok('走過去吃完：用掉蘋果、飽食 +10、XP +3、留下果核', s['inv']['food'] == 3 and round(s['hunger']) == 60 and s['xp'] == 3 and len(s['cores']) == 1, (s['inv'], round(s['hunger']), s['xp'], s['cores']))
         await p.wait_for_timeout(5000); await p.screenshot(path=f'{OUT}/02b_core.png')
+        await p.evaluate("PF.state.mush=[]")   # 晚上／雨後院子會冒蘑菇，點到蘑菇就不是點果核了
         await p.mouse.click(*await scene_xy(p, s['cores'][0]['x'], 98)); await p.wait_for_timeout(300)
         ok('點果核清掉', len((await st(p))['cores']) == 0)
         await do_play(p); s = await st(p)
@@ -109,6 +110,7 @@ async def main():
         await p.evaluate("(()=>{PF.PC.addCore(PF.state,30,Date.now()-120*60000,'yard');PF.debug.set({mood:80})})()"); await p.wait_for_timeout(600)
         await p.screenshot(path=f'{OUT}/03b_rotten.png')
         await p.evaluate("PF.debug.skip(60)"); s = await st(p); ok('發臭果核：每小時心情多掉 4', abs(s['mood'] - 73) < .2, round(s['mood'], 1))
+        await p.evaluate("PF.state.mush=[]")
         await p.mouse.click(*await scene_xy(p, 30, 98)); await p.wait_for_timeout(300); ok('清掉臭果核', len((await st(p))['cores']) == 0)
         # ---------- 4. 離線上限 12 小時 ----------
         for hrs in (2, 24, 168):
