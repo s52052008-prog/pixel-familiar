@@ -84,7 +84,7 @@ textarea{width:100%;height:64px;font-size:11px;border-radius:8px;margin-top:6px}
   <div class="side" style="justify-content:center;font-size:12px;color:#f0d8a8;line-height:1.5">吐彩虹時張嘴的位置。<br>手指直接拖畫面上的嘴巴也可以。<br>雪茄、玫瑰、棒棒糖也會跟著嘴巴走。</div>
  </div></div>
  <div id="p-draw">
-  <div class="sub" id="dSub"><button data-ds="tool" class="on">✏️ 畫</button><button data-ds="color">🎨 顏色</button><button data-ds="asset">🗂️ 換圖</button></div>
+  <div class="sub" id="dSub"><button data-ds="tool" class="on">✏️ 畫</button><button data-ds="color">🎨 顏色</button><button data-ds="asset" style="background:#6fd86a;color:#163a12;font-weight:700">🗂️ 換素材</button></div>
   <div id="ds-tool" class="row" style="height:calc(100% - 30px)">
    <div class="dpad"><button data-dm="-1,-1">↖</button><button data-dm="0,-1">▲</button><button data-dm="1,-1">↗</button><button data-dm="-1,0">◀</button><button class="go" id="dGo">👆<br>點下去</button><button data-dm="1,0">▶</button><button data-dm="-1,1">↙</button><button data-dm="0,1">▼</button><button data-dm="1,1">↘</button></div>
    <div class="side">
@@ -97,13 +97,13 @@ textarea{width:100%;height:64px;font-size:11px;border-radius:8px;margin-top:6px}
    <div class="lab">這張圖的顏色</div><div class="sw" id="swPet"></div>
    <div class="lab">最近用過</div><div class="sw" id="swRecent"></div>
    <div class="lab">常用色</div><div class="sw" id="swBase"></div></div>
-  <div id="ds-asset" class="scrollb" style="display:none"><div class="chips" id="dCat"></div><div class="dpick" id="dPick"></div></div>
  </div>
 </div>
 <div class="go2"><button id="bPrev">◀</button><button id="bDone">✅ 好了，下一隻</button><button id="bNext">▶</button></div>
 </div>
 <div class="sheet" id="shAcc"><div><h3>選要調的東西<button data-close>關閉</button></h3><div class="grid4" id="accGrid"></div></div></div>
 <div class="sheet" id="shPet"><div><h3><span id="shPetT">選寵物</span><button data-close>關閉</button></h3><div id="petGrid"></div></div></div>
+<div class="sheet" id="shAsset"><div><h3>🗂️ 選要修的素材<button data-close>關閉</button></h3><div class="chips" id="dCat" style="flex-wrap:wrap"></div><div class="dpick" id="dPick" style="grid-template-columns:repeat(auto-fill,minmax(52px,1fr))"></div></div></div>
 <div class="sheet" id="shMenu"><div><h3>⋯ 其他<button data-close>關閉</button></h3>
  <div class="rowlab">這件裝飾的完成紀錄</div><button class="big" id="bClearDone" style="background:#5a3a20;color:#fff3d8">把這件的 ✅ 全部取消（重新檢查一遍）</button>
  <div class="rowlab">手動備份／還原</div><button class="big" id="bCopy">📋 複製設定</button><textarea id="out" readonly></textarea><textarea id="inp" placeholder="貼上之前的設定"></textarea><button class="big" id="bLoad" style="background:#5a3a20;color:#fff3d8">載入貼上的設定</button></div></div>
@@ -179,7 +179,8 @@ function bars(){const j=job();
  if(mode==='mouth'){$('pAccI').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><text y="8" font-size="8">👄</text></svg>');$('pAccN').textContent='張嘴位置'}
  else if(mode==='head'){$('pAccI').src=ACC[cur.acc]?IMG[ACC[cur.acc].img].src:'';$('pAccN').textContent='頭型（全部裝飾）'}
  else if(ACC[cur.acc]){$('pAccI').src=IMG[ACC[cur.acc].img].src;$('pAccN').textContent=ACC[cur.acc].n}
- const n=progOf(j);$('pAccP').textContent=mode==='head'?'會帶動全部裝飾':mode==='draw'?'修圖':`${n}/35 完成`;$('prog').firstChild.style.width=(mode==='acc'||mode==='mouth'?n/35*100:0)+'%';
+ if(mode==='draw'){const v=viewId(),cv=v&&edited(v);$('pAccI').src=cv?cv.toDataURL():'';$('pAccN').textContent=(CATS.find(c=>c[0]===ED.cat)||['',''])[1];}
+ const n=progOf(j);$('pAccP').textContent=mode==='head'?'會帶動全部裝飾':mode==='draw'?'👆 點這裡換素材':`${n}/35 完成`;$('prog').firstChild.style.width=(mode==='acc'||mode==='mouth'?n/35*100:0)+'%';
  const c=$('pPetC').getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,48,48);paint(c,key(),0,0,48,false,mode==='acc'?lst():[]);$('pPetN').textContent=petName(key())+(isDone(key())&&mode!=='head'&&mode!=='draw'?' ✅':'');
  $('lock').style.display=locked()&&mode!=='draw'?'block':'none';
  const d=$('bDone');if(mode==='head'){d.textContent='下一隻 ▶';d.className='redo'}else if(locked()){d.textContent='✅ 已完成，下一隻';d.className=''}else{d.textContent=isDone(key())?'✅ 再存一次，下一隻':'✅ 好了，下一隻';d.className=''}}
@@ -197,7 +198,7 @@ const accKeys=()=>Object.keys(ACC).filter(k=>IMG[ACC[k].img]);
 /* 彈出清單 */
 function sheet(id,on){$(id).classList.toggle('show',on)}
 $$('[data-close]').forEach(b=>b.onclick=()=>b.closest('.sheet').classList.remove('show'));$$('.sheet').forEach(s=>s.addEventListener('click',e=>{if(e.target===s)s.classList.remove('show')}));
-$('pAcc').onclick=()=>{const g=$('accGrid');g.innerHTML='';
+$('pAcc').onclick=()=>{if(mode==='draw'){assetSheet();return}const g=$('accGrid');g.innerHTML='';
  const add=(id,img,name,n)=>{const b=document.createElement('button');b.className=(id==='MOUTH'?mode==='mouth':mode!=='mouth'&&id===cur.acc)?'on':'';const im=new Image();im.src=img;b.append(im,name);const s=document.createElement('small');s.textContent=n>=35?'🎉 全部完成':`${n}/35`;b.appendChild(s);b.onclick=()=>{sheet('shAcc',false);if(id==='MOUTH'){setMode('mouth')}else{cur.acc=id;if(mode!=='acc')setMode('acc');else{draw();baseHint()}}};g.appendChild(b)};
  for(const id of accKeys())add(id,IMG[ACC[id].img].src,ACC[id].n,progOf(id));
  add('MOUTH','data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><text y="8" font-size="8">👄</text></svg>'),'張嘴位置',progOf('MOUTH'));sheet('shAcc',true)};
@@ -235,7 +236,8 @@ $('cv').addEventListener('pointermove',e=>{if(!drag)return;const[x,y]=cvXY(e);if
  const fx=(x-drag.x)/VS+drag.ax,fy=(y-drag.y)/VS+drag.ay,ix=Math.trunc(fx),iy=Math.trunc(fy);drag.x=x;drag.y=y;drag.ax=fx-ix;drag.ay=fy-iy;if(!ix&&!iy)return;
  if(mode==='acc')moveAcc(ix,iy);else moveMouth(ix,iy);draw()});
 const endDrag=()=>{drag=null};$('cv').addEventListener('pointerup',endDrag);$('cv').addEventListener('pointercancel',endDrag);
-$$('#dSub button').forEach(b=>b.onclick=()=>{$$('#dSub button').forEach(x=>x.classList.toggle('on',x===b));for(const s of['tool','color','asset'])$('ds-'+s).style.display=s===b.dataset.ds?(s==='tool'?'flex':'block'):'none';if(b.dataset.ds==='asset')cats();if(b.dataset.ds==='color')swatches()});
+function assetSheet(){cats();if(ED.cat!=='pet'&&AREADY[ED.cat])picker();else if(ED.cat==='pet')$('dPick').innerHTML='<div class="lab" style="grid-column:1/-1">👆 上面點一種素材（道具、招式、場地…），下面就會出現全部的圖。修寵物的話選「🐣 寵物」，再用右上角換寵物。</div>';sheet('shAsset',true)}
+$$('#dSub button').forEach(b=>b.onclick=()=>{if(b.dataset.ds==='asset'){assetSheet();return}$$('#dSub button').forEach(x=>x.classList.toggle('on',x===b));for(const s of['tool','color'])$('ds-'+s).style.display=s===b.dataset.ds?(s==='tool'?'flex':'block'):'none';if(b.dataset.ds==='color')swatches()});
 /* ---------- 修圖（寵物＋全部素材） ---------- */
 const PC={},AIMG={},AREADY={};
 const isPet=id=>/^[a-z]+\d[oc]$/.test(id);
@@ -284,11 +286,11 @@ function swatches(){const mk=(id,L)=>{const el=$(id);el.innerHTML='';for(const v
  mk('swPet',Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,30))}
 /* 素材種類與挑圖 */
 function cats(){const el=$('dCat');el.innerHTML='';for(const[c,t]of CATS){const n=Object.keys(PX).filter(k=>c==='pet'?isPet(k):k.startsWith('s:'+(c==='misc'?'':c+'/'))&&(c!=='misc'||!k.includes('/'))).length;const b=document.createElement('button');b.className='chip'+(c===ED.cat?' on':'');b.textContent=t+(n?' ✏️':'');b.onclick=()=>pickCat(c);el.appendChild(b)}}
-async function pickCat(c){ED.cat=c;ED.src=null;cats();if(c==='pet'){$('dPick').innerHTML='<div class="lab">寵物用最上面「點這裡換寵物」來選</div>';fitView();swatches();draw();return}
+async function pickCat(c){ED.cat=c;ED.src=null;cats();if(c==='pet'){sheet('shAsset',false);fitView();swatches();draw();hint('🐣 修寵物：右上角可以換寵物');return}
  if(!AREADY[c]){AREADY[c]=0;$('dPick').innerHTML='<div class="note">載入中…</div>';draw();try{const r=await fetch('assets/'+c+'.json');const J=await r.json();await Promise.all(Object.entries(J).map(([k,v])=>new Promise(ok=>{const im=new Image();im.onload=ok;im.onerror=ok;im.src='data:image/png;base64,'+v;AIMG['s:'+k]=im})));AREADY[c]=1}catch(e){AREADY[c]=undefined;$('dPick').innerHTML='<div class="note">載入失敗，再點一次試試</div>';return}}
  if(ED.cat!==c)return;picker();draw()}
 function catIds(c){return Object.keys(AIMG).filter(k=>c==='misc'?!k.slice(2).includes('/'):k.startsWith('s:'+c+'/')).filter(k=>!/_closed$/.test(k)||!AIMG[k.replace(/_closed$/,'_open')]).sort()}
-function picker(){const el=$('dPick');el.innerHTML='';for(const id of catIds(ED.cat)){const b=document.createElement('button');b.className=id===ED.src?'on':'';const im=new Image();im.src=AIMG[id].src;b.appendChild(im);const p=pairOf(id);if(PX[id]||(p&&PX[p])){const i=document.createElement('i');i.textContent='✏️';b.appendChild(i)}b.title=id.slice(2);b.onclick=()=>{ED.src=id;ED.eye='o';PC[id]=null;delete PC[id];fitView();picker();swatches();draw();hint(id.slice(2))};el.appendChild(b)}}
+function picker(){const el=$('dPick');el.innerHTML='';for(const id of catIds(ED.cat)){const b=document.createElement('button');b.className=id===ED.src?'on':'';const im=new Image();im.src=AIMG[id].src;b.appendChild(im);const p=pairOf(id);if(PX[id]||(p&&PX[p])){const i=document.createElement('i');i.textContent='✏️';b.appendChild(i)}b.title=id.slice(2);b.onclick=()=>{sheet('shAsset',false);ED.src=id;ED.eye='o';PC[id]=null;delete PC[id];fitView();picker();swatches();draw();hint(id.slice(2))};el.appendChild(b)}}
 function markPick(){if(ED.cat!=='pet'&&mode==='draw'){const on=$('dPick').querySelector('.on');if(on&&!on.querySelector('i')){const i=document.createElement('i');i.textContent='✏️';on.appendChild(i)}}}
 $$('[data-dm]').forEach(b=>b.onclick=()=>{if(!viewId())return;const[W,H]=dims(),[dx,dy]=b.dataset.dm.split(',').map(Number);ED.x=Math.max(0,Math.min(W-1,ED.x+dx));ED.y=Math.max(0,Math.min(H-1,ED.y+dy));follow();draw()});
 $('dGo').onclick=()=>act(true);
