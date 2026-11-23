@@ -52,6 +52,8 @@ textarea{width:100%;height:70px;font-size:11px;border-radius:8px;margin-top:6px}
  <div class="side"><div><div class="lab">大小</div><div class="pm"><button class="btn" data-sz="-1">－ 縮小</button><button class="btn" data-sz="1">＋ 放大</button></div></div>
   <div><div class="lab">歪一邊</div><div class="pm"><button class="btn" data-rot="-5">↺</button><button class="btn" data-rot="0" style="font-size:13px">擺正</button><button class="btn" data-rot="5">↻</button></div></div></div></div>
  <div class="lab" style="margin-top:10px">圖層（被頭擋住的程度）</div><div class="seg3" id="layer"><button data-ly="0">預設</button><button data-ly="1">整個在前面</button><button data-ly="-1">整個在後面</button></div>
+ <div class="lab" style="margin-top:10px">上下分界（這件裝飾、全部寵物一起；粉紅虛線以上在後、以下在前）</div><div class="pm"><button class="btn" data-sp="0.04">▲ 線往上</button><button class="btn" data-sp="-0.04">▼ 線往下</button><button class="btn" data-sp="r" style="font-size:13px">恢復原本</button></div>
+ <div class="note" style="text-align:left">像花圈、圍巾：上半繞到頭／身體後面，下半蓋在前面。上面的「圖層」是只改這一隻。</div>
  <button class="reset" style="margin-top:10px" data-reset="acc">這隻的這個裝飾重設</button>
 </div>
 
@@ -104,21 +106,21 @@ const PETS={"flame0": "iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAEh0lEQVR42
  metal0:{ht:23,cx:20,hw:20,ey:31,ew:12},metal1:{ht:22,cx:14,hw:14,ey:30,ew:9},metal2:{ht:21,cx:13,hw:14,ey:28,ew:9},metal3:{ht:18,cx:13,hw:14,ey:25,ew:9},metal4:{ht:17,cx:14,hw:15,ey:24,ew:12}};
 const EL=[['flame','🔥 火'],['tide','💧 水'],['forest','🌿 草'],['earth','🪨 岩'],['bird','🐦 飛行'],['elec','⚡ 雷'],['metal','⚙️ 鋼']],ST=['寶寶','幼年','少年','成年','究極'],CELL=48;
 const $=id=>document.getElementById(id),$$=q=>[...document.querySelectorAll(q)];
-let PX={},TAB=JSON.parse(JSON.stringify(TAB0)),FIX={},cur={el:'flame',st:1,acc:'santa'},guide=true,flip=false,mode='acc';
-try{const sv=JSON.parse(localStorage.getItem('pf-acc-sim')||'null');if(sv){Object.assign(TAB,sv.tab||{});FIX=sv.fix||{};PX=sv.px||{}}}catch(e){}
+let FR={},GEO=null,PX={},TAB=JSON.parse(JSON.stringify(TAB0)),FIX={},cur={el:'flame',st:1,acc:'santa'},guide=true,flip=false,mode='acc';
+try{const sv=JSON.parse(localStorage.getItem('pf-acc-sim')||'null');if(sv){Object.assign(TAB,sv.tab||{});FIX=sv.fix||{};PX=sv.px||{};FR=sv.fr||{}}}catch(e){}
 const IMG={},PIM={};let pend=0;const load=(src,cb)=>{pend++;const im=new Image();im.onload=()=>{cb(im);if(--pend===0)all()};im.src='data:image/png;base64,'+src};
 for(const k in ACC_B64)load(ACC_B64[k],im=>IMG[k]=im);for(const k in PETS)load(PETS[k],im=>PIM[k]=im);for(const k in PETSC)load(PETSC[k],im=>PIM[k+'c']=im);
 const key=()=>cur.el+cur.st;
 /* ---------- 上一步 ---------- */
-const UNDO=[];const snap=()=>JSON.stringify({tab:TAB,fix:FIX,px:PX});
+const UNDO=[];const snap=()=>JSON.stringify({tab:TAB,fix:FIX,px:PX,fr:FR});
 function mark(){const s=snap();if(UNDO[UNDO.length-1]!==s)UNDO.push(s);if(UNDO.length>80)UNDO.shift()}
-function undo(){const s=UNDO.pop();if(!s){hint('沒有可以退回的了');return}const o=JSON.parse(s);TAB=o.tab;FIX=o.fix;PX=o.px;for(const k in PC)delete PC[k];draw();hint('↩️ 退回一步')}
+function undo(){const s=UNDO.pop();if(!s){hint('沒有可以退回的了');return}const o=JSON.parse(s);TAB=o.tab;FIX=o.fix;PX=o.px;FR=o.fr||{};for(const k in PC)delete PC[k];draw();hint('↩️ 退回一步')}
 let hintT=0;function hint(t,keep){$('hint').textContent=t;clearTimeout(hintT);if(!keep)hintT=setTimeout(baseHint,1800)}
 function baseHint(){$('hint').textContent={acc:ACC[cur.acc]?'👆 直接用手指拖裝飾，或用下面的按鈕微調':'先在上面選一個裝飾',head:'👆 手指拖動＝移動頭頂位置（藍線、黃線）',mouth:'👆 手指拖動＝移動嘴巴',draw:ED.tc==='paint'?'👆 手指點哪裡就畫哪裡':ED.tc==='pan'?'✋ 手指拖動畫面（圖很大時用）':'👆 點畫面移框框 → 方向鍵微調 → 按「點下去」'}[mode]}
 /* ---------- 錨點、畫裝飾 ---------- */
 function anchor(k){const T=TAB[k];return{ht:T.ht,cx:T.cx,hw:T.hw,ey:T.ey,ex0:T.cx-T.ew/2,ex1:T.cx+T.ew/2,ny:T.ey+(T.ey-T.ht)*.95+1,mouth:T.ey+Math.max(3,(T.ey-T.ht)*.45)+(T.my||0),mcx:T.cx+(T.mx||0),bot:45}}
 const getF=(k,id)=>{const F=(FIX[k]&&FIX[k][id])||[];while(F.length<5)F.push(0);return F};
-function drawAcc(c,k,x,y,w,fl,list,layer){const A=anchor(k),s=w/CELL;for(const id of list){const it=ACC[id],im=it&&IMG[it.img];if(!im)continue;const F=getF(k,id),fr=F[3]===1?1:F[3]===-1?0:(it.front??1);if(layer==='back'&&fr>=1)continue;if(layer==='front'&&fr<=0)continue;
+function drawAcc(c,k,x,y,w,fl,list,layer){const A=anchor(k),s=w/CELL;for(const id of list){const it=ACC[id],im=it&&IMG[it.img];if(!im)continue;const F=getF(k,id),fr=F[3]===1?1:F[3]===-1?0:(FR[id]??it.front??1);if(layer==='back'&&fr>=1)continue;if(layer==='front'&&fr<=0)continue;
  let aw,cx,by;
  if(it.slot==='head'){aw=A.hw*it.w;cx=A.cx+(it.side||0)*A.hw+(it.dx||0)*aw;const ah0=im.height*(aw/im.width);by=Math.min(A.ht+ah0*it.sink,A.ey-(it.side?0:2))}
  else if(it.slot==='face'){aw=Math.max(A.ex1-A.ex0+5,A.hw*.62);cx=A.cx;by=A.ey+im.height*(aw/im.width)*.55}
@@ -127,6 +129,7 @@ function drawAcc(c,k,x,y,w,fl,list,layer){const A=anchor(k),s=w/CELL;for(const i
  if(it.slot!=='head'&&it.ay!=null){aw=A.hw*it.w;const ah=im.height*(aw/im.width),tx=it.slot==='face'?(it.eye?A.ex1:A.cx):it.slot==='mouth'?A.mcx:A.cx,ty=it.slot==='face'?A.ey:it.slot==='mouth'?A.mouth+1:A.ny;cx=tx+(.5-it.ax)*aw;by=ty+(1-it.ay)*ah}
  cx+=F[0];by+=F[1];aw*=1+F[2]*.05;const ah=im.height*(aw/im.width);
  const dw=Math.max(4,Math.round(aw*s)),dh=Math.max(3,Math.round(ah*s)),px=Math.round(fl?x+(CELL-cx)*s-dw/2:x+cx*s-dw/2),py=Math.round(y+by*s-dh);
+ if(c===GEO_C&&id===cur.acc)GEO={px,py,dw,dh,fr};
  let sy=0,sh=im.height,oy=0,oh=dh;if(layer==='front'&&fr<1){sy=Math.floor(im.height*(1-fr));sh=im.height-sy;oy=Math.round(dh*(sy/im.height));oh=dh-oy}
  c.save();c.imageSmoothingEnabled=false;c.translate(px+dw/2,py+dh);if(fl)c.scale(-1,1);{const rr=(F[4]||0)+(it.rot||0);if(rr)c.rotate(rr*Math.PI/180)}c.drawImage(im,0,sy,im.width,sh,-dw/2,-dh+oy,dw,oh);c.restore()}}
 function drawMouth(c,k,x,y,s,fl){const A=anchor(k),mx=fl?CELL-A.mcx:A.mcx,ox=Math.round(mx)-2,oy=Math.round(A.mouth+1)-2,P=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(x+a*s,y+b*s,w*s,h*s)};P(ox,oy,5,4,'#2a0a0a');P(ox+1,oy-1,3,6,'#2a0a0a');P(ox+1,oy,3,3,'#7a1a2a');P(ox+1,oy+2,3,1,'#e8607a')}
@@ -135,8 +138,9 @@ function paint(c,k,x,y,w,fl,list,mouth){const im=petCv(k,'o');if(!im)return;draw
 /* ---------- 主畫面 ---------- */
 const VS=4,VX=(240-CELL*VS)/2,VY=28;   // 一般模式：寵物畫在 (VX,VY) 放大 4 倍
 function draw(){if(mode==='draw')drawEd();else drawView();if(mode==='draw'||document.querySelector('.zb'))edUI();thumbs();out()}
-function drawView(){const c=$('cv').getContext('2d'),k=key();c.imageSmoothingEnabled=false;c.fillStyle='#77a877';c.fillRect(0,0,240,240);
- paint(c,k,VX,VY,CELL*VS,flip,mode==='mouth'?[]:lst(),mode==='mouth');
+let GEO_C=null;function drawView(){const c=$('cv').getContext('2d'),k=key();GEO_C=c;GEO=null;c.imageSmoothingEnabled=false;c.fillStyle='#77a877';c.fillRect(0,0,240,240);
+ paint(c,k,VX,VY,CELL*VS,flip,mode==='mouth'?[]:lst(),mode==='mouth');GEO_C=null;
+ if(mode==='acc'&&GEO&&ACC[cur.acc]&&SPLIT_SHOW){const g=GEO,yy=Math.round(g.py+g.dh*(1-Math.max(0,Math.min(1,g.fr))))+.5;c.save();c.strokeStyle='#ff40c0';c.lineWidth=1;c.setLineDash([3,2]);c.beginPath();c.moveTo(g.px-6,yy);c.lineTo(g.px+g.dw+6,yy);c.stroke();c.setLineDash([]);c.fillStyle='#ff40c0';c.font='9px sans-serif';c.fillText('▲後面 ▼前面',g.px+g.dw+2,yy-2);c.restore()}
  if(guide){const A=anchor(k),X=v=>flip?VX+(CELL-v)*VS:VX+v*VS;
   if(mode==='head'||mode==='acc'){c.fillStyle='rgba(0,90,255,.75)';c.fillRect(0,VY+A.ht*VS,240,1);c.fillStyle='rgba(255,220,0,.85)';c.fillRect(X(A.cx),VY-6,1,CELL*VS+6);c.fillStyle='rgba(255,220,0,.45)';c.fillRect(Math.min(X(A.cx-A.hw/2),X(A.cx+A.hw/2)),VY+A.ht*VS-3,A.hw*VS,2)}
   if(mode==='head'){c.fillStyle='rgba(255,40,40,.85)';c.fillRect(Math.min(X(A.ex0),X(A.ex1)),VY+A.ey*VS,Math.abs(X(A.ex1)-X(A.ex0)),2)}}
@@ -162,6 +166,8 @@ function moveMouth(dx,dy){const T=TAB[key()];T.mx=(T.mx||0)+(flip?-dx:dx);T.my=(
 $$('[data-mv]').forEach(b=>b.onclick=()=>{const[x,y]=b.dataset.mv.split(',').map(Number);mark();if(moveAcc(x,y))draw()});
 $$('[data-sz]').forEach(b=>b.onclick=()=>{if(!ACC[cur.acc])return hint('先在上面選一個裝飾');mark();const k=key();FIX[k]=FIX[k]||{};const F=getF(k,cur.acc);F[2]+=+b.dataset.sz;FIX[k][cur.acc]=F;draw()});
 $$('[data-rot]').forEach(b=>b.onclick=()=>{if(!ACC[cur.acc])return hint('先在上面選一個裝飾');mark();const k=key();FIX[k]=FIX[k]||{};const F=getF(k,cur.acc),d=+b.dataset.rot;F[4]=d?F[4]+d:0;FIX[k][cur.acc]=F;draw()});
+let SPLIT_SHOW=true;
+$$('[data-sp]').forEach(b=>b.onclick=()=>{if(!ACC[cur.acc])return hint('先在上面選一個裝飾');mark();const id=cur.acc,d=b.dataset.sp;if(d==='r')delete FR[id];else{const v=FR[id]??ACC[id].front??1;FR[id]=Math.round(Math.max(0,Math.min(1,v+(+d)))*100)/100}SPLIT_SHOW=true;draw();const v=FR[id]??ACC[id].front??1;hint(v>=1?'整件都在前面':v<=0?'整件都在後面':`粉紅虛線以上畫在後面、以下畫在前面`)});
 $$('[data-ly]').forEach(b=>b.onclick=()=>{if(!ACC[cur.acc])return hint('先在上面選一個裝飾');mark();const k=key();FIX[k]=FIX[k]||{};const F=getF(k,cur.acc);F[3]=+b.dataset.ly;FIX[k][cur.acc]=F;draw();hint(['預設：帽緣壓在頭上','整個在前面','整個在後面'][[0,1,-1].indexOf(F[3])])});
 $$('[data-hd]').forEach(b=>b.onclick=()=>{const[p,d]=b.dataset.hd.split(',');mark();if(p==='cx')moveHead(+d,0);else TAB[key()][p]+=+d;draw()});
 $$('[data-mo]').forEach(b=>b.onclick=()=>{const[p,d]=b.dataset.mo.split(',');mark();if(p==='mx')moveMouth(+d,0);else moveMouth(0,+d);draw()});
@@ -243,15 +249,15 @@ $('bGuide').onclick=e=>{guide=!guide;e.currentTarget.classList.toggle('off',!gui
 $$('#modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
 $('grid').parentNode.addEventListener('toggle',()=>thumbs());
 $('bCopy').onclick=async()=>{out();const t=$('out').value;try{await navigator.clipboard.writeText(t);$('bCopy').textContent='✅ 已複製'}catch(e){const a=$('out');a.focus();a.select();$('bCopy').textContent='請長按下面框框 → 全選 → 拷貝'}};
-$('bLoad').onclick=()=>{try{const o=JSON.parse($('inp').value);mark();TAB=JSON.parse(JSON.stringify(TAB0));Object.assign(TAB,o.tab||{});FIX=o.fix||{};PX=o.px||{};for(const k in PC)delete PC[k];draw();hint('已載入')}catch(e){alert('格式不對')}};
+$('bLoad').onclick=()=>{try{const o=JSON.parse($('inp').value);mark();TAB=JSON.parse(JSON.stringify(TAB0));Object.assign(TAB,o.tab||{});FIX=o.fix||{};PX=o.px||{};FR=o.fr||{};for(const k in PC)delete PC[k];draw();hint('已載入')}catch(e){alert('格式不對')}};
 /* ---------- 存檔（手機＋雲端） ---------- */
 function out(){const fix={};for(const k in FIX)for(const a in FIX[k]){const v=FIX[k][a];if(v&&v.some(n=>n))(fix[k]=fix[k]||{})[a]=v}const px={};for(const k in PX)if(Object.keys(PX[k]).length)px[k]=PX[k];
- const o={tab:TAB,fix};if(Object.keys(px).length)o.px=px;const j=JSON.stringify(o);$('out').value=j;try{localStorage.setItem('pf-acc-sim',j)}catch(e){}cloudSave(j)}
+ const fr={};for(const k in FR)if(FR[k]!=null)fr[k]=FR[k];const o={tab:TAB,fix};if(Object.keys(fr).length)o.fr=fr;if(Object.keys(px).length)o.px=px;const j=JSON.stringify(o);$('out').value=j;try{localStorage.setItem('pf-acc-sim',j)}catch(e){}cloudSave(j)}
 let DB=null,cloudLast=null,cloudT=0,cloudReady=false;const cl=t=>$('cloud').textContent=t;const hm=t=>{const d=new Date(t);return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')};
 function cloudSave(j){if(!DB||!cloudReady||j===cloudLast)return;clearTimeout(cloudT);cl('☁️ 存檔中…');cloudT=setTimeout(async()=>{try{const at=Date.now();await DB.doc('cfg/main').set({json:j,at});cloudLast=j;cl('☁️ 已存到雲端 '+hm(at))}catch(e){cl('⚠️ 雲端存檔失敗')}},1200)}
 (async()=>{const off=()=>cl('📱 只存在這支手機');const to=setTimeout(()=>{if(!cloudReady)off()},10000);try{if(!window.claude||!claude.use){clearTimeout(to);off();return}DB=await claude.use('db');if(!DB){clearTimeout(to);off();return}
  const sn=await DB.doc('cfg/main').get(),d=sn&&(sn.data?sn.data():sn);clearTimeout(to);let loc=null;try{loc=localStorage.getItem('pf-acc-sim')}catch(e){}
- if(d&&d.json&&d.json!==loc){const o=JSON.parse(d.json);TAB=JSON.parse(JSON.stringify(TAB0));Object.assign(TAB,o.tab||{});FIX=o.fix||{};PX=o.px||{};for(const k in PC)delete PC[k];cloudLast=d.json;cloudReady=true;cl('☁️ 已讀取雲端 '+hm(d.at));if(pend===0)draw()}
+ if(d&&d.json&&d.json!==loc){const o=JSON.parse(d.json);TAB=JSON.parse(JSON.stringify(TAB0));Object.assign(TAB,o.tab||{});FIX=o.fix||{};PX=o.px||{};FR=o.fr||{};for(const k in PC)delete PC[k];cloudLast=d.json;cloudReady=true;cl('☁️ 已讀取雲端 '+hm(d.at));if(pend===0)draw()}
  else{cloudLast=d&&d.json||null;cloudReady=true;cl('☁️ 已連上雲端');if(pend===0)out()}}catch(e){clearTimeout(to);off()}})();
 function all(){chips();setMode('acc')}
 $$('.zb').forEach(z=>z.style.display='none');
