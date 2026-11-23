@@ -10,6 +10,7 @@ from import_art import downsample, quantize
 import_art.DARK = .5; import_art.CELL = 64
 SHEETS = {
   'santa': (3, 1, [('santa', 30), ('santa_side', 30), ('santa_s', 24)]),
+  'mushhat': (2, 1, [('mushhat', 28), ('mushhat_s', 24)]),
   'acc': (5, 2, [('bow', 18), ('tophat', 24), ('crown', 22), ('glasses', 24), ('wreath', 30), ('chef', 24), ('necklace', 22), ('cigar', 20), ('turkey', 28), ('antler', 30)]),
 }
 def fg_mask(path):
