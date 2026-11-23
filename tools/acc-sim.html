@@ -16,6 +16,7 @@ textarea{width:100%;height:90px;font-size:12px;border-radius:6px;box-sizing:bord
 input[type=color]{width:52px;height:44px;border:none;background:none;padding:0}
 </style></head><body><div class="wrap">
 <h1>🎀 幻獸日記・裝飾調整器</h1>
+<div class="small" id="cloud" style="background:#5a3a20;border-radius:6px;padding:6px 8px;margin-bottom:6px">☁️ 連線中…</div>
 <div class="small">選幻獸、選裝飾，用按鈕調到你覺得剛好（也可以調吐彩虹的嘴巴位置、用 🖌️ 修圖改點陣圖），最後按「複製設定」貼給 Claude。會自動存在這支手機。</div>
 <div class="lbl">屬性</div><div class="chips" id="cEl"></div>
 <div class="lbl">階段</div><div class="chips" id="cSt"></div>
@@ -83,7 +84,16 @@ function draw(){if(mode==='draw'){drawEd();grid();out();return}const c=document.
  const T=TAB[k],F=(FIX[k]&&FIX[k][cur.acc])||[0,0,0,0,0];c.fillStyle='#000a';c.fillRect(0,212,240,28);c.fillStyle='#fff';c.font='10px sans-serif';c.fillText(`${k}  頭頂${T.ht} 中心${T.cx} 頭寬${T.hw} 眼${T.ey}/${T.ew}  嘴${T.mx||0},${T.my||0}`,4,224);c.fillText(`細修${F[0]||0},${F[1]||0},${F[2]||0} 圖層${['預設','前面','後面'][F[3]===1?1:F[3]===-1?2:0]} 歪${F[4]||0}°`,4,236);grid();out()}
 function grid(){const g=document.getElementById('grid');if(!g.children.length){for(let n=0;n<5;n++)for(const[e]of EL){}for(const[e]of EL)for(let n=0;n<5;n++){const cv=document.createElement('canvas');cv.width=96;cv.height=96;cv.dataset.k=e+n;cv.onclick=()=>{cur.el=e;cur.st=n;chips();draw()};g.appendChild(cv)}}
  for(const cv of g.children){const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,96,96);paint(c,cv.dataset.k,8,14,80,false,lst());cv.classList.toggle('on',cv.dataset.k===key())}}
-function out(){const fix={};for(const k in FIX)for(const a in FIX[k]){const v=FIX[k][a];if(v&&v.some(n=>n)){(fix[k]=fix[k]||{})[a]=v}}const px={};for(const k in PX){const e=PX[k];if(Object.keys(e).length)px[k]=e}const o={tab:TAB,fix};if(Object.keys(px).length)o.px=px;document.getElementById('out').value=JSON.stringify(o);try{localStorage.setItem('pf-acc-sim',JSON.stringify(o))}catch(e){}}
+function out(){const fix={};for(const k in FIX)for(const a in FIX[k]){const v=FIX[k][a];if(v&&v.some(n=>n)){(fix[k]=fix[k]||{})[a]=v}}const px={};for(const k in PX){const e=PX[k];if(Object.keys(e).length)px[k]=e}const o={tab:TAB,fix};if(Object.keys(px).length)o.px=px;const j=JSON.stringify(o);document.getElementById('out').value=j;try{localStorage.setItem('pf-acc-sim',j)}catch(e){}cloudSave(j)}
+/* ☁️ 雲端存檔：不管用 App 還是 Safari 開，都讀同一份 */
+let DB=null,cloudLast=null,cloudT=0,cloudReady=false;const cl=t=>{const e=document.getElementById('cloud');if(e)e.textContent=t};
+const hm=t=>{const d=new Date(t);return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')};
+function cloudSave(j){if(!DB||!cloudReady||j===cloudLast)return;clearTimeout(cloudT);cl('☁️ 存檔中…');cloudT=setTimeout(async()=>{try{const at=Date.now();await DB.doc('cfg/main').set({json:j,at});cloudLast=j;cl('☁️ 已存到雲端 '+hm(at)+'（換 App／Safari 開都在）')}catch(e){cl('⚠️ 雲端存檔失敗，先存在這支手機；記得按「複製設定」備份')}},1200)}
+(async()=>{const to=setTimeout(()=>{if(!cloudReady)cl('📱 目前只存在這支手機（沒連上雲端）')},10000);try{if(!window.claude||!claude.use){clearTimeout(to);cl('📱 目前只存在這支手機（沒連上雲端）');return}DB=await claude.use('db');if(!DB){clearTimeout(to);cl('📱 目前只存在這支手機（沒連上雲端）');return}
+ const snap=await DB.doc('cfg/main').get(),d=snap&&(snap.data?snap.data():snap);clearTimeout(to);
+ let loc=null;try{loc=localStorage.getItem('pf-acc-sim')}catch(e){}
+ if(d&&d.json&&d.json!==loc){const o=JSON.parse(d.json);TAB=JSON.parse(JSON.stringify(TAB0));Object.assign(TAB,o.tab||{});FIX=o.fix||{};PX=o.px||{};for(const k in PC)delete PC[k];cloudLast=d.json;cloudReady=true;cl('☁️ 已讀取雲端存檔（'+hm(d.at)+'）');if(pend===0)draw()}
+ else{cloudLast=d&&d.json||null;cloudReady=true;cl(d?'☁️ 已連上雲端，存檔是最新的':'☁️ 已連上雲端');out()}}catch(e){clearTimeout(to);cl('📱 目前只存在這支手機（雲端讀取失敗）')}})();
 function chips(){const mk=(id,L,on,fn)=>{const el=document.getElementById(id);el.innerHTML='';for(const[v,t]of L){const b=document.createElement('button');b.className='chip'+(v===on?' on':'');b.textContent=t;b.onclick=()=>{fn(v);chips();draw()};el.appendChild(b)}};
  mk('cEl',EL,cur.el,v=>cur.el=v);mk('cSt',ST.map((t,i)=>[i,t]),cur.st,v=>cur.st=v);mk('cAc',[...Object.keys(ACC).filter(k=>IMG[ACC[k].img]).map(k=>[k,ACC[k].n]),['MOUTH','👄 張嘴（吐彩虹）'],['','（不戴）']],cur.acc,v=>cur.acc=v)}
 
