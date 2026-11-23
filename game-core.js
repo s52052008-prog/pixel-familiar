@@ -194,7 +194,23 @@ const CONFIG = {
   acc: {   // V1.88 寵物裝飾：friends＝加幾位好友送、price＝商店價錢
     santa: { slot: 'head', friends: 1 }, mushhat: { slot: 'head', dex: 'mush' }, bow: { slot: 'head', friends: 2 }, tophat: { slot: 'head', friends: 3 }, crown: { slot: 'head', friends: 5 },
     antler: { slot: 'head', price: 300 }, wreath: { slot: 'head', price: 300 }, chef: { slot: 'head', price: 300 }, turkey: { slot: 'head', price: 350 },
-    glasses: { slot: 'face', price: 400 }, cigar: { slot: 'mouth', price: 500 }, necklace: { slot: 'neck', price: 800 } },
+    glasses: { slot: 'face', price: 400 }, cigar: { slot: 'mouth', price: 500 }, necklace: { slot: 'neck', price: 800 },
+    gradcap: { slot: 'head', price: 600 }, halo: { slot: 'head', price: 1500 }, pumpkin: { slot: 'head', price: 500, month: 9 }, monocle: { slot: 'face', price: 600 }, eyepatch: { slot: 'face', price: 600 },
+    rose: { slot: 'mouth', price: 700 }, lollipop: { slot: 'mouth', price: 400 }, bowtie: { slot: 'neck', price: 600 }, scarf: { slot: 'neck', price: 500 } },
+  /* V1.88 裝飾＝裝備：每件一個小能力；強化五級（普通灰→優秀綠→精良藍→完美紫→超級金），等級越高越強、會發光 */
+  eq: {
+    fx: { santa: { gift: .25 }, antler: { spd: .06 }, bow: { def: .05 }, tophat: { dodge: .03 }, crown: { atk: .05 }, wreath: { regen: .02 },
+      chef: { heal: .2 }, turkey: { hp: .06 }, mushhat: { poison: .08 }, glasses: { crit: .03 }, cigar: { scare: .15 }, necklace: { coin: .1 },
+      gradcap: { xp: .05 }, halo: { endure: .12 }, pumpkin: { slow: .1 }, monocle: { aim: .03 }, eyepatch: { rage: .15 }, rose: { charm: .04 }, lollipop: { cure: .3 }, bowtie: { critRes: .15 }, scarf: { elemCut: .08 } },
+    mult: [1, 1.5, 2, 2.5, 3],
+    tiers: ['普通', '優秀', '精良', '完美', '超級'], colors: ['#b8b8b8', '#5ad86a', '#4aa8ff', '#b070ff', '#ffd040'],
+    up: [{ coins: 300, mush: 'mush', n: 3 }, { coins: 800, mush: 'mushS', n: 2 }, { coins: 2000, mush: 'mushN', n: 2 }, { coins: 5000, mush: 'mushG', n: 1 }],
+    sets: { boss: { name: '老大套', icon: '😎', need: ['glasses', 'cigar', 'necklace'], stun: .25, text: '開場有機會把對手嚇呆，對手第一回合不能動' },
+      xmas: { name: '聖誕套', icon: '🎄', need: [['santa', 'antler'], 'necklace'], gift: .25, text: '12 月打贏多拿禮物的機會變高' },
+      gent: { name: '紳士套', icon: '🎩', need: ['tophat', 'monocle', 'bowtie'], half: 1, text: '每場第一次被打，傷害減半' },
+      halloween: { name: '萬聖套', icon: '🎃', need: ['pumpkin', 'eyepatch', 'rose'], stun: .25, text: '開場對手有機會害怕到發抖，第一回合不能動' },
+      angel: { name: '天使套', icon: '😇', need: ['halo', 'scarf'], angel: .2, text: '撐住一口氣之後，再回一點血' } },
+    gift: [['food', 2], ['potion', 1], ['seeds', 2], ['berry', 2], ['candy', 1], ['coins', 60]] },
   mush: {   // V1.88 🍄 雨後蘑菇：雨停後院子冒出來，點了採收；烤過賣錢 1.5 倍、心情和體力 1.5 倍（飽食不變）
     kinds: {
       mush:  { n: '飄香菇', sell: 20, raw: { mood: 10, hunger: 10, energy: 10 }, cook: { mood: 15, hunger: 10, energy: 15 } },
@@ -328,7 +344,7 @@ function fresh(now = Date.now()) {
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] }, goalLv: 0,
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, lounge: { lv: 1, at: 0, decor: { placed: { paper: 'paper_cream' }, pos: {}, flip: {} } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
-    cores: [], ball: { best: 0, goals: 0 }, pk: { best: 0, games: 0, goals: 0 }, acc: [], accAdj: {}, accOwned: [], mush: [], mushChk: 0, mushDex: [], mushBuff: { atk: 0, def: 0 }, goldGlow: 0, goldKnown: false, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, relics: [], relicGot: [], eggBuys: 0, foster: [], fusionHouse: false, fosterPaid: false, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
+    cores: [], ball: { best: 0, goals: 0 }, pk: { best: 0, games: 0, goals: 0 }, acc: [], accAdj: {}, accOwned: [], accLv: {}, mush: [], mushChk: 0, mushDex: [], mushBuff: { atk: 0, def: 0 }, goldGlow: 0, goldKnown: false, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, relics: [], relicGot: [], eggBuys: 0, foster: [], fusionHouse: false, fosterPaid: false, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
     events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
@@ -397,6 +413,7 @@ function sanitize(o, now = Date.now()) {
   r.cores = Array.isArray(o.cores) ? o.cores.filter(c => c && typeof c === 'object').slice(-CONFIG.core.max).map(c => ({ x: num(c.x, 64, 4, 124), at: num(c.at, now, 0, 9e15), v: ['room', 'lounge'].includes(c.v) ? c.v : 'yard', k: CORE_KINDS.includes(c.k) ? c.k : 'core', ...(c.g ? { g: 1 } : {}) })) : [];   // V1.86.6 肉骨頭、魚骨存檔後不會變成果核
   const bl = o.ball && typeof o.ball === 'object' ? o.ball : {}; r.ball = { best: int(bl.best, 0, 0, 99), goals: int(bl.goals, 0, 0, 1e7) };
   { const A = CONFIG.acc; r.accOwned = Array.isArray(o.accOwned) ? [...new Set(o.accOwned.filter(k => A[k]))] : [];
+    r.accLv = {}; if (o.accLv && typeof o.accLv === 'object') for (const k of r.accOwned) { const v = int(o.accLv[k], 0, 0, 4); if (v) r.accLv[k] = v; }
     const own = new Set(r.accOwned), seen = {}; r.acc = Array.isArray(o.acc) ? o.acc.filter(k => A[k] && own.has(k) && !seen[A[k].slot] && (seen[A[k].slot] = 1)) : [];
     r.accAdj = {}; if (o.accAdj && typeof o.accAdj === 'object') for (const sl of ['head', 'face', 'mouth', 'neck']) { const v = o.accAdj[sl]; if (Array.isArray(v) && v.length === 3 && v.every(n => Number.isFinite(n))) r.accAdj[sl] = [clamp(Math.round(v[0]), -8, 8), clamp(Math.round(v[1]), -8, 8), clamp(Math.round(v[2]), -5, 5)]; } }   // V1.88 寵物裝飾
   r.mush = Array.isArray(o.mush) ? o.mush.filter(m => m && CONFIG.mush.kinds[m.k]).slice(0, CONFIG.mush.max).map(m => ({ k: m.k, x: clamp(Math.round(+m.x || 60), 6, 120), y: clamp(Math.round(+m.y || 96), 84, 106), at: num(m.at, 0, 0, 9e15), fake: m.fake ? 1 : 0 })) : [];
@@ -852,12 +869,36 @@ function foeFighter(n, myLvl, name = '野生怪', key = 'k') {
 const hasHeritage = st => !!(st.awake || (st.pair && st.pair.awake) || (st.roster || []).some(p => p.awake));
 /* V1.42 我方加成：進化階段、訓練成果、星耀覺醒 */
 function trainBonus(p) { const T = CONFIG.trainBonus, L = (p && p.trainLog) || {}, f = k => Math.min(T.max, Math.round((L[k] || 0) * T.per * 1000) / 1000); return { dodge: f('dodge'), attack: f('attack'), defense: f('defense') }; }
-function buffFighter(f, p) {
+/* V1.88 裝備：算出這隻戴的裝飾加了什麼（lv＝玩家的裝飾等級表） */
+function eqStats(acc, lv, month) {
+  const E = CONFIG.eq, o = { list: [], sets: [] };
+  for (const k of acc || []) { const fx = E.fx[k]; if (!fx) continue; const t = Math.max(0, Math.min(4, (lv && lv[k]) | 0)), m = E.mult[t]; o.list.push(k); for (const x in fx) o[x] = (o[x] || 0) + fx[x] * m; }
+  for (const id in E.sets) { const S = E.sets[id]; if (S.need.every(n => Array.isArray(n) ? n.some(q => o.list.includes(q)) : o.list.includes(n))) { o.sets.push(id); if (S.stun) o.stun = Math.max(o.stun || 0, S.stun); if (S.half) o.half = 1; if (S.angel) o.angel = S.angel; if (S.gift && month === 11) o.gift = (o.gift || 0) + S.gift; } }
+  return o;
+}
+function eqApply(f, acc, lv) {
+  const q = eqStats(acc, lv); if (!q.list.length) return f;
+  if (q.atk) f.atk *= 1 + q.atk; if (q.def) f.def *= 1 + q.def; if (q.spd) f.spd = (f.spd || 0) * (1 + q.spd) + .01; if (q.hp) f.max = f.hp = Math.round(f.max * (1 + q.hp));
+  if (q.dodge) f.dodge = (f.dodge || 0) + q.dodge; if (q.crit) f.critUp = (f.critUp || 0) + q.crit; if (q.regen) f.eqRegen = q.regen; if (q.heal) f.eqHeal = q.heal;
+  if (q.poison) f.eqPoison = q.poison; if (q.scare) f.eqScare = q.scare; if (q.stun) f.eqStun = q.stun; if (q.endure) f.eqEndure = q.endure; if (q.slow) f.eqSlow = q.slow;
+  if (q.aim) f.eqAim = q.aim; if (q.rage) f.eqRage = q.rage; if (q.charm) f.eqCharm = q.charm; if (q.cure) f.eqCure = q.cure; if (q.critRes) f.critRes = (f.critRes || 0) + q.critRes; if (q.elemCut) f.eqElemCut = q.elemCut;
+  if (q.half) f.halfNext = true; if (q.angel) f.eqAngel = q.angel; f.eqSets = q.sets; return f;
+}
+function accUpgrade(st, k) {
+  const E = CONFIG.eq; if (!st.accOwned.includes(k) || !E.fx[k]) return { ok: false, msg: '還沒有這個裝飾' };
+  const lv = (st.accLv[k] | 0); if (lv >= 4) return { ok: false, msg: '已經是最高級了！' };
+  const U = E.up[lv]; if (st.coins < U.coins) return { ok: false, msg: `金幣不夠（要 ${U.coins}）` };
+  if ((st.inv[U.mush] | 0) < U.n) return { ok: false, msg: '蘑菇不夠', need: U };
+  st.coins -= U.coins; st.inv[U.mush] -= U.n; st.accLv[k] = lv + 1; return { ok: true, lv: lv + 1 };
+}
+function eqGift(st, r = Math.random) { const L = CONFIG.eq.gift, [k, n] = L[Math.floor(r() * L.length) % L.length]; if (k === 'coins') st.coins += n; else st.inv[k] = (st.inv[k] || 0) + n; return [k, n]; }
+function buffFighter(f, p, lv) {
   if (!f || !p) return f; const sx = CONFIG.stageX[p.stage] || 1, tb = trainBonus(p), aw = p.awake ? CONFIG.starHeart.statX : 1;
   f.atk *= sx * (1 + tb.attack) * aw; f.def *= sx * (1 + tb.defense) * aw; f.max = f.hp = Math.round(f.max * sx * (1 + tb.defense) * aw); f.dodge = tb.dodge; f.stageX = sx;
   for (const k of (p.relics || [])) { const R = CONFIG.relics.items[k]; if (!R) continue;   // V1.52 寶物
     if (R.def) f.def *= 1 + R.def; if (R.atk) f.atk *= 1 + R.atk; if (R.hp) f.max = f.hp = Math.round(f.max * (1 + R.hp));
     if (R.crit) f.critUp = (f.critUp || 0) + R.crit; if (R.cut) f.dmgCut = (f.dmgCut || 0) + R.cut; if (R.regen) f.regen = (f.regen || 0) + R.regen; if (R.revive) f.revive = R.revive; if (R.sp) f.spUp = (f.spUp || 0) + R.sp; if (R.dodge) f.dodge = (f.dodge || 0) + R.dodge; }
+  if (lv) eqApply(f, p.acc, lv);   // V1.88 裝飾＝裝備
   return f;
 }
 /* V1.86 戰鬥天賦等級：少年期 1（弱化版）、成年期以後 2（完整版） */
@@ -907,6 +948,10 @@ function damage(a, d, special, r = Math.random, boost = 1) {
   const pow = (special ? (a.el === 'none' ? 1.15 : 1.3) * (1 + (a.spUp || 0)) : 1) * (a.charged ? CONFIG.chargeMult : 1) * boost; a.charged = false;
   const mult = elemMult(a, d, special);
   let dmg = Math.max(1, Math.round(a.atk * pow * (a.atk / (a.atk + d.def)) * 1.6 * mult * (.85 + r() * .3)));
+  if (a.scared) dmg = Math.max(1, Math.round(dmg * (1 - a.scared)));   // V1.88 被雪茄嚇到：第一回合打小力
+  if (a.eqAim) dmg = Math.round(dmg * (1 + a.eqAim / 2));   // 單片眼鏡：看穿弱點
+  if (a.eqRage) dmg = Math.round(dmg * (1 + a.eqRage * (1 - a.hp / a.max)));   // 海盜眼罩：血越少越兇
+  if (mult > 1 && d.eqElemCut) dmg = Math.max(1, Math.round(dmg * (1 - d.eqElemCut)));   // 圍巾：被剋也比較不痛
   if (a.reap) dmg = Math.round(dmg * (1 + a.reap * (1 - d.hp / d.max)));   // V1.86 靈魂收割：你的血越少打越痛
   if (special && d.spCut) dmg = Math.max(1, Math.round(dmg * (1 - d.spCut)));   // 苔石鎧甲：屬性攻擊打不痛
   if (d.stiffCut) dmg = Math.max(1, Math.round(dmg * (1 - d.stiffCut)));   // 越打越硬／不死骨架
@@ -920,8 +965,10 @@ function damage(a, d, special, r = Math.random, boost = 1) {
   let endured = false, sprouted = false;
   if (dmg >= d.hp && d.sprout && !d.sproutUsed) { d.sproutUsed = true; if (r() < d.sprout) { dmg = d.hp - 1; sprouted = true; } }   // V1.86 生生不息
   if (!sprouted && dmg >= d.hp && d.endure) { dmg = d.hp - 1; d.endure = false; endured = true; }
+  let haloed = false; if (!sprouted && !endured && dmg >= d.hp && d.eqEndure && !d.eqEndUsed) { d.eqEndUsed = true; if (r() < d.eqEndure) { dmg = d.hp - 1; haloed = true; } }   // 天使光環：撐住一口氣
   let revived = false; if (dmg >= d.hp && d.revive) { d.hp = Math.max(1, Math.round(d.max * d.revive)); d.revive = 0; revived = true; } else d.hp = Math.max(0, d.hp - dmg);   // V1.52 不死鳥羽毛
-  return { dmg, mult, crit, endured, revived, reflect, amulet, sprouted };
+  if (haloed && d.eqAngel) d.hp = Math.min(d.max, d.hp + Math.round(d.max * d.eqAngel));   // 天使套
+  return { dmg, mult, crit, endured, revived, reflect, amulet, sprouted, haloed };
 }
 function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random) {
   const A = CONFIG.adventure, out = { xp: 0, coins: 0, food: 0, seeds: 0, unlocked: 0, events: [] };
@@ -929,7 +976,10 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
   if (result === 'win') {
     st.adv.wins++; track(st, 'win', now);
     const xp = Math.round((A.xp + CONFIG.battleWin.xp) * CONFIG.battleLen.reward);   // V1.86 戰鬥變長，經驗金幣也多一點
-    if (full) { const T = trait(st); out.xp = addXP(st, xp); out.coins = Math.round((A.coinsMin + Math.floor(r() * (A.coinsMax - A.coinsMin + 1))) * CONFIG.battleLen.reward); if (T.coinX && r() < T.coinChance) { out.coins = Math.round(out.coins * T.coinX); out.coinBonus = true; } st.coins += out.coins;
+    const q = eqStats(st.acc, st.accLv, new Date(now).getMonth());   // V1.88 裝備：學士帽經驗、聖誕帽禮物、金項鍊金幣
+    if (full) { const T = trait(st); out.xp = addXP(st, Math.round(xp * (1 + (q.xp || 0)))); if (q.xp) out.eqXp = 1;
+      { if (q.gift && r() < q.gift) out.gift = eqGift(st, r); out.eqCoin = q.coin || 0; }
+      out.coins = Math.round((A.coinsMin + Math.floor(r() * (A.coinsMax - A.coinsMin + 1))) * CONFIG.battleLen.reward); if (T.coinX && r() < T.coinChance) { out.coins = Math.round(out.coins * T.coinX); out.coinBonus = true; } if (out.eqCoin) { out.eqCoinN = Math.max(1, Math.round(out.coins * out.eqCoin)); out.coins += out.eqCoinN; } st.coins += out.coins;
       if (T.seedChance && r() < T.seedChance) { st.inv.seeds++; out.bonusSeed = 1; } if (T.berryChance && r() < T.berryChance) { const b = 1 + Math.floor(r() * 2); st.inv.berry = (st.inv.berry || 0) + b; out.berry = b; } st.inv.seeds += A.seeds; out.seeds = A.seeds; st.path.flame += A.flame + CONFIG.battleWin.flame;
       { const fb = foeFor(n); if (fb.boss) { const bc = fb.big ? CONFIG.bossCoins.big : CONFIG.bossCoins.mini; st.coins += bc; out.coins += bc; out.bossCoins = bc; } }
       if (n === CONFIG.ember.stage && !st.emberOwned) { st.emberOwned = true; out.ember = 1; journal(st, now, '打倒大王，得到了「經驗火種」！'); } }
@@ -1640,6 +1690,7 @@ function wrapStats(api) {
 const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars, dayKey, hourIn, level, rng, makeGenome, CLASSIC_G, encodeGenome, decodeGenome, breedGenome,
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
+  eqStats, eqApply, accUpgrade, eqGift,
   plotState, plant, harvest, buySeed, buyDecor, placeDecor, loungeTick, upgradeLounge, helpSearch, lureFood, mushTick, pickMush, mushSell, mushCook, mushEat, MUSH_KEYS, buyItem, useCandy,
   toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, releasePet, PET_NAMES, CORE_KINDS, LEFT_NAME, guideStep, guideDo, fosterSwap, whereIs, inNest, loveTick, moveOut, eggReady, lostPets, recallLost, ownedIds, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, selectRod, allPets, giveEmber, emberShare, setTeam, TRAIN_TIER, trainLvOf, trainTier, trainLvUp, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
