@@ -179,7 +179,7 @@ function bars(){const j=job();
  if(mode==='mouth'){$('pAccI').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><text y="8" font-size="8">👄</text></svg>');$('pAccN').textContent='張嘴位置'}
  else if(mode==='head'){$('pAccI').src=ACC[cur.acc]?IMG[ACC[cur.acc].img].src:'';$('pAccN').textContent='頭型（全部裝飾）'}
  else if(ACC[cur.acc]){$('pAccI').src=IMG[ACC[cur.acc].img].src;$('pAccN').textContent=ACC[cur.acc].n}
- if(mode==='draw'){const v=viewId(),cv=v&&edited(v);$('pAccI').src=cv?cv.toDataURL():'';$('pAccN').textContent=(CATS.find(c=>c[0]===ED.cat)||['',''])[1];}
+ if(mode==='draw'){const v=viewId(),cv=v&&edited(v);$('pAccI').src=cv?cv.toDataURL():'';$('pAccN').textContent=ED.cat==='pet'?(ED.eye==='c'?'😌 寵物（閉眼）':ED.eye==='b'?'🐣 寵物（兩張一起）':'🐣 寵物（睜眼）'):(CATS.find(c=>c[0]===ED.cat)||['',''])[1]+(ED.eye==='c'&&ED.src&&pairOf(ED.src)?'（閉眼）':'');}
  const n=progOf(j);$('pAccP').textContent=mode==='head'?'會帶動全部裝飾':mode==='draw'?'👆 點這裡換素材':`${n}/35 完成`;$('prog').firstChild.style.width=(mode==='acc'||mode==='mouth'?n/35*100:0)+'%';
  const c=$('pPetC').getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,48,48);paint(c,key(),0,0,48,false,mode==='acc'?lst():[]);$('pPetN').textContent=petName(key())+(isDone(key())&&mode!=='head'&&mode!=='draw'?' ✅':'');
  $('lock').style.display=locked()&&mode!=='draw'?'block':'none';
@@ -247,7 +247,7 @@ function edited(id){if(PC[id])return PC[id];const c=baseData(id);if(!c)return nu
 const petCv=(k,e)=>edited(k+e);
 const ED={x:24,y:24,eye:'o',col:'#1a0a0a',tool:'pen',tc:'move',recent:[],cat:'pet',src:null,S:5,ox:0,oy:0};
 try{const r=JSON.parse(localStorage.getItem('pf-acc-sim-recent')||'[]');if(Array.isArray(r))ED.recent=r}catch(e){}
-const CATS=[['pet','🐣 寵物'],['fusion','🧬 融合'],['items','🍎 道具'],['sk','⚔️ 招式'],['arena','🏞️ 場地背景'],['fx','💥 特效'],['plots','🌱 田地'],['decor','🛋️ 休息室'],['acc','🎀 裝飾圖'],['train','🏋️ 訓練'],['ui','🔘 圖示1'],['ui2','🔘 圖示2'],['misc','🥚 蛋／野生']];
+const CATS=[['pet','🐣 寵物（睜眼）'],['petc','😌 寵物（閉眼）'],['fusion','🧬 融合'],['items','🍎 道具'],['sk','⚔️ 招式'],['arena','🏞️ 場地背景'],['fx','💥 特效'],['plots','🌱 田地'],['decor','🛋️ 休息室'],['acc','🎀 裝飾圖'],['train','🏋️ 訓練'],['ui','🔘 圖示1'],['ui2','🔘 圖示2'],['misc','🥚 蛋／野生']];
 const pairOf=id=>isPet(id)?id.slice(0,-1)+(id.endsWith('o')?'c':'o'):/_open$/.test(id)?id.replace(/_open$/,'_closed'):/_closed$/.test(id)?id.replace(/_closed$/,'_open'):null;
 function tgtBase(){return ED.cat==='pet'?key()+'o':ED.src}
 function viewId(){const b=tgtBase();if(!b)return null;const p=pairOf(b);if(ED.eye==='c'&&p&&(isPet(b)||AIMG[p]))return /_open$/.test(b)||isPet(b)?p:b;if(ED.eye!=='c'&&/_closed$/.test(b)&&AIMG[pairOf(b)])return pairOf(b);return b}
@@ -285,8 +285,8 @@ function swatches(){const mk=(id,L)=>{const el=$(id);el.innerHTML='';for(const v
  mk('swBase',BASE);mk('swRecent',ED.recent);const cnt={},cv=edited(viewId()||'');if(cv){const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;for(let i=0;i<d.length;i+=4){const v=hex(d,i);if(v)cnt[v]=(cnt[v]||0)+1}}
  mk('swPet',Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,30))}
 /* 素材種類與挑圖 */
-function cats(){const el=$('dCat');el.innerHTML='';for(const[c,t]of CATS){const n=Object.keys(PX).filter(k=>c==='pet'?isPet(k):k.startsWith('s:'+(c==='misc'?'':c+'/'))&&(c!=='misc'||!k.includes('/'))).length;const b=document.createElement('button');b.className='chip'+(c===ED.cat?' on':'');b.textContent=t+(n?' ✏️':'');b.onclick=()=>pickCat(c);el.appendChild(b)}}
-async function pickCat(c){ED.cat=c;ED.src=null;cats();if(c==='pet'){sheet('shAsset',false);fitView();swatches();draw();hint('🐣 修寵物：右上角可以換寵物');return}
+function cats(){const el=$('dCat');el.innerHTML='';for(const[c,t]of CATS){const n=Object.keys(PX).filter(k=>c==='pet'?isPet(k)&&k.endsWith('o'):c==='petc'?isPet(k)&&k.endsWith('c'):k.startsWith('s:'+(c==='misc'?'':c+'/'))&&(c!=='misc'||!k.includes('/'))).length;const b=document.createElement('button');b.className='chip'+((c==='petc'?ED.cat==='pet'&&ED.eye==='c':c==='pet'?ED.cat==='pet'&&ED.eye!=='c':c===ED.cat)?' on':'');b.textContent=t+(n?' ✏️':'');b.onclick=()=>pickCat(c);el.appendChild(b)}}
+async function pickCat(c){if(c==='pet'||c==='petc'){ED.eye=c==='petc'?'c':'o';c='pet'}ED.cat=c;ED.src=null;cats();if(c==='pet'){sheet('shAsset',false);fitView();swatches();draw();hint('🐣 修寵物：右上角可以換寵物');return}
  if(!AREADY[c]){AREADY[c]=0;$('dPick').innerHTML='<div class="note">載入中…</div>';draw();try{const r=await fetch('assets/'+c+'.json');const J=await r.json();await Promise.all(Object.entries(J).map(([k,v])=>new Promise(ok=>{const im=new Image();im.onload=ok;im.onerror=ok;im.src='data:image/png;base64,'+v;AIMG['s:'+k]=im})));AREADY[c]=1}catch(e){AREADY[c]=undefined;$('dPick').innerHTML='<div class="note">載入失敗，再點一次試試</div>';return}}
  if(ED.cat!==c)return;picker();draw()}
 function catIds(c){return Object.keys(AIMG).filter(k=>c==='misc'?!k.slice(2).includes('/'):k.startsWith('s:'+c+'/')).filter(k=>!/_closed$/.test(k)||!AIMG[k.replace(/_closed$/,'_open')]).sort()}
