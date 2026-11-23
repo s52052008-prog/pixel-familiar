@@ -193,15 +193,16 @@ const CONFIG = {
   freshBonus: { energy: 5 },               // 自己種的水果品質好：吃了體力再 +5
   acc: {   // V1.88 寵物裝飾：friends＝加幾位好友送、price＝商店價錢
     santa: { slot: 'head', friends: 1 }, mushhat: { slot: 'head', dex: 'mush' }, bow: { slot: 'head', friends: 2 }, tophat: { slot: 'head', friends: 3 }, crown: { slot: 'head', friends: 5 },
-    antler: { slot: 'head', price: 300 }, wreath: { slot: 'head', price: 300 }, chef: { slot: 'head', price: 300 }, turkey: { slot: 'head', price: 350 },
+    antler: { slot: 'head', price: 300 }, wreath: { slot: 'head', price: 800 }, chef: { slot: 'head', price: 300 }, turkey: { slot: 'head', price: 350 },
     glasses: { slot: 'face', price: 400 }, cigar: { slot: 'mouth', price: 500 }, necklace: { slot: 'neck', price: 800 },
-    gradcap: { slot: 'head', price: 600 }, halo: { slot: 'head', price: 1500 }, pumpkin: { slot: 'head', price: 500, month: 9 }, monocle: { slot: 'face', price: 600 }, eyepatch: { slot: 'face', price: 600 },
-    rose: { slot: 'mouth', price: 700 }, lollipop: { slot: 'mouth', price: 400 }, bowtie: { slot: 'neck', price: 600 }, scarf: { slot: 'neck', price: 500 } },
+    gradcap: { slot: 'head', price: 600 }, halo: { slot: 'head', drop: 'final' }, pumpkin: { slot: 'head', price: 500, month: 9 }, monocle: { slot: 'face', price: 400 }, eyepatch: { slot: 'face', drop: 'mini' },
+    rose: { slot: 'mouth', drop: 'mini' }, lollipop: { slot: 'mouth', price: 400 }, bowtie: { slot: 'neck', price: 400 }, scarf: { slot: 'neck', price: 400 } },
+  accDrop: .15,   // 打贏小王：15% 掉一件還沒有的「小王裝飾」（咬玫瑰、海盜眼罩）；最終大王第一次必掉天使光環
   /* V1.88 裝飾＝裝備：每件一個小能力；強化五級（普通灰→優秀綠→精良藍→完美紫→超級金），等級越高越強、會發光 */
   eq: {
     fx: { santa: { gift: .25 }, antler: { spd: .06 }, bow: { def: .05 }, tophat: { dodge: .03 }, crown: { atk: .05 }, wreath: { regen: .02 },
       chef: { heal: .2 }, turkey: { hp: .06 }, mushhat: { poison: .08 }, glasses: { crit: .03 }, cigar: { scare: .15 }, necklace: { coin: .1 },
-      gradcap: { xp: .05 }, halo: { endure: .12 }, pumpkin: { slow: .1 }, monocle: { aim: .03 }, eyepatch: { rage: .15 }, rose: { charm: .04 }, lollipop: { cure: .3 }, bowtie: { critRes: .15 }, scarf: { elemCut: .08 } },
+      gradcap: { xp: .05 }, halo: { endure: .12 }, pumpkin: { slow: .1 }, monocle: { aim: .05 }, eyepatch: { rage: .1 }, rose: { charm: .03 }, lollipop: { cure: .3 }, bowtie: { critRes: .25 }, scarf: { elemCut: .1 } },
     mult: [1, 1.5, 2, 2.5, 3],
     tiers: ['普通', '優秀', '精良', '完美', '超級'], colors: ['#b8b8b8', '#5ad86a', '#4aa8ff', '#b070ff', '#ffd040'],
     up: [{ coins: 300, mush: 'mush', n: 3 }, { coins: 800, mush: 'mushS', n: 2 }, { coins: 2000, mush: 'mushN', n: 2 }, { coins: 5000, mush: 'mushG', n: 1 }],
@@ -982,6 +983,9 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
       out.coins = Math.round((A.coinsMin + Math.floor(r() * (A.coinsMax - A.coinsMin + 1))) * CONFIG.battleLen.reward); if (T.coinX && r() < T.coinChance) { out.coins = Math.round(out.coins * T.coinX); out.coinBonus = true; } if (out.eqCoin) { out.eqCoinN = Math.max(1, Math.round(out.coins * out.eqCoin)); out.coins += out.eqCoinN; } st.coins += out.coins;
       if (T.seedChance && r() < T.seedChance) { st.inv.seeds++; out.bonusSeed = 1; } if (T.berryChance && r() < T.berryChance) { const b = 1 + Math.floor(r() * 2); st.inv.berry = (st.inv.berry || 0) + b; out.berry = b; } st.inv.seeds += A.seeds; out.seeds = A.seeds; st.path.flame += A.flame + CONFIG.battleWin.flame;
       { const fb = foeFor(n); if (fb.boss) { const bc = fb.big ? CONFIG.bossCoins.big : CONFIG.bossCoins.mini; st.coins += bc; out.coins += bc; out.bossCoins = bc; } }
+      { const fb = foeFor(n), AC = CONFIG.acc, own = st.accOwned || (st.accOwned = []);   // V1.88 打王掉裝飾
+        if (n === CONFIG.starHeart.stage && !own.includes('halo')) { own.push('halo'); out.accDrop = 'halo'; journal(st, now, '打倒最終大王，得到了「天使光環」！'); }
+        else if (fb.boss && !fb.big) { const L = Object.keys(AC).filter(k => AC[k].drop === 'mini' && !own.includes(k)); if (L.length && r() < CONFIG.accDrop) { const k = L[Math.floor(r() * L.length) % L.length]; own.push(k); out.accDrop = k; journal(st, now, '打倒小王，撿到了一件裝飾！'); } } }
       if (n === CONFIG.ember.stage && !st.emberOwned) { st.emberOwned = true; out.ember = 1; journal(st, now, '打倒大王，得到了「經驗火種」！'); } }
     else out.xp = addXP(st, Math.round(xp * A.overCapXpRate));
     const LK = fossilLuck(st);   // V1.83 化石：掉寶率加成

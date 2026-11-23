@@ -566,5 +566,11 @@ t('V1.88 裝飾＝裝備：加成、套裝、強化五級、存檔', () => {
   s.acc = ['necklace', 'gradcap']; s.accOwned.push('gradcap'); s.energy = 100; const st = C.startAdventure(s, 1, T0); const out = C.finishAdventure(s, 1, 'win', st.full, T0, () => .99); assert.ok(out.eqCoinN > 0 && out.eqXp);
   const h = C.mkFighter('h', 'k', 10, null, 1, 80, 0); h.eqEndure = 1; h.hp = 1; const r2 = C.damage({ atk: 999, el: 'none', hp: 1, max: 1 }, h, false, () => .5); assert.ok(r2.haloed && h.hp === 1, '天使光環撐住');
 });
+t('V1.88 打王掉裝飾：小王 15% 掉咬玫瑰／海盜眼罩，最終大王必掉天使光環', () => {
+  const s = hatched(); let n = 1; while (!(C.foeFor(n).boss && !C.foeFor(n).big)) n++;
+  s.adv.stage = 41; s.energy = 100; let st = C.startAdventure(s, n, T0); let o = C.finishAdventure(s, n, 'win', st.full, T0, () => .01);
+  assert.ok(['rose', 'eyepatch'].includes(o.accDrop) && s.accOwned.includes(o.accDrop));
+  s.energy = 100; st = C.startAdventure(s, 40, T0); o = C.finishAdventure(s, 40, 'win', st.full, T0, () => .99); assert.equal(o.accDrop, 'halo'); assert.ok(s.accOwned.includes('halo'));
+});
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);
