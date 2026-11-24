@@ -1332,6 +1332,23 @@ header .coin{background:none!important;border:9px solid transparent!important;bo
 .sheet .sitem{padding:0 4px!important;min-height:60px!important;justify-content:center}
 .sheet .prog{background:#fff3d8!important;border:2px solid #2a170a!important;box-shadow:inset 0 0 0 1px #c8913a;border-radius:3px;overflow:hidden;height:11px!important}.sheet .prog i{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.25) 0 5px,transparent 5px 10px)!important}
 .sheet .sdetail .spic{background:#e8cfa0!important;border-color:#8a5a2a!important}
+/* 第 3 步：戰鬥畫面 */
+#battle .moves .act{background:none!important;border:10px solid transparent!important;border-image:${UIK('wood')} 9 fill / 10px stretch!important;box-shadow:none!important;color:#fff3dc!important;image-rendering:pixelated;border-radius:0!important;text-shadow:0 1px 0 #2a170a,1px 0 0 #2a170a,-1px 0 0 #2a170a,0 -1px 0 #2a170a;padding:0 2px!important}
+#battle .moves .act small{color:#ffe6b8!important}
+#battle .moves .act:active{border-image:${UIK('wood_p')} 9 fill / 10px stretch!important;transform:translateY(2px)}
+#battle .moves .act.ult,#battle #mvBond{border-image:${UIK('btn')} 9 fill / 10px stretch!important;color:#4a2a10!important;text-shadow:0 1px 0 #fff3c0!important}#battle .moves .act.ult small{color:#6a4010!important}
+#battle .moves .act:disabled{filter:saturate(.5) brightness(.8)!important;opacity:.7}#battle .moves .act small{font-size:12px!important;letter-spacing:-.3px}
+#battle #mvBond{background:none!important;border:10px solid transparent!important;box-shadow:none!important;border-radius:0!important;image-rendering:pixelated}
+#battle #blog{background:#f6e2bd!important;border:11px solid transparent!important;border-image:${UIK('slot')} 11 fill / 11px stretch!important;box-shadow:none!important;color:#4a2a10!important;image-rendering:pixelated;padding:2px 6px!important}
+#arenaIn{border:13px solid transparent;border-image:${UIK('frame')} 13 / 13px stretch;image-rendering:pixelated;box-sizing:border-box}
+.hpgrp .hp{background:rgba(246,226,189,.92)!important;border:2px solid #2a170a!important;box-shadow:inset 0 0 0 1.5px #e0a84a!important;color:#4a2a10!important;border-radius:6px!important}.hpgrp .hp *{color:#4a2a10!important}
+.hpgrp .hp .bar{background:#fff3d8!important;border:1.5px solid #2a170a!important;border-radius:2px}
+#bFast{background:none!important;border:8px solid transparent!important;border-image:${UIK('wood')} 9 fill / 8px stretch!important;color:#fff3dc!important;border-radius:0!important;padding:0 4px!important;image-rendering:pixelated;text-shadow:0 1px 0 #2a170a}#bFast.on{border-image:${UIK('btn')} 9 fill / 8px stretch!important;color:#4a2a10!important;text-shadow:none}
+#rpsZone{background:repeating-linear-gradient(180deg,#5a381c 0 12px,#52331a 12px 13px)!important;border-top:0!important;border:13px solid transparent!important;border-bottom:0!important;border-image:${UIK('frame')} 13 / 13px 13px 0 stretch!important;image-rendering:pixelated}
+#rpsMsg{background:#f6e2bd;border:2px solid #2a170a;box-shadow:inset 0 0 0 1.5px #e0a84a;color:#4a2a10;border-radius:8px;padding:4px 8px}
+.rpsbtns button{background:none!important;border:10px solid transparent!important;border-image:${UIK('wood')} 9 fill / 10px stretch!important;box-shadow:none!important;color:#fff3dc!important;image-rendering:pixelated;border-radius:0!important}.rpsbtns button.pick{border-image:${UIK('btn')} 9 fill / 10px stretch!important;color:#4a2a10!important}
+#bResult .rcard{background:#f6e2bd!important;border:11px solid transparent!important;border-image:${UIK('slot')} 11 fill / 11px stretch!important;box-shadow:none!important;color:#4a2a10!important;border-radius:0!important}#bResult .rcard *:not(.btn){color:#4a2a10!important;text-shadow:none!important}
+#bResult .btn{background:none!important;border:9px solid transparent!important;border-image:${UIK('btn')} 9 fill / 9px stretch!important;box-shadow:none!important;color:#4a2a10!important;border-radius:0!important}
 .uikDeco{position:absolute;z-index:6;pointer-events:none;image-rendering:pixelated;height:26px}
 `;document.head.append(st);
  const W=document.getElementById('stagewrap');if(W)for(const[n,css]of[['leafL','left:-12px;top:-20px'],['paw','left:50%;top:-22px;transform:translateX(-50%)'],['leafR','right:-12px;top:-20px']]){const im=document.createElement('img');im.className='uikDeco';im.src=SP(`sprites/uik/${n}.png`);im.style.cssText=css;W.append(im)}})();
