@@ -47,7 +47,7 @@ const CONFIG = {
     rateX: [1, 1.25, 1.5, 1.8, 2.2, 3], capH: [12, 14, 16, 18, 20, 24], coreStages: [15, 20, 25, 30], corePrice: 1000 },   // V1.43 小豬撲滿等級 1～6：第 15／20／25／30 關王各掉一個核心碎片（+1 級），商店核心 1000 元（唯一，+1 級）   // 存錢筒（被動收入）：每小時 0.5＋等級×0.25（最多算到 Lv.30），最多存 12 小時
   loveNest: { cost: 300, cooldownH: 12, mood: 10 },          // 愛的小窩：買一次，成年期以上的一公一母可以進去生蛋
   pair: { rate: .5, advMinEnergy: 20, foeHp: 1.5, xpShare: .6 },   // 第二隻一起出來：狀態變化速度減半；第二隻分到 6 成經驗（V1.79 起一起冒險改成敵人也兩隻，foeHp 不再使用）
-  farm: { plots: 3, maxPlots: 9, expand: [90, 150, 300, 500, 700, 999],   /* V1.64 開始 3 格，最多 9 格 */ growHours: 2, growBy: [2, 3, 6, 12], fruitMin: 2, fruitMax: 3, freshHours: 6, rotHours: 24, xp: 5, forest: 3, seedPrice: 5, energy: [3, 5, 7, 10], sprinkler: 2000, sprinklerPlots: 6 },   // V1.90 種一顆要花體力；種下要澆水才會長，長到一半會再口渴一次；田 6 格以上能買自動灑水器   // 收成：蘋果、莓果各隨機 1～2 顆；田可以花錢擴建到 6 格     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
+  farm: { plots: 3, maxPlots: 9, expand: [90, 150, 300, 500, 700, 999],   /* V1.64 開始 3 格，最多 9 格 */ growHours: 2, growBy: [2, 3, 6, 12], fruitMin: 2, fruitMax: 3, freshHours: 6, rotHours: 24, xp: 5, forest: 3, seedPrice: 5, energy: [3, 5, 7, 10], waterEnergy: 2, sprinkler: 2000, sprinklerPlots: 6 },   // V1.90 種一顆要花體力；種下要澆水才會長，長到一半會再口渴一次；田 6 格以上能買自動灑水器   // 收成：蘋果、莓果各隨機 1～2 顆；田可以花錢擴建到 6 格     // 種植：GDD「種子、2h、產 2 食物、XP+5、森+3」
   goals: { perDay: 3, coins: [15, 30, 50], maxLv: 10, needPerLv: .2, rewardPerLv: .2 },   // 每天 ★／★★／★★★ 三個；每天 3 個都完成，任務等級 +1（更難、獎勵更好）
   candy: { price: 500, mood: 20, hunger: 10 },   // V1.39：星星糖 200 金幣，吃了直接升 1 級（不受屬性經驗加成影響）
   core: { rotMin: 10, moodPerHour: 4, max: 8 },
@@ -1202,19 +1202,22 @@ function harvest(st, i, now = Date.now(), r = Math.random) {
   if (st.harvests === CONFIG.harvestsForOldTree) journal(st, now, `收成第 ${st.harvests} 次了！`);
   return { ok: true, kind: k, n, over: q.over, xp, good, myst, magic, bonus, bonusN: bn, forest: st.hatched ? F.forest : 0, msg: (magic ? `✨神奇種子長出了能力水果！${name} +${n}` : q.over ? `${name}有點過熟了，趕快收！收成 ${n} 顆` : `收成！✨${name} +${n}`) + (bonus ? `、⚡能力水果 ${CONFIG.foods[bonus].name} +${bn}！` : '') + (xp ? `、經驗 +${xp}、🌿 森 +${F.forest}` : '') };
 }
-function water(st, i, now = Date.now()) {   // V1.90 澆水：剛種下澆一次開始長，長到一半口渴再澆一次
+function water(st, i, now = Date.now(), free = false) {   // V1.90 澆水：剛種下澆一次開始長，長到一半口渴再澆一次
   const q = plotState(st, i, now); if (!q || q.empty) return { ok: false, msg: '這塊田是空的' };
   if (!q.thirsty) return { ok: false, msg: q.ripe ? '已經成熟了，直接收成吧' : '土還濕濕的，不用澆' };
+  const we = free || !st.hatched ? 0 : CONFIG.farm.waterEnergy;
+  if (st.energy < we) return { ok: false, code: 'tired', msg: `牠太累了（澆一次要 ${we} 體力），先休息一下吧` };
+  st.energy -= we;
   const p = st.plots[i], grow = growHoursOf(st, p.g || 0) * H;
   if (p.wn === 0) { p.at = now; p.wn = 1; } else { p.at = now - grow / 2; delete p.wn; }
-  track(st, 'water', now); return { ok: true, second: !p.wn, msg: p.wn ? '💧 澆好水了，開始長囉！長到一半會再口渴一次' : '💧 又喝飽水了，會一路長到成熟！' };
+  track(st, 'water', now); return { ok: true, second: !p.wn, msg: (p.wn ? '💧 澆好水了，開始長囉！長到一半會再口渴一次' : '💧 又喝飽水了，會一路長到成熟！') + (we ? `（體力 −${we}）` : '') };
 }
 function thirstyPlots(st, now = Date.now()) { return (st.plots || []).map((_, i) => i).filter(i => { const q = plotState(st, i, now); return q && !q.empty && q.thirsty; }); }
 function buySprinkler(st) {
   const F = CONFIG.farm; if (st.sprinkler) return { ok: false, msg: '已經有自動灑水器了' };
   if (st.plots.length < F.sprinklerPlots) return { ok: false, msg: `田要擴建到 ${F.sprinklerPlots} 格才能裝自動灑水器` };
   if (st.coins < F.sprinkler) return { ok: false, msg: `金幣不足（需要 ${F.sprinkler}）` };
-  const now = Date.now(); for (const i of thirstyPlots(st, now)) water(st, i, now);
+  const now = Date.now(); for (const i of thirstyPlots(st, now)) water(st, i, now, true);
   for (const p of st.plots) delete p.wn;
   st.coins -= F.sprinkler; st.sprinkler = true; return { ok: true, msg: '裝好自動灑水器了！以後田裡的作物都會自動澆水 💦' };
 }

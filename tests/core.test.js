@@ -579,7 +579,7 @@ t('V1.90 種田：種子花體力（3／5／7／10）、要澆水才長、長到
   let r = PLANT0(s, 0, T0); assert.ok(r.ok); assert.equal(s.energy, 47);
   r = PLANT0(s, 1, T0, Math.random, true); assert.ok(r.ok); assert.equal(s.energy, 42);
   let q = C.plotState(s, 0, T0 + 5 * H); assert.ok(q.thirsty && q.progress === 0);   // 沒澆水不會長
-  assert.ok(C.water(s, 0, T0 + 5 * H).ok); assert.ok(!C.water(s, 0, T0 + 5 * H).ok);
+  assert.ok(C.water(s, 0, T0 + 5 * H).ok); assert.equal(s.energy, 40); assert.ok(!C.water(s, 0, T0 + 5 * H).ok);
   q = C.plotState(s, 0, T0 + 6.5 * H); assert.ok(q.thirsty && q.progress === .5);   // 長到一半口渴、停住
   assert.ok(C.water(s, 0, T0 + 8 * H).ok); q = C.plotState(s, 0, T0 + 9 * H); assert.ok(q.ripe && !q.thirsty);
   s.energy = 2; assert.equal(PLANT0(s, 2, T0).code, 'tired');
