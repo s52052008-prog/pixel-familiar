@@ -147,6 +147,7 @@ async def main():
             await p.mouse.click(b['x'] + q[0] / 128 * b['width'], b['y'] + q[1] / 112 * b['height']); await p.wait_for_timeout(300)
         await p.click('#bFarm'); await p.wait_for_timeout(400); fz = await p.is_visible('#farmZone'); await tap_plot(0)
         s = await st(p); ok('種田畫面：點空地種下種子', fz and s['inv']['seeds'] == 1 and s['plots'][0]['at'] > 0)
+        await tap_plot(0); await p.wait_for_timeout(1300); s = await st(p); ok('V1.90 點乾掉的田就會澆水', s['plots'][0].get('wn') == 1 and '澆好水' in await p.inner_text('#fmMsg'), s['plots'][0])
         await tap_plot(0); s2 = await st(p); ok('成長中不能收成', s2['plots'][0]['at'] == s['plots'][0]['at'] and '成熟' in await p.inner_text('#fmMsg')); await p.screenshot(path=f'{OUT}/09a_farm.png'); await p.click('#fmHome'); await p.wait_for_timeout(300)
         await p.evaluate("(()=>{const s=PF.state;s.plots[0].at=Date.now()-2*3600000-1000;delete s.plots[0].wn;PF.debug.set({})})()"); await p.wait_for_timeout(600)
         await p.screenshot(path=f'{OUT}/09b_ripe_in_scene.png')
