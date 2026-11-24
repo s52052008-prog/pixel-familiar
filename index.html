@@ -1994,10 +1994,11 @@ const NAV={stack:[],cur:null,pending:null,back:false};
 function navMark(key,fn){NAV.pending={key,fn}}
 function navBack(){const prev=NAV.stack.pop();if(!prev)return;NAV.back=true;NAV.cur=null;try{prev.fn()}finally{NAV.back=false}}
 function openModal(title,html,buttons=[{t:'關閉'}]){
- {const wasOpen=!$('modal').classList.contains('hidden'),nx=NAV.pending||{key:'?'+title,fn:null};NAV.pending=null;
+ {const wasOpen=!$('modal').classList.contains('hidden'),nx=NAV.pending?{...NAV.pending,title}:{key:'?'+title,fn:null,title};NAV.pending=null;
+  const same=NAV.cur&&(NAV.cur.key===nx.key||(!nx.fn&&NAV.cur.title===title));   // 同一個視窗重畫（例如載入中→內容）不算進下一層
   if(!wasOpen&&!NAV.back)NAV.stack=[];
-  else if(!NAV.back&&NAV.cur&&NAV.cur.fn&&NAV.cur.key!==nx.key&&!(NAV.stack.length&&NAV.stack[NAV.stack.length-1].key===NAV.cur.key))NAV.stack.push(NAV.cur);
-  if(nx.fn||!NAV.cur||NAV.cur.key!==nx.key)NAV.cur=nx}
+  else if(!NAV.back&&NAV.cur&&NAV.cur.fn&&!same&&!(NAV.stack.length&&NAV.stack[NAV.stack.length-1].key===NAV.cur.key))NAV.stack.push(NAV.cur);
+  if(!same||nx.fn)NAV.cur=nx.fn||!NAV.cur?nx:{...NAV.cur,title}}
  const hasX=buttons.some(b=>b.t==='關閉'&&!b.fn);buttons=buttons.filter(b=>!(b.t==='關閉'&&!b.fn));   // V1.67 「關閉」改成右上角的 ❌
  const sh=$('sheet');sh.innerHTML=`<div class="mhd">${NAV.stack.length?'<button class="mback" id="mBack" aria-label="返回">◀</button>':''}<h2>${title}</h2>${hasX?'<button class="mx" id="mX" aria-label="關閉">✕</button>':''}</div><div>${coinify(html)}</div><div class="row${buttons.length?'':' hidden'}" id="mbtns"></div>`;
  if(hasX)$('mX').onclick=()=>{sfx('tap');closeModal()};if($('mBack'))$('mBack').onclick=()=>{sfx('tap');navBack()};
@@ -2365,7 +2366,7 @@ async function friendsDialog(){navMark('friends',friendsDialog);openModal('👥 
 ${pend?`<p><b>💞 配對邀請</b></p>${pend}`:''}${reqs?`<p><b>👋 好友邀請</b></p>${reqs}`:''}
 <p><b>👥 我的好友（${F.length}）</b></p>${list||'<p class="small">還沒有好友。把好友碼傳給朋友，或輸入朋友的好友碼吧！</p>'}
 ${SOC.sent.length?`<p class="small">等待對方同意：${SOC.sent.map(x=>esc(x.name||'朋友')).join('、')}</p>`:''}
-<div class="row"><button class="btn pri" id="frRank">🏆 排行榜</button><button class="btn" id="frBoard">📜 留言板（${SOC.board.length}）</button><button class="btn" id="frMate">💞 配對</button></div>`);
+${F.length?`<div class="row"><button class="btn pri" id="frGiftAll" style="flex:1">🎁 一鍵送全部朋友免費小禮物</button></div>`:''}<div class="row"><button class="btn pri" id="frRank">🏆 排行榜</button><button class="btn" id="frBoard">📜 留言板（${SOC.board.length}）</button><button class="btn" id="frMate">💞 配對</button></div>`);
  document.querySelectorAll('[data-fk]').forEach(c=>{const f=F.find(x=>x.code===c.dataset.fk),p=f&&f.card&&f.card.pet;if(p&&p.gene)try{thumb(c,petKey('x:'+p.gene,formCode(p.stage,p.route)),'happy1')}catch(e){}});
  $('frCopy').onclick=async()=>{const t=`來當我的《幻獸日記》好友！到「👥 好友」輸入我的好友碼：${SOC.code}\n遊戲網址：${HOME_URL}`;try{if(navigator.share&&!inFrame)await navigator.share({text:t});else{await navigator.clipboard.writeText(t);toast('✅ 已複製，貼到 LINE 傳給朋友')}}catch(e){}};
  $('frAdd').onclick=async()=>{const c=$('frIn').value.trim().toUpperCase();if(c.length<6){$('frErr').textContent='好友碼是 6 個字';return}$('frAdd').disabled=true;try{const q=await pushPost('/add',{code:c});if(q&&q.ok){toast(q.msg,3500);sfx('level');friendsDialog()}else{$('frErr').textContent='❌ '+(q&&q.msg||'失敗');$('frAdd').disabled=false}}catch(e){$('frErr').textContent='❌ 連不到伺服器';$('frAdd').disabled=false}};
@@ -2374,6 +2375,9 @@ ${SOC.sent.length?`<p class="small">等待對方同意：${SOC.sent.map(x=>esc(x
  document.querySelectorAll('[data-visit]').forEach(b=>b.onclick=()=>startVisit(b.dataset.visit));
  document.querySelectorAll('[data-call]').forEach(b=>b.onclick=async()=>{b.disabled=true;const q=await pushPost('/act',{code:b.dataset.call,kind:'call'}).catch(()=>null);toast(q&&q.ok?q.msg:'❌ '+(q&&q.msg||'連不到伺服器'),4000);if(q&&q.ok){sfx('coin');b.textContent='📣 叫過了'}else b.disabled=false});
  document.querySelectorAll('[data-duel]').forEach(b=>b.onclick=()=>duelAsk(b.dataset.duel));$('frRank').onclick=()=>rankDialog();
+ if($('frGiftAll'))$('frGiftAll').onclick=async()=>{const b=$('frGiftAll');b.disabled=true;b.textContent='🎁 送禮中…';let ok=0,done=0,hits=[];   // V1.89.1 一鍵送全部朋友每日免費小禮物
+  for(const f of F){const q=await pushPost('/act',{code:f.code,kind:'daily'}).catch(()=>null);if(q&&q.ok){ok++;if(q.hit)hits.push(`${f.name} ${q.hit} 天`)}else done++}
+  let txt=ok?`🎁 送給 ${ok} 位朋友了！`:'今天每位朋友都送過了～';if(ok){const R=HELP_REWARD.daily;if(R&&R.coins){s.coins+=R.coins*ok;txt+=`\n回禮 🪙+${R.coins*ok}`}save();renderUI();sfx('coin')}if(done&&ok)txt+=`（${done} 位今天已經送過）`;if(hits.length)txt+=`\n🔥 好友火花：${hits.join('、')}`;toast(txt,4500);friendsDialog()};
  document.querySelectorAll('[data-px]').forEach(b=>b.onclick=()=>{const P=pendGet();P.splice(+b.dataset.px,1);pendSet(P);frDot();friendsDialog()});
  document.querySelectorAll('[data-pm]').forEach(b=>b.onclick=()=>acceptMate(+b.dataset.pm));
  if($('frName'))$('frName').onclick=()=>ownerDialog(false);
@@ -2420,13 +2424,19 @@ function drawVisit(now,dt){const r=VISIT.r;if(!r||!VISIT.key||(VISIT.f&&VISIT.f.
  ctx.fillStyle='rgba(20,60,30,.25)';ctx.fillRect(x+13,y+44,22,2);
  {const cp=VISIT.f.card.pet||{};drawAcc(ctx,S,fi,x,y,CELL,r.face===1,cp.acc,cp.accAdj,'back',cp.accLv)}if(r.face===1){ctx.save();ctx.translate(x+CELL,0);ctx.scale(-1,1);ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,0,y,CELL,CELL);ctx.restore()}else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,x,y,CELL,CELL);{const cp=VISIT.f.card.pet||{};drawAcc(ctx,S,fi,x,y,CELL,r.face===1,cp.acc,cp.accAdj,'front',cp.accLv)}
  if(!rm()&&r.act==='sleep'&&r.tx==null&&Math.random()<.012)spawn('z',1,{x:x+34,y:y+14,vx:5,vy:-7,jx:1,jy:1,life:1.8,spread:2})}
-function giftDialog(){const f=VISIT.f,U=f.used,L=f.limit,dl=(L.daily||1)-(U.daily||0),gl=(L.gift||3)-(U.gift||0),have=k=>k==='coins'?s.coins:(s.inv[k]||0);
- openModal(`🎁 送禮給 ${esc(f.name)}`,`<p><b>今天的免費小禮物</b></p><p class="small">不用花你的東西，隨機送一份小禮物。</p><div class="row"><button class="btn pri" id="gfFree" ${dl>0?'':'disabled'}>${dl>0?'🎁 送出小禮物':'今天送過了'}</button></div>
-<p style="margin-top:10px"><b>從背包送</b>　<span class="small">今天還能送 ${Math.max(0,gl)} 次</span></p><div class="gift-grid">${GIFTS.map(([k,t,Q])=>Q.map(n=>`<button class="btn" data-gk="${k}" data-gn="${n}" ${gl>0&&have(k)>=n?'':'disabled'}>${t} ×${n}</button>`).join('')).join('')}</div>
-<p class="small">目前有：${GIFTS.map(([k,t])=>`${t} ${have(k)}`).join('、')}</p>`);
+let GSEL=null,GQN=1;
+function giftDialog(){const f=VISIT.f,U=f.used,L=f.limit,dl=(L.daily||1)-(U.daily||0),gl=(L.gift||3)-(U.gift||0),have=k=>k==='coins'?s.coins:(s.inv[k]||0),own=GIFTS.filter(([k,t,Q])=>have(k)>=Q[0]);   // V1.89.1 只列出背包裡有的東西
+ if(!own.find(g=>g[0]===GSEL))GSEL=own.length?own[0][0]:null;const G=GIFTS.find(g=>g[0]===GSEL),qs=G?G[2].filter(n=>n<=have(GSEL)):[];if(!qs.includes(GQN))GQN=qs[0]||1;
+ openModal(`🎁 送禮給 ${esc(f.name)}`,`<div style="background:#3a2414;border-radius:10px;padding:8px 10px;color:#fff3d8"><b>今天的免費小禮物</b>　<span class="small">不花你的東西，隨機一份</span><div class="row" style="margin-top:6px"><button class="btn pri" id="gfFree" style="flex:1" ${dl>0?'':'disabled'}>${dl>0?'🎁 送出小禮物':'✅ 今天送過了'}</button></div></div>
+<p style="margin:10px 0 4px"><b>從背包挑一樣送</b>　<span class="small">今天還能送 ${Math.max(0,gl)} 次</span></p>
+${own.length?`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">${own.map(([k,t])=>`<button class="btn${k===GSEL?' pri':''}" data-gsel="${k}" style="margin:0;padding:6px 2px;font-size:13px;line-height:1.3">${t}<br><span class="small">有 ${have(k)}</span></button>`).join('')}</div>
+<div class="row" style="margin-top:8px;align-items:center;gap:5px"><span class="small">送幾個：</span>${qs.map(n=>`<button class="btn${n===GQN?' pri':''}" data-gq="${n}" style="margin:0;padding:6px 12px">${n}</button>`).join('')}</div>
+<div class="row"><button class="btn pri" id="gfSend" style="flex:1" ${gl>0?'':'disabled'}>${gl>0?`送出 ${G[1]} ×${GQN}`:'今天送禮次數用完了'}</button></div>`:'<p class="small">背包裡還沒有可以送的東西（蘋果、種子、糖果、藥水、魚、蛋糕、蘑菇、金幣…）</p>'}`);
  $('gfFree').onclick=async()=>{const r=await visitAct('daily');if(r){sfx('coin');giftDialog()}};
- document.querySelectorAll('[data-gk]').forEach(b=>b.onclick=async()=>{const k=b.dataset.gk,n=+b.dataset.gn;if(have(k)<n){toast('不夠喔');return}b.disabled=true;const r=await visitAct('gift',{item:k,n});
-  if(r){if(k==='coins')s.coins-=n;else s.inv[k]-=n;save();renderUI();sfx('coin');giftDialog()}})}
+ document.querySelectorAll('[data-gsel]').forEach(b=>b.onclick=()=>{GSEL=b.dataset.gsel;GQN=1;sfx('tap');giftDialog()});
+ document.querySelectorAll('[data-gq]').forEach(b=>b.onclick=()=>{GQN=+b.dataset.gq;sfx('tap');giftDialog()});
+ if($('gfSend'))$('gfSend').onclick=async()=>{const k=GSEL,n=GQN;if(have(k)<n){toast('不夠喔');return}$('gfSend').disabled=true;const r=await visitAct('gift',{item:k,n});
+  if(r){if(k==='coins')s.coins-=n;else s.inv[k]-=n;save();renderUI();sfx('coin');giftDialog()}else $('gfSend').disabled=false}}
 function msgDialog(){openModal(`💌 留言給 ${esc(VISIT.f.name)}`,`<textarea id="msIn" maxlength="60" placeholder="想說什麼？（60 字以內）" style="width:100%;min-height:70px;font-size:17px"></textarea>
 <div class="gift-grid" style="margin-top:6px">${QUICK.map((t,i)=>`<button class="btn" data-qm="${i}">${t}</button>`).join('')}</div><div class="row"><button class="btn pri" id="msGo">送出留言</button></div>`);
  document.querySelectorAll('[data-qm]').forEach(b=>b.onclick=()=>{$('msIn').value=QUICK[+b.dataset.qm]});
