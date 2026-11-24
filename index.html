@@ -322,6 +322,8 @@ header{padding-top:10px}
 @media (max-width:380px){.gdp,.gfc{width:126px;height:126px}.gk{width:42px;height:42px}.gkU,.gkT{left:42px}.gkD,.gkX{left:42px;top:84px}.gkL,.gkS{top:42px}.gkR,.gkC{left:84px;top:42px}}
 #gBanner{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:90;pointer-events:none}#gBanner img{width:min(70vw,300px);image-rendering:pixelated;display:block;animation:gbPop .9s ease-out forwards}#gBanner.gb_gameover img{width:min(60vw,240px);animation:gbDrop 1.3s ease-out forwards}
 @keyframes gbPop{0%{transform:scale(.3);opacity:0}25%{transform:scale(1.15);opacity:1}40%{transform:scale(1)}80%{opacity:1}100%{transform:scale(1.3);opacity:0}}@keyframes gbDrop{0%{transform:translateY(-60px);opacity:0}30%{transform:translateY(0);opacity:1}40%{transform:translateY(-8px)}50%{transform:translateY(0)}85%{opacity:1}100%{opacity:0}}
+.eqrow{display:flex;align-items:center;gap:6px;padding:5px 4px;border-bottom:1px dashed #6a4a2a;cursor:pointer}.eqrow canvas{width:42px;height:34px;image-rendering:pixelated;flex:none}.eqsl{width:36px;font-size:13px;color:#f0d8a8;flex:none}.eqn{flex:1}.eqgo{color:#ffe066;font-size:20px}.eqst{display:grid;grid-template-columns:auto auto 1fr;gap:3px 10px;align-items:center}.eqst b{text-align:right;font-size:16px}.eqp{color:#9fe88a;font-size:12px;margin-right:6px}.eqt{color:#8ac4ff;font-size:12px}
+.npeq{margin:-9px 0 -9px 6px;min-height:44px;min-width:44px;padding:2px 8px;font-size:13px;border-radius:8px;border:2px solid #2a170a;background:#f2c97a;color:#2a170a;font-weight:bold;cursor:pointer}
 .mchip{display:inline-flex;gap:1px;background:rgba(0,0,0,.35);border-radius:6px;padding:0 3px;margin-left:3px}.mchip img{height:14px;vertical-align:middle}.rimg{height:56px;margin-bottom:4px;image-rendering:pixelated;vertical-align:middle}.rimg.go{height:72px}.coinSpin img{height:1.1em;image-rendering:pixelated;vertical-align:-.15em}
 /* V1.66 組合拳：遊戲機風格的十字鍵與 AB 鍵 */
 .tctl.pad{display:flex!important;justify-content:space-between;align-items:center;gap:10px;padding:2px 18px 10px}
@@ -467,9 +469,9 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
   <button class="btn ya" id="yaMinus">－ 縮小</button><button class="btn ya" id="yaPlus">＋ 放大</button><button class="btn ya" id="yaFlip">↔ 鏡像</button>
   <button class="btn" id="arrReset">↺ 恢復</button><button class="btn pri" id="arrDone">✅ 完成</button></div></div>
  <div id="vsCard" class="hidden"><div class="lgTop"><canvas id="vsCv" width="48" height="48"></canvas><div class="lgInfo"><b id="vsName"></b><div id="vsSub"></div></div></div><div id="vsPlots" class="hidden"></div><div class="vsBtns"><button class="btn" id="vsPet">✋ 摸摸</button><button class="btn hidden" id="vsCare">🍖 幫忙照顧</button><button class="btn" id="vsWater">💧 澆水</button><button class="btn" id="vsGift">🎁 送禮</button><button class="btn" id="vsMsg">💌 留言</button><button class="btn" id="vsBoard">📜 留言板</button><button class="btn" id="vsMate">💞 配對</button><button class="btn" id="vsDuel">⚔️ 挑戰</button><button class="btn" id="vsSearch">🔍 幫忙找</button><button class="btn" id="vsMush">🍄 採蘑菇</button></div><button class="btn pri" id="vsHome">🏠 回家</button></div>
- <div id="lgCard" class="hidden"><div class="lgTop"><canvas id="lgCv" width="48" height="48"></canvas><div class="lgInfo"><b id="lgName"></b><div id="lgSub"></div><div id="lgBars"></div></div><button class="lgx" id="lgClose" aria-label="關閉">✕</button></div><div class="row"><button class="btn" id="lgPet">✋ 摸摸牠</button><button class="btn pri" id="lgSwap">🔁 換牠出來陪你</button></div></div>
+ <div id="lgCard" class="hidden"><div class="lgTop"><canvas id="lgCv" width="48" height="48"></canvas><div class="lgInfo"><b id="lgName"></b><div id="lgSub"></div><div id="lgBars"></div></div><button class="lgx" id="lgClose" aria-label="關閉">✕</button></div><div class="row"><button class="btn" id="lgPet">✋ 摸摸牠</button><button class="btn" id="lgEq">🎽 裝備</button><button class="btn pri" id="lgSwap">🔁 換牠出來陪你</button></div></div>
  <div id="infoSlot" class="wood">
-  <div class="nameplate"><div class="nprow2"><img class="nleaf" src="sprites/ui/leaf.png" alt=""><div id="petname"></div><button id="npEdit" class="npedit" aria-label="改名">✏️</button><img class="nleaf r" src="sprites/ui/leaf.png" alt=""></div><div id="stageText" class="chips"></div><div id="traitText" class="chips"></div><div id="bondRow" class="chips"></div><div id="growText"></div><div id="alertLine" class="hidden"></div></div>
+  <div class="nameplate"><div class="nprow2"><img class="nleaf" src="sprites/ui/leaf.png" alt=""><div id="petname"></div><button id="npEdit" class="npedit" aria-label="改名">✏️</button><button id="npEq" class="npeq" aria-label="裝備">🎽 裝備</button><img class="nleaf r" src="sprites/ui/leaf.png" alt=""></div><div id="stageText" class="chips"></div><div id="traitText" class="chips"></div><div id="bondRow" class="chips"></div><div id="growText"></div><div id="alertLine" class="hidden"></div></div>
   <div id="pairBar" class="pairbar hidden"></div>
   <div id="foodBar" class="foodbar hidden"></div>
  </div>
@@ -563,7 +565,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.90.0';
+const VERSION='1.90.1';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1763,9 +1765,11 @@ function lgCard(r){const p=r.p,L=CONFIG.lounge[s.lounge.lv-1],bar=(ic,v)=>`<span
  $('lgBars').innerHTML=bar('🍖',p.hunger)+bar('💗',p.mood)+bar('🫧',p.clean)+bar('⚡',p.energy);
  const c=$('lgCv'),x=c.getContext('2d'),S=sheet(petKey(gidOf(p),formCode(p.stage,p.route)));x.imageSmoothingEnabled=false;x.clearRect(0,0,48,48);x.drawImage(S.cv,(S.idx.idle0||0)*CELL,0,CELL,CELL,0,0,48,48);
  $('lgCard').classList.remove('hidden');document.body.classList.add('lgMode');pixifyDom($('lgCard'));try{fitStage&&fitStage()}catch(_){}}
+function lgEqOpen(){const r=LG.sel&&LG.r[LG.sel];if(!r)return;openModal(`🎽 ${esc(r.p.name)} 的裝備`,eqPanelHTML(r.p,false)+'<p class="small">換照顧牠才能幫牠換裝。</p>');eqPanelBind(false)}
 function lgClose(){LG.sel=null;const c=$('lgCard');if(c&&!c.classList.contains('hidden')){c.classList.add('hidden');document.body.classList.remove('lgMode');try{fitStage&&fitStage()}catch(_){}}}
 $('lgClose').onclick=()=>{sfx('tap');lgClose()};
-$('lgPet').onclick=()=>{const r=LG.r[LG.sel];if(r)lgCheer(r)};
+$('npEq').onclick=()=>{if(!s.hatched){toast('先把蛋孵出來吧！');return}sfx('tap');openModal(`🎽 ${esc(s.name)} 的裝備`,eqPanelHTML(s,true));eqPanelBind(true)};
+$('lgPet').onclick=()=>{const r=LG.r[LG.sel];if(r)lgCheer(r)};$('lgEq').onclick=()=>{sfx('tap');lgEqOpen()};
 $('lgSwap').onclick=()=>{const r=LG.r[LG.sel];if(!r)return;if(modeBusy()){toast('先完成現在的互動吧');return}if(s.sleeping){toast('先叫醒現在的寵物再換');return}cancelMode();
  const ox=r.x,oldSeed=s.seed,res=PC.swapPet(s,r.i,Date.now());toast(res.msg);if(!res.ok)return;
  delete LG.r[r.key];LG.sel=null;petX=Math.round(r.x);petTarget=null;walkCb=null;anim.once=null;const nk=String(oldSeed!=null?oldSeed:'i'+(s.roster.length-1));LG.r[nk]={key:nk,x:clamp(Math.round(ox),2,W-CELL-2),face:0,act:'idle',until:performance.now()+2500,tx:null,next:null,hop:performance.now()+700};
@@ -1995,7 +1999,17 @@ function petInfoHTML(p,main){const lv=PC.level(p.xp),T=p.route&&PC.traitOf(p.rou
   L.push(`<p class="small">${p.energy>=CONFIG.pair.advMinEnergy?'🐾 體力夠，冒險時會一起上場':`🐾 體力 ${Math.round(p.energy)}，要 ${CONFIG.pair.advMinEnergy} 以上才能一起去冒險（先換照顧牠，餵牠或讓牠睡覺）`}</p>`)}
  if((p.relics||[]).length)L.push(`<p>🪎 寶物：${p.relics.map(k=>CONFIG.relics.items[k].name).join('、')}</p>`);
  return`<div class="infobox">${L.join('')}</div>`}
-function infoDialog(which){if(!s.hatched){toast('先把蛋孵出來吧！');return}const p=which==='pair'?s.pair:s;if(!p)return;openModal(which==='pair'?'🐾 第二隻的資訊':'ℹ️ 寵物資訊',petInfoHTML(p,which!=='pair'))}
+/* V1.90.1 🎽 裝備欄：每個位置戴了什麼、套裝、打架時的實際數字（裝飾、訓練各加多少） */
+function eqPanelHTML(p,main){const A=CONFIG.acc,E=CONFIG.eq,acc=(p.acc||[]).filter(k=>A[k]),SL=[['head','頭上'],['face','眼睛'],['mouth','嘴巴'],['neck','脖子']];
+ const rows=SL.map(([sl,nm])=>{const k=acc.find(x=>A[x].slot===sl),lv=k?s.accLv[k]|0:0;return`<div class="eqrow"${main?` data-eqs="${sl}"`:''}><span class="eqsl">${nm}</span>${k?`<canvas data-ai="${k}" width="30" height="24"></canvas><span class="eqn"><b>${ACC[k].n}</b> <span style="color:${E.colors[lv]}">${E.tiers[lv]}</span><br><span class="small">${eqHead(k)}</span></span>`:'<span class="eqn small" style="opacity:.6">—（空）</span>'}${main?'<span class="eqgo">›</span>':''}</div>`}).join('');
+ const setL=Object.keys(E.sets).map(id=>{const S=E.sets[id],n=S.need.filter(k=>acc.includes(k)).length;return n?`${S.icon} ${S.name} ${n}/${S.need.length}${n>=S.need.length?' ✅':''}`:''}).filter(Boolean);
+ let F=null,F0=null,FT=null;try{const key=main?formKey():petKey(gidOf(p),formCode(p.stage,p.route)),mk=()=>PC.mkFighter(p.name,key,PC.level(p.xp||0),p.route,tier(),p.mood,p.bond);F=PC.buffFighter(mk(),p,s.accLv);F0=PC.buffFighter(mk(),Object.assign({},p,{acc:[]}),s.accLv);FT=PC.buffFighter(mk(),Object.assign({},p,{acc:[],trainLog:{},trainLv:{}}),s.accLv)}catch(e){}
+ let st='';if(F){const R=Math.round,pc=v=>R((v||0)*100),d=(a,b,f=R)=>{const x=f(a)-f(b);return x>0?`<span class="eqp">+${x}${f===pc?'%':''} 裝飾</span>`:''},t=(a,b,f=R)=>{const x=f(a)-f(b);return x>0?`<span class="eqt">+${x}${f===pc?'%':''} 訓練</span>`:''};
+  st=`<div class="eqst"><div>❤️ 血量</div><b>${R(F.max)}</b><div>${d(F.max,F0.max)}${t(F0.max,FT.max)}</div><div>⚔️ 攻擊</div><b>${R(F.atk)}</b><div>${d(F.atk,F0.atk)}${t(F0.atk,FT.atk)}</div><div>🛡️ 防禦</div><b>${R(F.def)}</b><div>${d(F.def,F0.def)}${t(F0.def,FT.def)}</div><div>💨 速度</div><b>${R(F.spd)}</b><div>${d(F.spd,F0.spd)}</div><div>🤸 閃避</div><b>${pc(F.dodge)}%</b><div>${d(F.dodge,F0.dodge,pc)}${t(F0.dodge,FT.dodge,pc)}</div><div>💥 會心</div><b>${pc(.08+(F.critUp||0))}%</b><div>${d(F.critUp,F0.critUp,pc)}</div></div>`}
+ return`<div class="infobox"><p><b>🎽 裝備</b>${main?'　<span class="small">點一格可以換</span>':''}</p>${rows}${setL.length?`<p class="small" style="margin-top:4px">套裝：${setL.join('　')}</p>`:''}<p style="margin-top:8px"><b>⚔️ 戰鬥能力</b>　<span class="small">打架時的實際數字</span></p>${st||'<p class="small">還算不出來</p>'}</div>`}
+function eqPanelBind(main){document.querySelectorAll('.infobox canvas[data-ai]').forEach(c=>{const im=ACC_IMG[ACC[c.dataset.ai].img];if(!im)return;const x=c.getContext('2d'),k=Math.min(30/im.width,24/im.height);x.imageSmoothingEnabled=false;x.clearRect(0,0,30,24);x.drawImage(im,(30-im.width*k)/2,(24-im.height*k)/2,im.width*k,im.height*k)});
+ if(main)document.querySelectorAll('[data-eqs]').forEach(b=>b.onclick=()=>{const sl=b.dataset.eqs,k=s.acc.find(x=>CONFIG.acc[x]&&CONFIG.acc[x].slot===sl);DRESS.sel=sl;if(k)DRESS.pick=k;else{const o=s.accOwned.find(x=>CONFIG.acc[x]&&CONFIG.acc[x].slot===sl);if(o)DRESS.pick=o}sfx('tap');dressDialog()})}
+function infoDialog(which){if(!s.hatched){toast('先把蛋孵出來吧！');return}const p=which==='pair'?s.pair:s;if(!p)return;openModal(which==='pair'?'🐾 第二隻的資訊':'ℹ️ 寵物資訊',petInfoHTML(p,which!=='pair')+eqPanelHTML(p,which!=='pair'));eqPanelBind(which!=='pair')}
 function renderPairBar(){const el=$('pairBar'),p=s.pair;if(!p||!s.hatched){el.classList.add('hidden');return}el.classList.remove('hidden');
  const k=`${Object.keys(ICV).length}|${p.name}|${p.stage}|${p.route}|${Math.round(p.hunger)}|${Math.round(p.mood)}|${Math.round(p.clean)}|${Math.round(p.energy)}`;if(el.dataset.k===k)return;el.dataset.k=k;
  const low=v=>v<20?' style="color:#ff8a8a"':'';
@@ -3806,7 +3820,13 @@ const TOURS=[
   {sel:'#scene',t:'🍄 新蘑菇',d:'院子多了 8 種蘑菇：雨停後有雞油菌、牛肝菌，早上偶爾有松茸；雷雨後有羊肚菌；晚上有一下就化掉的墨汁鬼傘；小樹樹幹長猴頭菇、蘋果樹根長靈芝。'},
   {sel:'#scene',t:'🐽 黑松露',d:'照顧<b>草系或岩系</b>幻獸時，牠有時會在院子嗅到松露，地上出現一塊鬆土，點一下就挖出來。休息室裡的草系、岩系也會偶爾自己溜出去找，回來叼一顆給你。'},
   {open:()=>{try{mushDialog()}catch(e){}},wait:600,sel:'.frow',t:'⚔️ 烤過吃有戰鬥效果',d:'新蘑菇<b>烤過再吃</b>，下一場戰鬥有特殊效果：屬性技變強、先出手、看穿猜拳、大絕招用兩次…打王前記得先吃！13 種全部收集還有 🪙1000。'},
-  {open:()=>closeModal(),sel:'#bTrain',t:'🥊 組合拳新按鍵',d:'組合拳換成新的方向鍵和 △○□✕ 按鍵。前幾階只會出方向鍵和 ○✕，練到第 4 階以後 △□ 也會出現。',opt:1}]}
+  {open:()=>closeModal(),sel:'#bTrain',t:'🥊 組合拳新按鍵',d:'組合拳換成新的方向鍵和 △○□✕ 按鍵。前幾階只會出方向鍵和 ○✕，練到第 4 階以後 △□ 也會出現。',opt:1}]},
+ {id:'v1901',t:'裝備欄・試戴・一次賣水果',new:['🎽 裝備欄','👀 試戴','🪙🎯👹 裝飾分類','💰 水果一次賣光'],steps:[
+  {sel:'#npEq',t:'🎽 裝備欄',d:'名字旁邊多了「裝備」：看頭上、眼睛、嘴巴、脖子各戴了什麼，還有打架時的血量、攻擊、閃避、會心…裝飾和訓練各加了多少。點一格就能換。'},
+  {open:()=>{try{dressDialog()}catch(e){}},wait:600,sel:'#drCv',t:'👀 試戴',d:'裝扮畫面點任何一件，幻獸會直接戴上給你看，還沒買的也可以試。一件裝飾只能戴在一隻身上，要給別隻戴會先問你要不要脫下來。'},
+  {sel:'[data-dcat]',t:'🪙🎯👹 分類',d:'裝飾分成花錢買、任務得到、打怪得到，點上面的分頁就能篩選。'},
+  {open:()=>{closeModal();openFarm();setTimeout(farmSell,200)},wait:800,sel:'#fslAll',t:'💰 一次賣光',d:'種田的「賣水果」可以一次賣 10 顆、整種全部賣，或全部水果一次賣光。',opt:1},
+  {open:()=>{closeModal();closeFarm()},sel:'#npEq',t:'完成！',d:'去試試看吧～'}]}
 ];
 let TOUR=null;
 function tourStart(id){const T=TOURS.find(x=>x.id===id);if(!T||TOUR)return;TOUR={T,i:-1};const blk=document.createElement('div');blk.id='tourBlock';blk.onclick=e=>{e.stopPropagation();sfx('no')};document.body.append(blk);tourNext()}
