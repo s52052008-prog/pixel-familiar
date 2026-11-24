@@ -274,6 +274,10 @@ body.guiding .panel{display:none!important}#app{gap:4px!important}.toolbar.five 
 #gdSkip{flex:0 0 auto;background:none;border:0;color:#8a6a4a;font-size:12px;text-decoration:underline;min-width:44px;min-height:44px;padding:0}
 @keyframes gdIn{from{transform:translateY(-6px);opacity:0}}
 #gdShade{position:fixed;inset:0;background:rgba(5,3,10,.72);z-index:40}#gdShade.hidden{display:none}
+#tourBlock{position:fixed;inset:0;z-index:99990}#tourHole{position:fixed;z-index:99991;pointer-events:none;border:3px solid #ffe066;border-radius:12px;box-shadow:0 0 0 9999px rgba(8,5,2,.66),0 0 14px #ffe066;transition:all .25s;animation:tourP 1.2s infinite}
+@keyframes tourP{50%{box-shadow:0 0 0 9999px rgba(8,5,2,.66),0 0 26px #ffe066}}
+#tourCard{position:fixed;left:50%;transform:translateX(-50%);width:min(92vw,400px);z-index:99992;background:#fff3d8;color:#3a2414;border:4px solid #2a170a;border-radius:14px;padding:10px 12px;box-shadow:0 6px 0 #6e4a20;font-size:16px}
+#tourCard b{font-size:18px;display:block;margin:2px 0}#tourCard p{margin:4px 0 8px;line-height:1.45}#tourCard small{color:#8a5a34}#tourCard .row{display:flex;gap:6px;justify-content:flex-end}#tourCard button{border:3px solid #2a170a;border-radius:10px;padding:8px 14px;font-size:16px;font-weight:700;background:#e8c98c;color:#3a2414}#tourCard button.go{background:#6fd86a;color:#163a12}
 body.gdOn #guideBar{position:relative;z-index:42}body.gdOn .gpoint{z-index:42!important}
 .gpoint{animation:gdGlow 1s ease-in-out infinite!important}@keyframes gdGlow{0%,100%{box-shadow:0 0 0 4px #fff27a,0 0 18px 8px #ffd040}50%{box-shadow:0 0 0 6px #fff,0 0 30px 14px #ffe066}}
 .gpoint{position:relative;box-shadow:0 0 0 3px #ffe066,0 0 12px 4px #ffd040!important;z-index:2}.gpoint::after{content:'👆';position:absolute;left:50%;bottom:-30px;font-size:40px;transform:translateX(-50%);animation:gdHand 1s ease-in-out infinite;pointer-events:none;filter:drop-shadow(0 2px 0 #0008);z-index:5}
@@ -2352,8 +2356,8 @@ async function checkUpdate(){if(window.PF_NO_SOCIAL||!/github\.io$/.test(locatio
  if(m&&m[1]!==VERSION&&!$('updBar')){const b=document.createElement('button');b.id='updBar';b.innerHTML=`🆕 新版本 V${m[1]} 來了！<b>按這裡更新</b>`;b.onclick=async()=>{b.textContent='更新中…';try{const r=await navigator.serviceWorker?.getRegistration();if(r)await r.update()}catch(e){}setTimeout(()=>location.reload(),600)};document.body.appendChild(b)}}catch(e){}}
 setTimeout(checkUpdate,3000);setInterval(()=>{if(document.visibilityState==='visible')checkUpdate()},15*60e3);document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate()});setInterval(()=>{if(document.visibilityState==='visible')socialPoll()},120000);
 /* V1.89 好友火花：兩個人同一天都有互動（摸摸、澆水、留言、送禮…）就 +1 天 */
-function sparkTxt(k){if(!k)return'';if(!k.n&&!k.me&&!k.them)return'<div class="small" style="color:#d8c0a0">🔥 今天兩個人都互動，就能點燃好友火花</div>';
- const st=k.me&&k.them?'今天已經點燃 ✅':k.me?'等朋友今天也來互動':k.them?'朋友今天來過了，換你互動！':'今天還沒互動，火花快熄了！';return`<div class="small" style="color:${k.me&&k.them?'#ffb040':'#ff9a8a'}">🔥 火花 ${k.n} 天・${st}</div>`}
+function sparkTxt(k){if(!k)return'';if(!k.n&&!k.me&&!k.them)return'<div class="small frSpark" style="color:#d8c0a0">🔥 今天兩個人都互動，就能點燃好友火花</div>';
+ const st=k.me&&k.them?'今天已經點燃 ✅':k.me?'等朋友今天也來互動':k.them?'朋友今天來過了，換你互動！':'今天還沒互動，火花快熄了！';return`<div class="small frSpark" style="color:${k.me&&k.them?'#ffb040':'#ff9a8a'}">🔥 火花 ${k.n} 天・${st}</div>`}
 async function friendsDialog(){navMark('friends',friendsDialog);openModal('👥 好友','<p class="small">讀取中…</p>');const url=await pushUrl();
  if(!url){openModal('👥 好友',`<p>好友功能要用遊戲網址開才能用：<b>${HOME_URL}</b>（建議「加入主畫面」）。</p><div class="row"><button class="btn pri" id="frMate">💞 配對・蛋籃</button></div>`);$('frMate').onclick=mateDialog;return}
  await cardSync(true);const r=await socialPoll();if(!r){openModal('👥 好友','<p>連不到好友伺服器，等一下再試試。</p><div class="row"><button class="btn pri" id="frMate">💞 配對・蛋籃</button></div>');$('frMate').onclick=mateDialog;return}
@@ -2454,11 +2458,11 @@ function menuDialog(){
 <p style="margin-top:10px"><b>🪄 金手指</b></p><div class="row"><input id="mCheat" placeholder="輸入密碼" autocomplete="off" autocapitalize="off" style="flex:1;min-width:0;font-size:16px;padding:8px;border:3px solid var(--line)"><button class="btn" id="mCheatGo">確定</button></div>
 <div class="row"><button class="btn" id="mBasketM">🧺 蛋籃（${s.eggs.length}）</button></div>
 <div class="row"><button class="btn" id="mNotify">🔔 手機通知：${s.settings.notify.on?'開':'關'}</button></div>
-<div class="row"><button class="btn" id="mGuide">📖 新手手冊</button><button class="btn" id="mUpdate">🔄 檢查更新</button></div>
+<div class="row"><button class="btn" id="mGuide">📖 新手手冊</button><button class="btn" id="mTour">🆕 新功能導覽</button><button class="btn" id="mUpdate">🔄 檢查更新</button></div>
 <div class="row"><button class="btn pri" id="mReset">🥚 迎接新的蛋（🪙 ${PC.eggPrice(s)}）</button></div>
 <div class="row" style="margin-top:14px"><button class="btn" id="mWipe" style="border-color:#a03a2a;color:#ffb0a0">🔄 全部重新開始</button></div>
 <p class="small" style="margin-top:12px">版本 V${VERSION}｜存檔位置：${standalone()?'主畫面 App':'瀏覽器'}（${location.host||'本機'}）${store.ok?'':'｜⚠️ 無法寫入'}</p>`);
- $('mWipe').onclick=wipeDialog;$('mNotify').onclick=notifyDialog;$('mGuide').onclick=guideListDialog;$('mOwner').onclick=()=>ownerDialog(false);$('mRename').onclick=()=>renameDialog(false);if($('mQuiz'))$('mQuiz').onclick=()=>quizIntro(false);$('mHelp').onclick=helpDialog;$('mSave').onclick=saveDialog;$('mBasketM').onclick=basketDialog;
+ $('mWipe').onclick=wipeDialog;$('mNotify').onclick=notifyDialog;$('mGuide').onclick=guideListDialog;$('mTour').onclick=tourListDialog;$('mOwner').onclick=()=>ownerDialog(false);$('mRename').onclick=()=>renameDialog(false);if($('mQuiz'))$('mQuiz').onclick=()=>quizIntro(false);$('mHelp').onclick=helpDialog;$('mSave').onclick=saveDialog;$('mBasketM').onclick=basketDialog;
  $('mSound').onclick=()=>{s.settings.sound=!s.settings.sound;save();unlockAudio();sfx('tap');$('mSound').textContent=snd()};
  $('mMusic').onclick=()=>{s.settings.music=!musicOn();if(!musicOn())bgmStop(.4);save();unlockAudio();sfx('tap');$('mMusic').textContent=mus()};
  $('mCheatGo').onclick=()=>{const c=$('mCheat').value.trim().toLowerCase().replace(/\s+/g,' ');$('mCheat').value='';
@@ -3701,6 +3705,39 @@ document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()
 ['rpsZone','moves','mvBond'].forEach(id=>pixifyDom($(id)));   // V1.70 戰鬥按鈕、猜拳也換成像素圖示
 /* V1.55 遊戲畫面依剩下的高度縮放（整頁不用捲） */
 /* V1.86 主畫面填滿寬度：高度不夠時，上下各切掉一點點（最多 15%，大多切下面的草地），點擊位置照樣對得準 */
+/* ================= V1.89.1 新功能導覽：每次更新都像新手教學一樣，一步一步帶你看新東西 ================= */
+const TOURS=[
+ {id:'v189',t:'好友新玩法・背包分類',new:['📣 叫朋友回來','🍖 幫忙照顧','🔥 好友火花','🎁 一鍵送禮','🎒 背包分類','🛒 商店的裝飾','📖 圖鑑的裝飾','◀ 返回鍵'],steps:[
+  {sel:'#bMate',t:'👥 好友',d:'朋友相關的新玩法都在「好友」裡面。'},
+  {open:()=>friendsDialog(),wait:1600,sel:'#frGiftAll',t:'🎁 一鍵送禮',d:'每位朋友每天可以收一份免費小禮物，按一下全部送完，你也會收到回禮。',opt:1},
+  {sel:'.frSpark',t:'🔥 好友火花',d:'你和朋友<b>同一天都有互動</b>（摸摸、澆水、留言、送禮…），火花就 +1 天；斷一天就歸零。連續 3、7、14、30 天都有獎勵！',opt:1},
+  {sel:'[data-call]',t:'📣 叫他回來',d:'朋友超過一天沒上線，按這裡叫他。他一回來，你們兩個都拿到回歸禮物。',opt:1},
+  {sel:'[data-visit]',t:'🍖 幫忙照顧',d:'朋友超過半天沒上線，去他家拜訪會多一顆「幫忙照顧」，幫他餵飽幻獸、陪牠玩。',opt:1},
+  {open:()=>{closeModal();shopDialog('bag',true,'all')},sel:'.bagtabs',t:'🎒 背包分類',d:'背包上面多了分頁：裝飾、食物、道具、寶物素材，還有魚簍和蘑菇籃。'},
+  {sel:'[data-bt="acc"]',t:'🎀 裝飾',d:'點這裡只看你的裝飾，可以直接戴上、強化。'},
+  {open:()=>shopDialog('food'),sel:'[data-tab="acc"]',t:'🛒 商店的裝飾',d:'商店多了「裝飾」分頁，全部裝飾都在這裡，可以買、也可以先試戴。'},
+  {sel:'#mBack',t:'◀ 返回鍵',d:'從一個視窗點進下一層時，左上角會有 ◀，按了回上一層，不用關掉重開。'},
+  {open:()=>{closeModal();codexDialog()},sel:'[data-cxacc]',t:'📖 圖鑑：裝飾',d:'圖鑑多了「裝飾」頁，看全部裝飾和套裝收集。'}]}
+];
+let TOUR=null;
+function tourStart(id){const T=TOURS.find(x=>x.id===id);if(!T||TOUR)return;TOUR={T,i:-1};const blk=document.createElement('div');blk.id='tourBlock';blk.onclick=e=>{e.stopPropagation();sfx('no')};document.body.append(blk);tourNext()}
+function tourNext(){if(!TOUR)return;const T=TOUR.T;TOUR.i++;if(TOUR.i>=T.steps.length){tourEnd(true);return}const S=T.steps[TOUR.i];$('tourCard')&&$('tourCard').remove();$('tourHole')&&($('tourHole').style.opacity=0);
+ try{S.open&&S.open()}catch(e){}
+ setTimeout(()=>{if(!TOUR)return;const el=[...document.querySelectorAll(S.sel)].find(x=>x.offsetParent);if(!el){if(S.opt||true){tourNext();return}}
+  try{el.scrollIntoView({block:'center'})}catch(e){}setTimeout(()=>tourShow(el,S),250)},S.wait||(S.open?500:80))}
+function tourShow(el,S){if(!TOUR)return;const T=TOUR.T,r=el.getBoundingClientRect(),pad=5;let h=$('tourHole');if(!h){h=document.createElement('div');h.id='tourHole';document.body.append(h)}
+ Object.assign(h.style,{left:r.left-pad+'px',top:r.top-pad+'px',width:r.width+pad*2+'px',height:r.height+pad*2+'px',opacity:1});
+ const c=document.createElement('div');c.id='tourCard';const last=TOUR.i===T.steps.length-1;
+ c.innerHTML=`<small>🆕 新功能導覽・${T.t}　${TOUR.i+1}/${T.steps.length}</small><b>${S.t}</b><p>${S.d}</p><div class="row"><button id="tourSkip">跳過</button><button class="go" id="tourGo">${last?'完成 🎉':'下一步 ▶'}</button></div>`;
+ document.body.append(c);const below=r.top+r.height/2<innerHeight/2;c.style[below?'top':'bottom']=(below?r.bottom+14:innerHeight-r.top+14)+'px';
+ $('tourGo').onclick=()=>{sfx('tap');tourNext()};$('tourSkip').onclick=()=>{sfx('tap');tourEnd(false)}}
+function tourEnd(done){if(!TOUR)return;const id=TOUR.T.id;TOUR=null;['tourCard','tourHole','tourBlock'].forEach(x=>$(x)&&$(x).remove());s.tours=[...new Set([...(s.tours||[]),id])];save();closeModal();if(done){toast('🎉 導覽完成！之後想再看，到「選單 → 🆕 新功能導覽」',3500);sfx('level')}}
+function tourCheck(){if(window.PF_NO_GUIDE||TOUR||!s.hatched||B||mode||!$('modal').classList.contains('hidden'))return;const seen=s.tours||[],T=TOURS.find(x=>!seen.includes(x.id));if(!T)return;
+ if(PC.guideStep(s)&&!(s.guide&&s.guide.off)){s.tours=TOURS.map(x=>x.id);save();return}   // 新手還在跑新手手冊：新功能就不另外介紹
+ openModal('🆕 有新功能！',`<p>這次更新多了：</p><ul style="margin:4px 0 8px;padding-left:20px;line-height:1.6">${T.new.map(x=>`<li>${x}</li>`).join('')}</ul><p class="small">花一分鐘帶你看一遍怎麼用？</p>`,[{t:'之後再說',fn:()=>{s.tours=[...new Set([...(s.tours||[]),T.id])];save();toast('之後想看，到「選單 → 🆕 新功能導覽」',3000)}},{t:'▶ 帶我看看',cls:'pri',fn:()=>{setTimeout(()=>tourStart(T.id),80)}}])}
+function tourListDialog(){openModal('🆕 新功能導覽',`<p class="small">每次更新的新東西，點一下重新帶你看一遍。</p>${TOURS.map(T=>`<div class="dm"><b>${(s.tours||[]).includes(T.id)?'✅':'🆕'} ${T.t}</b><span class="small">${T.new.join('、')}</span><button class="btn pri" data-tour="${T.id}" style="margin-top:4px">▶ 看導覽</button></div>`).join('')}`);
+ document.querySelectorAll('[data-tour]').forEach(b=>b.onclick=()=>{closeModal();setTimeout(()=>tourStart(b.dataset.tour),80)})}
+setTimeout(tourCheck,4000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(tourCheck,2500)});
 /* ================= V1.86.4 新手手冊 ================= */
 function renderGuide(){const bar=$('guideBar');if(!bar)return;if(window.PF_XP1)CONFIG.xpGain=1;if(window.PF_NO_GUIDE){bar.classList.add('hidden');document.body.classList.remove('guiding');$('gdShade').classList.add('hidden');document.body.classList.remove('gdOn');return}
  let S=PC.guideStep(s);if(S&&S.k==='hatch'&&s.hatched){guideHit('hatch');S=PC.guideStep(s)}
