@@ -138,7 +138,7 @@ function baseHint(){$('hint').textContent=locked()?'🔒 已完成：要改請�
 /* ---------- 錨點、畫裝飾 ---------- */
 function anchor(k){const T=TAB[k];return{ht:T.ht,cx:T.cx,hw:T.hw,ey:T.ey,ex0:T.cx-T.ew/2,ex1:T.cx+T.ew/2,ny:T.ey+(T.ey-T.ht)*.95+1,mouth:T.ey+Math.max(3,(T.ey-T.ht)*.45)+(T.my||0),mcx:T.cx+(T.mx||0),bot:45}}
 const getF=(k,id)=>{const F=(FIX[k]&&FIX[k][id])||[];while(F.length<5)F.push(0);return F};
-function drawAcc(c,k,x,y,w,fl,list,layer){const A=anchor(k),s=w/CELL;for(const id of list){const it=ACC[id],im=it&&IMG[it.img];if(!im)continue;const F=getF(k,id),fr=F[3]===1?1:F[3]===-1?0:(FR[id]??it.front??1);if(layer==='back'&&fr>=1)continue;if(layer==='front'&&fr<=0)continue;
+function drawAcc(c,k,x,y,w,fl,list,layer){const A=anchor(k),s=w/CELL;for(const id of list){const it=ACC[id],im=it&&IMG[it.img];if(!im)continue;const F=getF(k,id),fr=F[3]===1?1:F[3]===-1?0:((FR[id]??it.front??1)||1);if(layer==='back'&&fr>=1)continue;if(layer==='front'&&fr<=0)continue;
  let aw,cx,by;
  if(it.slot==='head'){aw=A.hw*it.w;cx=A.cx+(it.side||0)*A.hw+(it.dx||0)*aw;const ah0=im.height*(aw/im.width);by=Math.min(A.ht+ah0*it.sink,A.ey-(it.side?0:2))}
  else if(it.slot==='face'){aw=Math.max(A.ex1-A.ex0+5,A.hw*.62);cx=A.cx;by=A.ey+im.height*(aw/im.width)*.55}
