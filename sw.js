@@ -1,7 +1,7 @@
 // 幻獸日記 Service Worker — 離線快取
 // 更新遊戲時，請把 VERSION 改成新版本號，iPhone 才會換成新檔案。
-const VERSION = 'pf-1.91.0';
-const CORE = ['./', './index.html', './game-core.js'];
+const VERSION = 'pf-1.91.1';
+const CORE = ['./', './index.html', './game-core.js', './emb.js'];
 const EXTRA = ['./manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png',
   ...['flame','tide','forest','earth','bird','elec','metal'].flatMap(el => [0,1,2,3,4].flatMap(n => ['open','closed'].map(e => `./sprites/${el}_${n}_${e}.png`))),
   ...['flame','tide','forest','earth','bird','elec','metal'].map(el => `./sprites/egg_${el}.png`),
@@ -38,14 +38,14 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
   if (new URL(req.url).pathname.endsWith('/push-config.json')) return;   // 推播伺服器網址：永遠拿最新的
 
-  // 頁面：先試網路（最多等 3 秒），失敗就用快取 → 有網路時拿到最新版，離線也能開
+  // 頁面：先試網路（最多等 8 秒），失敗就用快取 → 有網路時拿到最新版，離線也能開
   if (req.mode === 'navigate') {
     e.respondWith((async () => {
       const cache = await caches.open(VERSION);
       try {
         const net = await Promise.race([
           fetch(req),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
+          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))
         ]);
         if (net && net.ok) cache.put('./index.html', net.clone());
         return net;
