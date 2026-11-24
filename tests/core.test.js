@@ -9,6 +9,8 @@ function t(name, fn) { try { fn(); pass++; console.log('PASS ' + name); } catch 
 const T0 = Date.parse('2026-11-16T02:00:00Z');           // 台北 10:00
 function hatched(now = T0) { const s = C.fresh(now); C.hatch(s, now); s.name = '測試'; s.route = null; s.crave = { kind: 'none', until: 1e15 }; return s; }   // 屬性特性另外測：預設不帶屬性，數值才固定
 C.CONFIG.weatherOn = false;   // 天氣另外測
+const PLANT0 = C.plant, FE = C.CONFIG.farm.energy; C.CONFIG.farm.energy = [0, 0, 0, 0];   // V1.90 澆水、體力另外測：舊測試當作種下就澆好、不花體力
+C.plant = (st, i, ...a) => { const r = PLANT0(st, i, ...a); if (r.ok) delete st.plots[i].wn; return r; };
 const nonNeg = s => ['hunger', 'mood', 'clean', 'energy', 'bond'].every(k => s[k] >= 0 && s[k] <= 100) && s.coins >= 0 && s.xp >= 0 && s.inv.food >= 0 && s.inv.seeds >= 0;
 
 // 1. 全新存檔與檢查
@@ -572,5 +574,20 @@ t('V1.88 打王掉裝飾：小王 15% 掉咬玫瑰／海盜眼罩，最終大王
   assert.ok(['rose', 'eyepatch'].includes(o.accDrop) && s.accOwned.includes(o.accDrop));
   s.energy = 100; st = C.startAdventure(s, 40, T0); o = C.finishAdventure(s, 40, 'win', st.full, T0, () => .99); assert.equal(o.accDrop, 'halo'); assert.ok(s.accOwned.includes('halo'));
 });
+t('V1.90 種田：種子花體力（3／5／7／10）、要澆水才長、長到一半再口渴、自動灑水器要田 6 格', () => {
+  C.CONFIG.farm.energy = FE; const s = hatched(); s.energy = 50; s.inv.seeds = 3; s.inv.seeds2 = 1;
+  let r = PLANT0(s, 0, T0); assert.ok(r.ok); assert.equal(s.energy, 47);
+  r = PLANT0(s, 1, T0, Math.random, true); assert.ok(r.ok); assert.equal(s.energy, 42);
+  let q = C.plotState(s, 0, T0 + 5 * H); assert.ok(q.thirsty && q.progress === 0);   // 沒澆水不會長
+  assert.ok(C.water(s, 0, T0 + 5 * H).ok); assert.ok(!C.water(s, 0, T0 + 5 * H).ok);
+  q = C.plotState(s, 0, T0 + 6.5 * H); assert.ok(q.thirsty && q.progress === .5);   // 長到一半口渴、停住
+  assert.ok(C.water(s, 0, T0 + 8 * H).ok); q = C.plotState(s, 0, T0 + 9 * H); assert.ok(q.ripe && !q.thirsty);
+  s.energy = 2; assert.equal(PLANT0(s, 2, T0).code, 'tired');
+  s.coins = 5000; assert.ok(!C.buySprinkler(s).ok); while (s.plots.length < 6) C.expandFarm(s);
+  assert.ok(C.buySprinkler(s).ok); assert.ok(!C.plotState(s, 1, T0 + 9 * H).thirsty);
+  const b = C.sanitize ? C.sanitize(JSON.parse(JSON.stringify(s))) : null; if (b) assert.ok(b.sprinkler);
+  C.CONFIG.farm.energy = [0, 0, 0, 0];
+});
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);
