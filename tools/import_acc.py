@@ -11,6 +11,7 @@ import_art.DARK = .5; import_art.CELL = 64
 SHEETS = {
   'santa': (3, 1, [('santa', 30), ('santa_side', 30), ('santa_s', 24)]),
   'mushhat': (2, 1, [('mushhat', 28), ('mushhat_s', 24)]),
+  'headband': (1, 1, [('headband', 32)]),
   'acc2': (5, 2, [('gradcap', 26), ('halo', 24), ('pumpkin', 28), ('monocle', 16), ('eyepatch', 24), ('rose', 18), ('lollipop', 12), ('bowtie', 16), ('scarf', 20)]),
   'acc': (5, 2, [('bow', 18), ('tophat', 24), ('crown', 22), ('glasses', 24), ('wreath', 30), ('chef', 24), ('necklace', 22), ('cigar', 20), ('turkey', 28), ('antler', 30)]),
 }

@@ -196,13 +196,14 @@ const CONFIG = {
     antler: { slot: 'head', price: 300 }, wreath: { slot: 'head', price: 800 }, chef: { slot: 'head', price: 300 }, turkey: { slot: 'head', price: 350 },
     glasses: { slot: 'face', price: 400 }, cigar: { slot: 'mouth', price: 500 }, necklace: { slot: 'neck', price: 800 },
     gradcap: { slot: 'head', price: 600 }, halo: { slot: 'head', drop: 'final' }, pumpkin: { slot: 'head', price: 500, month: 9 }, monocle: { slot: 'face', price: 400 }, eyepatch: { slot: 'face', drop: 'mini' },
-    rose: { slot: 'mouth', drop: 'mini' }, lollipop: { slot: 'mouth', price: 400 }, bowtie: { slot: 'neck', price: 400 }, scarf: { slot: 'neck', price: 400 } },
+    rose: { slot: 'mouth', drop: 'mini' }, lollipop: { slot: 'mouth', price: 400 }, bowtie: { slot: 'neck', price: 400 }, scarf: { slot: 'neck', price: 400 },
+    headband: { slot: 'head', pk: 1 } },   // V1.90 ⚽ 足球頭帶：PK 踢出全部 10 種球路才拿得到
   accDrop: .15,   // 打贏小王：15% 掉一件還沒有的「小王裝飾」（咬玫瑰、海盜眼罩）；最終大王第一次必掉天使光環
   /* V1.88 裝飾＝裝備：每件一個小能力；強化五級（普通灰→優秀綠→精良藍→完美紫→超級金），等級越高越強、會發光 */
   eq: {
     fx: { santa: { gift: .25 }, antler: { spd: .06 }, bow: { def: .05 }, tophat: { dodge: .03 }, crown: { atk: .05 }, wreath: { regen: .02 },
       chef: { heal: .2 }, turkey: { hp: .06 }, mushhat: { poison: .08 }, glasses: { crit: .03 }, cigar: { scare: .15 }, necklace: { coin: .1 },
-      gradcap: { xp: .05 }, halo: { endure: .12 }, pumpkin: { slow: .1 }, monocle: { aim: .05 }, eyepatch: { rage: .1 }, rose: { charm: .03 }, lollipop: { cure: .3 }, bowtie: { critRes: .25 }, scarf: { elemCut: .1 } },
+      gradcap: { xp: .05 }, halo: { endure: .12 }, pumpkin: { slow: .1 }, monocle: { aim: .05 }, eyepatch: { rage: .1 }, rose: { charm: .03 }, lollipop: { cure: .3 }, bowtie: { critRes: .25 }, scarf: { elemCut: .1 }, headband: { spd: .04, dodge: .02, pkAim: .3 } },
     mult: [1, 1.5, 2, 2.5, 3],
     tiers: ['普通', '優秀', '精良', '完美', '超級'], colors: ['#b8b8b8', '#5ad86a', '#4aa8ff', '#b070ff', '#ffd040'],
     up: [{ coins: 300, mush: 'mush', n: 3 }, { coins: 800, mush: 'mushS', n: 2 }, { coins: 2000, mush: 'mushN', n: 2 }, { coins: 5000, mush: 'mushG', n: 1 }],
@@ -210,7 +211,8 @@ const CONFIG = {
       xmas: { name: '聖誕套', icon: '🎄', need: [['santa', 'antler'], 'necklace'], gift: .25, text: '12 月打贏多拿禮物的機會變高' },
       gent: { name: '紳士套', icon: '🎩', need: ['tophat', 'monocle', 'bowtie'], half: 1, text: '每場第一次被打，傷害減半' },
       halloween: { name: '萬聖套', icon: '🎃', need: ['pumpkin', 'eyepatch', 'rose'], stun: .25, text: '開場對手有機會害怕到發抖，第一回合不能動' },
-      angel: { name: '天使套', icon: '😇', need: ['halo', 'scarf'], angel: .2, text: '撐住一口氣之後，再回一點血' } },
+      angel: { name: '天使套', icon: '😇', need: ['halo', 'scarf'], angel: .2, text: '撐住一口氣之後，再回一點血' },
+      star: { name: '球星套', icon: '⚽', need: ['headband', 'glasses', 'necklace'], pkCoin: 2, xp: .05, text: 'PK 每踢進一球多拿 🪙2；冒險打贏經驗多一點' } },
     gift: [['food', 2], ['potion', 1], ['seeds', 2], ['berry', 2], ['candy', 1], ['coins', 60]] },
   mush: {   // V1.88 🍄 雨後蘑菇：雨停後院子冒出來，點了採收；烤過賣錢 1.5 倍、心情和體力 1.5 倍（飽食不變）
     kinds: {
@@ -874,7 +876,7 @@ function trainBonus(p) { const T = CONFIG.trainBonus, L = (p && p.trainLog) || {
 function eqStats(acc, lv, month) {
   const E = CONFIG.eq, o = { list: [], sets: [] };
   for (const k of acc || []) { const fx = E.fx[k]; if (!fx) continue; const t = Math.max(0, Math.min(4, (lv && lv[k]) | 0)), m = E.mult[t]; o.list.push(k); for (const x in fx) o[x] = (o[x] || 0) + fx[x] * m; }
-  for (const id in E.sets) { const S = E.sets[id]; if (S.need.every(n => Array.isArray(n) ? n.some(q => o.list.includes(q)) : o.list.includes(n))) { o.sets.push(id); if (S.stun) o.stun = Math.max(o.stun || 0, S.stun); if (S.half) o.half = 1; if (S.angel) o.angel = S.angel; if (S.gift && month === 11) o.gift = (o.gift || 0) + S.gift; } }
+  for (const id in E.sets) { const S = E.sets[id]; if (S.need.every(n => Array.isArray(n) ? n.some(q => o.list.includes(q)) : o.list.includes(n))) { o.sets.push(id); if (S.stun) o.stun = Math.max(o.stun || 0, S.stun); if (S.half) o.half = 1; if (S.angel) o.angel = S.angel; if (S.pkCoin) o.pkCoin = S.pkCoin; if (S.xp) o.xp = (o.xp || 0) + S.xp; if (S.gift && month === 11) o.gift = (o.gift || 0) + S.gift; } }
   return o;
 }
 function eqApply(f, acc, lv) {
