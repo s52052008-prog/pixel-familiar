@@ -589,5 +589,20 @@ t('V1.90 種田：種子花體力（3／5／7／10）、要澆水才長、長到
   C.CONFIG.farm.energy = [0, 0, 0, 0];
 });
 
+t('V1.90 新蘑菇：樹上猴頭菇、草岩系聞松露、休息室出去找松露、晚上墨汁鬼傘 2 小時化掉；烤過吃有戰鬥效果', () => {
+  const s = hatched(); s.route = 'earth'; s.mush = []; s.mushChk = T0; s.mushDays = {};
+  const T = T0 + 2 * H;   // 台北 12:00
+  C.mushTick(s, T, () => 0); assert.ok(s.mush.some(m => m.k === 'mushL' && m.on === 'tree1')); assert.ok(s.mush.some(m => m.k === 'mushR' && m.on === 'tree2')); assert.ok(s.mush.some(m => m.k === 'mushB' && m.dig));
+  const n0 = s.mush.length; C.mushTick(s, T + H, () => 0); assert.equal(s.mush.filter(m => m.on === 'tree1').length, 1);   // 一天只長一次
+  const i = s.mush.findIndex(m => m.dig); assert.ok(C.pickMush(s, i, T + H).ok); assert.equal(s.inv.mushB, 1);
+  const r = hatched(); r.mush = []; r.mushChk = T0 - 2 * H; r.mushDays = {}; r.roster = [{ name: '小岩', route: 'earth', seed: 7, hatched: true, xp: 0 }];
+  C.mushTick(r, T0 + 4 * H, () => 0); assert.equal(r.inv.mushB || 0, 1); assert.ok(r.tripDone && r.tripDone.name === '小岩');   // 10 點出門、1 小時後叼回來
+  const k = hatched(); k.mush = []; k.mushDays = {}; const N = Date.parse('2026-11-16T12:30:00Z'); k.mushChk = N - H;   // 台北 20:30
+  C.mushTick(k, N, () => 0); const ink = k.mush.filter(m => m.k === 'mushK'); assert.ok(ink.length >= 1 && ink[0].life === 2);
+  C.mushTick(k, N + 2.5 * H, () => .99); assert.equal(k.mush.filter(m => m.k === 'mushK').length, 0);
+  const e = hatched(); e.inv.mushT = 1; assert.ok(C.mushCook(e, 'mushT').ok); const x = C.mushEat(e, 'mushT_c', T0); assert.ok(x.ok && x.buff === 'crit' && e.mushBuff.crit === 1);
+  const b = C.sanitize(JSON.parse(JSON.stringify(e)), T0); assert.equal(b.mushBuff.crit, 1); assert.equal(b.inv.mushT_c, 0);
+});
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

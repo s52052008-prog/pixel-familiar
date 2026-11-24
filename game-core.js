@@ -220,8 +220,18 @@ const CONFIG = {
       mushS: { n: '花斑毒菇', sell: 40, raw: 'poison', cook: { mood: 15, hunger: 10, energy: 15, xp: 20, buff: 'atk' } },
       mushW: { n: '白斑毒菇', sell: 6, raw: 'poison', cook: 'poison' },
       mushN: { n: '夜光菇', sell: 150, raw: { mood: 10, hunger: 10, energy: 10 }, cook: { mood: 15, hunger: 10, energy: 15, xp: 20, buff: 'def' } },
-      mushG: { n: '金色蘑菇', sell: 999, raw: 'gold', cook: 'burn' } },
-    odds: [['mush', .58], ['mushS', .17], ['mushW', .17], ['mushG', .02]], nightOdds: [['mushN', .3]],   // 夜光菇只在晚上雨停時出現
+      mushG: { n: '金色蘑菇', sell: 999, raw: 'gold', cook: 'burn' },
+      // V1.90 新蘑菇：烤過吃了下一場戰鬥有特殊效果（飽食、體力加一點點）
+      mushC: { n: '雞油菌', sell: 45, raw: { mood: 3, hunger: 5, energy: 5 }, cook: { mood: 5, hunger: 8, energy: 8, buff: 'sp' } },
+      mushP: { n: '牛肝菌', sell: 45, raw: { mood: 3, hunger: 5, energy: 5 }, cook: { mood: 5, hunger: 8, energy: 8, buff: 'half' } },
+      mushM: { n: '羊肚菌', sell: 90, raw: { mood: 3, hunger: 5, energy: 5 }, cook: { mood: 5, hunger: 8, energy: 8, buff: 'first' } },
+      mushT: { n: '松茸', sell: 300, raw: { mood: 3, hunger: 5, energy: 5 }, cook: { mood: 5, hunger: 8, energy: 8, buff: 'crit' } },
+      mushL: { n: '猴頭菇', sell: 70, raw: { mood: 3, hunger: 5, energy: 5 }, cook: { mood: 5, hunger: 8, energy: 8, buff: 'peek' } },
+      mushR: { n: '靈芝', sell: 400, raw: { mood: 3, hunger: 5, energy: 5 }, cook: { mood: 5, hunger: 8, energy: 8, buff: 'regen' } },
+      mushK: { n: '墨汁鬼傘', sell: 60, raw: { mood: 3, hunger: 5, energy: 5 }, cook: { mood: 5, hunger: 8, energy: 8, buff: 'ink' } },
+      mushB: { n: '黑松露', sell: 800, raw: { mood: 3, hunger: 5, energy: 5 }, cook: { mood: 5, hunger: 8, energy: 8, buff: 'ult2' } } },
+    odds: [['mush', .40], ['mushS', .13], ['mushW', .13], ['mushC', .14], ['mushP', .14], ['mushT', .04], ['mushG', .02]],   // V1.90 松茸只在早上 6～11 點；雷雨後 25% 羊肚菌
+    morel: .25, inkP: .058, inkLife: 2, maneP: .35, reishiP: .05, treeLife: 24, sniffP: .012, sniffLife: 3, tripP: .05, tripMax: .25, buffs: { sp: .15, crit: .15, regen: .05, ink: .7 }, nightOdds: [['mushN', .3]],   // 夜光菇只在晚上雨停時出現
     love: ['forest', 'earth', 'metal'], loveMood: 5, poison: { mood: -30, hunger: -5 }, lifeHours: 8, max: 6, buff: .05, goldXp: 100, cookX: 1.5 },
   pk: { shots: 5, energy: 6, hunger: 3, coin: 5, xp: 2, mood: 2, perfect: 20 },   // V1.88 射門 PK：每進一球的獎勵、5 球全進加碼
   runaway: { starveHours: 12, steps: 10000, help: 1500, lure: 2500, back: { hunger: 40, mood: 35, clean: 40 }, bondLoss: 15 },   // 餓肚子（飽食 0）超過 12 小時就離家出走；走 1 萬步才找得回來
@@ -347,7 +357,7 @@ function fresh(now = Date.now()) {
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] }, goalLv: 0,
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, lounge: { lv: 1, at: 0, decor: { placed: { paper: 'paper_cream' }, pos: {}, flip: {} } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
-    cores: [], ball: { best: 0, goals: 0 }, pk: { best: 0, games: 0, goals: 0, kinds: [] }, acc: [], accAdj: {}, accOwned: [], accLv: {}, mush: [], mushChk: 0, mushDex: [], mushBuff: { atk: 0, def: 0 }, goldGlow: 0, goldKnown: false, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, relics: [], relicGot: [], eggBuys: 0, foster: [], fusionHouse: false, fosterPaid: false, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
+    cores: [], ball: { best: 0, goals: 0 }, pk: { best: 0, games: 0, goals: 0, kinds: [] }, acc: [], accAdj: {}, accOwned: [], accLv: {}, mush: [], mushChk: 0, mushDex: [], mushBuff: { atk: 0, def: 0 }, mushDays: {}, trip: null, tripDone: null, mushAll: false, goldGlow: 0, goldKnown: false, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, relics: [], relicGot: [], eggBuys: 0, foster: [], fusionHouse: false, fosterPaid: false, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
     events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
@@ -419,8 +429,10 @@ function sanitize(o, now = Date.now()) {
     r.accLv = {}; if (o.accLv && typeof o.accLv === 'object') for (const k of r.accOwned) { const v = int(o.accLv[k], 0, 0, 4); if (v) r.accLv[k] = v; }
     const own = new Set(r.accOwned), seen = {}; r.acc = Array.isArray(o.acc) ? o.acc.filter(k => A[k] && own.has(k) && !seen[A[k].slot] && (seen[A[k].slot] = 1)) : [];
     r.accAdj = {}; if (o.accAdj && typeof o.accAdj === 'object') for (const sl of ['head', 'face', 'mouth', 'neck']) { const v = o.accAdj[sl]; if (Array.isArray(v) && v.length === 3 && v.every(n => Number.isFinite(n))) r.accAdj[sl] = [clamp(Math.round(v[0]), -8, 8), clamp(Math.round(v[1]), -8, 8), clamp(Math.round(v[2]), -5, 5)]; } }   // V1.88 寵物裝飾
-  r.mush = Array.isArray(o.mush) ? o.mush.filter(m => m && CONFIG.mush.kinds[m.k]).slice(0, CONFIG.mush.max).map(m => ({ k: m.k, x: clamp(Math.round(+m.x || 60), 6, 120), y: clamp(Math.round(+m.y || 96), 84, 106), at: num(m.at, 0, 0, 9e15), fake: m.fake ? 1 : 0 })) : [];
-  r.mushChk = num(o.mushChk, 0, 0, 9e15); r.mushDex = Array.isArray(o.mushDex) ? [...new Set(o.mushDex.filter(k => CONFIG.mush.kinds[k]))] : []; r.mushBuff = o.mushBuff && typeof o.mushBuff === 'object' ? { atk: o.mushBuff.atk ? 1 : 0, def: o.mushBuff.def ? 1 : 0 } : { atk: 0, def: 0 };
+  r.mush = Array.isArray(o.mush) ? o.mush.filter(m => m && CONFIG.mush.kinds[m.k]).slice(0, CONFIG.mush.max + 6).map(m => ({ k: m.k, x: clamp(Math.round(+m.x || 60), 6, 120), y: clamp(Math.round(+m.y || 96), 84, 106), at: num(m.at, 0, 0, 9e15), fake: m.fake ? 1 : 0, ...(m.life ? { life: num(m.life, 1, 1, 48) } : {}), ...(['tree1', 'tree2'].includes(m.on) ? { on: m.on } : {}), ...(m.dig ? { dig: 1 } : {}) })) : [];
+  r.mushChk = num(o.mushChk, 0, 0, 9e15); r.mushDex = Array.isArray(o.mushDex) ? [...new Set(o.mushDex.filter(k => CONFIG.mush.kinds[k]))] : []; r.mushBuff = Object.fromEntries(MUSH_BUFFS.map(k => [k, o.mushBuff && o.mushBuff[k] ? 1 : 0]));
+  r.mushDays = o.mushDays && typeof o.mushDays === 'object' ? Object.fromEntries(['ink', 'tree', 'sniff', 'trip'].map(k => [k, typeof o.mushDays[k] === 'string' ? o.mushDays[k].slice(0, 10) : ''])) : {};
+  r.trip = o.trip && typeof o.trip === 'object' && o.trip.back ? { key: String(o.trip.key || ''), name: String(o.trip.name || '').slice(0, 20), at: num(o.trip.at, 0, 0, 9e15), back: num(o.trip.back, 0, 0, 9e15) } : null; r.tripDone = null; r.mushAll = !!o.mushAll;
   r.goldGlow = num(o.goldGlow, 0, 0, 9e15); r.goldKnown = !!o.goldKnown;
   { const k = o.pk && typeof o.pk === 'object' ? o.pk : {}; r.pk = { best: int(k.best, 0, 0, 5), games: int(k.games, 0, 0, 1e7), goals: int(k.goals, 0, 0, 1e7), kinds: Array.isArray(k.kinds) ? [...new Set(k.kinds.filter(x => /^[a-z]{3,10}$/.test(x)))].slice(0, 20) : [] }; }   // V1.88 射門 PK
   r.den = { level: int(o.den && o.den.level, 1, 1, CONFIG.den.length) };
@@ -541,19 +553,29 @@ function pickApple(st, now = Date.now()) {
 }
 function ensureCrave(st, now = Date.now()) { if (st.hatched && (!st.crave || now >= st.crave.until)) pickCrave(st, now); return st.crave; }
 /* ===== V1.88 🍄 雨後蘑菇 ===== */
-const MUSH_KEYS = ['mush', 'mush_c', 'mushS', 'mushS_c', 'mushX', 'mushX_c', 'mushW', 'mushW_c', 'mushN', 'mushN_c', 'mushG'];
+const MUSH_KEYS = ['mush', 'mush_c', 'mushS', 'mushS_c', 'mushX', 'mushX_c', 'mushW', 'mushW_c', 'mushN', 'mushN_c', 'mushG', ...['mushC', 'mushP', 'mushM', 'mushT', 'mushL', 'mushR', 'mushK', 'mushB'].flatMap(k => [k, k + '_c'])];
+const MUSH_BUFFS = ['atk', 'def', 'sp', 'half', 'first', 'crit', 'peek', 'regen', 'ink', 'ult2'];
 const isWet = w => w === 'rain' || w === 'storm';
 function mushPick(rand, night) { const M = CONFIG.mush; if (night) for (const [k, p] of M.nightOdds) if (rand() < p) return k; let r = rand(), a = 0; for (const [k, p] of M.odds) { a += p; if (r < a) return k; } return 'mush'; }
 /* 一小時一小時看天氣：從下雨變成沒下雨的那一刻，院子冒出蘑菇（放太久會枯掉） */
 function mushTick(st, now = Date.now(), rand = Math.random) {
-  const M = CONFIG.mush; st.mush = (st.mush || []).filter(m => now - m.at < M.lifeHours * H);
+  const M = CONFIG.mush; st.mushDays = st.mushDays || {}; st.mush = (st.mush || []).filter(m => now - m.at < (m.life || M.lifeHours) * H && m.at <= now + H);
+  const yard = () => st.mush.filter(m => !m.on && !m.dig).length, dk = t => dayKey(t), add = (o) => st.mush.push(Object.assign({ x: 8 + Math.round(rand() * 112), y: 86 + Math.round(rand() * 18), fake: 0 }, o));
+  if (st.trip && now >= st.trip.back) { st.inv.mushB = (st.inv.mushB || 0) + 1; if (!st.mushDex.includes('mushB')) st.mushDex.push('mushB'); st.tripDone = { name: st.trip.name, at: st.trip.back }; journal(st, st.trip.back, `${st.trip.name} 自己跑出去，叼回一顆黑松露！`); st.trip = null; }
   if (!st.mushChk || now - st.mushChk > 48 * H) st.mushChk = now - 48 * H;
   for (let t = Math.floor(st.mushChk / H) * H + H; t <= now; t += H) {
     if (isWet(weatherAt(t - H)) && !isWet(weatherAt(t)) && now - t < M.lifeHours * H) {
       const hr = new Date(t + 8 * H).getUTCHours(), night = hr >= 19 || hr < 5, el = st.route || '';
       let n = 2 + Math.floor(rand() * 3) + (['forest', 'earth'].includes(el) ? 1 : 0);   // 森林、大地的鼻子比較靈
-      while (n-- > 0 && st.mush.length < M.max) { const k = mushPick(rand, night); st.mush.push({ k, x: 8 + Math.round(rand() * 112), y: 86 + Math.round(rand() * 18), at: t, fake: 0 }); }
+      const storm = weatherAt(t - H) === 'storm', morning = hr >= 6 && hr < 11;
+      while (n-- > 0 && yard() < M.max) { let k = storm && rand() < M.morel ? 'mushM' : mushPick(rand, night); if (k === 'mushT' && !morning) k = 'mush'; add({ k, at: t }); }
     }
+    const hr = new Date(t + 8 * H).getUTCHours(), day = dk(t), nightKey = dk(t - 6 * H);
+    if ([20, 21, 22, 23, 0, 1].includes(hr) && st.mushDays.ink !== nightKey && rand() < M.inkP && now - t < M.inkLife * H) { st.mushDays.ink = nightKey; for (let i = 1 + Math.floor(rand() * 2); i-- > 0;) add({ k: 'mushK', at: t, life: M.inkLife }); }   // 墨汁鬼傘：晚上冒出來，2 小時就化掉
+    if (hr >= 7 && st.mushDays.tree !== day) { st.mushDays.tree = day; if (now - t < M.treeLife * H) { if (rand() < M.maneP) add({ k: 'mushL', at: t, life: M.treeLife, on: 'tree1' }); if (rand() < M.reishiP) add({ k: 'mushR', at: t, life: M.treeLife, on: 'tree2' }); } }   // 樹上的猴頭菇、樹根的靈芝
+    if (hr >= 8 && hr < 22 && st.hatched && ['forest', 'earth'].includes(st.route) && st.mushDays.sniff !== day && rand() < M.sniffP && now - t < M.sniffLife * H) { st.mushDays.sniff = day; add({ k: 'mushB', at: t, life: M.sniffLife, dig: 1 }); }   // 草系、岩系聞到松露
+    if (hr === 10 && st.mushDays.trip !== day && !st.trip) { st.mushDays.trip = day; const L = (st.roster || []).map((p, i) => ({ p, i })).filter(o => o.p.hatched !== false && ['forest', 'earth'].includes(o.p.route) && !inNest(o.p, t));
+      if (L.length && rand() < Math.min(M.tripMax, M.tripP * L.length)) { const o = L[Math.floor(rand() * L.length)]; st.trip = { key: o.p.seed != null ? String(o.p.seed) : 'i' + o.i, name: o.p.name || '夥伴', at: t, back: t + H + Math.round(rand() * H) }; if (now >= st.trip.back) { st.inv.mushB = (st.inv.mushB || 0) + 1; if (!st.mushDex.includes('mushB')) st.mushDex.push('mushB'); st.tripDone = { name: st.trip.name, at: st.trip.back }; st.trip = null; } } }   // 休息室的草系、岩系自己出去找松露
   }
   st.mushChk = now;
 }
@@ -577,7 +599,7 @@ function mushEat(st, key, now = Date.now()) {
   if (E === 'poison') { st.mood = clamp(st.mood + M.poison.mood); st.hunger = clamp(st.hunger + M.poison.hunger); st.energy = 0; journal(st, now, '吃到毒蘑菇，吐了…'); return { ok: true, poison: true }; }
   if (E === 'gold') { st.goldGlow = now + 24 * H; st.goldKnown = true; const xp = addXP(st, M.goldXp); journal(st, now, '吃了金色蘑菇，全身發光！'); return { ok: true, gold: true, xp }; }
   const love = M.love.includes(st.route) ? M.loveMood : 0; st.mood = clamp(st.mood + E.mood + love); st.hunger = clamp(st.hunger + E.hunger); st.energy = clamp(st.energy + E.energy);
-  let xp = 0; if (E.xp) xp = addXP(st, E.xp); if (E.buff) st.mushBuff[E.buff] = 1;
+  let xp = 0; if (E.xp) xp = addXP(st, E.xp); if (E.buff) { st.mushBuff = st.mushBuff || {}; st.mushBuff[E.buff] = 1; }
   return { ok: true, eff: E, love, xp, buff: E.buff || null, cooked };
 }
 function applyTime(st, now = Date.now()) {
@@ -1724,7 +1746,7 @@ const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, S
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   eqStats, eqApply, accUpgrade, eqGift,
-  plotState, plant, harvest, water, thirstyPlots, buySprinkler, buySeed, buyDecor, placeDecor, loungeTick, upgradeLounge, helpSearch, lureFood, mushTick, pickMush, mushSell, mushCook, mushEat, MUSH_KEYS, buyItem, useCandy,
+  plotState, plant, harvest, water, thirstyPlots, buySprinkler, buySeed, buyDecor, placeDecor, loungeTick, upgradeLounge, helpSearch, lureFood, mushTick, pickMush, mushSell, mushCook, mushEat, MUSH_KEYS, MUSH_BUFFS, buyItem, useCandy,
   toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, releasePet, PET_NAMES, CORE_KINDS, LEFT_NAME, guideStep, guideDo, fosterSwap, whereIs, inNest, loveTick, moveOut, eggReady, lostPets, recallLost, ownedIds, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, selectRod, allPets, giveEmber, emberShare, setTeam, TRAIN_TIER, trainLvOf, trainTier, trainLvUp, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 Object.assign(API, { EARN_NAME, SPEND_NAME, BADGES, BADGE, statsOf, statAdd, statVal, checkBadges, playTick, weekKey, sumOf }); wrapStats(API);

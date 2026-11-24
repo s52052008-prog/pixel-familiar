@@ -322,7 +322,7 @@ header{padding-top:10px}
 @media (max-width:380px){.gdp,.gfc{width:126px;height:126px}.gk{width:42px;height:42px}.gkU,.gkT{left:42px}.gkD,.gkX{left:42px;top:84px}.gkL,.gkS{top:42px}.gkR,.gkC{left:84px;top:42px}}
 #gBanner{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:90;pointer-events:none}#gBanner img{width:min(70vw,300px);image-rendering:pixelated;display:block;animation:gbPop .9s ease-out forwards}#gBanner.gb_gameover img{width:min(60vw,240px);animation:gbDrop 1.3s ease-out forwards}
 @keyframes gbPop{0%{transform:scale(.3);opacity:0}25%{transform:scale(1.15);opacity:1}40%{transform:scale(1)}80%{opacity:1}100%{transform:scale(1.3);opacity:0}}@keyframes gbDrop{0%{transform:translateY(-60px);opacity:0}30%{transform:translateY(0);opacity:1}40%{transform:translateY(-8px)}50%{transform:translateY(0)}85%{opacity:1}100%{opacity:0}}
-.rimg{height:56px;margin-bottom:4px;image-rendering:pixelated;vertical-align:middle}.rimg.go{height:72px}.coinSpin img{height:1.1em;image-rendering:pixelated;vertical-align:-.15em}
+.mchip{display:inline-flex;gap:1px;background:rgba(0,0,0,.35);border-radius:6px;padding:0 3px;margin-left:3px}.mchip img{height:14px;vertical-align:middle}.rimg{height:56px;margin-bottom:4px;image-rendering:pixelated;vertical-align:middle}.rimg.go{height:72px}.coinSpin img{height:1.1em;image-rendering:pixelated;vertical-align:-.15em}
 /* V1.66 組合拳：遊戲機風格的十字鍵與 AB 鍵 */
 .tctl.pad{display:flex!important;justify-content:space-between;align-items:center;gap:10px;padding:2px 18px 10px}
 .tctl.pad .dpad{position:relative;width:126px;height:126px}
@@ -1690,7 +1690,7 @@ function switchToPair(){if(!s.pair||evo||modeBusy()||(B&&!B.over))return;cancelM
 /* ===== V1.86.7 休息室：小窩裡休息的夥伴住這裡，自己吃、自己喝、自己玩、自己睡 ===== */
 const LG={r:{},sel:null},LG_DEP=[-4,6,0,9,-7,3,-1];
 const lgKey=(p,i)=>String(p.seed!=null?p.seed:'i'+i);
-function lgPets(){const n=Date.now();return s.roster.map((p,i)=>({p,i})).filter(o=>o.p.hatched!==false&&!PC.inNest(o.p,n))}
+function lgPets(){const n=Date.now();return s.roster.map((p,i)=>({p,i})).filter(o=>o.p.hatched!==false&&!PC.inNest(o.p,n)&&!(s.trip&&s.trip.key===lgKey(o.p,o.i)))}
 const LGSPR={};
 function feederSpr(lv){const k='f'+lv;if(LGSPR[k])return LGSPR[k];{const a=artCv('feeder'+lv);if(a)return LGSPR[k]=a}const g=grid(18,27),R=(x,y,w,h,c)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)px(g,x+i,y+j,c)},[lid,bw,bh]=[['#5a8ab0','#e8584a','#ff8a7a'],['#3a9a5a','#4a8ae8','#8ab8ff'],['#c8901a','#e8b030','#ffe066']][lv-1];
  R(3,1,12,13,'#d8f0f8');R(4,2,2,11,'#ffffff');R(4,6,10,7,'#c88a4a');for(let i=0;i<5;i++)px(g,5+i*2,7+(i%2)*3,'#a8642a');R(2,0,14,2,lid);R(6,14,6,3,lid);
@@ -1728,6 +1728,7 @@ function lgFrame(r,now){if(r.tx!=null)return['idle1','jump0'][Math.floor(now/130
  switch(r.act){case'eat':case'drink':return['eat1','eat2'][Math.floor(now/220)%2];case'sleep':return Math.floor(now/900)%2?'sleep0':'sleep1';case'perch':return now%4000<160?'blink':['idle0','idle1'][Math.floor(now/600)%2];case'play':return['jump0','jump1','jump2','jump1','happy0','happy1'][Math.floor(now/120)%6];
   default:return now%3200<160?'blink':['idle0','idle1'][Math.floor(now/500)%2]}}
 function drawLounge(now,dt){lgUpdate(now,dt);if(ARR.on)return;
+ if(s.trip){const x=104,y=PET_Y+30;ctx.fillStyle='#3a2a1a';ctx.fillRect(x-1,y-1,16,13);ctx.fillStyle='#fff8e0';ctx.fillRect(x,y,14,11);ctx.fillStyle='#b8a888';for(let j=0;j<3;j++)ctx.fillRect(x+2,y+3+j*3,10-j*2,1);ctx.fillStyle='#e84a4a';ctx.fillRect(x+6,y-2,2,2)}   // V1.90 出去找松露的紙條
  for(const r of Object.values(LG.r).sort((a,b)=>a.dep-b.dep)){const p=r.p,S=sheet(petKey(gidOf(p),formCode(p.stage,p.route))),fn=lgFrame(r,now),fi=S.idx[fn]??S.idx.idle0??0,x=Math.round(r.x),gy=PET_Y+r.dep,
    y=gy-(r.lift||0)-(r.act==='play'&&r.tx==null&&!rm()?Math.round(Math.abs(Math.sin(now/130))*3):0);
   if(!r.lift){ctx.fillStyle='rgba(20,60,30,.25)';ctx.fillRect(x+13,gy+44,22,2);ctx.fillRect(x+15,gy+43,18,1)}
@@ -2354,7 +2355,7 @@ ${S.map((x,i)=>`<div class="frow"${x.mine?' style="border-color:#ffe066"':''}><d
  document.querySelectorAll('[data-rk]').forEach(b=>b.onclick=()=>{sfx('tap');rankDialog(b.dataset.rk)});$('rkBack').onclick=friendsDialog;
  document.querySelectorAll('[data-rkk]').forEach(c=>{const x=c.dataset.rkk==='me'?me:L.find(q=>q.code===c.dataset.rkk),p=x&&x.card&&x.card.pet;if(x&&x.mine&&s.hatched){thumb(c,formKey(),'happy1');return}if(p&&p.gene)try{thumb(c,petKey('x:'+p.gene,formCode(p.stage,p.route)),'happy1')}catch(e){}})}
 function myCard(){const D=s.decor,pl=(s.plots||[]).filter((p,i)=>{const q=PC.plotState(s,i,Date.now());return q&&!q.empty&&!q.ripe}).length;
- return{v:1,pet:s.hatched?{name:s.name,gene:encodeGenome(curGenome()),stage:s.stage,route:s.route,sex:s.sex,lv:lvl(),acc:s.acc,accAdj:s.accAdj,accLv:Object.fromEntries((s.acc||[]).map(k=>[k,s.accLv[k]|0]))}:null,ft:s.hatched?ftSnap():null,runaway:s.runaway?{got:s.runaway.got||0,need:CONFIG.runaway.steps}:null,mush:(s.mush||[]).map(m=>m.k).slice(0,6),adv:Math.max(0,((s.adv&&s.adv.stage)||1)-1),pk:(s.pk&&s.pk.best)||0,decor:{placed:D.placed,pos:D.pos||{},flip:D.flip||{}},plots:pl,pl:(s.plots||[]).map((p,i)=>{const q=PC.plotState(s,i,Date.now());return[plotStage(q),q&&q.thirsty?1:0]}),dex:(s.dex||[]).length,pets:PC.petCount(s),den:s.den.level}}
+ return{v:1,pet:s.hatched?{name:s.name,gene:encodeGenome(curGenome()),stage:s.stage,route:s.route,sex:s.sex,lv:lvl(),acc:s.acc,accAdj:s.accAdj,accLv:Object.fromEntries((s.acc||[]).map(k=>[k,s.accLv[k]|0]))}:null,ft:s.hatched?ftSnap():null,runaway:s.runaway?{got:s.runaway.got||0,need:CONFIG.runaway.steps}:null,mush:(s.mush||[]).filter(m=>!m.dig&&m.at<=Date.now()).map(m=>m.k).slice(0,6),adv:Math.max(0,((s.adv&&s.adv.stage)||1)-1),pk:(s.pk&&s.pk.best)||0,decor:{placed:D.placed,pos:D.pos||{},flip:D.flip||{}},plots:pl,pl:(s.plots||[]).map((p,i)=>{const q=PC.plotState(s,i,Date.now());return[plotStage(q),q&&q.thirsty?1:0]}),dex:(s.dex||[]).length,pets:PC.petCount(s),den:s.den.level}}
 async function cardSync(force,keep){try{if(!await pushUrl())return;const c=myCard(),h=JSON.stringify(c)+ownerName();if(!force&&(h===SOC.cardH||Date.now()-SOC.cardAt<10*60e3))return;
  const r=await pushPost('/me',{name:ownerName(),card:c},keep);if(r&&r.ok){SOC.cardH=h;SOC.cardAt=Date.now();SOC.code=r.code}}catch(e){}}
 function cardSoon(){clearTimeout(SOC.timer);SOC.timer=setTimeout(()=>cardSync(),30000)}
@@ -2898,7 +2899,10 @@ function relicDialog(){const RL=CONFIG.relics,RI=RL.items,iv=s.inv.relics||{},pe
  document.querySelectorAll('[data-un]').forEach(b=>b.onclick=()=>{const[i,k]=b.dataset.un.split('|'),r=PC.unequipRelic(s,P(i),k);toast(r.msg);sfx('tap');save();relicDialog()});
  document.querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>{const k=b.dataset.sell,R=RI[k];confirmBox('💰 真的要賣掉嗎？',`確定要把「${R.icon} ${R.name}」賣掉換 ${RL.sell} 金幣嗎？賣掉就拿不回來了（只能再打王碰運氣）。`,`確定賣掉（+${RL.sell}）`,()=>{const r=PC.sellRelic(s,k);toast(r.ok?'💰 '+r.msg:'❌ '+r.msg,3000);if(r.ok){sfx('level');save();renderUI()}relicDialog()})})}
 const POISON_K=['mushW','mushX','mushS'];
-function mushBuffApply(me){const M=s.mushBuff||{},k=1+CONFIG.mush.buff;if(M.atk){me.atk=Math.round(me.atk*k);blog('🍄 吃過烤花斑毒菇，這場攻擊力 +5%！')}if(M.def){me.def=Math.round(me.def*k);blog('🍄 吃過烤夜光菇，這場防禦力 +5%！')}if(M.atk||M.def){s.mushBuff={atk:0,def:0};save()}}
+function mushBuffApply(me,foe){const M=s.mushBuff||{},k=1+CONFIG.mush.buff,BF=CONFIG.mush.buffs;if(M.atk){me.atk=Math.round(me.atk*k);blog('🍄 吃過烤花斑毒菇，這場攻擊力 +5%！')}if(M.def){me.def=Math.round(me.def*k);blog('🍄 吃過烤夜光菇，這場防禦力 +5%！')}
+ const L=[];if(M.sp){me.spUp=(me.spUp||0)+BF.sp;L.push('烤雞油菌：屬性技傷害 +15%')}if(M.half){me.halfNext=true;L.push('烤牛肝菌：第一次受傷減半')}if(M.first){me.mushFirst=true;L.push('烤羊肚菌：第一回合先出手')}if(M.crit){me.critUp=(me.critUp||0)+BF.crit;L.push('烤松茸：容易打出會心一擊')}
+ if(M.peek){B.peek=1;L.push('烤猴頭菇：看穿一次猜拳')}if(M.regen){me.mushRegen=BF.regen;L.push('烤靈芝：每回合回一點血')}if(M.ink&&foe){foe.inked=1;L.push('烤墨汁鬼傘：敵人第一招容易打歪')}if(M.ult2){me.ultMax=2;L.push('烤黑松露：大絕招可以用兩次')}
+ for(const t of L)blog('🍄 '+t+'！');B.mushIcons=PC.MUSH_BUFFS.filter(x=>M[x]);if(PC.MUSH_BUFFS.some(x=>M[x])){s.mushBuff={};save()}}
 function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');return}if(nestBusy())return;cancelMode();petX=PET_X;const r=PC.startAdventure(s,n,Date.now());if(!r.ok){toast(r.msg);return}save();renderUI();
  const me=PC.mkFighter(s.name,formKey(),lvl(),s.route,tier(),s.mood,s.bond),foe=foeFighter(n);
  PC.buffFighter(me,s,s.accLv);me.aura=auraOf(s);me.stage=s.stage;me.eqAcc=s.acc;me.eqAdj=s.accAdj;   // V1.42：進化階段、訓練成果、星耀覺醒
@@ -2915,7 +2919,7 @@ function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');retu
  {const fs=[foe,foe2].filter(Boolean),msg=[];for(const m of[me,me2])if(m){if(m.eqScare){for(const f of fs)f.scared=Math.max(f.scared||0,m.eqScare);msg.push('🚬 雪茄的煙圈嚇到對手了，第一回合打不太用力')}if(m.eqSlow){for(const f of fs)f.spd*=1-m.eqSlow;msg.push('🎃 南瓜頭好可怕，對手動作變慢了')}if(m.eqStun&&Math.random()<m.eqStun){foe.stun=1;msg.push(m.eqSets&&m.eqSets.includes('boss')?'😎 老大氣場全開！對手嚇呆了，第一回合不能動':'🎃 對手怕到發抖，第一回合不能動')}if(m.halfNext&&m.eqSets&&m.eqSets.includes('gent'))msg.push('🎩 紳士風度：第一次被打只受一半傷害')}B.eqMsg=[...new Set(msg)]}   /* V1.88 裝備的開場效果 */$('bBanner').classList.add('hidden');
  $('battle').classList.remove('hidden');$('bResult').classList.add('hidden');$('moves').classList.remove('hidden');showPanel('mpMain');
  $('bFast').textContent=`⏩ ×${BSPD}`;$('bFast').classList.toggle('on',BSPD>1);unlockAudio();B.bgm=foe.big?'big':foe.boss?'mini':'normal';bgmPlay(B.bgm);   // V1.81 戰鬥音樂
- setTimeout(()=>{for(const t of B.eqMsg||[])blog(t)},900);$('mvSp').textContent='✨ '+SP_NAME[me.el];blog(`📍 ${ARENA_NAME[arenaFor(n,foe)]}\n${foe.name} 出現了！（${foe.elTxt||EL_NAME[foe.el]} Lv.${foe.level}）${foe2?`\n${foe2.name} 也跳出來了！（${EL_NAME[foe2.el]} Lv.${foe2.level}）`:''}${duo?`\n🐾 ${me.name} 和 ${me2.name} 一起上場！點敵人可以選要打哪一隻`:s.pair?`\n（${s.pair.name} 體力不夠，留在家休息）`:''}`);mushBuffApply(me);bUI();sfx('play')}
+ setTimeout(()=>{for(const t of B.eqMsg||[])blog(t)},900);$('mvSp').textContent='✨ '+SP_NAME[me.el];blog(`📍 ${ARENA_NAME[arenaFor(n,foe)]}\n${foe.name} 出現了！（${foe.elTxt||EL_NAME[foe.el]} Lv.${foe.level}）${foe2?`\n${foe2.name} 也跳出來了！（${EL_NAME[foe2.el]} Lv.${foe2.level}）`:''}${duo?`\n🐾 ${me.name} 和 ${me2.name} 一起上場！點敵人可以選要打哪一隻`:s.pair?`\n（${s.pair.name} 體力不夠，留在家休息）`:''}`);mushBuffApply(me,foe);bUI();sfx('play')}
 let BLOG=[];function blog(t){if(!t)return;BLOG.push(String(t));if(BLOG.length>40)BLOG.shift();const el=$('blog');el.innerHTML=BLOG.map((x,i)=>`<div class="bl${i===BLOG.length-1?' now':''}">${esc(x)}</div>`).join('');el.scrollTop=el.scrollHeight}   /* V1.84 戰鬥播報：一行一行記下來 */
 /* ---------------- 戰鬥場地：依怪獸屬性決定 ---------------- */
 const ARENA_NAME={meadow:'🌼 草原',rock:'🌋 火山岩地',water:'🌊 水邊',forest:'🌲 森林深處',canyon:'🪨 大地峽谷',sky:'☁️ 天空之巔',storm:'⛈️ 雷雲山',mine:'⚙️ 鋼鐵礦坑',tower:'✨ 星之塔'};
@@ -2977,7 +2981,7 @@ function fitArena(){const bx=$('arenaBox'),inn=document.querySelector('#battle .
 addEventListener('resize',()=>{if(B)fitArena()});
 function bUI(){setTimeout(()=>{pixifyDom($('moves'));fitArena()},0);const{me,foe}=B,danger=dangerNow();
  $('fName').innerHTML=`${esc(foe.name)}  Lv.${foe.level} ${elHTML(foe.elA||foe.el)}${foe.el2s?'＋'+elHTML(foe.el2s):''}`;$('fChips').innerHTML=talChips(foe)+bossStat(foe);$('fHp').textContent=`${foe.hp}/${foe.max}`;$('fBar').style.width=foe.hp/foe.max*100+'%';
- $('mChips').innerHTML=talChips(me)+petStat(me);$('mName').innerHTML=`${esc(me.name)}  Lv.${me.level} ${elHTML(me.el)}${tier()?' '+'✦'.repeat(tier()):''}${me.charged?' ⚡蓄力中':''}${danger?'　⚠️ 危險！':''}`;$('mHp').textContent=`${me.hp}/${me.max}`;$('mBar').style.width=me.hp/me.max*100+'%';
+ $('mChips').innerHTML=talChips(me)+petStat(me)+(B.mushIcons&&B.mushIcons.length?`<span class="mchip" title="吃過的蘑菇">${B.mushIcons.map(x=>MUSH_BUFF_ICON[x]).filter(Boolean).map(k=>k.startsWith('mush')?`<img src="sprites/mush/${k}.png" alt="">`:'🍄').join('')}</span>`:'');$('mName').innerHTML=`${esc(me.name)}  Lv.${me.level} ${elHTML(me.el)}${tier()?' '+'✦'.repeat(tier()):''}${me.charged?' ⚡蓄力中':''}${danger?'　⚠️ 危險！':''}`;$('mHp').textContent=`${me.hp}/${me.max}`;$('mBar').style.width=me.hp/me.max*100+'%';
  $('mBar').style.background=me.hp/me.max<.3?'#e86a6a':'';
  {const m2=B.me2,f2=B.foe2;$('m2Box').classList.toggle('hidden',!m2);if(m2){$('m2Chips').innerHTML=talChips(m2)+petStat(m2);$('m2Name').innerHTML=`🐾 ${esc(m2.name)}  Lv.${m2.level} ${elHTML(m2.el)}${m2.charged?' ⚡蓄力中':''}`;$('m2Hp').textContent=`${Math.max(0,m2.hp)}/${m2.max}`;$('m2Bar').style.width=Math.max(0,m2.hp)/m2.max*100+'%';$('m2Bar').style.background=m2.hp/m2.max<.3?'#e86a6a':''}
   $('f2Box').classList.toggle('hidden',!f2);if(f2){$('f2Name').innerHTML=`${esc(f2.name)}  Lv.${f2.level} ${elHTML(f2.el)}`;$('f2Chips').innerHTML=talChips(f2)+petStat(f2);$('f2Hp').textContent=`${Math.max(0,f2.hp)}/${f2.max}`;$('f2Bar').style.width=Math.max(0,f2.hp)/f2.max*100+'%'}
@@ -2987,7 +2991,7 @@ function bUI(){setTimeout(()=>{pixifyDom($('moves'));fitArena()},0);const{me,foe
  $('pickTag').classList.toggle('hidden',!duoPick||B.busy);$('pickTag').innerHTML=B.pick==='me2'?`🐾 輪到 ${A.name} 出招（2/2）<u style="margin-left:8px;cursor:pointer" id="pickBack">↩ 重選</u>`:`🐾 先選 ${B.me.name} 的招式（1/2）`;if($('pickBack'))$('pickBack').onclick=()=>{B.pick=null;B.pendMv=null;showPanel('mpMain');bUI()};
  $('mvPo').innerHTML=`🧪 回復藥水 ×${s.inv.potion}<small>${A.name} 回復 ${Math.round(A.max*CONFIG.potion.heal*(1+(A.eqHeal||0)))}</small>`;$('mvPo2').innerHTML=`💖 超級藥水 ×${s.inv.potion2||0}<small>${A.name} 回復全部 HP</small>`;
  $('mvTk').innerHTML=`💥 衝撞<small>${tag(false)}</small>`;$('mvCh').innerHTML=`⚡ 輔助：蓄力<small>${A.charged?'已蓄力':'下一擊 ×1.5'}</small>`;$('mvSp').innerHTML=`✨ ${SP_NAME[A.el]}<small>${A.cd>0?`冷卻 ${A.cd} 回合`:tag(true)}</small>`;
- $('mvUlt').innerHTML=`🌟 ${ULT_NAME[A.el]||'大絕招'}<small>${A.ultUsed?'這場用過了':`約 ${Math.round(PC.expectDamage(A,foe,true)*CONFIG.ult.power)}・每場一次`}</small>`;
+ $('mvUlt').innerHTML=`🌟 ${ULT_NAME[A.el]||'大絕招'}<small>${A.ultUsed?'這場用過了':`約 ${Math.round(PC.expectDamage(A,foe,true)*CONFIG.ult.power)}・${A.ultMax>1?`還能用 ${A.ultMax-(A.ultN||0)} 次`:'每場一次'}`}</small>`;
  {const K=CONFIG.counter[A.el]||CONFIG.counter.none,ok=CONFIG.counter.stages.includes(A.stage);$('mvCt').innerHTML=ok?`${K.icon} ${K.name}<small>${A.counterUsed?'這場用過了':'反擊技・先出手・每場一次'}</small>`:`🔒 反擊技<small>成年期解鎖</small>`}
  $('mvCombo').classList.toggle('hidden',!(B.me2&&!B.me2.out)||B.pick==='me2');$('mvCombo').innerHTML=`🤝 羈絆合擊<small>${B.comboUsed?'這場用過了':`兩隻一起衝・各 ${CONFIG.combo.mult} 倍`}</small>`;
  $('mvBag').innerHTML=`🎒 背包<small>🧪×${s.inv.potion} 💖×${s.inv.potion2||0} 🌈×${s.inv.elixir||0}</small>`;{const bad=!!(A.burnT>0||A.frost||A.curseT||A.doomT);$('mvEx').innerHTML=`🌈 萬靈藥 ×${s.inv.elixir||0}<small>${bad?'解除點燃、凍傷、混亂、死亡宣告':'身上沒有壞狀態'}</small>`;$('mvEx').disabled=B.busy||!(s.inv.elixir>0)||!bad}
@@ -3127,11 +3131,11 @@ function tapRush(o={}){return new Promise(res=>{const z=$('tapZone'),n=$('tapN')
   setTimeout(()=>{clearInterval(cd);live=false;z.removeEventListener('pointerdown',on);msg.textContent=o.go?`連打 ${taps} 下！`:`連打 ${taps} 下！威力 ×${PC.bondBoost(taps).toFixed(1)}`;setTimeout(()=>{z.classList.add('hidden');res(taps)},900)},T*1000)},700)})}
 /* 猜拳：敵人攻擊前 2 秒內選一個，回傳 { result, mult, me, foe } */
 const RPS_ICON={rock:'✊',scissors:'✌️',paper:'✋'};
-function rpsRound(){return new Promise(res=>{const z=$('rpsZone'),T=CONFIG.rps.seconds,bar=$('rpsBar').firstElementChild,btns=[...z.querySelectorAll('[data-rps]')];let done=false;
- z.classList.remove('hidden');btns.forEach(b=>{b.classList.remove('pick');b.disabled=false});$('rpsMsg').textContent='敵人要攻擊了！猜拳躲開它！';const t0=performance.now();
+function rpsRound(){return new Promise(res=>{const PEEK=B&&B.peek>0?PC.RPS[Math.floor(Math.random()*3)]:null;if(PEEK)B.peek=0;const z=$('rpsZone'),T=CONFIG.rps.seconds,bar=$('rpsBar').firstElementChild,btns=[...z.querySelectorAll('[data-rps]')];let done=false;
+ z.classList.remove('hidden');btns.forEach(b=>{b.classList.remove('pick');b.disabled=false});$('rpsMsg').textContent=PEEK?`👀 猴頭菇看穿了！敵人要出 ${RPS_ICON[PEEK]}`:'敵人要攻擊了！猜拳躲開它！';const t0=performance.now();
  const tick=setInterval(()=>{bar.style.width=Math.max(0,100-(performance.now()-t0)/(T*10))+'%'},50);
  const finish=me=>{if(done)return;done=true;clearInterval(tick);btns.forEach(b=>{b.disabled=true;if(b.dataset.rps===me)b.classList.add('pick')});
-  const foe=PC.RPS[Math.floor(Math.random()*3)],r=PC.rps(me,foe);
+  const foe=PEEK||PC.RPS[Math.floor(Math.random()*3)],r=PC.rps(me,foe);
   $('rpsMsg').textContent=`你 ${me?RPS_ICON[me]:'⌛'}　vs　${RPS_ICON[foe]} 敵人　→　${{win:'猜贏了！躲開攻擊！',tie:'平手！傷害 ×0.8',lose:me?'猜輸了…傷害 ×1.2':'來不及選…傷害 ×1.2'}[r.result]}`;
   sfx(r.result==='win'?'level':r.result==='tie'?'tap':'no');setTimeout(()=>{z.classList.add('hidden');res({...r,me,foe})},900)};
  btns.forEach(b=>b.onclick=()=>finish(b.dataset.rps));setTimeout(()=>finish(null),T*1000)})}
@@ -3169,12 +3173,13 @@ async function onMove(mv){if(!B||B.over||(mv!=='frozen'&&B.busy))return;unlockAu
  if(mv!=='frozen'&&mv!=='bond'&&mv!=='combo'&&B.pick!=='me2'&&B.me2&&B.me2.hp>0&&!B.me2.out&&!B.me2.frozen&&B.me.hp>0){   // 先記下第一隻的招式，換第二隻選
   B.pendMv=mv;B.pick='me2';showPanel('mpMain');sfx('tap');bUI();blog(`🐾 ${B.me.name}：${MV_NAME[mv]||mv}。\n接著選 ${B.me2.name} 要做什麼！`);return}
  let m2Pick=null;if(B.pick==='me2'){m2Pick=mv;mv=B.pendMv;B.pendMv=null}B.pick=null;
- if(mv==='ult')B.me.ultUsed=B.ultUsed=true;if(m2Pick==='ult')B.me2.ultUsed=true;showPanel('mpMain');
+ if(mv==='ult'){B.me.ultN=(B.me.ultN||0)+1;B.me.ultUsed=B.me.ultN>=(B.me.ultMax||1);B.ultUsed=true}if(m2Pick==='ult')B.me2.ultUsed=true;showPanel('mpMain');
  const{me,foe}=B;let boost=1;
  if(mv==='bond'){if(B.bondUsed||!dangerNow())return;const nb=PC.canBond(s);if(nb){blog('💸 '+nb+'…');sfx('no');return}B.bondUsed=true;PC.battleBond(s,Date.now());save();blog(`👏 花 ${CONFIG.bond.cost} 金幣買了加油棒！（之後要休息 ${CONFIG.bond.restHours} 小時才能再冒險）`);B.busy=true;bUI();const taps=await tapRush();boost=PC.bondBoost(taps);blog(`💗 連打 ${taps} 下，威力 ×${boost.toFixed(1)}！`);await sleep(900)}
  B.busy=true;bUI();
  const fm=foe.zeroNext?'zerohit':foe.breathN>0?'breath2':foe.ultState==='warned'?'bossult':foe.chanting?'spell':aiMove(foe);let first=mv==='bond'||mv==='guard'||mv==='mushbomb'||mv==='potion'||mv==='potion2'||mv==='elixir'||me.spd>foe.spd||(me.spd===foe.spd&&Math.random()<.5);
- if(foe.bt&&foe.bt.includes('wing'))first=false;if(!B.round&&me.tal==='bird'&&Math.random()<talP(me,'bird').first){first=true;tpop(me,'乘風！','#bfe8ff');blog(`🐦 乘風：${me.name} 搶先出手！`)}   /* V1.86 火鳳永遠先手；飛行系第一回合先動手 */
+ if(foe.bt&&foe.bt.includes('wing'))first=false;if(!B.round&&me.tal==='bird'&&Math.random()<talP(me,'bird').first){first=true;tpop(me,'乘風！','#bfe8ff');blog(`🐦 乘風：${me.name} 搶先出手！`)}
+ if(!B.round&&me.mushFirst){me.mushFirst=false;first=true;tpop(me,'搶先！','#ffe08a');blog(`🍄 羊肚菌的力量：${me.name} 搶先出手！`)}   /* V1.86 火鳳永遠先手；飛行系第一回合先動手 */
  const f2=B.foe2&&B.foe2.hp>0?B.foe2:null,fm2=f2?aiMove(f2):null;
  const me2=B.me2&&B.me2.hp>0&&!B.me2.out?B.me2:null,m2=mv==='combo'?null:me2?(m2Pick||(me2.cd===0&&Math.random()<.5?'special':'tackle')):null;   // 第二隻：玩家選的招（冰凍等特殊狀況才自動）
  const QUICK=['guard','bond','potion','potion2','elixir','counter'];
@@ -3193,6 +3198,7 @@ async function onMove(mv){if(!B||B.over||(mv!=='frozen'&&B.busy))return;unlockAu
   if(isFoe&&m==='spell'){await bossSpell(a,d);for(const t of[me,B.me2])if(t&&t.hp<=0)B.fx[sideOf(t)].faint=performance.now();continue}
   if(side==='foe'&&['bossult','breath2','zerohit'].includes(m)){await bossAct(foe,d,m);for(const t of[me,B.me2])if(t&&t.hp<=0)B.fx[sideOf(t)].faint=performance.now();continue}
   if(isFoe&&a.stun>0){a.stun=0;blog(`⚡ ${a.name} 全身麻痺，這回合動不了！`);B.fx[side].flash=performance.now()+600;bUI();await sleep(900);continue}
+  if(isFoe&&a.inked&&(m==='tackle'||m==='special')){a.inked=0;if(Math.random()<CONFIG.mush.buffs.ink){if(m==='special')a.cd=3;a.charged=false;tpop(a,'看不見！','#9aa8c8');spawn('bubble',6,{x:BPOS[side][0],y:BPOS[side][1]-10,vy:-6,jx:16,life:.9,spread:10},bparts);blog(`🦑 ${a.name} 眼睛被墨汁噴到，攻擊打歪了！`);bUI();await sleep(1000);continue}}
   if(isFoe&&(m==='tackle'||m==='special')&&!window.PF_NO_RPS){const r=await rpsRound();   // 敵人攻擊前猜拳
    const dz=r.result!=='win'&&Math.random()<(d.dodge||0)+(d.windT>0?CONFIG.counter.bird.dodge:0);   // V1.42 閃避訓練：猜拳沒贏也有機會閃開
    if(r.result==='win'||dz){if(m==='special')a.cd=3;a.charged=false;blog(dz?`🤸 閃避訓練的成果！${d.name} 一個側身閃開了 ${a.name} 的攻擊！`:`${a.name} 使出${m==='special'?'「'+SP_NAME[a.el]+'」':'撞擊'}！但 ${d.name} 靈巧地躲開了！`);{const A=B.fx[side],D=B.fx[sideOf(d)],dir=side.startsWith('foe')?-1:1;A.anim='jump';A.t0=performance.now();sfx('tap');await sleep(160);A.dx=12*dir;A.dy=-6*dir;D.dx=-16*dir;D.dy=-4;sfx('wake');await sleep(120);spawn('star',3,{x:BPOS[sideOf(d)][0],y:BPOS[sideOf(d)][1]-4,vy:-12,life:.6,spread:10},bparts);await sleep(260);A.dx=0;A.dy=0;await sleep(220);D.dx=0;D.dy=0;D.anim='happy';D.t0=performance.now()}   /* V1.84 閃避過場：敵人衝過來、我方往旁邊一跳 */
@@ -3205,6 +3211,7 @@ async function onMove(mv){if(!B||B.over||(mv!=='frozen'&&B.busy))return;unlockAu
  for(const t of[me,B.me2])if(t){t.roundCut=0;if(t.windT>0)t.windT--;if(t.leafT>0&&t.hp>0&&foe.hp>0){t.leafT--;const h=Math.min(t.max-t.hp,Math.round(t.max*CONFIG.counter.leaf.heal));if(h>0){t.hp+=h;spawn('leaf',4,{x:BPOS[sideOf(t)][0],y:BPOS[sideOf(t)][1],vy:-12,jx:20,life:.9,spread:14},bparts);blog(`🌿 森林守護：${t.name} 回復 ${h} HP`);bUI();await sleep(600)}}}
  await roundEnd();
  await bossTick();
+ if(foe.hp>0&&me.hp>0&&me.mushRegen&&me.hp<me.max){const h=Math.min(me.max-me.hp,Math.max(1,Math.round(me.max*me.mushRegen)));me.hp+=h;tpop(me,'+'+h,'#7af07a');blog(`🍄 靈芝的力量：${me.name} 回復 ${h} HP`);bUI();await sleep(600)}
  if(foe.hp>0)for(const f of[me,B.me2])if(f&&f.hp>0&&f.regen&&f.hp<f.max){const h=Math.min(f.max-f.hp,Math.round(f.max*f.regen));f.hp+=h;blog(`💚 苔石之心：${f.name} 回復 ${h} HP`);bUI();await sleep(700)}   // V1.52 寶物回血
  if(foe.hp>0)for(const f of[me,B.me2])if(f&&f.hp>0&&f.eqRegen&&f.hp<f.max){const h=Math.max(1,Math.min(f.max-f.hp,Math.round(f.max*f.eqRegen)));f.hp+=h;blog(`🌸 花圈的香氣：${f.name} 回復 ${h} HP`);bUI();await sleep(600)}   // V1.88 花圈
  if(foe.hp<=0&&B.foe2&&B.foe2.hp>0){B.fx.foe.faint=performance.now();blog(`${foe.name} 倒下了！剩下 ${B.foe2.name}！`);await sleep(1000);   // V1.79 前面那隻倒下：後面那隻補上
@@ -3543,20 +3550,28 @@ function drawApple(){const A=FEED.apple;if(!A)return;
  else{const ic=ICV[FI.icon];ctx.drawImage(ic,Math.round(A.x-ic.width/2),Math.round(A.y-ic.height+2))}}
 /* ---- 果核 ---- */
 /* ===== V1.88 🍄 雨後蘑菇（院子） ===== */
-const MUSH_ICON={};function mushIcon(k){if(MUSH_ICON[k])return MUSH_ICON[k];const c=document.createElement('canvas');c.width=9;c.height=9;const x=c.getContext('2d'),P=(a,b,w,h,col)=>{x.fillStyle=col;x.fillRect(a,b,w,h)};
+const MUSH_NEW=['mushC','mushP','mushM','mushT','mushL','mushR','mushK','mushB'],MUSH_IMG={};MUSH_NEW.forEach(k=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);MUSH_IMG[k]=c;MUSH_ICON[k]=c};im.src=`sprites/mush/${k}.png`});
+const MUSH_ICON={};function mushIcon(k){k=k.replace('_c','');if(MUSH_ICON[k])return MUSH_ICON[k];if(MUSH_NEW.includes(k)){const c=document.createElement('canvas');c.width=c.height=9;return c}const c=document.createElement('canvas');c.width=9;c.height=9;const x=c.getContext('2d'),P=(a,b,w,h,col)=>{x.fillStyle=col;x.fillRect(a,b,w,h)};
  const cap={mush:['#9a5a2a','#c07a3a','#e8b07a'],mushS:['#a8201a','#e8403a','#ffffff'],mushW:['#b8303a','#ee5a5a','#ffffff'],mushX:['#a8201a','#e8403a','#ffffff'],mushN:['#2a7a9a','#5fd8f0','#e0fcff'],mushG:['#a87a10','#ffd34a','#fff8c0']}[k]||['#9a5a2a','#c07a3a','#e8b07a'];
  P(1,1,7,1,'#2a1a10');P(0,2,9,3,'#2a1a10');P(1,2,7,3,cap[1]);P(2,1,5,1,cap[1]);P(1,4,7,1,cap[0]);P(3,5,3,3,'#2a1a10');P(3,5,3,3,k==='mushN'?'#c0f4ff':'#f4ead0');P(3,8,3,1,'#2a1a10');
  if(k==='mush'){P(3,2,1,1,cap[2]);P(6,3,1,1,cap[2])}else{P(2,2,1,1,cap[2]);P(5,2,1,1,cap[2]);P(4,3,1,1,cap[2]);P(7,3,1,1,cap[2])}if(k==='mushW')P(3,7,3,1,'#e8e0d0');
  return MUSH_ICON[k]=c}
-function drawMush(now){if(curView()!=='yard'||!s.mush||!s.mush.length)return;for(const m of s.mush){const ic=mushIcon(m.k),bob=0;
+function mushPos(m){if(m.on){const b=yBox(m.on),cx=Math.round((b[0]+b[2])/2);return m.on==='tree1'?{x:cx+5,y:b[3]-1}:{x:cx-7,y:b[3]+2}}return{x:m.x,y:m.y}}
+function drawMush(now){if(curView()!=='yard'||!s.mush||!s.mush.length)return;const nowMs=Date.now();for(const m0 of s.mush){if(m0.at>nowMs)continue;const P0=mushPos(m0),m={...m0,x:P0.x,y:P0.y};
+ if(m.dig){ctx.fillStyle='#5a3a20';ctx.fillRect(m.x-5,m.y-2,10,3);ctx.fillRect(m.x-4,m.y-3,8,1);ctx.fillStyle='#7a5230';ctx.fillRect(m.x-3,m.y-3,2,1);ctx.fillRect(m.x+1,m.y-2,2,1);if(!rm()&&Math.floor(now/500)%2){ctx.fillStyle='#fff3a6';ctx.font='bold 7px sans-serif';ctx.textAlign='center';ctx.fillText('?',m.x,m.y-6);ctx.textAlign='left'}continue}
+ if(MUSH_IMG[m.k]){const I=MUSH_IMG[m.k],h=m.k==='mushL'||m.k==='mushR'?10:12,w=Math.round(I.width*h/I.height);ctx.save();ctx.imageSmoothingEnabled=true;if(m.k==='mushK'){const left=(m.at+2*3600e3-nowMs)/3600e3;if(left<.5)ctx.globalAlpha=.5+left}ctx.drawImage(I,Math.round(m.x-w/2),Math.round(m.y-h),w,h);ctx.restore();continue}
+ const ic=mushIcon(m.k),bob=0;
  if((m.k==='mushN'||m.k==='mushG')&&!rm()){const a=.25+.15*Math.sin(now/300+m.x);ctx.fillStyle=m.k==='mushN'?`rgba(120,230,255,${a})`:`rgba(255,220,80,${a})`;ctx.beginPath();ctx.arc(m.x,m.y-4,7,0,7);ctx.fill()}
  ctx.drawImage(ic,m.x-4,m.y-9+bob);if(m.k==='mushG'&&!rm()&&Math.random()<.02)spawn('spark',1,{x:m.x,y:m.y-6,vy:-8,life:.6,spread:4})}}
-function tryMush(x,y){if(curView()!=='yard'||!s.mush)return false;const i=s.mush.findIndex(m=>Math.abs(x-m.x)<=7&&y>=m.y-12&&y<=m.y+3);if(i<0)return false;
- const m=s.mush[i],r=PC.pickMush(s,i,Date.now());if(!r.ok)return false;save();renderUI();sfx('leaf');spawn('leaf',4,{x:m.x,y:m.y-4,vy:-14,life:.8,spread:6});
+function tryMush(x,y){if(curView()!=='yard'||!s.mush)return false;const nowMs=Date.now(),i=s.mush.findIndex(m0=>{if(m0.at>nowMs)return false;const m=mushPos(m0);return Math.abs(x-m.x)<=7&&y>=m.y-13&&y<=m.y+4});if(i<0)return false;
+ const m0=s.mush[i],m=mushPos(m0);if(m0.dig){const r=PC.pickMush(s,i,nowMs);if(!r.ok)return false;save();renderUI();sfx('dig'in SFX?'dig':'tap');buzz(20);playAnim('happy');spawn('leaf',6,{x:m.x,y:m.y-2,vy:-16,life:.8,spread:8});setTimeout(()=>{spawn('star',5,{x:m.x,y:m.y-6,vy:-20,life:1,spread:8});sfx('level');toast(`🐽 ${s.name} 用爪子挖呀挖…挖出一顆「黑松露」！`,3500);mushDexCheck()},500);return true}
+ const r=PC.pickMush(s,i,nowMs);if(!r.ok)return false;save();renderUI();sfx('leaf');spawn('leaf',4,{x:m.x,y:m.y-4,vy:-14,life:.8,spread:6});
  toast(`🍄 採到「${r.name}」！${s.mushDex.length>=5&&!s.accOwned.includes('mushhat')?'':''}到「背包 → 🍄 蘑菇籃」看看`,2800);mushDexCheck();return true}
-function mushDexCheck(){if(s.mushDex.length>=5&&!s.accOwned.includes('mushhat')){s.accOwned.push('mushhat');save();setTimeout(()=>{toast('📖 蘑菇圖鑑收集完成！獲得「🍄 蘑菇帽」裝飾！',5000);sfx('level')},1500)}}
-const MUSH_ROWS=[['mush','飄香菇',['mush'],['mush_c']],['mushS','花斑毒菇',['mushS','mushX'],['mushS_c','mushX_c']],['mushW','白斑毒菇',['mushW'],['mushW_c']],['mushN','夜光菇',['mushN'],['mushN_c']],['mushG','金色蘑菇',['mushG'],[]]];
-const MUSH_DESC={mush:'幻獸都愛吃（草、岩、鋼屬性最愛）：心情、飽食、體力都會增加。烤過更好吃。',mushS:'生吃會出事！烤熟後很營養，還會多一點經驗，下一場戰鬥攻擊力 +5%（打魔王前吃一下）。',mushW:'不管生的熟的，吃了都會中毒、嘔吐、頭暈…別吃！（可以在冒險時丟向敵人）',mushN:'只在晚上雨停時出現。烤熟後很營養，還會多一點經驗，下一場戰鬥防禦力 +5%。',mushG:'沒有辦法烤，烤了似乎會壞掉，不過吃了不知道有什麼特殊效果？？？'};
+function mushDexCheck(){if(s.mushDex.length>=MUSH_ROWS.length&&!s.mushAll){s.mushAll=true;s.coins+=1000;save();setTimeout(()=>{toast('📖 13 種蘑菇全部收集完成！獎勵 🪙1000',5000);sfx('level')},3000)}if(s.mushDex.length>=5&&!s.accOwned.includes('mushhat')){s.accOwned.push('mushhat');save();setTimeout(()=>{toast('📖 蘑菇圖鑑收集完成！獲得「🍄 蘑菇帽」裝飾！',5000);sfx('level')},1500)}}
+const MUSH_ROWS=[['mush','飄香菇',['mush'],['mush_c']],['mushS','花斑毒菇',['mushS','mushX'],['mushS_c','mushX_c']],['mushW','白斑毒菇',['mushW'],['mushW_c']],['mushN','夜光菇',['mushN'],['mushN_c']],['mushG','金色蘑菇',['mushG'],[]],['mushC','雞油菌',['mushC'],['mushC_c']],['mushP','牛肝菌',['mushP'],['mushP_c']],['mushM','羊肚菌',['mushM'],['mushM_c']],['mushT','松茸',['mushT'],['mushT_c']],['mushL','猴頭菇',['mushL'],['mushL_c']],['mushR','靈芝',['mushR'],['mushR_c']],['mushK','墨汁鬼傘',['mushK'],['mushK_c']],['mushB','黑松露',['mushB'],['mushB_c']]];
+const MUSH_DESC={mush:'幻獸都愛吃（草、岩、鋼屬性最愛）：心情、飽食、體力都會增加。烤過更好吃。',mushS:'生吃會出事！烤熟後很營養，還會多一點經驗，下一場戰鬥攻擊力 +5%（打魔王前吃一下）。',mushW:'不管生的熟的，吃了都會中毒、嘔吐、頭暈…別吃！（可以在冒險時丟向敵人）',mushN:'只在晚上雨停時出現。烤熟後很營養，還會多一點經驗，下一場戰鬥防禦力 +5%。',mushG:'沒有辦法烤，烤了似乎會壞掉，不過吃了不知道有什麼特殊效果？？？',
+ mushC:'雨停後常見的金黃色喇叭菇。烤過吃：下一場戰鬥 🔥 屬性技傷害 +15%。',mushP:'雨停後常見的胖胖蘑菇。烤過吃：下一場戰鬥 🛡️ 第一次受到的傷害減半。',mushM:'只在雷雨過後冒出來。烤過吃：下一場戰鬥 💨 第一回合一定先出手。',mushT:'雨停後的早上（6～11 點）才可能長出來，很稀有。烤過吃：下一場戰鬥 💥 容易打出會心一擊。',
+ mushL:'長在院子小樹的樹幹上，每天有機會長一朵。烤過吃：下一場戰鬥 👀 看穿敵人一次猜拳。',mushR:'長在蘋果樹根部，非常難遇到。烤過吃：下一場戰鬥 💚 每回合回一點血。',mushK:'晚上才會冒出來，2 小時沒採就化成墨汁。烤過吃：下一場戰鬥 🦑 敵人第一招容易打歪。',mushB:'草系、岩系幻獸會在院子聞到，點鬆土挖出來；休息室的草系、岩系有時也會自己去找。烤過吃：下一場戰鬥 🌟 大絕招可以用兩次。'};
 const mushPickKey=L=>{const tot=L.reduce((a,k)=>a+(s.inv[k]||0),0);if(!tot)return null;let r=Math.random()*tot;for(const k of L){r-=s.inv[k]||0;if(r<0)return k}return L[0]};   // 花斑毒菇裡混著認錯的白斑毒菇，拿到哪個看運氣
 function mushDialog(){navMark('mush',mushDialog);const C=CONFIG.mush.kinds,cnt=L=>L.reduce((a,k)=>a+(s.inv[k]||0),0);
  const rows=MUSH_ROWS.map(([k,n,raw,ck])=>{const a=cnt(raw),b=cnt(ck),known=s.mushDex.includes(k);if(!known&&!a&&!b)return`<div class="frow" style="opacity:.55"><canvas data-mi="${k}" width="9" height="9" style="width:36px;height:36px;image-rendering:pixelated;filter:brightness(0)"></canvas><div class="fi"><b>？？？</b><div class="small">還沒採過</div></div></div>`;
@@ -3564,8 +3579,8 @@ function mushDialog(){navMark('mush',mushDialog);const C=CONFIG.mush.kinds,cnt=L
   return`<div class="frow" style="flex-wrap:wrap"><canvas data-mi="${k}" width="9" height="9" style="width:36px;height:36px;image-rendering:pixelated"></canvas><div class="fi"><b>${n}</b>　<span class="small">生 ${a}${ck.length?`・烤好 ${b}`:''}</span><div class="small">${desc}</div></div>
 <div style="display:flex;gap:4px;flex-wrap:wrap;width:100%;justify-content:flex-end">${a?`<button class="btn" data-me="${k}:raw" style="margin:0;padding:4px 8px">😋 餵生的</button>${ck.length?`<button class="btn" data-mc="${k}" style="margin:0;padding:4px 8px">🔥 烤</button>`:k==='mushG'?`<button class="btn" data-mc="${k}" style="margin:0;padding:4px 8px">🔥 烤</button>`:''}<button class="btn" data-ms="${k}:raw" style="margin:0;padding:4px 8px">🪙 賣 ${C[k].sell}</button>`:''}
 ${b?`<button class="btn pri" data-me="${k}:ck" style="margin:0;padding:4px 8px">😋 餵烤的</button><button class="btn" data-ms="${k}:ck" style="margin:0;padding:4px 8px">🪙 賣 ${Math.round(C[k].sell*CONFIG.mush.cookX)}</button>`:''}</div></div>`}).join('');
- openModal('🍄 蘑菇籃',`<p class="small">下過雨、雨停之後，院子會冒出蘑菇，點一下就能採。放太久會枯掉喔！</p><p><b>📖 蘑菇圖鑑 ${s.mushDex.length} / 5</b>　<span class="small">${s.mushDex.length>=5?'✅ 已收集完成（獲得蘑菇帽）':'收集齊全送「🍄 蘑菇帽」裝飾'}</span></p>${rows}`);
- document.querySelectorAll('[data-mi]').forEach(c=>{const x=c.getContext('2d');x.drawImage(mushIcon(c.dataset.mi),0,0)});
+ openModal('🍄 蘑菇籃',`<p class="small">下過雨、雨停之後，院子會冒出蘑菇，點一下就能採。放太久會枯掉喔！樹上、晚上、雷雨後也有特別的蘑菇。烤過再吃，下一場戰鬥會有特殊效果。</p><p><b>📖 蘑菇圖鑑 ${s.mushDex.length} / ${MUSH_ROWS.length}</b>　<span class="small">${s.mushDex.length>=5?'✅ 收集 5 種（獲得蘑菇帽）':'收集 5 種送「🍄 蘑菇帽」裝飾'}・${s.mushAll?'✅ 全部收集（🪙1000）':`全部 ${MUSH_ROWS.length} 種送 🪙1000`}</span></p>${rows}`);
+ document.querySelectorAll('[data-mi]').forEach(c=>{const I=mushIcon(c.dataset.mi);c.width=I.width;c.height=I.height;if(I.width>9){c.style.imageRendering='auto'}c.getContext('2d').drawImage(I,0,0)});
  const keyOf=(k,ck)=>{const R0=MUSH_ROWS.find(r=>r[0]===k);return mushPickKey(ck?R0[3]:R0[2])};
  document.querySelectorAll('[data-mc]').forEach(b=>b.onclick=()=>{const k=keyOf(b.dataset.mc,false);if(!k)return;const go=()=>{const r=PC.mushCook(s,k);toast(r.ok?r.msg:'❌ '+r.msg,3000);if(r.ok){sfx(r.burnt?'no':'eat');save();renderUI();mushDialog()}};
   if(b.dataset.mc==='mushG')confirmBox('🔥 真的要烤金色蘑菇？','烤了似乎會壞掉…','烤烤看',()=>{go()});else go()});
@@ -3574,8 +3589,14 @@ ${b?`<button class="btn pri" data-me="${k}:ck" style="margin:0;padding:4px 8px">
   const go=()=>{const x0=s.xp,r=PC.mushEat(s,key,Date.now());if(!r.ok){toast('❌ '+r.msg);return}closeModal();save();renderUI();
    if(r.poison){mushSick();return}
    if(r.gold){playAnim('happy');sfx('evolve');flashUntil=performance.now()+800;spawn('star',16,{y:66,vy:-30,jx:60,life:1.6,stagger:.04});say(`✨ ${s.name} 全身閃閃發光！經驗 +${r.xp}（光會維持一整天）`);afterChange(x0);return}
-   playAnim('eat');sfx('eat');spawn('heart',3,{y:70,life:1.1});const E=r.eff;say(`😋 好好吃！心情 +${E.mood+r.love}${r.love?'（最愛吃蘑菇了！）':''}、飽食 +${E.hunger}、體力 +${E.energy}${r.xp?`、經驗 +${r.xp}`:''}${r.buff?`\n💪 下一場戰鬥${r.buff==='atk'?'攻擊':'防禦'}力 +5%`:''}`);afterChange(x0)};
+   playAnim('eat');sfx('eat');spawn('heart',3,{y:70,life:1.1});const E=r.eff;say(`😋 好好吃！心情 +${E.mood+r.love}${r.love?'（最愛吃蘑菇了！）':''}、飽食 +${E.hunger}、體力 +${E.energy}${r.xp?`、經驗 +${r.xp}`:''}${r.buff?`\n💪 下一場戰鬥：${MUSH_BUFF_TXT[r.buff]}`:''}`);afterChange(x0)};
   if(k==='mushG'&&t!=='ck'&&!s.goldKnown)confirmBox('🌟 吃金色蘑菇？','不知道會發生什麼事…想吃看看嗎？','吃吃看！',()=>{go()});else go()})}
+let TRIP_SEEN='',SNIFF_SEEN=0;setInterval(()=>{if(!s||!s.hatched)return;
+ if(s.tripDone){const d=s.tripDone;s.tripDone=null;save();renderUI();toast(`🐽 ${d.name} 自己跑出去，叼回一顆「黑松露」！到「背包 → 🍄 蘑菇籃」看看`,5000);sfx('level');mushDexCheck()}
+ if(s.trip&&TRIP_SEEN!==s.trip.key+s.trip.at){TRIP_SEEN=s.trip.key+s.trip.at;if(Date.now()-s.trip.at<3*3600e3)toast(`📝 ${s.trip.name} 在休息室留了紙條：「出去找好吃的了～」（大約 ${new Date(s.trip.back).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})} 回來）`,5000)}
+ const dg=(s.mush||[]).find(m=>m.dig&&m.at<=Date.now());if(dg&&SNIFF_SEEN!==dg.at&&curView()==='yard'&&!VISIT.on){SNIFF_SEEN=dg.at;say(`🐽 ${s.name} 鼻子嗅嗅…好像聞到什麼！點一下那塊鬆土挖挖看`)}},3000);
+const MUSH_BUFF_ICON={atk:'s',def:'n',sp:'mushC',half:'mushP',first:'mushM',crit:'mushT',peek:'mushL',regen:'mushR',ink:'mushK',ult2:'mushB'};
+const MUSH_BUFF_TXT={atk:'攻擊力 +5%',def:'防禦力 +5%',sp:'🔥 屬性技傷害 +15%',half:'🛡️ 第一次受傷減半',first:'💨 第一回合先出手',crit:'💥 容易打出會心一擊',peek:'👀 看穿一次猜拳',regen:'💚 每回合回一點血',ink:'🦑 敵人第一招容易打歪',ult2:'🌟 大絕招可以用兩次'};
 let DIZZY=0;function mushSick(){DIZZY=performance.now()+5000;RAINBOW=performance.now();playAnim('sad');sfx('no');buzz(80);say(`🤮 嘔…${s.name} 吃到毒蘑菇，中毒了！頭好暈…（心情 -30、體力歸零）`);
  for(let i=0;i<2;i++)setTimeout(()=>{try{PC.addCore(s,petX+16+Math.random()*16,Date.now(),curView(),'poop');const c=s.cores[s.cores.length-1];if(c&&c.k==='poop')c.g=1;save()}catch(e){}},2600+i*1200)}
 /* 🌈 吐彩虹：從嘴巴噴出一道彩虹流到地上 */
@@ -3763,11 +3784,15 @@ const TOURS=[
   {sel:'#pkPad',t:'💪 力道 🎯 準度',d:'按「就這樣踢」後：先點一下停住<b>力道條</b>（越高越快），再停住<b>準度條</b>（停在中間綠色最準）。去踢一場試試吧！'}]},
  {id:'v190f',t:'種田要澆水了',new:['⚡ 種種子要花體力','💧 種下要澆水才會長','🌿 長到一半會再口渴一次','👥 朋友可以幫你澆水、看到你的田','💦 自動灑水器（田 6 格解鎖）'],steps:[
   {sel:'#bFarm',t:'🌱 種田',d:'種田有新玩法了！'},
-  {open:()=>farmDialog(),wait:700,sel:'#plots',t:'⚡ 種子要花體力',d:'種一顆要花體力：普通 3、優良 5、稀有 7、神奇 10。'},
-  {sel:'#plots',t:'💧 澆水才會長',d:'剛種下的土是乾的，按「💧澆水」（花 2 體力），澆水壺會幫你澆濕，作物才開始長。<b>長到一半會再口渴一次</b>，要再澆一次才會長到成熟。院子裡口渴的田頭上會冒出水滴提醒你。'},
-  {sel:'[data-pw]',t:'💧 點一下就澆',d:'口渴的田會出現這顆按鈕，一塊一塊點著澆。',opt:1},
-  {sel:'#fSpr',t:'💦 自動灑水器',d:'田擴建到 6 格之後，可以花 2000 金幣買自動灑水器，以後所有作物都自動澆水，不用再自己點。'},
-  {sel:'#bMate',open:()=>closeModal(),t:'👥 朋友來幫忙',d:'朋友去你家拜訪時，看得到你田裡種了什麼、哪塊口渴，按「澆水」就能幫你把口渴的田全部澆好。'}]}
+  {open:()=>openFarm(),wait:700,sel:'#fmS_normal',t:'⚡ 種子要花體力',d:'種一顆要花體力：普通 3、優良 5、稀有 7、神奇 10，按鈕上都有寫。'},
+  {sel:'#fmcv',t:'💧 澆水才會長',d:'剛種下的土是乾的，頭上會冒水滴。<b>點那塊田就會拿澆水壺澆水</b>（花 2 體力），作物才開始長。<b>長到一半會再口渴一次</b>，要再澆一次才會長到成熟。院子裡口渴的田也會冒水滴提醒你。'},
+  {open:()=>farmShop(),wait:500,sel:'#fsb4',t:'💦 自動灑水器',d:'田擴建到 6 格之後，可以在「買種子、擴建」花 2000 金幣買自動灑水器，以後所有作物都自動澆水，不用再自己點。'},
+  {sel:'#bMate',open:()=>{closeModal();closeFarm()},t:'👥 朋友來幫忙',d:'朋友去你家拜訪時，看得到你田裡種了什麼、哪塊口渴，按「澆水」就能幫你把口渴的田全部澆好。'}]},
+ {id:'v190m',t:'新蘑菇・新按鍵',new:['🍄 8 種新蘑菇','⚔️ 烤過吃了戰鬥有特殊效果','🌳 樹上、晚上、雷雨後的蘑菇','🐽 草系岩系挖黑松露','🥊 組合拳新按鍵'],steps:[
+  {sel:'#scene',t:'🍄 新蘑菇',d:'院子多了 8 種蘑菇：雨停後有雞油菌、牛肝菌，早上偶爾有松茸；雷雨後有羊肚菌；晚上有一下就化掉的墨汁鬼傘；小樹樹幹長猴頭菇、蘋果樹根長靈芝。'},
+  {sel:'#scene',t:'🐽 黑松露',d:'照顧<b>草系或岩系</b>幻獸時，牠有時會在院子嗅到松露，地上出現一塊鬆土，點一下就挖出來。休息室裡的草系、岩系也會偶爾自己溜出去找，回來叼一顆給你。'},
+  {open:()=>{try{mushDialog()}catch(e){}},wait:600,sel:'.frow',t:'⚔️ 烤過吃有戰鬥效果',d:'新蘑菇<b>烤過再吃</b>，下一場戰鬥有特殊效果：屬性技變強、先出手、看穿猜拳、大絕招用兩次…打王前記得先吃！13 種全部收集還有 🪙1000。'},
+  {open:()=>closeModal(),sel:'#bTrain',t:'🥊 組合拳新按鍵',d:'組合拳換成新的方向鍵和 △○□✕ 按鍵。前幾階只會出方向鍵和 ○✕，練到第 4 階以後 △□ 也會出現。',opt:1}]}
 ];
 let TOUR=null;
 function tourStart(id){const T=TOURS.find(x=>x.id===id);if(!T||TOUR)return;TOUR={T,i:-1};const blk=document.createElement('div');blk.id='tourBlock';blk.onclick=e=>{e.stopPropagation();sfx('no')};document.body.append(blk);tourNext()}
@@ -4378,16 +4403,18 @@ const SEEDK=[['normal','seeds','seed','種子'],['good','seeds2','seed2','優良
 function fmLayout(){const n=s.plots.length,rows=Math.ceil(n/3),RY=[[96],[72,100],[56,78,104]][rows-1]||[56,78,104],RS=[[1.15],[.9,1.1],[.72,.88,1.05]][rows-1]||[.72,.88,1.05],out=[];
  for(let i=0;i<n;i++){const r=Math.floor(i/3),c=i%3,inRow=Math.min(3,n-r*3),sc=RS[r],gap=40*sc,x=64+(c-(inRow-1)/2)*gap;out.push({x,y:RY[r],sc})}return out}
 function openFarm(){if(modeBusy()){toast('先完成現在的互動吧');return}if(firstTip('farm',openFarm))return;cancelMode();unlockAudio();PC.claimDaily(s,Date.now());
- FMZ={fx:[],sel:FMZ&&FMZ.sel||'normal'};$('farmZone').classList.remove('hidden');fmInfo();fmMsg('點空地種下選好的種子，成熟了點一下收成');sfx('tap');
+ FMZ={fx:[],sel:FMZ&&FMZ.sel||'normal'};$('farmZone').classList.remove('hidden');fmInfo();fmMsg(s.sprinkler?'點空地種下選好的種子，成熟了點一下收成（💦 自動灑水器會幫你澆水）':'點空地種下選好的種子，土乾了（💧）點一下澆水，成熟了點一下收成');sfx('tap');
  const loop=now=>{if(!FMZ)return;fmDraw(now);requestAnimationFrame(loop)};requestAnimationFrame(loop)}
 function closeFarm(){FMZ=null;$('farmZone').classList.add('hidden');save();renderUI()}
 const fmMsg=t=>{$('fmMsg').innerHTML=`<span>${t}</span>`};
 function fmInfo(){const now=Date.now();$('fmInfo').textContent=`${PC.SLOT_NAME[PC.fishSlot(now)]}・${PC.WEATHER_NAME[PC.weatherAt(now)]}・🪙 ${s.coins}`;
  if((s.inv[SEEDK.find(k=>k[0]===FMZ.sel)[1]]||0)<1){const f=SEEDK.find(k=>(s.inv[k[1]]||0)>0);if(f)FMZ.sel=f[0]}
- for(const[k,inv,ic,nm]of SEEDK){const b=$('fmS_'+k);b.innerHTML=`${MI(ic,'🌱')}<span>${nm} ×${s.inv[inv]||0}</span>`;b.classList.toggle('on',FMZ.sel===k);b.disabled=(s.inv[inv]||0)<1&&k!=='normal'}}
+ for(const[k,inv,ic,nm]of SEEDK){const b=$('fmS_'+k);b.innerHTML=`${MI(ic,'🌱')}<span>${nm} ×${s.inv[inv]||0}<small> ⚡${CONFIG.farm.energy[SEEDK.findIndex(x=>x[0]===k)]}</small></span>`;b.classList.toggle('on',FMZ.sel===k);b.disabled=(s.inv[inv]||0)<1&&k!=='normal'}}
 function fmTap(x,y){const L=fmLayout(),now=Date.now();for(let i=L.length-1;i>=0;i--){const p=L[i],w=24*p.sc,h=22*p.sc;if(x>=p.x-w/2-2&&x<=p.x+w/2+2&&y>=p.y-h-2&&y<=p.y+4){
   PC.fixFresh(s);const q=PC.plotState(s,i,now),x0=s.xp;let r;
   if(q.empty){const g=FMZ.sel==='magic'?'magic':FMZ.sel==='rare'?'mystery':FMZ.sel==='good';r=(setTimeout(()=>guideHit('plant'),900),PC.plant)(s,i,now,Math.random,g);if(r.ok){sfx('tap');for(let k=0;k<4;k++)FMZ.fx.push({x:p.x,y:p.y-4,vx:(Math.random()-.5)*30,vy:-20-Math.random()*15,t:now,col:'#8a5a30'})}}
+  else if(q.thirsty){if(FMZ.water&&now-FMZ.water.t0<1100)return;const we=CONFIG.farm.waterEnergy;if(s.hatched&&s.energy<we){fmMsg(`❌ 牠太累了（澆一次要 ${we} 體力），先休息一下吧`);sfx('no');return}
+   FMZ.water={i,t0:now};sfx('splash');buzz(10);setTimeout(()=>{const r2=PC.water(s,i,Date.now());fmMsg(r2.ok?r2.msg:'❌ '+r2.msg);if(r2.ok){WATER_FX[i]=Date.now()+1200;for(let k=0;k<6;k++)FMZ&&FMZ.fx.push({x:p.x,y:p.y-6,vx:(Math.random()-.5)*30,vy:-18-Math.random()*12,t:Date.now(),col:'#8ac4ff'});sfx('level')}save();renderUI();fmInfo()},1000);return}
   else if(q.ripe||q.rotten){r=PC.harvest(s,i,now);if(r.ok){sfx(r.rotten?'no':'eat');buzz(20);if(!r.rotten){for(let k=0;k<8;k++)FMZ.fx.push({x:p.x,y:p.y-10*p.sc,vx:(Math.random()-.5)*50,vy:-30-Math.random()*25,t:now,col:'#ffe066'});
     const rows=[[CONFIG.foods[r.kind].icon,CONFIG.foods[r.kind].name,`×${r.n}`,r.good?(r.magic?'✨神奇':r.myst?'🔮稀有':'🌟優良'):'']];if(r.bonus)rows.push([CONFIG.foods[r.bonus].icon,CONFIG.foods[r.bonus].name,`×${r.bonusN||1}`,'⚡能力水果']);if(r.xp)rows.push(['star','經驗',`+${r.xp}`,'']);
     {const F=CONFIG.foods,t=`🌾 收成：${F[r.kind].name}×${r.n}${r.good?(r.magic?'（✨神奇）':r.myst?'（🔮稀有）':'（🌟優良）'):''}${r.bonus?`、⚡${F[r.bonus].name}×${r.bonusN||1}`:''}${r.xp?`、經驗 +${r.xp}`:''}`;r.msg=t;setTimeout(()=>afterChange(x0),300)}}}}   /* V1.86.6 收成不用再點視窗 */
@@ -4399,9 +4426,14 @@ function fmDraw(now){const c=fmctx,ph=phase(),nowMs=Date.now();c.clearRect(0,0,1
  wxScene(c,now,16);
  const L=fmLayout();L.forEach((p,i)=>{const q=PC.plotState(s,i,nowMs),st=plotStage(q),SP=PLOT_SPR[st]||PLOT_SPR.empty;if(!SP)return;const k=28*p.sc/SP.width,w=Math.round(SP.width*k),h=Math.round(SP.height*k);
   c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(p.x,p.y,13*p.sc,3*p.sc,0,0,Math.PI*2);c.fill();
-  c.save();c.imageSmoothingEnabled=false;c.drawImage(SP,Math.round(p.x-w/2),Math.round(p.y-h+2),w,h);c.restore();
+  c.save();c.imageSmoothingEnabled=false;if(q.thirsty)c.filter='sepia(.5) saturate(.6) brightness(1.15)';c.drawImage(SP,Math.round(p.x-w/2),Math.round(p.y-h+2),w,h);c.filter='none';c.restore();
+  if(WATER_FX[i]&&nowMs<WATER_FX[i]){c.save();c.globalAlpha=.35*(WATER_FX[i]-nowMs)/1200;c.fillStyle='#1a2a4a';c.beginPath();c.ellipse(p.x,p.y-2,12*p.sc,4*p.sc,0,0,Math.PI*2);c.fill();c.restore()}
   {const g=s.plots[i].g;if(g&&!q.empty&&!q.rotten)seedGlow(c,g,p.x,p.y,w,h,now,i)}
+  if(q.thirsty&&ICV.ic_drop&&!(FMZ.water&&FMZ.water.i===i&&nowMs-FMZ.water.t0<1100)){const D=ICV.ic_drop,dw=Math.round(7*p.sc),dh=Math.round(D.height*dw/D.width);c.save();c.imageSmoothingEnabled=true;c.drawImage(D,Math.round(p.x-dw/2),Math.round(p.y-h+2-dh+Math.sin(now/260+i)*1.5),dw,dh);c.restore()}
+  if(FMZ.water&&FMZ.water.i===i){const t=(nowMs-FMZ.water.t0)/1000;if(t<1.1){const S2=WATER_SPR.can,cw=Math.round(18*p.sc),chh=Math.round(S2.height*cw/S2.width),ang=t<.25?-t/.25*.7:t<.85?-.7:-.7+(t-.85)/.25*.7;c.save();c.translate(Math.round(p.x+8*p.sc),Math.round(p.y-h-4));c.rotate(ang);c.imageSmoothingEnabled=!!WATER_SPR.hd;c.drawImage(S2,-cw,-chh/2,cw,chh);c.restore();
+   if(t>.25&&t<.95){c.fillStyle='#8ac4ff';for(let d=0;d<6;d++){const ph=((t-.25)*3+d/6)%1;c.fillRect(Math.round(p.x-6*p.sc+d*2*p.sc),Math.round(p.y-h+ph*(h-2)),1,2)}}}}
   if(st==='rot'&&ICV.fly){const a=now/300+i;c.drawImage(ICV.fly,Math.round(p.x+4*Math.cos(a)),Math.round(p.y-h+3*Math.sin(a*1.7)))}
+  if(s.sprinkler&&i===0){const fr=WATER_SPR.spr[Math.floor(now/250)%2],sw=12,sh=Math.round(fr.height*sw/fr.width),sx=Math.round(p.x-24*p.sc-sw/2),sy=Math.round(p.y-sh);c.save();c.imageSmoothingEnabled=!!WATER_SPR.hd;c.drawImage(fr,sx,sy,sw,sh);c.restore();if(Math.floor(now/3000)%2===0){c.fillStyle='#bfe2ff';for(let d=0;d<8;d++){const r=4+((now/80+d*5)%14),a=now/400+d*.8;c.fillRect(Math.round(sx+sw/2+Math.cos(a)*r),Math.round(sy+1+Math.sin(a)*r*.3-r*.3),1,1)}}}
   if(!q.empty&&!q.ripe&&!q.rotten){const bw=Math.round(20*p.sc),bx=Math.round(p.x-bw/2),by=Math.round(p.y+3);c.fillStyle='rgba(20,12,6,.75)';c.fillRect(bx-1,by-1,bw+2,4);c.fillStyle='#7ae06a';c.fillRect(bx,by,Math.round(bw*q.progress),2)}
   if(q.ripe&&!q.rotten&&Math.floor(now/500+i)%2){c.fillStyle='#fff6a0';c.fillRect(Math.round(p.x)-1,Math.round(p.y-h-2),3,1);c.fillRect(Math.round(p.x),Math.round(p.y-h-3),1,3)}
   if(q.empty&&Math.floor(now/700+i)%3===0){c.fillStyle='rgba(255,255,255,.6)';c.font='bold 7px sans-serif';c.fillText('+',Math.round(p.x-2),Math.round(p.y-3))}});
@@ -4412,9 +4444,10 @@ for(const[k]of SEEDK)$('fmS_'+k).onclick=()=>{FMZ.sel=k;sfx('tap');fmInfo()};
 $('fmShop').onclick=()=>{sfx('tap');farmShop()};$('fmSell').onclick=()=>{sfx('tap');farmSell()};$('fmHome').onclick=closeFarm;
 function farmShop(){const F=CONFIG.farm,ep=PC.expandPrice(s);
  openModal('🛒 買種子、擴建',`<p>🪙 金幣 <b>${s.coins}</b></p><p class="small">普通 ${F.growBy[0]} 小時、🌟優良 ${F.growBy[1]} 小時、🔮稀有 ${F.growBy[2]} 小時、✨神奇 ${F.growBy[3]} 小時成熟${PC.hasSkill(s,'forest')?'（🌿草系幫忙，快 20%）':''}。稀有、神奇種子只能冒險打王拿到。</p>
- <div class="sellrow"><button class="selltile" id="fsb1"><canvas class="picon" data-icon="seed" data-s="3"></canvas><b>種子</b><span>綜合莓果</span><i>🪙${F.seedPrice}</i></button><button class="selltile" id="fsb2"><canvas class="picon" data-icon="seed2" data-s="3"></canvas><b>優良種子</b><span>藍莓草莓多</span><i>🪙${CONFIG.goodSeed.price}</i></button><button class="selltile" id="fsb3" ${ep?'':'disabled'}><canvas class="picon" data-icon="seed" data-s="3"></canvas><b>擴建田地</b><span>${ep?`第 ${s.plots.length+1} 格`:`已滿 ${F.maxPlots} 格`}</span><i>${ep?'🪙'+ep:'—'}</i></button></div><div class="err" id="fsbErr"></div>`);
+ <div class="sellrow"><button class="selltile" id="fsb1"><canvas class="picon" data-icon="seed" data-s="3"></canvas><b>種子</b><span>綜合莓果</span><i>🪙${F.seedPrice}</i></button><button class="selltile" id="fsb2"><canvas class="picon" data-icon="seed2" data-s="3"></canvas><b>優良種子</b><span>藍莓草莓多</span><i>🪙${CONFIG.goodSeed.price}</i></button><button class="selltile" id="fsb3" ${ep?'':'disabled'}><canvas class="picon" data-icon="seed" data-s="3"></canvas><b>擴建田地</b><span>${ep?`第 ${s.plots.length+1} 格`:`已滿 ${F.maxPlots} 格`}</span><i>${ep?'🪙'+ep:'—'}</i></button><button class="selltile" id="fsb4" ${s.sprinkler||s.plots.length<F.sprinklerPlots?'disabled':''}><canvas id="fsb4c"></canvas><b>自動灑水器</b><span>${s.sprinkler?'已裝好 💦':s.plots.length<F.sprinklerPlots?`田 ${F.sprinklerPlots} 格解鎖`:'自動幫田澆水'}</span><i>${s.sprinkler?'✓':'🪙'+F.sprinkler}</i></button></div><p class="small">💧 種下要澆水才會長，長到一半會再口渴一次，澆一次 ⚡${F.waterEnergy}。⚡ 種一顆：普通 ${F.energy[0]}、優良 ${F.energy[1]}、稀有 ${F.energy[2]}、神奇 ${F.energy[3]}。</p><div class="err" id="fsbErr"></div>`);
  document.querySelectorAll('#sheet canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));pixifyDom($('sheet'));
  const go=r=>{if(!r.ok){$('fsbErr').textContent='❌ '+r.msg;sfx('no');return}toast(r.msg);sfx('coin');save();renderUI();if(FMZ)fmInfo();farmShop()};
+ {const c=$('fsb4c'),S=WATER_SPR.spr[0];c.width=S.width;c.height=S.height;c.style.height='36px';c.style.imageRendering='pixelated';c.getContext('2d').drawImage(S,0,0)}$('fsb4').onclick=()=>{const r=PC.buySprinkler(s);if(r.ok)sfx('level');go(r)};
  $('fsb1').onclick=()=>go(PC.buySeed(s));$('fsb2').onclick=()=>go(PC.buyItem(s,'seeds2'));$('fsb3').onclick=()=>go(PC.expandFarm(s))}
 function farmSell(){PC.fixFresh(s);const ks=PC.FRESH_KEYS.filter(k=>!['food','berry'].includes(k)||(s.inv.fresh[k]||0)>0);
  openModal('💰 賣自己種的水果',`<p class="small">點一下賣 1 顆。只有自己種出來的才能賣。</p><div class="sellrow">${ks.map(k=>{const c=s.inv.fresh[k]||0;return`<button class="selltile" data-sell="${k}" ${c?'':'disabled'}><canvas class="picon" data-icon="${CONFIG.foods[k].icon}" data-s="3"></canvas><b>${CONFIG.foods[k].name}</b><span>×${c}</span><i>🪙${CONFIG.sellFruit[k]}</i></button>`}).join('')}</div><div class="err" id="fslErr"></div>`);

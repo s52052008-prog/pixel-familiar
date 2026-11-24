@@ -148,7 +148,7 @@ async def main():
         await p.click('#bFarm'); await p.wait_for_timeout(400); fz = await p.is_visible('#farmZone'); await tap_plot(0)
         s = await st(p); ok('種田畫面：點空地種下種子', fz and s['inv']['seeds'] == 1 and s['plots'][0]['at'] > 0)
         await tap_plot(0); s2 = await st(p); ok('成長中不能收成', s2['plots'][0]['at'] == s['plots'][0]['at'] and '成熟' in await p.inner_text('#fmMsg')); await p.screenshot(path=f'{OUT}/09a_farm.png'); await p.click('#fmHome'); await p.wait_for_timeout(300)
-        await p.evaluate("(()=>{const s=PF.state;s.plots[0].at=Date.now()-2*3600000-1000;PF.debug.set({})})()"); await p.wait_for_timeout(600)
+        await p.evaluate("(()=>{const s=PF.state;s.plots[0].at=Date.now()-2*3600000-1000;delete s.plots[0].wn;PF.debug.set({})})()"); await p.wait_for_timeout(600)
         await p.screenshot(path=f'{OUT}/09b_ripe_in_scene.png')
         x0 = (await st(p))['xp']; await p.click('#bFarm'); await p.wait_for_timeout(400); await p.screenshot(path=f'{OUT}/09c_farm_ripe.png'); await tap_plot(0); await p.wait_for_timeout(500)
         card = (not await p.is_visible('#gResult')) and '收成' in (await p.evaluate("document.getElementById('fmMsg').textContent"))   # V1.86.6 收成不跳視窗，訊息顯示在種田畫面
@@ -265,7 +265,7 @@ async def main():
         await p.wait_for_selector('#bDone', state='visible', timeout=8000); await p.click('#bDone'); await p.wait_for_timeout(300)
         await p.evaluate("PF.debug.set({energy:100,sleeping:false,xp:512,coins:100})"); x0 = (await st(p))['xp']
         await p.click('#bTrain'); await p.wait_for_timeout(300); await p.click('[data-tk=combo]'); await p.wait_for_timeout(3200)
-        seq = await p.evaluate('PF.TG.seq'); ok('組合拳節奏版：5 組 × 5 拳、有方向鍵與 AB 鍵', len(seq) == 25 and await p.locator('#tCtl [data-tb]').count() == 6, (len(seq), await p.locator('#tCtl [data-tb]').count()))
+        seq = await p.evaluate('PF.TG.seq'); ok('組合拳節奏版：5 組 × 5 拳、方向鍵＋○✕（△□ 第 4 階才開）', len(seq) == 25 and await p.locator('#tCtl [data-tb]').count() == 8 and await p.locator('#tCtl .gk.off').count() == 2, (len(seq), await p.locator('#tCtl [data-tb]').count()))
         await p.evaluate("""new Promise(r=>{const iv=setInterval(()=>{const G=PF.TG;if(!G||G.phase==='done'){clearInterval(iv);r(1);return}if(G.phase==='play'){const n=G.notes.find(n=>!n.st&&Math.abs(G.t-n.t)<.05);if(n)G.btn(n.k)}},8)})""")
         await p.wait_for_selector('#tResult', state='visible', timeout=8000); s = await st(p)
         ok('訓練場：組合拳成功、扣 20 金幣、有經驗', s['coins'] == 80 and s['xp'] > x0 and '成功' in await p.inner_text('#tRTitle'), (s['coins'], s['xp'] - x0))
