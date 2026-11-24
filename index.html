@@ -1332,7 +1332,7 @@ function accAnchor(S,fi){S.anc=S.anc||{};if(S.anc[fi]!==undefined)return S.anc[f
 /* V1.88 強化發光：做一張單色剪影，畫在裝飾外圍一圈 */
 const ACC_SIL={};function accSil(im,key,col){const id=key+col;if(ACC_SIL[id])return ACC_SIL[id];const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const x=cv.getContext('2d');x.drawImage(im,0,0);x.globalCompositeOperation='source-in';x.fillStyle=col;x.fillRect(0,0,cv.width,cv.height);return ACC_SIL[id]=cv}
 function drawAcc(c,S,fi,x,y,w,flip,list,adj,layer='front',lv){if(!list||!list.length)return;const A=accAnchor(S,fi);if(!A)return;const k=w/CELL;
- for(const id of list){const it=ACC[id],im=it&&ACC_IMG[it.img];if(!im)continue;const P=(ACC_PFIX[S.art||'']||{})[id]||[0,0,0,0,0],fr=P[3]===1?1:P[3]===-1?0:(it.front||1),L=lv&&lv[id]|0,glow=L>0&&(fr>=1?layer==='front':layer==='back');if(!glow&&layer==='back'&&fr>=1)continue;if(!glow&&layer==='front'&&fr<=0)continue;
+ for(const id of list){const it=ACC[id],im=it&&ACC_IMG[it.img];if(!im)continue;const P=(ACC_PFIX[S.art||'']||{})[id]||[0,0,0,0,0],fr=P[3]===1?1:P[3]===-1?0:(it.front??1),L=lv&&lv[id]|0,glow=L>0&&(fr>=1?layer==='front':layer==='back');if(!glow&&layer==='back'&&fr>=1)continue;if(!glow&&layer==='front'&&fr<=0)continue;
   const J=(adj&&adj[it.slot])||[0,0,0],z=1+J[2]*.06;let aw,cx,by;
   if(it.slot==='head'){aw=A.hw*it.w*z;cx=A.cx+(it.side||0)*A.hw+(it.dx||0)*aw;const ah0=im.height*(aw/im.width);by=Math.min(A.ht+ah0*it.sink,A.ey-(it.side?0:2))}
   else if(it.slot==='face'){aw=Math.max(A.ex1-A.ex0+5,A.hw*.62)*z;cx=A.cx;by=A.ey+im.height*(aw/im.width)*.55}
