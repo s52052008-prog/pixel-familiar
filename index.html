@@ -1351,6 +1351,8 @@ header .coin{background:none!important;border:9px solid transparent!important;bo
 #bResult .rcard{background:#f6e2bd!important;border:11px solid transparent!important;border-image:${UIK('slot')} 11 fill / 11px stretch!important;box-shadow:none!important;color:#4a2a10!important;border-radius:0!important}#bResult .rcard *:not(.btn){color:#4a2a10!important;text-shadow:none!important}
 #bResult .btn{background:none!important;border:9px solid transparent!important;border-image:${UIK('btn')} 9 fill / 9px stretch!important;box-shadow:none!important;color:#4a2a10!important;border-radius:0!important}
 #foodBar{bottom:0!important;display:flex;align-items:center;background:repeating-linear-gradient(180deg,#5a381c 0 12px,#52331a 12px 13px)!important;border:0!important;box-shadow:none!important}#foodBar.hidden{display:none}
+.hpgrp{width:51%!important;gap:2px!important}.hpgrp .hp{padding:2px 5px 3px!important;font-size:10.5px!important;background:rgba(246,226,189,.82)!important}.hpgrp:has(.hp:not(.hidden) ~ .hp:not(.hidden)) .hp .chips{display:none!important}.hpgrp .hp .bar{height:5px!important}
+#rpsZone{left:calc(env(safe-area-inset-left) + 10px)!important;right:calc(env(safe-area-inset-right) + 10px)!important;border:13px solid transparent!important;border-image:${UIK('frame')} 13 / 13px stretch!important;bottom:calc(env(safe-area-inset-bottom) + 8px)!important;padding:8px 6px 10px!important}
 .uikDeco{position:absolute;z-index:6;pointer-events:none;image-rendering:pixelated;height:26px}
 `;document.head.append(st);
  const W=document.getElementById('stagewrap');if(W)for(const[n,css]of[['leafL','left:-12px;top:-20px'],['paw','left:50%;top:-22px;transform:translateX(-50%)'],['leafR','right:-12px;top:-20px']]){const im=document.createElement('img');im.className='uikDeco';im.src=SP(`sprites/uik/${n}.png`);im.style.cssText=css;W.append(im)}})();
@@ -3399,7 +3401,7 @@ bcv.addEventListener('pointerdown',e=>{if(!B||B.over||!B.foe2||B.foe2.hp<=0||B.f
 const HAZE=document.createElement('canvas');HAZE.width=HAZE.height=48;const BTOP={},TOPC={};
 /* V1.86 扣血、回血數字：跳出來、彈一下、往上飄 */
 function drawBattle(now){drawBattle0(now);if(!B)return;const c=bctx,L=B.lastHp||(B.lastHp={}),N=B.nums||(B.nums=[]);
- for(const k of['me','me2','foe','foe2']){const f=B[k];if(!f||!f._pos)continue;const last=L[k];if(last!=null&&f.hp!==last){const[x,y,sc]=f._pos;N.push({v:f.hp-last,x:x+(Math.random()-.5)*8,y:y-38*sc,t:now,crit:f._crit&&now-f._crit<700,big:sc>1.1})}L[k]=f.hp}
+ for(const k of['me','me2','foe','foe2']){const f=B[k];if(!f||!f._pos)continue;if(L['o'+k]!==f){L['o'+k]=f;L[k]=f.hp;continue}const last=L[k];if(last!=null&&f.hp!==last){const[x,y,sc]=f._pos;N.push({v:f.hp-last,x:x+(Math.random()-.5)*8,y:y-38*sc,t:now,crit:f._crit&&now-f._crit<700,big:sc>1.1})}L[k]=f.hp}
  for(let i=N.length-1;i>=0;i--){const n=N[i],a=(now-n.t)/1000;if(a>(n.txt?1.4:1.1)){N.splice(i,1);continue}
   if(n.txt){const pop=a<.12?1.5-a/.12*.5:1,yy=n.y-Math.min(1,a/1.2)*10,al=a>1.05?1-(a-1.05)/.35:1;c.save();c.globalAlpha=Math.max(0,al);c.font=`bold ${Math.round(7*pop)}px sans-serif`;c.textAlign='center';c.lineJoin='round';c.lineWidth=2.5;c.strokeStyle='#1a1020';c.strokeText(n.txt,n.x,yy);c.fillStyle=n.col||'#fff';c.fillText(n.txt,n.x,yy);c.restore();continue}const pop=a<.12?1.7-a/.12*.7:a<.22?1+.15*Math.sin((a-.12)/.1*Math.PI):1,yy=n.y-Math.min(1,a/.9)*16,al=a>.8?1-(a-.8)/.3:1,heal=n.v>0;
   const fs=Math.round((n.crit?11:n.big?9:8)*pop),txt=(heal?'+':'')+n.v+(n.crit?'!':'');c.save();c.globalAlpha=Math.max(0,al);c.font=`bold ${fs}px "Arial Black",sans-serif`;c.textAlign='center';c.lineJoin='round';c.lineWidth=3;c.strokeStyle=heal?'#0a3a12':'#3a0806';c.strokeText(txt,n.x,yy);c.fillStyle=heal?'#7af07a':n.crit?'#ffe14a':'#ffffff';c.fillText(txt,n.x,yy);
@@ -3423,8 +3425,8 @@ function drawBattle0(now){if(!B)return;const c=bctx;c.save();if(B.shake>now&&!rm
  const bk=f=>f.big?1.5:f.boss?1.3:1;   // 大王 ×1.5、小王 ×1.3
  const F2=!!(B.foe2&&(B.foe2.hp>0||now-B.fx.foe2.faint<800)),M2=!!B.me2;
  /* V1.83.1 兩隻一起時：同一邊的兩隻都站在自己的圓台附近，一隻前、一隻稍微後面，不要往對方靠 */
- const LF=F2?{foe:[86,74+OY,bk(B.foe)],foe2:[108,65+OY,.85]}:{foe:[B.foe.boss?90:94,B.foe.boss?74+OY:70+OY,bk(B.foe)]};
- const LM=M2?{me:[40,109+OY,1],me2:[18,101+OY,.85]}:{me:[34,106+OY,1]};
+ const LF=F2?{foe:[80,76+OY,bk(B.foe)],foe2:[112,62+OY,.85]}:{foe:[B.foe.boss?90:94,B.foe.boss?74+OY:70+OY,bk(B.foe)]};
+ const LM=M2?{me:[46,109+OY,1],me2:[16,99+OY,.85]}:{me:[34,106+OY,1]};
  const FK={foe:B.foe,foe2:B.foe2,me:B.me,me2:B.me2},topOf=f=>{if(!f)return 10;if(TOPC[f.key]===undefined){try{TOPC[f.key]=petTopY(f.key,0)-PET_Y}catch(e){TOPC[f.key]=10}}return TOPC[f.key]};
  for(const[k,[x,y,sc]]of Object.entries({...LF,...LM})){BPOS[k]=[x,Math.round(y-24*sc)];BTOP[k]=[x,Math.round(y-CELL*sc+topOf(FK[k])*sc)]}
  // 影子（先畫），再由後往前畫
@@ -3432,8 +3434,8 @@ function drawBattle0(now){if(!B)return;const c=bctx;c.save();if(B.shake>now&&!rm
  if(M2)shadow(LM.me2[0],LM.me2[1],.8,.16);shadow(LM.me[0],LM.me[1],1,.28);
  // V1.81 目標：敵人腳下閃爍的黃圈（畫在角色後面）
  if(B.foe2&&B.foe2.hp>0&&B.foe.hp>0&&!B.over){const L=B.tgt==='foe2'?LF.foe2:LF.foe,a=.55+.35*Math.sin(now/160);c.strokeStyle=`rgba(255,211,74,${a})`;c.lineWidth=1.5;c.beginPath();c.ellipse(L[0],L[1]-2*L[2],17*L[2],4.5*L[2],0,0,Math.PI*2);c.stroke()}
- if(F2)one(B.foe2,B.fx.foe2,LF.foe2[0],LF.foe2[1],'foe',.8,true);one(B.foe,B.fx.foe,LF.foe[0],LF.foe[1],'foe',LF.foe[2],false);
- if(M2)one(B.me2,B.fx.me2,LM.me2[0],LM.me2[1],'me',.8,true);one(B.me,B.fx.me,LM.me[0],LM.me[1],'me',1,false);
+ {const f2Top=F2&&(B.act==='foe2'||(!B.busy&&B.tgt==='foe2'));if(F2&&!f2Top)one(B.foe2,B.fx.foe2,LF.foe2[0],LF.foe2[1],'foe',.8,true);one(B.foe,B.fx.foe,LF.foe[0],LF.foe[1],'foe',LF.foe[2],false);if(f2Top)one(B.foe2,B.fx.foe2,LF.foe2[0],LF.foe2[1],'foe',.8,true)}   // V1.91.2 誰出招／被選中就畫在前面
+ {const m2Top=M2&&(B.act==='me2'||(!B.busy&&B.pick==='me2'));if(M2&&!m2Top)one(B.me2,B.fx.me2,LM.me2[0],LM.me2[1],'me',.8,true);one(B.me,B.fx.me,LM.me[0],LM.me[1],'me',1,false);if(m2Top)one(B.me2,B.fx.me2,LM.me2[0],LM.me2[1],'me',.8,true)}
  // V1.81 輪到誰：頭上彈跳的三角形（我方黃、敵方紅）
  {const who=B.over?null:B.busy?B.act:(B.pick==='me2'?'me2':'me');const P=who&&BTOP[who],f=who&&(who==='foe'?B.foe:who==='foe2'?B.foe2:who==='me'?B.me:B.me2);
   if(P&&f&&f.hp>0&&!(B.fx[who]&&B.fx[who].faint)){const red=who.startsWith('foe'),bob=Math.round(Math.abs(Math.sin(now/180))*3),x=P[0],y=P[1]-8-bob;
