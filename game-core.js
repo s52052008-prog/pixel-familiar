@@ -345,7 +345,7 @@ function fresh(now = Date.now()) {
     plots: Array.from({ length: CONFIG.farm.plots }, () => ({ at: 0 })),
     goals: { date: '', list: [] }, goalLv: 0,
     decor: { owned: ['paper_cream', 'bed_round'], placed: { paper: 'paper_cream', bed: 'bed_round' } }, lounge: { lv: 1, at: 0, decor: { placed: { paper: 'paper_cream' }, pos: {}, flip: {} } }, view: 'yard', digest: [], toiletUses: 0, starveSince: 0, runaway: null, bondRestUntil: 0, ballUses: 0, ballBroken: false,
-    cores: [], ball: { best: 0, goals: 0 }, pk: { best: 0, games: 0, goals: 0 }, acc: [], accAdj: {}, accOwned: [], accLv: {}, mush: [], mushChk: 0, mushDex: [], mushBuff: { atk: 0, def: 0 }, goldGlow: 0, goldKnown: false, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, relics: [], relicGot: [], eggBuys: 0, foster: [], fusionHouse: false, fosterPaid: false, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
+    cores: [], ball: { best: 0, goals: 0 }, pk: { best: 0, games: 0, goals: 0, kinds: [] }, acc: [], accAdj: {}, accOwned: [], accLv: {}, mush: [], mushChk: 0, mushDex: [], mushBuff: { atk: 0, def: 0 }, goldGlow: 0, goldKnown: false, den: { level: 1 }, roster: [], pair: null, owner: '', loveNest: false, loveAt: 0, piggy: 0, pigCores: [], pigBought: false, relics: [], relicGot: [], eggBuys: 0, foster: [], fusionHouse: false, fosterPaid: false, trials: {}, washes: 0, earthWins: 0, matGot: {}, ascBase: null, awake: false,
     events: { volcano: false, moonspring: false, oldtree: false, canyon: false, skypeak: false, thunder: false, mine: false },
     daily: { date: '', adv: 0, gift: false },
     steps: { days: {}, total: 0, rem: 0, forestRem: 0 },
@@ -420,7 +420,7 @@ function sanitize(o, now = Date.now()) {
   r.mush = Array.isArray(o.mush) ? o.mush.filter(m => m && CONFIG.mush.kinds[m.k]).slice(0, CONFIG.mush.max).map(m => ({ k: m.k, x: clamp(Math.round(+m.x || 60), 6, 120), y: clamp(Math.round(+m.y || 96), 84, 106), at: num(m.at, 0, 0, 9e15), fake: m.fake ? 1 : 0 })) : [];
   r.mushChk = num(o.mushChk, 0, 0, 9e15); r.mushDex = Array.isArray(o.mushDex) ? [...new Set(o.mushDex.filter(k => CONFIG.mush.kinds[k]))] : []; r.mushBuff = o.mushBuff && typeof o.mushBuff === 'object' ? { atk: o.mushBuff.atk ? 1 : 0, def: o.mushBuff.def ? 1 : 0 } : { atk: 0, def: 0 };
   r.goldGlow = num(o.goldGlow, 0, 0, 9e15); r.goldKnown = !!o.goldKnown;
-  { const k = o.pk && typeof o.pk === 'object' ? o.pk : {}; r.pk = { best: int(k.best, 0, 0, 5), games: int(k.games, 0, 0, 1e7), goals: int(k.goals, 0, 0, 1e7) }; }   // V1.88 射門 PK
+  { const k = o.pk && typeof o.pk === 'object' ? o.pk : {}; r.pk = { best: int(k.best, 0, 0, 5), games: int(k.games, 0, 0, 1e7), goals: int(k.goals, 0, 0, 1e7), kinds: Array.isArray(k.kinds) ? [...new Set(k.kinds.filter(x => /^[a-z]{3,10}$/.test(x)))].slice(0, 20) : [] }; }   // V1.88 射門 PK
   r.den = { level: int(o.den && o.den.level, 1, 1, CONFIG.den.length) };
   r.roster = Array.isArray(o.roster) ? o.roster.filter(p => p && typeof p === 'object' && p.hatched).slice(0, CONFIG.den.length - 1).map(p => sanitizePet(p, now)) : [];
   r.foster = Array.isArray(o.foster) ? o.foster.filter(p => p && typeof p === "object" && p.hatched).slice(0, 60).map(p => sanitizePet(p, now)) : [];

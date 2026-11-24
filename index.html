@@ -93,7 +93,13 @@ img.uic{width:21px;height:21px;vertical-align:-5px;margin-right:5px;display:inli
 #fishZone{position:fixed;inset:0;z-index:19;background:repeating-linear-gradient(90deg,#2a1a0e 0 3px,#24160c 3px 41px);display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:calc(8px + env(safe-area-inset-top)) 8px calc(12px + env(safe-area-inset-bottom));touch-action:manipulation;-webkit-user-select:none;user-select:none}
 #fishZone.hidden{display:none}
 #pkZone{position:fixed;inset:0;z-index:19;background:repeating-linear-gradient(90deg,#2a1a0e 0 3px,#24160c 3px 41px);display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:calc(8px + env(safe-area-inset-top)) 8px calc(12px + env(safe-area-inset-bottom))}#pkZone.hidden{display:none}
-#pkcv{display:block;width:100%;aspect-ratio:128/112;image-rendering:pixelated;border:3px solid var(--line);touch-action:none}
+#pkcv{display:block;width:100%;aspect-ratio:128/112;max-height:42dvh;object-fit:contain;image-rendering:pixelated;border:3px solid var(--line);touch-action:none;background:#2a6a2e}
+#pkZone .fin{display:flex;flex-direction:column;min-height:100%}#pkPad{position:relative;flex:1 1 auto;min-height:34dvh;margin:4px 0;border:3px solid var(--line);border-radius:10px;overflow:hidden;touch-action:none}#pkpc{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#pkConfirm{position:absolute;left:8px;right:8px;bottom:8px;background:#000b;border-radius:12px;padding:8px;text-align:center;color:#fff3d8;font-size:19px}#pkConfirm .row{display:flex;gap:8px;margin-top:6px}#pkConfirm .btn{flex:1;margin:0;min-height:50px;font-size:17px}#pkConfirm.hidden,#pkMeter.hidden{display:none}
+#pkMeter{position:absolute;inset:0;background:#0008;display:grid;grid-template-columns:auto 1fr;grid-template-rows:1fr auto;gap:10px;padding:12px;align-items:center;justify-items:center}
+#pkPow{position:relative;grid-row:1/3;height:90%;aspect-ratio:20/56}#pkPow img,#pkAim img{width:100%;height:100%;image-rendering:pixelated;display:block}#pkPowI{position:absolute;left:-10%;right:-10%;height:6px;background:#fff;border:2px solid #2a170a;border-radius:3px;transform:translateY(50%)}
+#pkAim{position:relative;width:min(100%,300px);aspect-ratio:68/23}#pkAimI{position:absolute;top:-8%;bottom:20%;width:6px;background:#fff;border:2px solid #2a170a;border-radius:3px;transform:translateX(-50%)}
+#pkPow span,#pkAim span{position:absolute;left:50%;transform:translateX(-50%);bottom:-22px;color:#fff3d8;font-size:13px;white-space:nowrap}#pkPow.dim,#pkAim.dim{opacity:.35}#pkTap{width:min(100%,300px);min-height:56px;font-size:18px;margin:0}
 #pkMsg{text-align:center;font-weight:800;font-size:18px;min-height:52px;color:#ffd86a;line-height:1.4;padding:4px 6px}
 #updBar{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 6px);z-index:99999;background:#ffe066;color:#3a2414;border:3px solid #2a170a;border-radius:8px;padding:10px 14px;font-size:16px;box-shadow:0 4px 14px #000a;max-width:92vw}
 #pkZone{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}#pkZone .fin{flex:1 1 auto;width:100%;max-width:520px}
@@ -277,7 +283,7 @@ body.guiding .panel{display:none!important}#app{gap:4px!important}.toolbar.five 
 #tourBlock{position:fixed;inset:0;z-index:99990}#tourHole{position:fixed;z-index:99991;pointer-events:none;border:3px solid #ffe066;border-radius:12px;box-shadow:0 0 0 9999px rgba(8,5,2,.66),0 0 14px #ffe066;transition:all .25s;animation:tourP 1.2s infinite}
 @keyframes tourP{50%{box-shadow:0 0 0 9999px rgba(8,5,2,.66),0 0 26px #ffe066}}
 #tourCard{position:fixed;left:50%;transform:translateX(-50%);width:min(92vw,400px);z-index:99992;background:#fff3d8;color:#3a2414;border:4px solid #2a170a;border-radius:14px;padding:10px 12px;box-shadow:0 6px 0 #6e4a20;font-size:16px}
-#tourCard b{font-size:18px;display:block;margin:2px 0}#tourCard p{margin:4px 0 8px;line-height:1.45}#tourCard small{color:#8a5a34}#tourCard .row{display:flex;gap:6px;justify-content:flex-end}#tourCard button{border:3px solid #2a170a;border-radius:10px;padding:8px 14px;font-size:16px;font-weight:700;background:#e8c98c;color:#3a2414}#tourCard button.go{background:#6fd86a;color:#163a12}
+#tourCard .tt{font-size:18px;display:block;margin:2px 0}#tourCard p{margin:4px 0 8px;line-height:1.45}#tourCard small{color:#8a5a34}#tourCard .row{display:flex;gap:6px;justify-content:flex-end}#tourCard button{border:3px solid #2a170a;border-radius:10px;padding:8px 14px;font-size:16px;font-weight:700;background:#e8c98c;color:#3a2414}#tourCard button.go{background:#6fd86a;color:#163a12}
 body.gdOn #guideBar{position:relative;z-index:42}body.gdOn .gpoint{z-index:42!important}
 .gpoint{animation:gdGlow 1s ease-in-out infinite!important}@keyframes gdGlow{0%,100%{box-shadow:0 0 0 4px #fff27a,0 0 18px 8px #ffd040}50%{box-shadow:0 0 0 6px #fff,0 0 30px 14px #ffe066}}
 .gpoint{position:relative;box-shadow:0 0 0 3px #ffe066,0 0 12px 4px #ffd040!important;z-index:2}.gpoint::after{content:'👆';position:absolute;left:50%;bottom:-30px;font-size:40px;transform:translateX(-50%);animation:gdHand 1s ease-in-out infinite;pointer-events:none;filter:drop-shadow(0 2px 0 #0008);z-index:5}
@@ -527,7 +533,10 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
  <div class="fctl"><button class="btn fsel4" id="fmS_normal"></button><button class="btn fsel4" id="fmS_good"></button><button class="btn fsel4" id="fmS_rare"></button><button class="btn fsel4" id="fmS_magic"></button>
   <button class="btn fs3" id="fmShop"><img class="uic" src="sprites/ui/shop.png" alt="">買種子、擴建</button><button class="btn fs3" id="fmSell"><img class="uic" src="sprites/ui/coin.png" alt="">賣水果</button><button class="btn fs3" id="fmHome"><img class="uic" src="sprites/ui/house.png" alt="">回院子</button></div></div></div>
 <div id="pkZone" class="hidden"><div class="fin"><div class="fhd"><b>⚽ 射門 PK</b><span id="pkInfo"></span></div><canvas id="pkcv" width="128" height="112"></canvas><div id="pkMsg"></div>
- <div class="fctl"><button class="btn" id="pkHome" style="grid-column:span 12">🏠 回家</button></div>
+ <div id="pkPad"><canvas id="pkpc"></canvas>
+  <div id="pkConfirm" class="hidden"><b id="pkKind"></b><div class="row"><button class="btn" id="pkRedo">🔄 重畫</button><button class="btn pri" id="pkGo">✅ 就這樣踢</button></div></div>
+  <div id="pkMeter" class="hidden"><div id="pkPow"><img src="sprites/pk/power.png" alt=""><i id="pkPowI"></i><span>力道</span></div><div id="pkAim"><img src="sprites/pk/aim.png" alt=""><i id="pkAimI"></i><span>準度</span></div><button class="btn pri" id="pkTap">👆 點一下停！</button></div></div>
+ <div class="fctl"><button class="btn" id="pkBook" style="grid-column:span 6">📖 球路</button><button class="btn" id="pkHome" style="grid-column:span 6">🏠 回家</button></div>
  <div id="pkRes" class="hidden"><div class="rcard"><h2 id="pkRT"></h2><p id="pkRB"></p><div class="row"><button class="btn pri" id="pkAgain">再踢一場</button><button class="btn" id="pkClose">回家</button></div></div></div></div></div>
 <div id="fishZone" class="hidden"><div class="fin" id="fsFin"><div class="fhd"><b>🎣 池邊釣魚</b><span id="fsInfo"></span></div><canvas id="fscv" width="128" height="112"></canvas><div id="fsMsg"></div>
  <div class="fctl"><button class="btn fsel" id="fsB1"></button><button class="btn fsel" id="fsB2"></button><button class="btn fsel" id="fsRod"></button>
@@ -3717,7 +3726,13 @@ const TOURS=[
   {sel:'[data-bt="acc"]',t:'🎀 裝飾',d:'點這裡只看你的裝飾，可以直接戴上、強化。'},
   {open:()=>shopDialog('food'),sel:'[data-tab="acc"]',t:'🛒 商店的裝飾',d:'商店多了「裝飾」分頁，全部裝飾都在這裡，可以買、也可以先試戴。'},
   {sel:'#mBack',t:'◀ 返回鍵',d:'從一個視窗點進下一層時，左上角會有 ◀，按了回上一層，不用關掉重開。'},
-  {open:()=>{closeModal();codexDialog()},sel:'[data-cxacc]',t:'📖 圖鑑：裝飾',d:'圖鑑多了「裝飾」頁，看全部裝飾和套裝收集。'}]}
+  {open:()=>{closeModal();codexDialog()},sel:'[data-cxacc]',t:'📖 圖鑑：裝飾',d:'圖鑑多了「裝飾」頁，看全部裝飾和套裝收集。'}]},
+ {id:'v190',t:'射門 PK 大改版',new:['⚽ 新球場','👆 大大的踢球板','🍌 十種球路（香蕉球、落葉球、蝴蝶球…）','💪 力道條','🎯 準度條','📖 球路圖鑑'],steps:[
+  {sel:'[data-act=play]',t:'⚽ 射門 PK',d:'按「玩耍」→「射門 PK」就能踢。現在帶你練習一下（不花體力）。'},
+  {open:()=>{closeModal();openPK(true)},wait:700,sel:'#pkPad',t:'👆 踢球板',d:'手指<b>從球往上畫一條線</b>。直的、彎的、S 形、Z 字…畫法不同，踢出的球路就不同！'},
+  {sel:'#pkcv',t:'👀 看球怎麼飛',d:'畫完會先在球場上用虛線畫出球路，告訴你是哪一種球。不對就按「重畫」。'},
+  {sel:'#pkBook',t:'📖 球路',d:'十種球路的畫法都在這裡，照著畫就對了。後面五種要 PK 累積踢進幾球才會解鎖。'},
+  {sel:'#pkPad',t:'💪 力道 🎯 準度',d:'按「就這樣踢」後：先點一下停住<b>力道條</b>（越高越快），再停住<b>準度條</b>（停在中間綠色最準）。去踢一場試試吧！'}]}
 ];
 let TOUR=null;
 function tourStart(id){const T=TOURS.find(x=>x.id===id);if(!T||TOUR)return;TOUR={T,i:-1};const blk=document.createElement('div');blk.id='tourBlock';blk.onclick=e=>{e.stopPropagation();sfx('no')};document.body.append(blk);tourNext()}
@@ -3728,10 +3743,10 @@ function tourNext(){if(!TOUR)return;const T=TOUR.T;TOUR.i++;if(TOUR.i>=T.steps.l
 function tourShow(el,S){if(!TOUR)return;const T=TOUR.T,r=el.getBoundingClientRect(),pad=5;let h=$('tourHole');if(!h){h=document.createElement('div');h.id='tourHole';document.body.append(h)}
  Object.assign(h.style,{left:r.left-pad+'px',top:r.top-pad+'px',width:r.width+pad*2+'px',height:r.height+pad*2+'px',opacity:1});
  const c=document.createElement('div');c.id='tourCard';const last=TOUR.i===T.steps.length-1;
- c.innerHTML=`<small>🆕 新功能導覽・${T.t}　${TOUR.i+1}/${T.steps.length}</small><b>${S.t}</b><p>${S.d}</p><div class="row"><button id="tourSkip">跳過</button><button class="go" id="tourGo">${last?'完成 🎉':'下一步 ▶'}</button></div>`;
+ c.innerHTML=`<small>🆕 新功能導覽・${T.t}　${TOUR.i+1}/${T.steps.length}</small><b class="tt">${S.t}</b><p>${S.d}</p><div class="row"><button id="tourSkip">跳過</button><button class="go" id="tourGo">${last?'完成 🎉':'下一步 ▶'}</button></div>`;
  document.body.append(c);const below=r.top+r.height/2<innerHeight/2;c.style[below?'top':'bottom']=(below?r.bottom+14:innerHeight-r.top+14)+'px';
  $('tourGo').onclick=()=>{sfx('tap');tourNext()};$('tourSkip').onclick=()=>{sfx('tap');tourEnd(false)}}
-function tourEnd(done){if(!TOUR)return;const id=TOUR.T.id;TOUR=null;['tourCard','tourHole','tourBlock'].forEach(x=>$(x)&&$(x).remove());s.tours=[...new Set([...(s.tours||[]),id])];save();closeModal();if(done){toast('🎉 導覽完成！之後想再看，到「選單 → 🆕 新功能導覽」',3500);sfx('level')}}
+function tourEnd(done){if(!TOUR)return;const id=TOUR.T.id;TOUR=null;if(PKZ&&PKZ.practice)closePK();['tourCard','tourHole','tourBlock'].forEach(x=>$(x)&&$(x).remove());s.tours=[...new Set([...(s.tours||[]),id])];save();closeModal();if(done){toast('🎉 導覽完成！之後想再看，到「選單 → 🆕 新功能導覽」',3500);sfx('level')}setTimeout(tourCheck,4000)}
 function tourCheck(){if(window.PF_NO_GUIDE||TOUR||!s.hatched||B||mode||!$('modal').classList.contains('hidden'))return;const seen=s.tours||[],T=TOURS.find(x=>!seen.includes(x.id));if(!T)return;
  if(PC.guideStep(s)&&!(s.guide&&s.guide.off)){s.tours=TOURS.map(x=>x.id);save();return}   // 新手還在跑新手手冊：新功能就不另外介紹
  openModal('🆕 有新功能！',`<p>這次更新多了：</p><ul style="margin:4px 0 8px;padding-left:20px;line-height:1.6">${T.new.map(x=>`<li>${x}</li>`).join('')}</ul><p class="small">花一分鐘帶你看一遍怎麼用？</p>`,[{t:'之後再說',fn:()=>{s.tours=[...new Set([...(s.tours||[]),T.id])];save();toast('之後想看，到「選單 → 🆕 新功能導覽」',3000)}},{t:'▶ 帶我看看',cls:'pri',fn:()=>{setTimeout(()=>tourStart(T.id),80)}}])}
@@ -4047,80 +4062,144 @@ const TRAIN_INIT={
    ========================================================= */
 const FZIMG=new Image();FZIMG.src='sprites/arena/pondside.png';
 /* ===== V1.88 ⚽ 射門 PK：手指往球門滑一下射門，守門員是朋友的幻獸 ===== */
-let PKZ=null;const pkcv=$('pkcv'),pkx=pkcv.getContext('2d');pkx.imageSmoothingEnabled=false;
-const PK_GOAL={l:30,r:98,top:24,bot:54};
+const PK_GOAL={l:29,r:99,top:28,bot:63},PK_SPOT={x:64,y:89};
+const PK_IMG={};for(const n of['field','ball','power','aim']){const im=new Image();im.src=`sprites/pk/${n}.png`;PK_IMG[n]=im}
+/* V1.90 十種球路：畫線的樣子決定怎麼踢 */
+const PK_KINDS={straight:{n:'💥 強力直球',d:'直直畫一條',r:1},banana:{n:'🍌 香蕉球',d:'畫一個弧，往那邊彎',r:.85},leaf:{n:'🍂 落葉球',d:'先直、最後一勾',r:.8},butterfly:{n:'🦋 蝴蝶球',d:'畫一個 S',r:.72},chip:{n:'🥄 挑射',d:'往上輕輕、慢慢一挑',r:.85},
+ rocket:{n:'🚀 火箭球',d:'從下往上快速一刷（要很長）',r:.7,unlock:5},boomer:{n:'🪃 迴旋球',d:'先往旁邊、再轉向球門',r:.75,unlock:10},zig:{n:'⚡ 閃電球',d:'畫 Z 字，折兩次',r:.7,unlock:20},whirl:{n:'🌀 旋風球',d:'先畫一個小圈，再往前',r:.72,unlock:30},ghost:{n:'👻 分身球',d:'先在球上點兩下，再畫線',r:.65,unlock:45}};
+const PK_DEMO={straight:[[50,95],[50,10]],banana:[[50,95],[38,60],[38,35],[52,10]],leaf:[[50,95],[50,30],[58,14],[66,16]],butterfly:[[50,95],[36,75],[62,45],[40,15]],chip:[[50,95],[50,62]],rocket:[[50,98],[50,4]],boomer:[[50,95],[82,82],[86,55],[60,12]],zig:[[50,95],[72,70],[30,45],[60,12]],whirl:[[50,95],[50,78],[64,70],[60,56],[44,60],[46,76],[52,10]],ghost:[[50,95],[50,10]]};
+const pkUnlocked=k=>!PK_KINDS[k].unlock||(s.pk.goals||0)>=PK_KINDS[k].unlock;
+let PKZ=null;const pkcv=$('pkcv'),pkx=pkcv.getContext('2d');pkx.imageSmoothingEnabled=false;const pkpc=$('pkpc'),pkp=pkpc.getContext('2d');
 function pkKeeper(){const F=(SOC.friends||[]).filter(f=>f.card&&f.card.pet&&f.card.pet.gene&&!f.card.runaway);
  if(F.length){const f=F[Math.floor(Math.random()*F.length)],p=f.card.pet;return{key:petKey('x:'+p.gene,formCode(p.stage,p.route)),name:`${f.name} 的 ${p.name}`,code:f.code,acc:p.acc,adj:p.accAdj}}
  const sd=crypto.getRandomValues(new Uint32Array(1))[0];return{key:petKey('g:'+sd,formCode('adult',null)),name:'院子裡的野生幻獸',code:null}}
-function openPK(){if(!s.hatched){toast('先把蛋孵出來吧！');return}if(s.sleeping){toast(`${s.name} 在睡覺，先叫醒牠`);return}if(nestBusy())return;if(modeBusy()){toast('先完成現在的互動吧');return}
- const C=CONFIG.pk;if(s.energy<C.energy+4){toast(`${s.name} 太累了，先休息一下吧`,2600);sfx('no');return}cancelMode();unlockAudio();
- s.energy=Math.max(0,s.energy-C.energy);s.hunger=Math.max(0,s.hunger-C.hunger);save();renderUI();
- PKZ={kp:pkKeeper(),shot:0,res:[],saves:0,goals:0,phase:'aim',ball:null,gk:{x:64,tx:64,dive:0,t:0,rot:0},hist:[0,0,0],path:[],x0:s.xp,fx:[],msgT:0};
- $('pkZone').classList.remove('hidden');$('pkRes').classList.add('hidden');pkMsg(`守門員：${PKZ.kp.name}<br>手指從球往球門<b>滑一下</b>射門！`);
- let last=performance.now();const loop=now=>{if(!PKZ)return;const dt=Math.min(.05,(now-last)/1000);last=now;pkUpdate(dt,now);pkDraw(now);requestAnimationFrame(loop)};requestAnimationFrame(loop);sfx('wake')}
-function pkMsg(h){$('pkMsg').innerHTML=h;$('pkInfo').textContent=PKZ?`${PKZ.res.map(r=>r?'⚽':'❌').join('')}${'⚪'.repeat(Math.max(0,CONFIG.pk.shots-PKZ.res.length))}`:''}
-const pkXY=e=>{const b=pkcv.getBoundingClientRect();return{x:(e.clientX-b.left)/b.width*128,y:(e.clientY-b.top)/b.height*112,t:performance.now()}};
-pkcv.addEventListener('pointerdown',e=>{e.preventDefault();if(!PKZ||PKZ.phase!=='aim')return;PKZ.path=[pkXY(e)];try{pkcv.setPointerCapture(e.pointerId)}catch(_){}});
-pkcv.addEventListener('pointermove',e=>{if(PKZ&&PKZ.phase==='aim'&&PKZ.path.length)PKZ.path.push(pkXY(e))});
-pkcv.addEventListener('pointerup',e=>{if(!PKZ||PKZ.phase!=='aim'||!PKZ.path.length)return;PKZ.path.push(pkXY(e));pkShoot();PKZ.path=[]});
-function pkShoot(){const P=PKZ.path,a=P[0],b=P[P.length-1],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy),dt=Math.max(30,b.t-a.t)/1000;
- if(dy>-8||len<12){pkMsg('往<b>球門的方向</b>滑長一點喔！');return}
- let dev=0;for(const q of P){const d=((q.x-a.x)*dy-(q.y-a.y)*dx)/len;if(Math.abs(d)>Math.abs(dev))dev=d}   // 手指走的弧度 → 香蕉球
- const speed=len/dt,power=clamp((speed-60)/260,0,1),curve=clamp(-dev/9,-1,1);
- const tx=64+clamp(dx/-dy,-1.6,1.6)*44,ty=PK_GOAL.bot-2-clamp((len-14)/70,0,1.25)*30;   // 滑得越長球越高
- const T=.62-power*.3;PKZ.ball={t:0,T,tx,ty,curve,power,sx:64,sy:96};PKZ.phase='fly';PKZ.kick=performance.now();sfx('header');
- // 守門員：看起始方向猜，後面幾球越來越會猜你的習慣
- const zone=x=>x<52?0:x>76?2:1,seen=zone(tx-curve*14),n=PKZ.shot,H=PKZ.hist,tot=H[0]+H[1]+H[2];
- let pick;if(Math.random()<.22+n*.08)pick=seen;else if(tot&&Math.random()<.35+n*.05)pick=H.indexOf(Math.max(...H));else pick=Math.floor(Math.random()*3);
- H[zone(tx)]++;const g=PKZ.gk;g.tx=[42,64,86][pick]+(Math.random()-.5)*6;g.t=-(.16-n*.015);g.dive=pick===1?0:(pick===0?-1:1);g.high=ty<36&&Math.random()<.5}
+function openPK(practice){if(!s.hatched){toast('先把蛋孵出來吧！');return}if(s.sleeping&&!practice){toast(`${s.name} 在睡覺，先叫醒牠`);return}if(!practice){if(nestBusy())return;if(modeBusy()){toast('先完成現在的互動吧');return}}
+ const C=CONFIG.pk;if(!practice&&s.energy<C.energy+4){toast(`${s.name} 太累了，先休息一下吧`,2600);sfx('no');return}cancelMode();unlockAudio();
+ if(!practice){s.energy=Math.max(0,s.energy-C.energy);s.hunger=Math.max(0,s.hunger-C.hunger);save();renderUI()}
+ s.pk.kinds=s.pk.kinds||[];const first=!practice&&!s.pk.games&&!s.pk.kinds.length;
+ PKZ={kp:pkKeeper(),practice:!!practice,warm:first,shot:0,res:[],saves:0,goals:0,phase:'aim',ball:null,gk:{x:64,tx:64,dive:0,t:0,rot:0},hist:[0,0,0],used:{},path:[],taps:[],x0:s.xp,fx:[],msgT:0};
+ $('pkZone').classList.remove('hidden');$('pkRes').classList.add('hidden');pkPhase('aim');pkMsg(practice?'練習模式：在下面的踢球板畫線看看～':first?`守門員：${PKZ.kp.name}<br>第一球是<b>練習球</b>，不算分！在下面畫一條線`:`守門員：${PKZ.kp.name}<br>在下面的踢球板<b>畫一條線</b>決定怎麼踢！`);
+ requestAnimationFrame(()=>pkPadSize());let last=performance.now();const loop=now=>{if(!PKZ)return;const dt=Math.min(.05,(now-last)/1000);last=now;pkUpdate(dt,now);pkDraw(now);pkPadDraw(now);requestAnimationFrame(loop)};requestAnimationFrame(loop);sfx('wake')}
+function pkMsg(h){$('pkMsg').innerHTML=h;$('pkInfo').textContent=PKZ?(PKZ.practice?'🎯 練習':`${PKZ.res.map(r=>r?'⚽':'❌').join('')}${'⚪'.repeat(Math.max(0,CONFIG.pk.shots-PKZ.res.length))}`):''}
+function pkPhase(p){PKZ.phase=p;$('pkConfirm').classList.toggle('hidden',p!=='confirm');$('pkMeter').classList.toggle('hidden',p!=='power'&&p!=='acc');$('pkPow').classList.toggle('dim',p!=='power');$('pkAim').classList.toggle('dim',p!=='acc');$('pkTap').textContent=p==='power'?'👆 點一下停！決定力道':'👆 點一下停！停在綠色最準'}
+/* 踢球板：手指畫的線對應到球場 */
+function pkPadSize(){const r=pkpc.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);pkpc.width=Math.max(10,Math.round(r.width*d));pkpc.height=Math.max(10,Math.round(r.height*d))}
+addEventListener('resize',()=>PKZ&&pkPadSize());
+const pkPadXY=e=>{const b=pkpc.getBoundingClientRect();return{x:(e.clientX-b.left)/b.width,y:(e.clientY-b.top)/b.height,t:performance.now()}};   // 0~1
+const pkToField=q=>({x:64+(q.x-.5)*120,y:PK_SPOT.y-(.92-q.y)/.86*(PK_SPOT.y-20)});   // 板子最下面＝罰球點、最上面＝橫桿再上去一點
+pkpc.addEventListener('pointerdown',e=>{e.preventDefault();if(!PKZ||PKZ.phase!=='aim')return;const q=pkPadXY(e);PKZ.path=[q];PKZ.down=q;try{pkpc.setPointerCapture(e.pointerId)}catch(_){}});
+pkpc.addEventListener('pointermove',e=>{if(PKZ&&PKZ.phase==='aim'&&PKZ.path.length)PKZ.path.push(pkPadXY(e))});
+pkpc.addEventListener('pointerup',e=>{if(!PKZ||PKZ.phase!=='aim'||!PKZ.path.length)return;const q=pkPadXY(e);PKZ.path.push(q);const P=PKZ.path;let L=0;for(let i=1;i<P.length;i++)L+=Math.hypot(P[i].x-P[i-1].x,P[i].y-P[i-1].y);
+ if(L<.04){PKZ.taps=PKZ.taps.filter(t=>q.t-t<900);PKZ.taps.push(q.t);PKZ.path=[];if(PKZ.taps.length>=2)pkMsg('👻 點了兩下！現在畫線就是分身球');return}   // 點一下：算在「點兩下」
+ pkJudge()});
+$('pkRedo').onclick=()=>{if(!PKZ)return;PKZ.path=[];PKZ.taps=[];PKZ.plan=null;pkPhase('aim');pkMsg('重畫一條線～');sfx('tap')};
+$('pkGo').onclick=()=>{if(!PKZ||PKZ.phase!=='confirm')return;PKZ.m0=performance.now();pkPhase('power');sfx('tap')};
+const pkStop=()=>{if(!PKZ)return;const Z=PKZ;if(Z.phase==='power'){Z.power=pkMeter(Z.m0,1.05);Z.m0=performance.now();pkPhase('acc');sfx('tap')}else if(Z.phase==='acc'){Z.acc=pkMeterAcc(Z.m0);pkShoot()}};
+$('pkTap').onclick=pkStop;$('pkMeter').addEventListener('pointerdown',e=>{if(e.target.id!=='pkTap'){e.preventDefault();pkStop()}});
+const pkMeter=(t0,per)=>{const u=((performance.now()-t0)/1000/per)%2;return u<1?u:2-u};   // 0→1→0 來回跑
+const pkMeterAcc=t0=>{const per=Math.max(.55,.9-(PKZ.shot*.05));return pkMeter(t0,per)*2-1};   // -1～1，0 是正中間
+/* 判斷球路 */
+function pkJudge(){const Z=PKZ,P0=Z.path;if(P0.length<2)return;
+ const P=[P0[0]];for(const q of P0){const l=P[P.length-1];if(Math.hypot(q.x-l.x,q.y-l.y)>.012)P.push(q)}if(P.length<3){Z.path=[];pkMsg('畫長一點喔！往<b>球門的方向</b>畫');return}
+ let L=0;for(let i=1;i<P.length;i++)L+=Math.hypot(P[i].x-P[i-1].x,P[i].y-P[i-1].y);const a=P[0],b=P[P.length-1],chord=Math.hypot(b.x-a.x,b.y-a.y),dt=Math.max(.05,(b.t-a.t)/1000),speed=L/dt;
+ if(a.y-b.y<.12){Z.path=[];pkMsg('要往<b>上面（球門）</b>畫喔！');return}
+ // 等距取 24 點，算每一段轉了多少
+ const N=24,Q=[];{let acc=0,j=1;Q.push(a);const step=L/(N-1);let prev=a;for(let i=1;i<P.length&&Q.length<N;i++){let seg=Math.hypot(P[i].x-prev.x,P[i].y-prev.y);while(acc+seg>=step&&Q.length<N){const r=(step-acc)/seg,nq={x:prev.x+(P[i].x-prev.x)*r,y:prev.y+(P[i].y-prev.y)*r};Q.push(nq);seg-=step-acc;prev=nq;acc=0}acc+=seg;prev=P[i]}while(Q.length<N)Q.push(b)}
+ const ang=[];for(let i=1;i<N;i++)ang.push(Math.atan2(Q[i].x-Q[i-1].x,-(Q[i].y-Q[i-1].y)));   // 0＝正上方，往右是正
+ const turn=[];for(let i=1;i<ang.length;i++){let d=ang[i]-ang[i-1];while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;turn.push(d)}
+ const T=turn.reduce((x,y)=>x+y,0),A=turn.reduce((x,y)=>x+Math.abs(y),0),sharp=turn.filter(d=>Math.abs(d)>1.45).length;
+ let flips=0,acc=0,sign=0,lobes=[];for(const d of turn){acc+=d;if(Math.abs(acc)>.45){const sg=Math.sign(acc);if(sign&&sg!==sign)flips++;if(sg!==sign)lobes.push(sg);sign=sg;acc=0}}
+ const early=Math.abs(ang.slice(0,6).reduce((x,y)=>x+y,0)/6),late=turn.slice(-6).reduce((x,y)=>x+y,0),body=turn.slice(0,-6).reduce((x,y)=>x+Math.abs(y),0);
+ let loop=false;for(let i=0;i<N-1&&!loop;i++)for(let j=i+3;j<N-1;j++){if(pkCross(Q[i],Q[i+1],Q[j],Q[j+1])){loop=true;break}}
+ let k;const ghost=Z.taps.filter(t=>a.t-t<1500).length>=2;
+ if(ghost)k='ghost';else if(loop||A>5.2)k='whirl';else if(sharp>=2&&flips>=1)k='zig';else if(early>1.0)k='boomer';else if(flips>=1&&A>1.3)k='butterfly';else if(Math.abs(late)>.55&&body<.6)k='leaf';
+ else if(L<.36&&speed<1.4)k='chip';else if(Math.abs(T)>.45||A>.9)k='banana';else if(chord/L>.95&&L>.7&&speed>2.6)k='rocket';else k='straight';
+ let note='';if(!pkUnlocked(k)){const K=PK_KINDS[k];note=`<br><span class="small">🔒 ${K.n} 要 PK 累積踢進 ${K.unlock} 球才會（現在 ${s.pk.goals||0} 球），這次先用基本球路</span>`;k={ghost:'straight',whirl:'banana',zig:'butterfly',boomer:'banana',rocket:'straight'}[k]}
+ const end=pkToField(b),tx=clamp(end.x,6,122),ty=k==='rocket'?PK_GOAL.bot-5:clamp(end.y,12,PK_GOAL.bot-2);   // 火箭球貼地飛
+ Z.plan={k,tx,ty,curve:clamp(-T/2.2,-1,1),side:Math.sign((Q[5]||b).x-a.x)||1,startX:pkToField(Q[6]||b).x,line:Q.map(pkToField)};
+ Z.taps=[];pkPhase('confirm');$('pkKind').innerHTML=`${PK_KINDS[k].n}${(Z.used[k]||0)?`<span class="small">（這場用過 ${Z.used[k]} 次，守門員會比較會猜）</span>`:''}${note}`;pkMsg('看一下球會怎麼飛～不對就重畫');sfx('tap')}
+function pkCross(p1,p2,p3,p4){const d=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);const d1=d(p3,p4,p1),d2=d(p3,p4,p2),d3=d(p1,p2,p3),d4=d(p1,p2,p4);return d1*d2<0&&d3*d4<0}
+/* 球在空中：每種球路飛法不同 */
+function pkPos(B,k){const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2,lin=k,x0=B.sx+(B.tx-B.sx)*lin,y0=B.sy+(B.ty-B.sy)*e;let x=x0,y=y0,lift=Math.sin(Math.PI*k)*(4+B.power*3);
+ switch(B.k){case'banana':x+=B.curve*Math.sin(Math.PI*k)*18;break;case'leaf':lift=Math.sin(Math.PI*Math.min(1,k/.7))*14*(k<.7?1:Math.max(0,1-(k-.7)/.3*1.4));break;
+  case'butterfly':x+=Math.sin(k*3*Math.PI)*9*(1-k*.6);break;case'chip':lift=Math.sin(Math.PI*k)*24;break;case'rocket':lift=Math.sin(Math.PI*k)*1.5;break;
+  case'boomer':x+=-B.side*Math.sin(Math.PI*k)*30;break;case'zig':{const z=k<.33?k/.33:k<.66?1-(k-.33)/.33*2:-1+(k-.66)/.34;x+=z*12*(1-k*.5)}break;
+  case'whirl':if(k<.35){const u=k/.35;x+=Math.sin(u*2*Math.PI)*9;y+=(1-Math.cos(u*2*Math.PI))*-3}break}
+ return{x,y:y-lift,r:4.2-k*2}}
+function pkShoot(){const Z=PKZ,pl=Z.plan,K=PK_KINDS[pl.k],a=Z.acc,ab=Math.abs(a),p=Z.power;
+ let dx=0,dy=0,grade;if(ab<.16){grade='perfect'}else if(ab<.5){grade='ok';dx=Math.sign(a)*(4+ab*6);dy=-ab*4}else{grade='bad';dx=Math.sign(a)*(10+ab*14);dy=-ab*10*(Math.random()<.5?1:-.4)}
+ const tx=pl.tx+dx,ty=pl.ty+dy,T=pl.k==='chip'?1.05-p*.2:pl.k==='rocket'?.36-p*.12:.78-p*.36;
+ Z.ball={k:pl.k,t:0,T,tx,ty,curve:pl.curve,side:pl.side,power:p,grade,sx:PK_SPOT.x,sy:PK_SPOT.y};Z.used[pl.k]=(Z.used[pl.k]||0)+1;pkPhase('fly');Z.kick=performance.now();sfx(pl.k==='rocket'?'punch':'header');
+ const isNew=!s.pk.kinds.includes(pl.k);if(isNew){s.pk.kinds.push(pl.k);save()}
+ pkMsg(`${K.n}　${grade==='perfect'?'🎯 完美！':grade==='ok'?'稍微偏了一點':'😵 偏很多！'}${isNew?'<br>📖 新球路收進球路圖鑑！':''}`);
+ // 守門員：看你一開始往哪邊踢來猜；同一招用越多次越會猜
+ const zone=x=>x<52?0:x>76?2:1,seen=zone(pl.startX),n=Z.shot,H=Z.hist,tot=H[0]+H[1]+H[2],rep=(Z.used[pl.k]-1);
+ let pick;if(Math.random()<.25+n*.06+rep*.12)pick=rep>0&&Math.random()<.5?zone(tx):seen;else if(tot&&Math.random()<.3)pick=H.indexOf(Math.max(...H));else pick=Math.floor(Math.random()*3);
+ H[zone(tx)]++;const g=Z.gk;g.tx=[42,64,86][pick]+(Math.random()-.5)*6;g.t=-(.14-n*.012)*(pl.k==='rocket'?.5:1);g.dive=pick===1?0:(pick===0?-1:1);g.high=ty<40&&Math.random()<.5;g.rep=rep}
 function pkUpdate(dt,now){const Z=PKZ,g=Z.gk;
  for(let i=Z.fx.length-1;i>=0;i--){const p=Z.fx[i];p.t+=dt;if(p.t>p.life){Z.fx.splice(i,1);continue}p.vy+=(p.g||0)*dt;p.x+=p.vx*dt;p.y+=p.vy*dt}
- if(Z.phase==='aim'){g.x+=(64+Math.sin(now/500)*6-g.x)*Math.min(1,dt*3);g.rot*=.8;return}
+ if(Z.phase!=='fly'&&Z.phase!=='after'){g.x+=(64+Math.sin(now/500)*6-g.x)*Math.min(1,dt*3);g.rot*=.8;return}
  if(Z.phase==='fly'){const B=Z.ball;B.t+=dt;g.t+=dt;if(g.t>0){g.x+=(g.tx-g.x)*Math.min(1,dt*9);g.rot+=(g.dive*1.1-g.rot)*Math.min(1,dt*10)}
-  if(B.t>=B.T){const x=B.tx,y=B.ty;let r;
-   if(x<PK_GOAL.l-2||x>PK_GOAL.r+2)r='wide';else if(y<PK_GOAL.top-1)r='over';
-   else if(x<PK_GOAL.l+1||x>PK_GOAL.r-1)r=Math.random()<.5?'post':'goal';
-   else{let reach=(g.dive?14:9)*(B.power>.8?.75:1)*(y<34&&!g.high&&g.dive?.7:1)+PKZ.shot;r=Math.abs(x-g.x)<reach?'save':'goal'}
+  if(B.t>=B.T){const x=B.tx,y=B.ty,G=PK_GOAL;let r;
+   if(x<G.l-1||x>G.r+1)r='wide';else if(y<G.top-1)r='over';else if(x<G.l+2||x>G.r-2||(y<G.top+2&&Math.random()<.5))r=Math.random()<.5?'post':'goal';
+   else{let reach=(g.dive?14:9)*(B.power>.85?.8:1)*(y<36&&!g.high&&g.dive?.7:1)*PK_KINDS[B.k].r*(B.grade==='perfect'?.85:1)*(1+.18*(g.rep||0))+Z.shot*.6;r=Math.abs(x-g.x)<reach?'save':'goal'}
    pkResult(r)}}
- else if(Z.phase==='after'&&now>Z.msgT){if(Z.res.length>=CONFIG.pk.shots)pkEnd();else{Z.phase='aim';Z.ball=null;Z.gk={x:64,tx:64,dive:0,t:0,rot:0};pkMsg(`第 ${Z.res.length+1} 球，滑一下射門！`)}}}
-function pkResult(r){const Z=PKZ,B=Z.ball,ok=r==='goal';Z.res.push(ok);Z.shot++;if(ok)Z.goals++;if(r==='save')Z.saves++;B.done=r;Z.phase='after';Z.msgT=performance.now()+1500;
+ else if(Z.phase==='after'&&now>Z.msgT){if(!Z.practice&&Z.res.length>=CONFIG.pk.shots)pkEnd();else{Z.ball=null;Z.plan=null;Z.path=[];Z.gk={x:64,tx:64,dive:0,t:0,rot:0};pkPhase('aim');pkMsg(Z.practice?'再畫一條試試看～':`第 ${Z.res.length+1} 球，畫線決定怎麼踢！`)}}}
+function pkResult(r){const Z=PKZ,B=Z.ball,ok=r==='goal',warm=Z.warm;B.done=r;Z.phase='after';Z.msgT=performance.now()+1600;
+ if(warm)Z.warm=false;else if(!Z.practice){Z.res.push(ok);Z.shot++;if(ok)Z.goals++;if(r==='save')Z.saves++}
  if(ok){sfx('net');setTimeout(()=>sfx('coin'),250);buzz(20);for(let i=0;i<10;i++)Z.fx.push({ic:Math.random()<.5?'star':'note',x:B.tx,y:B.ty,vx:(Math.random()-.5)*60,vy:-30-Math.random()*30,g:60,t:0,life:.9})}else sfx(r==='save'?'punch':r==='post'?'clang':'whoosh');
- pkMsg({goal:['⚽ 進球！！','⚽ 漂亮的一腳！','⚽ 球進了！守門員看傻了！'][Math.floor(Math.random()*3)],save:`🧤 被${Z.kp.code?'朋友的幻獸':'守門員'}撲出去了！`,wide:'💨 打偏了…',over:'⬆️ 飛過橫桿了…',post:'🥅 噹！打中門柱！'}[r])}
-function pkEnd(){const Z=PKZ,C=CONFIG.pk,g=Z.goals;Z.phase='done';const coins=g*C.coin+(g>=C.shots?C.perfect:0),xp=g*C.xp;
+ pkMsg(({goal:['⚽ 進球！！','⚽ 漂亮的一腳！','⚽ 球進了！守門員看傻了！'][Math.floor(Math.random()*3)],save:`🧤 被${Z.kp.code?'朋友的幻獸':'守門員'}撲出去了！`,wide:'💨 打偏了…',over:'⬆️ 飛過橫桿了…',post:'🥅 噹！打中門柱！'})[r]+(warm?'<br><span class="small">（練習球不算分，接下來是正式的 5 球！）</span>':''))}
+function pkEnd(){const Z=PKZ,C=CONFIG.pk,g=Z.goals;Z.phase='done';const coins=g*C.coin+(g>=C.shots?C.perfect:0),xp=g*C.xp,before=s.pk.goals||0;
  s.coins+=coins;PC.addXP(s,xp);s.mood=Math.min(100,s.mood+g*C.mood);s.pk.games++;s.pk.goals+=g;const nb=g>s.pk.best;if(nb)s.pk.best=g;save();renderUI();
+ const unl=Object.keys(PK_KINDS).filter(k=>PK_KINDS[k].unlock&&before<PK_KINDS[k].unlock&&s.pk.goals>=PK_KINDS[k].unlock);
  if(Z.kp.code)pushPost('/act',{code:Z.kp.code,kind:'pk',data:{saves:Z.saves,goals:g}}).catch(()=>{});
  $('pkRT').textContent=g>=C.shots?'🏆 5 球全進！完美！':g>=3?'🎉 踢得好！':'😅 下次會更好！';
- $('pkRB').innerHTML=`進球 <b>${g} / ${C.shots}</b>${nb?'　🆕 新紀錄！':''}<br>🪙 +${coins}　⭐ 經驗 +${xp}　💗 心情 +${g*C.mood}${g>=C.shots?'<br>（全進加碼 🪙 +'+C.perfect+'）':''}<br><span class="small">最佳紀錄 ${s.pk.best} 球・守門員：${esc(Z.kp.name)}</span>`;
+ $('pkRB').innerHTML=`進球 <b>${g} / ${C.shots}</b>${nb?'　🆕 新紀錄！':''}<br>🪙 +${coins}　⭐ 經驗 +${xp}　💗 心情 +${g*C.mood}${g>=C.shots?'<br>（全進加碼 🪙 +'+C.perfect+'）':''}${unl.length?`<br>🔓 解鎖新球路：<b>${unl.map(k=>PK_KINDS[k].n).join('、')}</b>！看「📖 球路」學怎麼畫`:''}<br><span class="small">最佳紀錄 ${s.pk.best} 球・守門員：${esc(Z.kp.name)}</span>`;
  $('pkAgain').textContent=`再踢一場（⚡${C.energy}）`;setTimeout(()=>{if(PKZ){$('pkRes').classList.remove('hidden');sfx(g>=3?'level':'tap')}},500);const x0=Z.x0;setTimeout(()=>afterChange(x0),600)}
 function closePK(){PKZ=null;$('pkZone').classList.add('hidden');$('pkRes').classList.add('hidden');renderUI()}
-$('pkHome').onclick=()=>{if(PKZ&&PKZ.res.length&&PKZ.phase!=='done'){confirmBox('離開 PK？','現在離開，這場踢進的球就不算獎勵了喔。','離開',()=>{closePK()});return}closePK()};
-$('pkClose').onclick=closePK;$('pkAgain').onclick=()=>{closePK();setTimeout(openPK,100)};
-function pkBall(c,x,y,r,spin){c.fillStyle='#1a1008';c.beginPath();c.arc(x,y,r+.8,0,7);c.fill();c.fillStyle='#ffffff';c.beginPath();c.arc(x,y,r,0,7);c.fill();
- c.fillStyle='#2a2a32';const k=Math.max(1,Math.round(r*.45));c.fillRect(Math.round(x-k/2+Math.cos(spin)*r*.3),Math.round(y-k/2+Math.sin(spin)*r*.3),k,k);if(r>2.5){c.fillRect(Math.round(x+Math.cos(spin+2.1)*r*.75)-0,Math.round(y+Math.sin(spin+2.1)*r*.75),1,1);c.fillRect(Math.round(x+Math.cos(spin+4.2)*r*.75),Math.round(y+Math.sin(spin+4.2)*r*.75),1,1)}}
+$('pkHome').onclick=()=>{if(PKZ&&!PKZ.practice&&PKZ.res.length&&PKZ.phase!=='done'){confirmBox('離開 PK？','現在離開，這場踢進的球就不算獎勵了喔。','離開',()=>{closePK()});return}closePK()};
+$('pkClose').onclick=closePK;$('pkAgain').onclick=()=>{closePK();setTimeout(()=>openPK(),100)};
+$('pkBook').onclick=()=>pkBook();
+/* 📖 球路圖鑑：每種畫法的示範線 */
+function pkBook(){const seen=s.pk.kinds||[];openModal('📖 球路',`<p class="small">在踢球板上照著畫就會踢出那種球。踢出過的會亮起來；🔒 的要 PK 累積踢進幾球才會解鎖（現在 ${s.pk.goals||0} 球）。</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">${Object.keys(PK_KINDS).map(k=>{const K=PK_KINDS[k],lock=!pkUnlocked(k),D=PK_DEMO[k];
+ return`<div style="background:#3a2414;border-radius:10px;padding:6px;color:#fff3d8;${lock?'opacity:.55':''}"><svg viewBox="0 0 100 100" style="width:100%;height:70px;background:#2f7a34;border-radius:6px"><rect x="22" y="2" width="56" height="16" fill="none" stroke="#fff" stroke-width="2"/>${k==='ghost'?'<circle cx="50" cy="95" r="6" fill="none" stroke="#ffe066" stroke-width="3"/><text x="62" y="92" font-size="12" fill="#ffe066">×2</text>':''}<polyline points="${D.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#ffe066" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${D[0][0]}" cy="${D[0][1]}" r="4" fill="#fff"/></svg>
+ <b style="font-size:14px">${lock?'🔒 ':seen.includes(k)?'✅ ':''}${K.n}</b><div class="small">${lock?`PK 踢進 ${K.unlock} 球解鎖`:K.d}</div></div>`}).join('')}</div>`)}
+function pkBall(c,x,y,r,spin){const im=PK_IMG.ball;if(im.complete&&im.naturalWidth){const w=Math.max(3,Math.round(r*2.2));c.save();c.translate(x,y);c.rotate(spin||0);c.drawImage(im,-w/2,-w/2,w,w);c.restore();return}
+ c.fillStyle='#1a1008';c.beginPath();c.arc(x,y,r+.8,0,7);c.fill();c.fillStyle='#ffffff';c.beginPath();c.arc(x,y,r,0,7);c.fill()}
 function pkPet(c,key,fn,x,y,sc,flip,rot,acc,adj){const S=sheet(key),fi=S.idx[fn]??S.idx.idle0??0,w=Math.round(CELL*sc);c.save();c.translate(x,y);if(rot)c.rotate(rot);if(flip)c.scale(-1,1);drawAcc(c,S,fi,-w/2,-w,w,false,acc,adj,'back');c.drawImage(S.cv,fi*CELL,0,CELL,CELL,-w/2,-w,w,w);drawAcc(c,S,fi,-w/2,-w,w,false,acc,adj);c.restore()}
-function pkDraw(now){const c=pkx,Z=PKZ,G=PK_GOAL,ph=phase();
- const sky=c.createLinearGradient(0,0,0,20);sky.addColorStop(0,ph==='night'?'#0c1430':ph==='dusk'?'#7a4f8f':'#5aa6e0');sky.addColorStop(1,ph==='night'?'#233a68':ph==='dusk'?'#f4b07a':'#b8e4f4');c.fillStyle=sky;c.fillRect(0,0,128,20);
- c.fillStyle='#3a4a5a';c.fillRect(0,12,128,10);for(let i=0;i<64;i++){c.fillStyle=['#e8584a','#ffd34a','#5ab0f0','#f0f0f0','#6fcf5a'][(i*7)%5];c.fillRect(i*2,13+((i*5)%3)*3,1,2)}   // 觀眾席
- for(let y=22,k=0;y<112;k++){const h=4+k*1.6;c.fillStyle=k%2?'#4aa84e':'#56b85a';c.fillRect(0,y,128,Math.ceil(h));y+=h}
- // 禁區線
- c.fillStyle='rgba(255,255,255,.85)';c.fillRect(0,G.bot,128,1);c.fillRect(14,70,100,1);c.fillRect(14,G.bot,1,16);c.fillRect(113,G.bot,1,16);c.fillRect(63,95,3,2);
- // 球網
- c.fillStyle='rgba(255,255,255,.18)';c.fillRect(G.l,G.top,G.r-G.l,G.bot-G.top);c.fillStyle='rgba(255,255,255,.35)';for(let x=G.l;x<G.r;x+=4)c.fillRect(x,G.top,1,G.bot-G.top);for(let y=G.top;y<G.bot;y+=4)c.fillRect(G.l,y,G.r-G.l,1);
+function pkDraw(now){const c=pkx,Z=PKZ,G=PK_GOAL;
+ if(PK_IMG.field.complete&&PK_IMG.field.naturalWidth)c.drawImage(PK_IMG.field,0,0,128,112);else{c.fillStyle='#4aa84e';c.fillRect(0,0,128,112)}
  // 守門員（朋友的幻獸，站在球門線上）
  const g=Z.gk,gf=Z.phase==='fly'&&g.t>0&&g.dive?'jump1':Z.phase==='after'&&Z.ball&&Z.ball.done==='save'?'happy1':(Math.floor(now/400)%2?'idle0':'idle1');
- pkPet(c,Z.kp.key,gf,Math.round(g.x),G.bot+2-(g.high&&Z.phase!=='aim'?6:0),.62,false,g.rot,Z.kp.acc,Z.kp.adj);
- // 門柱、橫桿
- c.fillStyle='#1a1008';c.fillRect(G.l-2,G.top-2,G.r-G.l+4,3);c.fillRect(G.l-2,G.top-2,3,G.bot-G.top+3);c.fillRect(G.r-1,G.top-2,3,G.bot-G.top+3);
- c.fillStyle='#ffffff';c.fillRect(G.l-1,G.top-1,G.r-G.l+2,1);c.fillRect(G.l-1,G.top-1,1,G.bot-G.top+1);c.fillRect(G.r,G.top-1,1,G.bot-G.top+1);
+ pkPet(c,Z.kp.key,gf,Math.round(g.x),G.bot+1-(g.high&&Z.phase==='fly'?6:0),.62,false,g.rot,Z.kp.acc,Z.kp.adj);
+ // 預計球路（虛線）
+ if((Z.phase==='confirm'||Z.phase==='power'||Z.phase==='acc')&&Z.plan){const pl=Z.plan,B={k:pl.k,tx:pl.tx,ty:pl.ty,curve:pl.curve,side:pl.side,power:.5,sx:PK_SPOT.x,sy:PK_SPOT.y};c.fillStyle='rgba(255,230,90,.95)';for(let i=0;i<=24;i++){if(i%2)continue;const p=pkPos(B,i/24);c.fillRect(Math.round(p.x),Math.round(p.y),1,1)}
+  c.strokeStyle='rgba(255,230,90,.9)';c.strokeRect(Math.round(pl.tx)-2.5,Math.round(pl.ty)-2.5,5,5)}
+ // 正在畫的線（同步畫到球場上）
+ if(Z.phase==='aim'&&Z.path.length>1){c.fillStyle='rgba(255,255,255,.75)';for(const q of Z.path){const f=pkToField(q);c.fillRect(Math.round(f.x),Math.round(f.y),1,1)}}
  // 自己的幻獸（踢球的人）
- const kicking=Z.kick&&now-Z.kick<300;pkPet(c,formKey(),kicking?'jump1':(Math.floor(now/450)%2?'idle0':'idle1'),38,104,.82,true,0,s.acc,s.accAdj);
+ const kicking=Z.kick&&now-Z.kick<300;pkPet(c,formKey(),kicking?'jump1':(Math.floor(now/450)%2?'idle0':'idle1'),40,108,.8,true,0,s.acc,s.accAdj);
  // 球
- const B=Z.ball;if(!B)pkBall(c,64,96,4,0);else{const k=Math.min(1,B.t/B.T),e=k,x=B.sx+(B.tx-B.sx)*e+B.curve*Math.sin(Math.PI*k)*16,y=B.sy+(B.ty-B.sy)*e-Math.sin(Math.PI*k)*(4+B.power*4),r=4-k*1.8;
-  if(B.done==='goal'){pkBall(c,B.tx,B.ty+Math.min(6,(now-Z.msgT+1500)/80),2.2,0)}else if(B.done==='save'){pkBall(c,B.tx+(B.tx<64?-1:1)*Math.min(30,(now-Z.msgT+1500)/25),B.ty+Math.min(30,(now-Z.msgT+1500)/30),2.2,now/80)}
-  else if(B.done){pkBall(c,B.tx+(B.tx-64)*.2,B.ty-4,2,now/80)}else pkBall(c,x,y,r,now/60)}
- // 瞄準線
- if(Z.phase==='aim'&&Z.path.length>1){c.fillStyle='rgba(255,224,102,.8)';for(const q of Z.path)c.fillRect(Math.round(q.x),Math.round(q.y),1,1)}
+ const B=Z.ball;if(!B)pkBall(c,PK_SPOT.x,PK_SPOT.y-3,4,0);else{const k=Math.min(1,B.t/B.T),p=pkPos(B,k);
+  if(B.done==='goal'){pkBall(c,B.tx,B.ty+Math.min(6,(now-Z.msgT+1600)/80),2.2,0)}else if(B.done==='save'){pkBall(c,B.tx+(B.tx<64?-1:1)*Math.min(30,(now-Z.msgT+1600)/25),B.ty+Math.min(30,(now-Z.msgT+1600)/30),2.2,now/80)}
+  else if(B.done){pkBall(c,B.tx+(B.tx-64)*.2,B.ty-4,2,now/80)}
+  else{if(B.k==='rocket'){c.fillStyle='rgba(255,180,60,.6)';for(let j=1;j<6;j++){const q=pkPos(B,Math.max(0,k-j*.03));c.fillRect(Math.round(q.x)-1,Math.round(q.y)-1,2,2)}}
+   if(B.k==='ghost'&&k<.85){const sp=12*Math.pow(1-k/.85,1.4);c.globalAlpha=.55;pkBall(c,p.x-sp,p.y,p.r,now/60);pkBall(c,p.x+sp,p.y,p.r,now/60);c.globalAlpha=1}
+   pkBall(c,p.x,p.y-3*(1-k),p.r,now/60)}}
  for(const p of Z.fx){const im=ICV[p.ic];if(im)c.drawImage(im,Math.round(p.x-3),Math.round(p.y-3),6,6)}}
+/* 踢球板畫面 */
+function pkPadDraw(now){const c=pkp,Z=PKZ,W=pkpc.width,H=pkpc.height;if(!W)return;
+ const gr=c.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#2a6a2e');gr.addColorStop(1,'#3f9444');c.fillStyle=gr;c.fillRect(0,0,W,H);
+ c.fillStyle='rgba(255,255,255,.06)';for(let i=0;i<6;i++)if(i%2)c.fillRect(0,H*i/6,W,H/6);
+ // 球門的位置（對照上面的球場）
+ const F2P=f=>({x:((f.x-64)/120+.5)*W,y:(.92-(PK_SPOT.y-f.y)/(PK_SPOT.y-20)*.86)*H}),g1=F2P({x:PK_GOAL.l,y:PK_GOAL.top}),g2=F2P({x:PK_GOAL.r,y:PK_GOAL.bot});
+ c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=Math.max(2,W/180);c.setLineDash([8,6]);c.strokeRect(g1.x,g1.y,g2.x-g1.x,g2.y-g1.y);c.setLineDash([]);
+ c.fillStyle='rgba(255,255,255,.55)';c.font=`${Math.round(H/18)}px sans-serif`;c.textAlign='center';c.fillText('球門',(g1.x+g2.x)/2,g1.y-6);
+ const bx=W/2,by=.92*H,br=Math.min(W,H)/16;if(PK_IMG.ball.complete&&PK_IMG.ball.naturalWidth){c.imageSmoothingEnabled=false;c.drawImage(PK_IMG.ball,bx-br,by-br,br*2,br*2)}
+ if(Z.phase==='aim'&&!Z.path.length){c.fillStyle='rgba(255,255,255,'+(.5+.3*Math.sin(now/300))+')';c.fillText('👆 從球往上畫一條線',bx,by-br-10)}
+ if(Z.taps.length){c.strokeStyle='#ffe066';c.lineWidth=4;c.beginPath();c.arc(bx,by,br+6+4*Math.sin(now/120),0,7);c.stroke()}
+ const P=Z.phase==='aim'?Z.path:(Z.plan?Z.path:[]);if(P.length>1){c.strokeStyle='#ffe066';c.lineWidth=Math.max(5,W/60);c.lineCap='round';c.lineJoin='round';c.beginPath();P.forEach((q,i)=>i?c.lineTo(q.x*W,q.y*H):c.moveTo(q.x*W,q.y*H));c.stroke()}
+ if(Z.phase==='power'){const v=pkMeter(Z.m0,1.05);$('pkPowI').style.bottom=(6+v*84)+'%'}if(Z.phase==='acc'){const v=pkMeterAcc(Z.m0);$('pkAimI').style.left=(50+v*44)+'%'}}
 let FZ=null;const fcv=$('fscv'),fctx=fcv.getContext('2d');fctx.imageSmoothingEnabled=false;
 const FTR={x:6,y:10,w:14,h:90};   // 拉條軌道
 const fsMsg=t=>{$('fsMsg').innerHTML=`<span>${t}</span>`};
