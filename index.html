@@ -315,6 +315,14 @@ header{padding-top:10px}
 #tcv{border-left:0;border-right:0;width:100%;height:auto;background:#000}
 #trainZone .tctl{margin-top:auto;padding:0 10px}#trainZone .tctl .tbtn{min-height:96px;font-size:22px}
 
+/* V1.90 組合拳換成冠宏畫的按鍵 */
+.gpad{display:flex;justify-content:space-between;align-items:center;width:100%;padding:0 10px 8px}.gdp,.gfc{position:relative;width:138px;height:138px}
+.gk{position:absolute;width:46px;height:46px;padding:0;border:0;background:none;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;cursor:pointer}.gk img{width:100%;height:100%;image-rendering:pixelated;display:block;pointer-events:none}.gk.dn{transform:translateY(3px)}.gk.off{opacity:.25;pointer-events:none}
+.gkU,.gkT{left:46px;top:0}.gkD,.gkX{left:46px;top:92px}.gkL,.gkS{left:0;top:46px}.gkR,.gkC{left:92px;top:46px}
+@media (max-width:380px){.gdp,.gfc{width:126px;height:126px}.gk{width:42px;height:42px}.gkU,.gkT{left:42px}.gkD,.gkX{left:42px;top:84px}.gkL,.gkS{top:42px}.gkR,.gkC{left:84px;top:42px}}
+#gBanner{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:90;pointer-events:none}#gBanner img{width:min(70vw,300px);image-rendering:pixelated;display:block;animation:gbPop .9s ease-out forwards}#gBanner.gb_gameover img{width:min(60vw,240px);animation:gbDrop 1.3s ease-out forwards}
+@keyframes gbPop{0%{transform:scale(.3);opacity:0}25%{transform:scale(1.15);opacity:1}40%{transform:scale(1)}80%{opacity:1}100%{transform:scale(1.3);opacity:0}}@keyframes gbDrop{0%{transform:translateY(-60px);opacity:0}30%{transform:translateY(0);opacity:1}40%{transform:translateY(-8px)}50%{transform:translateY(0)}85%{opacity:1}100%{opacity:0}}
+.rimg{height:56px;margin-bottom:4px;image-rendering:pixelated;vertical-align:middle}.rimg.go{height:72px}.coinSpin img{height:1.1em;image-rendering:pixelated;vertical-align:-.15em}
 /* V1.66 組合拳：遊戲機風格的十字鍵與 AB 鍵 */
 .tctl.pad{display:flex!important;justify-content:space-between;align-items:center;gap:10px;padding:2px 18px 10px}
 .tctl.pad .dpad{position:relative;width:126px;height:126px}
@@ -3859,7 +3867,7 @@ function init(){
 const TRAIN_INFO={
  dodge:{icon:'⚾',title:'閃避訓練：躲棒球',goal:'投手會丟直球、曲球、蝴蝶球、伸卡球、變速球、分身球，還有全身發光的超級球！按左右移動閃開，共 12 球；階段越高球越快、越刁鑽，能被打中的次數也越少'},
  rush:{icon:'👊',title:'攻擊訓練：沙包連打',goal:'3 秒內連續打沙包（第 1–3 階約 70 下，越高階要越多下）'},
- combo:{icon:'🥊',title:'攻擊訓練：組合拳',goal:'像打太鼓一樣：符號滑到沙包旁的圓圈時，照符號按 ▲▼◀▶ 或 A／B。5 組 × 5 拳全部打完才結算；階段越高節奏越快、判定越嚴'},
+ combo:{icon:'🥊',title:'攻擊訓練：組合拳',goal:'像打太鼓一樣：符號滑到沙包旁的圓圈時，照符號按方向鍵或 ○✕（第 4 階以後還有 △□）。5 組 × 5 拳全部打完才結算；階段越高節奏越快、判定越嚴'},
  flash:{icon:'💡',title:'攻擊訓練：靈光一閃',goal:'飛盤會亂飛！飛進紅色攻擊範圍時點螢幕，寵物會用屬性技從遠處射中它。10 個飛盤要打中 6～9 個（看階段）；有時一次飛兩個，兩隻手指同時點就能射兩發'},
  zen:{icon:'🧘',title:'防禦訓練：瀑布打坐',goal:'坐在瀑布下面修行！20 秒內把亂飄的意念泡泡點掉（會往上衝、也會左右閃），階段越高泡泡越快、越多，能分心的次數也越少'}};
 let TG=null;const tcv=$('tcv'),tctx=tcv.getContext('2d');tctx.imageSmoothingEnabled=false;
@@ -3885,10 +3893,10 @@ function startTraining(kind){if(modeBusy()){toast('先完成現在的互動吧')
  TG={kind,t:0,phase:'count',cd:3,x0:s.xp,S:sheet(formKey()),fx:[],shake:0,flash:0};TRAIN_INIT[kind](TG);
  $('trainZone').classList.remove('hidden');$('tResult').classList.add('hidden');$('tTitle').textContent=TRAIN_INFO[kind].icon+' '+TRAIN_INFO[kind].title;$('tGoal').textContent=TRAIN_INFO[kind].goal;
  $('tCtl').innerHTML=TG.ctlHTML||(TG.btns||[]).map(([id,t])=>`<button class="btn tbtn" data-tb="${id}">${t}</button>`).join('');$('tCtl').classList.toggle('pad',!!TG.ctlHTML);
- $('tCtl').querySelectorAll('[data-tb]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();if(TG&&TG.phase==='play'&&TG.btn)TG.btn(b.dataset.tb)}));
+ $('tCtl').querySelectorAll('[data-tb]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();{const im=b.querySelector('.gk img')||(b.classList.contains('gk')&&b.querySelector('img'));if(im){const k=GBK[b.dataset.tb];im.src=`sprites/gbtn/${k}_p.png`;b.classList.add('dn');clearTimeout(b._t);b._t=setTimeout(()=>{im.src=`sprites/gbtn/${k}.png`;b.classList.remove('dn')},130)}}if(TG&&TG.phase==='play'&&TG.btn)TG.btn(b.dataset.tb)}));
  fitTrain();tMsg('準備…3');sfx('tap');let last=performance.now();
  const loop=now=>{if(!TG)return;const dt=Math.min(.05,(now-last)/1000);last=now;
-  if(TG.phase==='count'){TG.cd-=dt;const k=Math.ceil(TG.cd);if(TG.cd<=0){TG.phase='play';TG.t=0;tMsg('開始！');sfx('wake')}else if(k!==TG.lastK){TG.lastK=k;tMsg('準備…'+k);sfx('tap')}}
+  if(TG.phase==='count'){TG.cd-=dt;const k=Math.ceil(TG.cd);if(TG.cd<=0){TG.phase='play';TG.t=0;tMsg('開始！');sfx('wake');gameBanner('start',900)}else if(k!==TG.lastK){TG.lastK=k;tMsg('準備…'+k);sfx('tap')}}
   else if(TG.phase==='play'){TG.t+=dt;TG.update(dt)}
   for(let i=TG.fx.length-1;i>=0;i--){const p=TG.fx[i];p.t+=dt;if(p.t>p.life){TG.fx.splice(i,1);continue}p.vy+=(p.g||0)*dt;p.x+=(p.vx||0)*dt;p.y+=(p.vy||0)*dt}
   drawTraining(now);$('tHud').innerHTML=TG.hud?TG.hud():'';if(TG.phase!=='done')requestAnimationFrame(loop)};requestAnimationFrame(loop)}
@@ -3900,7 +3908,7 @@ function tMsg(t){$('tMsg').textContent=t}
 function tPop(ic,x,y,n=3){for(let i=0;i<n;i++)TG.fx.push({ic,x:x+(Math.random()-.5)*10,y:y+(Math.random()-.5)*6,vx:(Math.random()-.5)*30,vy:-20-Math.random()*20,g:40,t:0,life:.7})}
 function endTraining(win,note){if(!TG||TG.phase==='done')return;const kind=TG.kind;TG.phase='done';
  const r=(setTimeout(()=>guideHit('train'),1500),PC.finishTrain)(s,kind,win,Date.now());let lvUp='';if(win&&['zen','dodge','rush','combo','flash'].includes(kind)){const a=PC.trainLvOf(s,kind),b=PC.trainLvUp(s,kind);if(b>a)lvUp=`<br>📈 這項訓練升到第 <b>${b}</b> 階（${PC.TRAIN_TIER[PC.trainTier(b)]}）`;else if(a>=10)lvUp='<br>🏆 已經是最高的第 10 階了！'}save();renderUI();
- $('tResult').classList.remove('hidden');$('tRTitle').textContent=win?'🎉 訓練成功！':'😣 訓練失敗…';
+ $('tResult').classList.remove('hidden');$('tRTitle').innerHTML=win?'<img class="rimg" src="sprites/gbtn/trophy.png" alt=""><br>🎉 訓練成功！':'<img class="rimg go" src="sprites/gbtn/gameover.png" alt=""><br>😣 訓練失敗…';
  $('tRBody').innerHTML=`${note||''}<br>${win?(()=>{const sk=CONFIG.train.kinds[kind].skill,n=(s.trainLog||{})[sk]||0,pc=Math.round(PC.trainBonus(s)[sk]*100),nm={dodge:'閃避',attack:'攻擊',defense:'防禦'}[sk];return`經驗 <b>+${r.xp}</b><br>${nm}能力 → 目前 <b>+${pc}%</b>${pc>=20?'（練滿了！）':''}${lvUp}`})():'沒有達成目標，這次沒有經驗。再試一次吧！'}`;
  $('tAgain').textContent=`再練一次（🪙 ${CONFIG.train.cost}）`;$('tAgain').disabled=!!PC.canTrain(s);
  sfx(win?'level':'no');buzz(win?30:60);if(win){TG.win=true;tPop('star',64,50,8)}drawTraining(performance.now());
@@ -3911,7 +3919,13 @@ $('tClose').onclick=()=>closeTraining();
 tcv.addEventListener('pointerdown',e=>{e.preventDefault();if(!TG||TG.phase!=='play'||!TG.tap)return;const b=tcv.getBoundingClientRect();TG.tap((e.clientX-b.left)/b.width*128,(e.clientY-b.top)/b.height*tcv.height-TOFF)});
 /* 組合拳：每次隨機 5～6 拳，至少換手 2 次，不會整串都同一邊 */
 /* 組合拳的音符：↑↓←→ 藍色、A 紅色、B 黃色 */
-function noteGlyph(c,x,y,k){const col=k==='A'?'#e8433f':k==='B'?'#f2b21a':'#3a7ae8';c.fillStyle='#1a1008';c.beginPath();c.arc(x,y,7.5,0,Math.PI*2);c.fill();c.fillStyle=col;c.beginPath();c.arc(x,y,6.5,0,Math.PI*2);c.fill();c.fillStyle='rgba(255,255,255,.35)';c.fillRect(x-3,y-4,3,1);c.fillStyle='#ffffff';
+/* V1.90 冠宏畫的遊戲按鍵（sprites/gbtn）：組合拳的方向鍵、△○□✕，小遊戲的 START／GAME OVER */
+const GB={};['up','down','left','right','tri','cir','sq','x','up_p','down_p','left_p','right_p','tri_p','cir_p','sq_p','x_p','start','gameover','trophy','coin0','coin1','coin2','coin3','crown','star','heart','bomb'].forEach(n=>{const im=new Image();im.src=`sprites/gbtn/${n}.png`;GB[n]=im});
+const GBK={U:'up',D:'down',L:'left',R:'right',T:'tri',C:'cir',S:'sq',X:'x'};
+function gameBanner(k,ms=1100){const old=$('gBanner');old&&old.remove();const d=document.createElement('div');d.id='gBanner';d.className='gb_'+k;d.innerHTML=`<img src="sprites/gbtn/${k}.png" alt="">`;document.body.append(d);setTimeout(()=>d.remove(),ms)}
+const coinSpin=()=>'<span class="coinSpin"><img src="sprites/gbtn/coin0.png" alt=""></span>';
+setInterval(()=>{const f=Math.floor(performance.now()/140)%4;document.querySelectorAll('.coinSpin img').forEach(i=>{const n=`sprites/gbtn/coin${f}.png`;if(!i.src.endsWith(n))i.src=n})},140);
+function noteGlyph(c,x,y,k){const im=GB[GBK[k]];if(im&&im.complete&&im.naturalWidth){const w=16,h=Math.round(im.naturalHeight*w/im.naturalWidth);c.drawImage(im,Math.round(x-w/2),Math.round(y-h/2),w,h);return}const col=k==='A'?'#e8433f':k==='B'?'#f2b21a':'#3a7ae8';c.fillStyle='#1a1008';c.beginPath();c.arc(x,y,7.5,0,Math.PI*2);c.fill();c.fillStyle=col;c.beginPath();c.arc(x,y,6.5,0,Math.PI*2);c.fill();c.fillStyle='rgba(255,255,255,.35)';c.fillRect(x-3,y-4,3,1);c.fillStyle='#ffffff';
  const U=['0001000','0011100','0111110','1111111','0011100','0011100','0011100'],rot=(g,f)=>g.map((r,j)=>[...r].map((_,i)=>f(g,i,j)).join(''));
  const P={U,D:[...U].reverse(),L:rot(U,(g,i,j)=>g[i][j]),R:rot(U,(g,i,j)=>g[i][6-j]),A:['0011100','0110110','1100011','1100011','1111111','1100011','1100011'],B:['1111100','1100110','1100110','1111100','1100110','1100110','1111100']}[k];
  for(let j=0;j<7;j++)for(let i=0;i<7;i++)if(P[j][i]==='1')c.fillRect(x-3+i,y-3+j,1,1)}
@@ -4008,11 +4022,11 @@ const TRAIN_INIT={
     tPet(c,fr,24+SH+dx,58+dy,true);if(hop&&k>.35&&k<.65){c.fillStyle='#fff3a6';c.fillRect(70+SH,60,3,3);c.fillRect(74+SH,54,2,2);c.fillRect(74+SH,66,2,2)}
     tBar(c,8,104,112,G.n/GOAL,G.n>=GOAL?'#6fcf5a':'#ffd34a')}})},
  /* 組合拳（V1.66 節奏版）：音符滑到沙包旁的圓圈時照節拍按 ▲▼◀▶ / A B，5 組 × 5 拳全部打完才結算，命中 70% 以上過關 */
- combo(G){const Q=TLV('combo'),KEYS=['U','D','L','R','A','B'],SETS=5,PER=5,BEAT=[.6,.5,.42,.36][Q.t]-Q.sub*.015,GAP=1,SPD=62/BEAT*.5,HITX=60,LY=74,WIN=[.3,.26,.22,.18][Q.t],PERF=.1,TOTAL=SETS*PER,NEED=Math.ceil(TOTAL*([.6,.7,.78,.85][Q.t]));
-  const notes=[];let t=1.2;for(let k=0;k<SETS;k++){for(let n=0;n<PER;n++){notes.push({k:KEYS[Math.floor(Math.random()*6)],t,set:k,st:0});t+=BEAT}t+=GAP}
+ combo(G){const Q=TLV('combo'),KEYS=Q.t?['U','D','L','R','T','C','S','X']:['U','D','L','R','C','X'],SETS=5,PER=5,BEAT=[.6,.5,.42,.36][Q.t]-Q.sub*.015,GAP=1,SPD=62/BEAT*.5,HITX=60,LY=74,WIN=[.3,.26,.22,.18][Q.t],PERF=.1,TOTAL=SETS*PER,NEED=Math.ceil(TOTAL*([.6,.7,.78,.85][Q.t]));
+  const notes=[];let t=1.2;for(let k=0;k<SETS;k++){for(let n=0;n<PER;n++){notes.push({k:KEYS[Math.floor(Math.random()*KEYS.length)],t,set:k,st:0});t+=BEAT}t+=GAP}
   const arrow=d=>`<svg viewBox="0 0 20 20"><path d="${{U:'M10 4 L17 13 L3 13 Z',D:'M10 16 L17 7 L3 7 Z',L:'M4 10 L13 3 L13 17 Z',R:'M16 10 L7 3 L7 17 Z'}[d]}"/></svg>`;
   Object.assign(G,{notes,miss:0,good:0,perf:0,combo:0,best:0,side:1,hit:0,setDone:0,judge:null,seq:notes.map(n=>n.k),
-   ctlHTML:`<div class="padL"><div class="dpad">${['U','L','R','D'].map(k=>`<button class="pk pk${k}" data-tb="${k}" aria-label="${k}">${arrow(k)}</button>`).join('')}<i class="hub"></i></div></div><div class="padR"><button class="pk pkB" data-tb="B">B</button><button class="pk pkA" data-tb="A">A</button></div>`,
+   ctlHTML:`<div class="gpad"><div class="gdp">${['U','L','R','D'].map(k=>`<button class="gk gk${k}" data-tb="${k}" aria-label="${k}"><img src="sprites/gbtn/${GBK[k]}.png" alt=""></button>`).join('')}</div><div class="gfc">${['T','S','C','X'].map(k=>`<button class="gk gk${k}${KEYS.includes(k)?'':' off'}" data-tb="${k}" aria-label="${k}"><img src="sprites/gbtn/${GBK[k]}.png" alt=""></button>`).join('')}</div></div>`,
    judgeSet(txt,col){G.judge={txt,col,at:G.t}},
    btn(k){const cand=G.notes.filter(n=>!n.st&&Math.abs(G.t-n.t)<=WIN+.08).sort((a,b)=>Math.abs(G.t-a.t)-Math.abs(G.t-b.t))[0];
     if(!cand){sfx('tap');return}
@@ -4106,7 +4120,7 @@ function openPK(practice){if(!s.hatched){toast('先把蛋孵出來吧！');retur
  s.pk.kinds=s.pk.kinds||[];const first=!practice&&!s.pk.games&&!s.pk.kinds.length;
  PKZ={kp:pkKeeper(),practice:!!practice,warm:first,shot:0,res:[],saves:0,goals:0,phase:'aim',ball:null,gk:{x:64,tx:64,dive:0,t:0,rot:0},hist:[0,0,0],used:{},path:[],taps:[],x0:s.xp,fx:[],msgT:0};
  $('pkZone').classList.remove('hidden');$('pkRes').classList.add('hidden');pkPhase('aim');pkMsg(practice?'練習模式：在下面的踢球板畫線看看～':first?`守門員：${PKZ.kp.name}<br>第一球是<b>練習球</b>，不算分！在下面畫一條線`:`守門員：${PKZ.kp.name}<br>在下面的踢球板<b>畫一條線</b>決定怎麼踢！`);
- requestAnimationFrame(()=>pkPadSize());let last=performance.now();const loop=now=>{if(!PKZ)return;const dt=Math.min(.05,(now-last)/1000);last=now;pkUpdate(dt,now);pkDraw(now);pkPadDraw(now);requestAnimationFrame(loop)};requestAnimationFrame(loop);sfx('wake')}
+ requestAnimationFrame(()=>pkPadSize());if(!practice)setTimeout(()=>gameBanner('start',900),250);let last=performance.now();const loop=now=>{if(!PKZ)return;const dt=Math.min(.05,(now-last)/1000);last=now;pkUpdate(dt,now);pkDraw(now);pkPadDraw(now);requestAnimationFrame(loop)};requestAnimationFrame(loop);sfx('wake')}
 function pkMsg(h){$('pkMsg').innerHTML=h;$('pkInfo').textContent=PKZ?(PKZ.practice?'🎯 練習':`${PKZ.res.map(r=>r?'⚽':'❌').join('')}${'⚪'.repeat(Math.max(0,CONFIG.pk.shots-PKZ.res.length))}`):''}
 function pkPhase(p){PKZ.phase=p;$('pkConfirm').classList.toggle('hidden',p!=='confirm');$('pkMeter').classList.toggle('hidden',p!=='power'&&p!=='acc');$('pkPow').classList.toggle('dim',p!=='power');$('pkAim').classList.toggle('dim',p!=='acc');$('pkTap').textContent=p==='power'?'👆 點一下停！決定力道':'👆 點一下停！停在綠色最準'}
 /* 踢球板：手指畫的線對應到球場 */
@@ -4180,8 +4194,8 @@ function pkEnd(){const Z=PKZ,C=CONFIG.pk,g=Z.goals;Z.phase='done';const star=PC.
  s.coins+=coins;PC.addXP(s,xp);s.mood=Math.min(100,s.mood+g*C.mood);s.pk.games++;s.pk.goals+=g;const nb=g>s.pk.best;if(nb)s.pk.best=g;save();renderUI();
  const unl=Object.keys(PK_KINDS).filter(k=>PK_KINDS[k].unlock&&before<PK_KINDS[k].unlock&&s.pk.goals>=PK_KINDS[k].unlock);
  if(Z.kp.code)pushPost('/act',{code:Z.kp.code,kind:'pk',data:{saves:Z.saves,goals:g}}).catch(()=>{});
- $('pkRT').textContent=g>=C.shots?'🏆 5 球全進！完美！':g>=3?'🎉 踢得好！':'😅 下次會更好！';
- $('pkRB').innerHTML=`進球 <b>${g} / ${C.shots}</b>${nb?'　🆕 新紀錄！':''}<br>🪙 +${coins}　⭐ 經驗 +${xp}　💗 心情 +${g*C.mood}${g>=C.shots?'<br>（全進加碼 🪙 +'+C.perfect+'）':''}${unl.length?`<br>🔓 解鎖新球路：<b>${unl.map(k=>PK_KINDS[k].n).join('、')}</b>！看「📖 球路」學怎麼畫`:''}<br><span class="small">最佳紀錄 ${s.pk.best} 球・守門員：${esc(Z.kp.name)}</span>`;
+ $('pkRT').innerHTML=(g>=C.shots?'<img class="rimg" src="sprites/gbtn/crown.png" alt=""><br>🏆 5 球全進！完美！':g>=3?'<img class="rimg" src="sprites/gbtn/trophy.png" alt=""><br>🎉 踢得好！':'<img class="rimg go" src="sprites/gbtn/gameover.png" alt=""><br>😅 下次會更好！');
+ $('pkRB').innerHTML=`進球 <b>${g} / ${C.shots}</b>${nb?'　🆕 新紀錄！':''}<br>${coinSpin()} +${coins}　⭐ 經驗 +${xp}　💗 心情 +${g*C.mood}${g>=C.shots?'<br>（全進加碼 🪙 +'+C.perfect+'）':''}${unl.length?`<br>🔓 解鎖新球路：<b>${unl.map(k=>PK_KINDS[k].n).join('、')}</b>！看「📖 球路」學怎麼畫`:''}<br><span class="small">最佳紀錄 ${s.pk.best} 球・守門員：${esc(Z.kp.name)}</span>`;
  $('pkAgain').textContent=`再踢一場（⚡${C.energy}）`;setTimeout(()=>{if(PKZ){$('pkRes').classList.remove('hidden');sfx(g>=3?'level':'tap')}},500);const x0=Z.x0;setTimeout(()=>afterChange(x0),600)}
 function closePK(){PKZ=null;$('pkZone').classList.add('hidden');$('pkRes').classList.add('hidden');renderUI()}
 $('pkHome').onclick=()=>{if(PKZ&&!PKZ.practice&&PKZ.res.length&&PKZ.phase!=='done'){confirmBox('離開 PK？','現在離開，這場踢進的球就不算獎勵了喔。','離開',()=>{closePK()});return}closePK()};
