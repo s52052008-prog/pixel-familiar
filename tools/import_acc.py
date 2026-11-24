@@ -45,6 +45,17 @@ for sheet, (C, R, ITEMS) in SHEETS.items():
             al = im[..., 3] > 0; nb = ndimage.convolve(al.astype(int), np.ones((3, 3), int), mode='constant') - al
             im[al & (nb == 0)] = 0
         Image.fromarray(im).save(f'sprites/acc/{nm}.png'); print(nm, tw, th)
+# 冠宏用調整器修過的裝飾圖：重新匯入後要再套一次（art/px-edits.json）
+import json as _j, os as _o
+if _o.path.exists('art/px-edits.json'):
+    from PIL import Image as _I
+    for _k, _E in _j.load(open('art/px-edits.json'))['px'].items():
+        if not _k.startswith('s:acc/'): continue
+        _f = f'sprites/{_k[2:]}.png'; _im = _I.open(_f).convert('RGBA'); _W = _im.width
+        for _i, _v in _E.items():
+            _i = int(_i); _im.putpixel((_i % _W, _i // _W), (0, 0, 0, 0) if _v == 'x' else (int(_v[1:3], 16), int(_v[3:5], 16), int(_v[5:7], 16), 255))
+        _im.save(_f); print('套用修圖', _f)
+
 mp = {os.path.basename(f)[:-4]: base64.b64encode(open(f, 'rb').read()).decode() for f in sorted(glob.glob('sprites/acc/*.png'))}
 line = 'const ACC_B64=' + '{' + ','.join(f"{k}:'{v}'" for k, v in mp.items()) + '};   // 由 tools/import_acc.py 產生'
 h = open('index.html').read()
