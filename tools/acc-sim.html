@@ -247,7 +247,7 @@ function edited(id){if(PC[id])return PC[id];const c=baseData(id);if(!c)return nu
 const petCv=(k,e)=>edited(k+e);
 const ED={x:24,y:24,eye:'o',col:'#1a0a0a',tool:'pen',tc:'move',recent:[],cat:'pet',src:null,S:5,ox:0,oy:0};
 try{const r=JSON.parse(localStorage.getItem('pf-acc-sim-recent')||'[]');if(Array.isArray(r))ED.recent=r}catch(e){}
-const CATS=[['pet','🐣 寵物（睜眼）'],['petc','😌 寵物（閉眼）'],['fusion','🧬 融合'],['items','🍎 道具'],['sk','⚔️ 招式'],['arena','🏞️ 場地背景'],['fx','💥 特效'],['plots','🌱 田地'],['decor','🛋️ 休息室'],['acc','🎀 裝飾圖'],['train','🏋️ 訓練'],['ui','🔘 圖示1'],['ui2','🔘 圖示2'],['misc','🥚 蛋／野生']];
+const CATS=[['pet','🐣 寵物（睜眼）'],['petc','😌 寵物（閉眼）'],['fusion','🧬 融合'],['items','🍎 道具'],['sk','⚔️ 招式'],['arena','🏞️ 場地背景'],['fx','💥 特效'],['plots','🌱 田地'],['decor','🛋️ 休息室'],['acc','🎀 裝飾圖'],['train','🏋️ 訓練'],['ui','🔘 圖示1'],['ui2','🔘 圖示2'],['wild','🐲 怪獸'],['misc','🥚 蛋']];
 const pairOf=id=>isPet(id)?id.slice(0,-1)+(id.endsWith('o')?'c':'o'):/_open$/.test(id)?id.replace(/_open$/,'_closed'):/_closed$/.test(id)?id.replace(/_closed$/,'_open'):null;
 function tgtBase(){return ED.cat==='pet'?key()+'o':ED.src}
 function viewId(){const b=tgtBase();if(!b)return null;const p=pairOf(b);if(ED.eye==='c'&&p&&(isPet(b)||AIMG[p]))return /_open$/.test(b)||isPet(b)?p:b;if(ED.eye!=='c'&&/_closed$/.test(b)&&AIMG[pairOf(b)])return pairOf(b);return b}

@@ -206,7 +206,7 @@ const CONFIG = {
       gradcap: { xp: .05 }, halo: { endure: .12 }, pumpkin: { slow: .1 }, monocle: { aim: .05 }, eyepatch: { rage: .1 }, rose: { charm: .03 }, lollipop: { cure: .3 }, bowtie: { critRes: .25 }, scarf: { elemCut: .1 }, headband: { spd: .04, dodge: .02, pkAim: .3 } },
     mult: [1, 1.5, 2, 2.5, 3],
     tiers: ['普通', '優秀', '精良', '完美', '超級'], colors: ['#b8b8b8', '#5ad86a', '#4aa8ff', '#b070ff', '#ffd040'],
-    up: [{ coins: 300, mush: 'mush', n: 3 }, { coins: 800, mush: 'mushS', n: 2 }, { coins: 2000, mush: 'mushN', n: 2 }, { coins: 5000, mush: 'mushG', n: 1 }],
+    up: [{ coins: 500 }, { coins: 1500 }, { coins: 4000 }, { coins: 10000 }],   // V1.91.2 強化只要金幣，越高級越貴（不再用蘑菇）
     sets: { boss: { name: '老大套', icon: '😎', need: ['glasses', 'cigar', 'necklace'], stun: .25, text: '開場有機會把對手嚇呆，對手第一回合不能動' },
       xmas: { name: '聖誕套', icon: '🎄', need: [['santa', 'antler'], 'necklace'], gift: .25, text: '12 月打贏多拿禮物的機會變高' },
       gent: { name: '紳士套', icon: '🎩', need: ['tophat', 'monocle', 'bowtie'], half: 1, text: '每場第一次被打，傷害減半' },
@@ -914,8 +914,7 @@ function accUpgrade(st, k) {
   const E = CONFIG.eq; if (!st.accOwned.includes(k) || !E.fx[k]) return { ok: false, msg: '還沒有這個裝飾' };
   const lv = (st.accLv[k] | 0); if (lv >= 4) return { ok: false, msg: '已經是最高級了！' };
   const U = E.up[lv]; if (st.coins < U.coins) return { ok: false, msg: `金幣不夠（要 ${U.coins}）` };
-  if ((st.inv[U.mush] | 0) < U.n) return { ok: false, msg: '蘑菇不夠', need: U };
-  st.coins -= U.coins; st.inv[U.mush] -= U.n; st.accLv[k] = lv + 1; return { ok: true, lv: lv + 1 };
+  st.coins -= U.coins; st.accLv[k] = lv + 1; return { ok: true, lv: lv + 1 };
 }
 function eqGift(st, r = Math.random) { const L = CONFIG.eq.gift, [k, n] = L[Math.floor(r() * L.length) % L.length]; if (k === 'coins') st.coins += n; else st.inv[k] = (st.inv[k] || 0) + n; return [k, n]; }
 function buffFighter(f, p, lv) {

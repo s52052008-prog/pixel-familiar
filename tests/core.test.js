@@ -560,9 +560,9 @@ t('V1.88 裝飾＝裝備：加成、套裝、強化五級、存檔', () => {
   const s = hatched(); s.accOwned = ['crown', 'glasses', 'cigar', 'necklace']; s.acc = ['crown', 'glasses', 'cigar', 'necklace'];
   const a = C.buffFighter(C.mkFighter('a', 'k', 10, null, 1, 80, 0), s), b = C.buffFighter(C.mkFighter('a', 'k', 10, null, 1, 80, 0), s, s.accLv);
   assert.ok(b.atk > a.atk && b.critUp > (a.critUp || 0) && b.eqScare > 0 && b.eqStun > 0, '老大套＋皇冠');
-  s.coins = 99999; s.inv.mush = 3; let r = C.accUpgrade(s, 'crown'); assert.ok(r.ok); assert.equal(s.accLv.crown, 1); assert.equal(s.inv.mush, 0);
-  r = C.accUpgrade(s, 'crown'); assert.ok(!r.ok && r.need, '花斑毒菇不夠');
-  s.inv.mushS = 2; s.inv.mushN = 2; s.inv.mushG = 1; C.accUpgrade(s, 'crown'); C.accUpgrade(s, 'crown'); C.accUpgrade(s, 'crown'); assert.equal(s.accLv.crown, 4); assert.ok(!C.accUpgrade(s, 'crown').ok);
+  s.coins = 600; s.inv.mush = 3; let r = C.accUpgrade(s, 'crown'); assert.ok(r.ok); assert.equal(s.accLv.crown, 1); assert.equal(s.inv.mush, 3); assert.equal(s.coins, 100);   // V1.91.2 只要金幣
+  r = C.accUpgrade(s, 'crown'); assert.ok(!r.ok, '金幣不夠');
+  s.coins = 99999; C.accUpgrade(s, 'crown'); C.accUpgrade(s, 'crown'); C.accUpgrade(s, 'crown'); assert.equal(s.accLv.crown, 4); assert.ok(!C.accUpgrade(s, 'crown').ok);
   const c = C.buffFighter(C.mkFighter('a', 'k', 10, null, 1, 80, 0), s, s.accLv); assert.ok(c.atk > b.atk, '超級皇冠更強');
   const k = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 1); assert.equal(k.accLv.crown, 4);
   s.acc = ['necklace', 'gradcap']; s.accOwned.push('gradcap'); s.energy = 100; const st = C.startAdventure(s, 1, T0); const out = C.finishAdventure(s, 1, 'win', st.full, T0, () => .99); assert.ok(out.eqCoinN > 0 && out.eqXp);
