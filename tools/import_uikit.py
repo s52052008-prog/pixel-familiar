@@ -27,3 +27,12 @@ N = ['equip', 'edit', 'close', 'back', 'gear', 'bag', 'shop', 'dex', 'friends', 
 for i, n in enumerate(N): save(I, (int(i % 5 * W / 5), int(i // 5 * H / 4), int((i % 5 + 1) * W / 5), int((i // 5 + 1) * H / 4)), 'i_' + n, 8)
 J = Image.open('art/src/uikit/icons2.png'); save(J, (100, 100, 950, 800), 'i_dodge', 10); save(J, (980, 100, 1720, 800), 'i_crit', 10)
 print('ok')
+# 場景外框：用大視窗的下方角落（沒有葉子）拼成可拉長的框；葉子、腳印另外切出來疊上去
+p = Image.open('sprites/uik/panel.png').convert('RGBA'); W, H = p.size; C = 13
+bl = p.crop((0, H - C, C, H)); br = p.crop((W - C, H - C, W, H)); be = p.crop((C + 20, H - C, C + 32, H)); le = p.crop((0, 60, C, 72)); re_ = p.crop((W - C, 60, W, 72))
+f = Image.new('RGBA', (C * 3, C * 3), (0, 0, 0, 0))
+f.paste(bl.transpose(Image.FLIP_TOP_BOTTOM), (0, 0)); f.paste(br.transpose(Image.FLIP_TOP_BOTTOM), (2 * C, 0)); f.paste(bl, (0, 2 * C)); f.paste(br, (2 * C, 2 * C))
+f.paste(be.resize((C, C)).transpose(Image.FLIP_TOP_BOTTOM), (C, 0)); f.paste(be.resize((C, C)), (C, 2 * C)); f.paste(le.resize((C, C)), (0, C)); f.paste(re_.resize((C, C)), (2 * C, C))
+f.save('sprites/uik/frame.png')
+trim(p.crop((10, 0, 40, 28))).save('sprites/uik/leafL.png'); trim(p.crop((104, 0, 134, 28))).save('sprites/uik/leafR.png'); trim(p.crop((56, 0, 89, 24))).save('sprites/uik/paw.png')
+print('frame ok')
