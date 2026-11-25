@@ -234,7 +234,7 @@ const CONFIG = {
     morel: .25, inkP: .058, inkLife: 2, maneP: .35, reishiP: .05, treeLife: 24, sniffP: .012, sniffLife: 3, tripP: .05, tripMax: .25, buffs: { sp: .15, crit: .15, regen: .05, ink: .7 }, nightOdds: [['mushN', .3]],   // 夜光菇只在晚上雨停時出現
     love: ['forest', 'earth', 'metal'], loveMood: 5, poison: { mood: -30, hunger: -5 }, lifeHours: 8, max: 6, buff: .05, goldXp: 100, cookX: 1.5 },
   pk: { shots: 5, energy: 6, hunger: 3, coin: 5, xp: 2, mood: 2, perfect: 20 },   // V1.88 射門 PK：每進一球的獎勵、5 球全進加碼
-  runaway: { starveHours: 12, steps: 10000, help: 1500, lure: 2500, back: { hunger: 40, mood: 35, clean: 40 }, bondLoss: 15 },   // 餓肚子（飽食 0）超過 12 小時就離家出走；走 1 萬步才找得回來
+  runaway: { off: true, starveHours: 12, steps: 10000, help: 1500, lure: 2500, back: { hunger: 40, mood: 35, clean: 40 }, bondLoss: 15 },   // 餓肚子（飽食 0）超過 12 小時就離家出走；走 1 萬步才找得回來
   washCost: 3,                              // 洗澡要付水費
   ballLife: 3, ballCost: 3,                 // 球每玩 3 次就會爆掉，換新球 3 金幣
   traitsOn: true,
@@ -621,7 +621,8 @@ function applyTime(st, now = Date.now()) {
     if (rotH > 0) st.mood = clamp(st.mood - rotH * CONFIG.core.moodPerHour);
     if (starveT) { st.hunger = 0; st.starveSince = st.starveSince || starveT; }   // 真實時間已經餓到 0（不受 12 小時上限保護）
     if (st.hunger > 0) st.starveSince = 0;
-    if (st.starveSince && !st.runaway && now - st.starveSince >= CONFIG.runaway.starveHours * H) { st.runaway = { at: now, got: 0 }; st.sleeping = false; journal(st, now, '肚子太餓，離家出走了…'); events.push('runaway'); }
+    if (CONFIG.runaway.off && st.runaway) comeHome(st, now, true);   // V1.92 離家出走先拿掉：已經跑掉的自己回家
+    if (!CONFIG.runaway.off && st.starveSince && !st.runaway && now - st.starveSince >= CONFIG.runaway.starveHours * H) { st.runaway = { at: now, got: 0 }; st.sleeping = false; journal(st, now, '肚子太餓，離家出走了…'); events.push('runaway'); }
     const N = CONFIG.neglect; if (Math.min(st.hunger, st.mood, st.clean) < N.below) st.bond = clamp(st.bond - N.bondPerHour * eff);   // 沒照顧好，親密度會掉
     if (st.pair) decayPair(st, eff);
     const WF = !st.sleeping && !st.runaway && weatherFx(st, now);   // 天氣：離線最多算 3 小時
@@ -855,10 +856,10 @@ function lureFood(st, now = Date.now()) {
   if ((st.inv.food || 0) < 1) return { ok: false, msg: '沒有蘋果了…可以到商店買' };
   st.inv.food--; st.runaway.lure = d; const r = helpSearch(st, CONFIG.runaway.lure, now); journal(st, now, '在門口放了一顆蘋果'); return { ok: true, ...r };
 }
-function comeHome(st, now = Date.now()) {
+function comeHome(st, now = Date.now(), self = false) {
   const B = CONFIG.runaway.back; st.runaway = null; st.starveSince = 0; st.lastTick = now;
-  st.hunger = B.hunger; st.mood = B.mood; st.clean = B.clean; st.bond = clamp(st.bond - CONFIG.runaway.bondLoss);
-  journal(st, now, '走了好遠的路，終於把牠找回來了！'); return true;
+  st.hunger = Math.max(st.hunger, B.hunger); st.mood = Math.max(st.mood, B.mood); st.clean = Math.max(st.clean, B.clean); if (!self) st.bond = clamp(st.bond - CONFIG.runaway.bondLoss);
+  journal(st, now, self ? '牠自己走回家了！' : '走了好遠的路，終於把牠找回來了！'); return true;
 }
 const stepTier = st => Math.floor(st.steps.total / CONFIG.steps.tier);
 

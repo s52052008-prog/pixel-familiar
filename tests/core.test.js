@@ -9,6 +9,7 @@ function t(name, fn) { try { fn(); pass++; console.log('PASS ' + name); } catch 
 const T0 = Date.parse('2026-11-16T02:00:00Z');           // 台北 10:00
 function hatched(now = T0) { const s = C.fresh(now); C.hatch(s, now); s.name = '測試'; s.route = null; s.crave = { kind: 'none', until: 1e15 }; return s; }   // 屬性特性另外測：預設不帶屬性，數值才固定
 C.CONFIG.weatherOn = false;   // 天氣另外測
+C.CONFIG.runaway.off = false;   // V1.92 遊戲裡先關掉離家出走；舊的離家出走測試照樣跑
 const PLANT0 = C.plant, FE = C.CONFIG.farm.energy; C.CONFIG.farm.energy = [0, 0, 0, 0];   // V1.90 澆水、體力另外測：舊測試當作種下就澆好、不花體力
 C.plant = (st, i, ...a) => { const r = PLANT0(st, i, ...a); if (r.ok) delete st.plots[i].wn; return r; };
 const nonNeg = s => ['hunger', 'mood', 'clean', 'energy', 'bond'].every(k => s[k] >= 0 && s[k] <= 100) && s.coins >= 0 && s.xp >= 0 && s.inv.food >= 0 && s.inv.seeds >= 0;
@@ -602,6 +603,13 @@ t('V1.90 新蘑菇：樹上猴頭菇、草岩系聞松露、休息室出去找�
   C.mushTick(k, N + 2.5 * H, () => .99); assert.equal(k.mush.filter(m => m.k === 'mushK').length, 0);
   const e = hatched(); e.inv.mushT = 1; assert.ok(C.mushCook(e, 'mushT').ok); const x = C.mushEat(e, 'mushT_c', T0); assert.ok(x.ok && x.buff === 'crit' && e.mushBuff.crit === 1);
   const b = C.sanitize(JSON.parse(JSON.stringify(e)), T0); assert.equal(b.mushBuff.crit, 1); assert.equal(b.inv.mushT_c, 0);
+});
+
+t('V1.92 離家出走關掉：餓很久也不會跑掉；之前跑掉的自己回家', () => {
+  C.CONFIG.runaway.off = true; const s = hatched(); s.hunger = 0; s.lastTick = T0; s.starveSince = T0 - 30 * H;
+  C.applyTime(s, T0 + 2 * H); assert.ok(!s.runaway);
+  s.runaway = { at: T0, got: 0 }; C.applyTime(s, T0 + 3 * H); assert.ok(!s.runaway); assert.ok(s.hunger >= C.CONFIG.runaway.back.hunger - 5);
+  C.CONFIG.runaway.off = false;
 });
 
 console.log(`\n${pass}/${pass + fail} passed`);
