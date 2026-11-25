@@ -160,7 +160,8 @@ const petName=k=>EL.find(x=>x[0]===k.slice(0,-1))[1].split(' ')[1]+'・'+ST[+k.s
 const job=()=>mode==='mouth'?'MOUTH':cur.acc;               // 現在在做哪一件（嘴巴也算一件）
 const dkey=(k,j=job())=>k+'|'+j;
 const isDone=(k,j)=>!!DONE[dkey(k,j)];
-function locked(){return(mode==='acc'||mode==='mouth')&&isDone(key())&&!UNLOCK[dkey(key())]}
+const dwKey=()=>'d|'+(ED.cat==='pet'?key()+ED.eye:(ED.src||''));const dwDone=()=>!!DONE[dwKey()]&&!UNLOCK[dwKey()];
+function locked(){if(mode==='draw')return dwDone();return(mode==='acc'||mode==='mouth')&&isDone(key())&&!UNLOCK[dkey(key())]}
 function draw(){if(mode==='draw')drawEd();else drawView();edUI();bars();out()}
 let GEO_C=null;function drawView(){const c=$('cv').getContext('2d'),k=key();GEO_C=c;GEO=null;c.imageSmoothingEnabled=false;c.fillStyle='#77a877';c.fillRect(0,0,240,240);
  paint(c,k,VX,VY,CELL*VS,flip,mode==='mouth'?[]:lst(),mode==='mouth');GEO_C=null;
@@ -182,12 +183,12 @@ function bars(){const j=job();
  if(mode==='draw'){const v=viewId(),cv=v&&edited(v);$('pAccI').src=cv?cv.toDataURL():'';$('pAccN').textContent=ED.cat==='pet'?(ED.eye==='c'?'😌 寵物（閉眼）':ED.eye==='b'?'🐣 寵物（兩張一起）':'🐣 寵物（睜眼）'):(CATS.find(c=>c[0]===ED.cat)||['',''])[1]+(ED.eye==='c'&&ED.src&&pairOf(ED.src)?'（閉眼）':'');}
  const n=progOf(j);$('pAccP').textContent=mode==='head'?'會帶動全部裝飾':mode==='draw'?'👆 點這裡換素材':`${n}/35 完成`;$('prog').firstChild.style.width=(mode==='acc'||mode==='mouth'?n/35*100:0)+'%';
  const c=$('pPetC').getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,48,48);paint(c,key(),0,0,48,false,mode==='acc'?lst():[]);$('pPetN').textContent=petName(key())+(isDone(key())&&mode!=='head'&&mode!=='draw'?' ✅':'');
- $('lock').style.display=locked()&&mode!=='draw'?'block':'none';
- const d=$('bDone');if(mode==='head'){d.textContent='下一隻 ▶';d.className='redo'}else if(locked()){d.textContent='✅ 已完成，下一隻';d.className=''}else{d.textContent=isDone(key())?'✅ 再存一次，下一隻':'✅ 好了，下一隻';d.className=''}}
+ $('lock').style.display=locked()?'block':'none';
+ const d=$('bDone');if(mode==='draw'){d.textContent=dwDone()?'✅ 已完成，下一張':DONE[dwKey()]?'✅ 再存一次，下一張':'✅ 修好了，下一張';d.className=''}else if(mode==='head'){d.textContent='下一隻 ▶';d.className='redo'}else if(locked()){d.textContent='✅ 已完成，下一隻';d.className=''}else{d.textContent=isDone(key())?'✅ 再存一次，下一隻':'✅ 好了，下一隻';d.className=''}}
 /* 下一隻：找這件還沒完成的；這件全好了就換下一件 */
 function goPet(k){cur.el=k.slice(0,-1);cur.st=+k.slice(-1);if(mode==='draw'&&ED.cat==='pet'){fitView();swatches()}draw();baseHint()}
 function nextPet(step=1,skipDone=true){const i=PETS_ORDER.indexOf(key());for(let d=1;d<=35;d++){const k=PETS_ORDER[(i+step*d+35*35)%35];if(!skipDone||mode==='head'||!isDone(k))return k}return null}
-function done(){if(mode==='head'){goPet(nextPet(1,false));return}
+function done(){if(mode==='draw'){drawDone();return}if(mode==='head'){goPet(nextPet(1,false));return}
  const k=key();if(!locked()){mark();DONE[dkey(k)]=1;delete UNLOCK[dkey(k)]}
  const nx=nextPet(1,true);if(nx){toast(`✅ ${petName(k)} 存好了！換 ${petName(nx)}`);goPet(nx);return}
  if(mode==='mouth'){toast('🎉 35 隻的嘴巴全部完成！');draw();return}
@@ -210,7 +211,7 @@ $('bMenu').onclick=()=>{out();sheet('shMenu',true)};
 $('bClearDone').onclick=()=>{const j=job();if(!confirm(`把「${j==='MOUTH'?'嘴巴':ACC[j]?ACC[j].n:''}」35 隻的 ✅ 全部取消？（位置不會變）`))return;mark();for(const k of PETS_ORDER)delete DONE[k+'|'+j];sheet('shMenu',false);draw()};
 function setMode(m){mode=m;$$('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));for(const p of['acc','head','mouth','draw'])$('p-'+p).style.display=p===m?'':'none';if(m==='draw'){cats();if(ED.cat==='pet')fitView();swatches()}baseHint();draw()}
 /* ---------- 調整動作 ---------- */
-function guard(){if(locked()){hint('🔒 這隻已完成，要改先按「解鎖再改」');$('lock').animate([{transform:'translateX(-50%) scale(1.1)'},{transform:'translateX(-50%)'}],250);return false}return true}
+function guard(){if(locked()){hint(mode==='draw'?'🔒 這張已完成，要改先按「解鎖再改」':'🔒 這隻已完成，要改先按「解鎖再改」');$('lock').animate([{transform:'translateX(-50%) scale(1.1)'},{transform:'translateX(-50%)'}],250);return false}return true}
 let headWarned={};function headGuard(){const k=key(),n=Object.keys(DONE).filter(d=>d.startsWith(k+'|')&&!d.endsWith('|MOUTH')).length;if(n&&!headWarned[k]){if(!confirm(`⚠️ 改頭型會讓這隻「已完成的 ${n} 件裝飾」一起移動喔！確定要改嗎？`))return false;headWarned[k]=1}return true}
 function moveAcc(dx,dy){if(!ACC[cur.acc])return false;const k=key();FIX[k]=FIX[k]||{};const F=getF(k,cur.acc);F[0]+=flip?-dx:dx;F[1]+=dy;FIX[k][cur.acc]=F;return true}
 function moveMouth(dx,dy){const T=TAB[key()];T.mx=(T.mx||0)+(flip?-dx:dx);T.my=(T.my||0)+dy}
@@ -226,8 +227,12 @@ $$('[data-mo]').forEach(b=>b.onclick=()=>{if(!guard())return;const[p,d]=b.datase
 $$('[data-reset]').forEach(b=>b.onclick=()=>{const k=key(),r=b.dataset.reset;if(r!=='head'&&r!=='draw'&&!guard())return;if(r==='head'&&!headGuard())return;mark();
  if(r==='acc'){if(FIX[k])delete FIX[k][cur.acc]}else if(r==='head'){const T=TAB[k],o=TAB0[k];for(const p of['ht','cx','hw','ey','ew'])T[p]=o[p]}else if(r==='mouth'){delete TAB[k].mx;delete TAB[k].my}
  else{if(!confirm('這張圖改過的點全部還原？'))return;for(const id of writeIds()){delete PX[id];delete PC[id]}swatches();if(ED.cat!=='pet')picker()}draw();hint('已重設（按 ↩️ 可以反悔）')});
-$('bUnlock').onclick=()=>{UNLOCK[dkey(key())]=1;draw();baseHint();hint('🔓 解鎖了，改好再按「再存一次」')};
-$('bDone').onclick=done;$('bNext').onclick=()=>goPet(nextPet(1,false));$('bPrev').onclick=()=>goPet(nextPet(-1,false));
+$('bUnlock').onclick=()=>{UNLOCK[mode==='draw'?dwKey():dkey(key())]=1;draw();baseHint();hint('🔓 解鎖了，改好再按「再存一次」')};
+/* V1.92 修圖也有上一張、下一張、完成鎖定 */
+function drawStep(d){if(ED.cat==='pet'){goPet(nextPet(d,false));return}const L=catIds(ED.cat);if(!L.length)return;let i=L.indexOf(ED.src);i=i<0?0:(i+d+L.length)%L.length;ED.src=L[i];ED.eye='o';delete PC[ED.src];fitView();picker();swatches();draw();hint(ED.src.slice(2)+(dwDone()?'　🔒 已完成':''))}
+function drawDone(){if(!viewId()&&ED.cat!=='pet'){hint('先選一張要修的素材');return}const k=dwKey();if(!dwDone()){mark();DONE[k]=1;delete UNLOCK[k]}if(ED.cat!=='pet'){const L=catIds(ED.cat),i=L.indexOf(ED.src);for(let n=1;n<=L.length;n++){const nx=L[(i+n)%L.length];if(!DONE['d|'+nx]){toast('✅ 存好了！換下一張');ED.src=nx;ED.eye='o';delete PC[nx];fitView();picker();swatches();draw();return}}toast('🎉 這一類全部修好了！');picker();draw();return}
+ const nx=nextPet(1,false);toast(`✅ ${petName(key())} 存好了！`);goPet(nx)}
+$('bDone').onclick=done;$('bNext').onclick=()=>mode==='draw'?drawStep(1):goPet(nextPet(1,false));$('bPrev').onclick=()=>mode==='draw'?drawStep(-1):goPet(nextPet(-1,false));
 /* 手指直接拖（頭型不能拖，免得不小心整隻跑掉） */
 let drag=null;const cvXY=e=>{const r=$('cv').getBoundingClientRect();return[(e.clientX-r.left)/r.width*240,(e.clientY-r.top)/r.height*240]};
 $('cv').addEventListener('pointerdown',e=>{e.preventDefault();const[x,y]=cvXY(e);if(mode==='draw'){$('cv').setPointerCapture(e.pointerId);if(ED.tc==='pan'){drag={pan:1,x,y};return}mark();edPoint(x,y,true);drag={draw:1};return}
@@ -273,10 +278,10 @@ function drawEd(){const c=$('cv').getContext('2d'),id=viewId();c.imageSmoothingE
  c.fillStyle='#fff';c.font='11px sans-serif';c.fillText(`${{pen:'✏️',pick:'💧',erase:'🧽'}[ED.tool]} ${ED.x},${ED.y}　這格 ${here||'透明'}　已改 ${Object.keys(PX[id]||{}).length} 格`,22,235)}
 function edUI(){$('curC').style.background=ED.col;$('dCol').value=ED.col;
  $$('#tool button').forEach(b=>b.classList.toggle('on',b.dataset.tool===ED.tool));$$('#touch button').forEach(b=>b.classList.toggle('on',b.dataset.tc===ED.tc));$$('#eyes button').forEach(b=>b.classList.toggle('on',b.dataset.eye===ED.eye));
- const b=tgtBase(),p=b&&pairOf(b);$('eyesWrap').style.display=p&&(isPet(b)||AIMG[p])?'':'none';$$('.zb').forEach(z=>z.style.display=mode==='draw'?'':'none');$('bFace').style.display=mode==='draw'?'none':'';$('bDone').parentNode.style.display=mode==='draw'?'none':''}
-function edPoint(x,y,first){if(!viewId())return;const g=geo(),nx=Math.max(0,Math.min(g.W-1,Math.floor((x-g.X)/g.S))),ny=Math.max(0,Math.min(g.H-1,Math.floor((y-g.Y)/g.S)));if(!first&&nx===ED.x&&ny===ED.y)return;ED.x=nx;ED.y=ny;if(ED.tc==='paint')act(false);else draw()}
+ const b=tgtBase(),p=b&&pairOf(b);$('eyesWrap').style.display=p&&(isPet(b)||AIMG[p])?'':'none';$$('.zb').forEach(z=>z.style.display=mode==='draw'?'':'none');$('bFace').style.display=mode==='draw'?'none':'';$('bDone').parentNode.style.display=''}
+function edPoint(x,y,first){if(!viewId())return;if(ED.tool!=='pick'&&ED.tc==='paint'&&locked()){if(first)guard();return}const g=geo(),nx=Math.max(0,Math.min(g.W-1,Math.floor((x-g.X)/g.S))),ny=Math.max(0,Math.min(g.H-1,Math.floor((y-g.Y)/g.S)));if(!first&&nx===ED.x&&ny===ED.y)return;ED.x=nx;ED.y=ny;if(ED.tc==='paint')act(false);else draw()}
 function setPx(v){const i=ED.y*dims()[0]+ED.x;for(const id of writeIds()){PX[id]=PX[id]||{};const orig=hex(baseData(id).getImageData(ED.x,ED.y,1,1).data)||'x';if(v===orig)delete PX[id][i];else PX[id][i]=v;if(!Object.keys(PX[id]).length)delete PX[id];delete PC[id]}markPick()}
-function act(withMark){if(!viewId())return;if(ED.tool==='pick'){const v=pxAt(viewId(),ED.x,ED.y);if(v){ED.col=v;ED.tool='pen';swatches();hint('💧 吸到顏色了，換回畫筆')}else hint('這格是透明的');draw();return}
+function act(withMark){if(!viewId())return;if(ED.tool!=='pick'&&!guard())return;if(ED.tool==='pick'){const v=pxAt(viewId(),ED.x,ED.y);if(v){ED.col=v;ED.tool='pen';swatches();hint('💧 吸到顏色了，換回畫筆')}else hint('這格是透明的');draw();return}
  if(withMark)mark();if(ED.tool==='erase')setPx('x');else{setPx(ED.col);addRecent(ED.col)}draw()}
 function addRecent(v){if(ED.recent[0]===v)return;ED.recent=[v,...ED.recent.filter(q=>q!==v)].slice(0,10);try{localStorage.setItem('pf-acc-sim-recent',JSON.stringify(ED.recent))}catch(e){}swatches()}
 function setCol(v){ED.col=v;if(ED.tool!=='pen')ED.tool='pen';swatches();draw()}
@@ -290,7 +295,7 @@ async function pickCat(c){if(c==='pet'||c==='petc'){ED.eye=c==='petc'?'c':'o';c=
  if(!AREADY[c]){AREADY[c]=0;$('dPick').innerHTML='<div class="note">載入中…</div>';draw();try{const r=await fetch('assets/'+c+'.json');const J=await r.json();await Promise.all(Object.entries(J).map(([k,v])=>new Promise(ok=>{const im=new Image();im.onload=ok;im.onerror=ok;im.src='data:image/png;base64,'+v;AIMG['s:'+k]=im})));AREADY[c]=1}catch(e){AREADY[c]=undefined;$('dPick').innerHTML='<div class="note">載入失敗，再點一次試試</div>';return}}
  if(ED.cat!==c)return;picker();draw()}
 function catIds(c){return Object.keys(AIMG).filter(k=>c==='misc'?!k.slice(2).includes('/'):k.startsWith('s:'+c+'/')).filter(k=>!/_closed$/.test(k)||!AIMG[k.replace(/_closed$/,'_open')]).sort()}
-function picker(){const el=$('dPick');el.innerHTML='';for(const id of catIds(ED.cat)){const b=document.createElement('button');b.className=id===ED.src?'on':'';const im=new Image();im.src=AIMG[id].src;b.appendChild(im);const p=pairOf(id);if(PX[id]||(p&&PX[p])){const i=document.createElement('i');i.textContent='✏️';b.appendChild(i)}b.title=id.slice(2);b.onclick=()=>{sheet('shAsset',false);ED.src=id;ED.eye='o';PC[id]=null;delete PC[id];fitView();picker();swatches();draw();hint(id.slice(2))};el.appendChild(b)}}
+function picker(){const el=$('dPick');el.innerHTML='';for(const id of catIds(ED.cat)){const b=document.createElement('button');b.className=id===ED.src?'on':'';const im=new Image();im.src=AIMG[id].src;b.appendChild(im);const p=pairOf(id);if(DONE['d|'+id]||PX[id]||(p&&PX[p])){const i=document.createElement('i');i.textContent=DONE['d|'+id]?'✅':'✏️';b.appendChild(i)}b.title=id.slice(2);b.onclick=()=>{sheet('shAsset',false);ED.src=id;ED.eye='o';PC[id]=null;delete PC[id];fitView();picker();swatches();draw();hint(id.slice(2))};el.appendChild(b)}}
 function markPick(){if(ED.cat!=='pet'&&mode==='draw'){const on=$('dPick').querySelector('.on');if(on&&!on.querySelector('i')){const i=document.createElement('i');i.textContent='✏️';on.appendChild(i)}}}
 $$('[data-dm]').forEach(b=>b.onclick=()=>{if(!viewId())return;const[W,H]=dims(),[dx,dy]=b.dataset.dm.split(',').map(Number);ED.x=Math.max(0,Math.min(W-1,ED.x+dx));ED.y=Math.max(0,Math.min(H-1,ED.y+dy));follow();draw()});
 $('dGo').onclick=()=>act(true);
