@@ -278,7 +278,7 @@ function drawEd(){const c=$('cv').getContext('2d'),id=viewId();c.imageSmoothingE
  c.fillStyle='#fff';c.font='11px sans-serif';c.fillText(`${{pen:'✏️',pick:'💧',erase:'🧽'}[ED.tool]} ${ED.x},${ED.y}　這格 ${here||'透明'}　已改 ${Object.keys(PX[id]||{}).length} 格`,22,235)}
 function edUI(){$('curC').style.background=ED.col;$('dCol').value=ED.col;
  $$('#tool button').forEach(b=>b.classList.toggle('on',b.dataset.tool===ED.tool));$$('#touch button').forEach(b=>b.classList.toggle('on',b.dataset.tc===ED.tc));$$('#eyes button').forEach(b=>b.classList.toggle('on',b.dataset.eye===ED.eye));
- const b=tgtBase(),p=b&&pairOf(b);$('eyesWrap').style.display=p&&(isPet(b)||AIMG[p])?'':'none';$$('.zb').forEach(z=>z.style.display=mode==='draw'?'':'none');$('bFace').style.display=mode==='draw'?'none':'';$('bDone').parentNode.style.display=''}
+ const b=tgtBase(),p=b&&pairOf(b);$('eyesWrap').style.display=p&&(isPet(b)||AIMG[p])?'':'none';$$('.zb').forEach(z=>z.style.display=mode==='draw'?'':'none');$('bFace').style.display='';$('bFace').textContent=mode==='draw'?'↔️ 翻':'↔️';$('bDone').parentNode.style.display=''}
 function edPoint(x,y,first){if(!viewId())return;if(ED.tool!=='pick'&&ED.tc==='paint'&&locked()){if(first)guard();return}const g=geo(),nx=Math.max(0,Math.min(g.W-1,Math.floor((x-g.X)/g.S))),ny=Math.max(0,Math.min(g.H-1,Math.floor((y-g.Y)/g.S)));if(!first&&nx===ED.x&&ny===ED.y)return;ED.x=nx;ED.y=ny;if(ED.tc==='paint')act(false);else draw()}
 function setPx(v){const i=ED.y*dims()[0]+ED.x;for(const id of writeIds()){PX[id]=PX[id]||{};const orig=hex(baseData(id).getImageData(ED.x,ED.y,1,1).data)||'x';if(v===orig)delete PX[id][i];else PX[id][i]=v;if(!Object.keys(PX[id]).length)delete PX[id];delete PC[id]}markPick()}
 function act(withMark){if(!viewId())return;if(ED.tool!=='pick'&&!guard())return;if(ED.tool==='pick'){const v=pxAt(viewId(),ED.x,ED.y);if(v){ED.col=v;ED.tool='pen';swatches();hint('💧 吸到顏色了，換回畫筆')}else hint('這格是透明的');draw();return}
@@ -306,7 +306,14 @@ $$('#eyes button').forEach(b=>b.onclick=()=>{ED.eye=b.dataset.eye;swatches();dra
 $('dCol').oninput=e=>setCol(e.target.value);$('dCol').onchange=e=>addRecent(e.target.value);
 /* ---------- 其他按鈕 ---------- */
 $('bUndo').onclick=undo;
-$('bFace').onclick=()=>{flip=!flip;draw();hint(flip?'牠現在朝右':'牠現在朝左')};
+$('bFace').onclick=()=>{if(mode==='draw'){flipAsset();return}flip=!flip;draw();hint(flip?'牠現在朝右':'牠現在朝左')};
+/* V1.92 修圖：整張左右翻（存成一格一格的修改，可以 ↩️ 退回） */
+function flipAsset(){const v=viewId();if(!v){hint('先選一張要修的素材');return}if(!guard())return;mark();
+ for(const id of writeIds()){const cv=edited(id),B=baseData(id);if(!cv||!B)continue;const W=cv.width,H=cv.height,cur=cv.getContext('2d').getImageData(0,0,W,H).data,org=B.getImageData(0,0,W,H).data;
+  const hx=(d,i)=>d[i+3]<128?'x':'#'+[d[i],d[i+1],d[i+2]].map(n=>n.toString(16).padStart(2,'0')).join('');const N={};
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const nv=hx(cur,(y*W+(W-1-x))*4),o=hx(org,(y*W+x)*4);if(nv!==o)N[y*W+x]=nv}
+  if(Object.keys(N).length)PX[id]=N;else delete PX[id];delete PC[id]}
+ markPick();draw();hint('↔️ 整張左右翻好了（按 ↩️ 可以退回）')}
 $('bGuide').onclick=e=>{guide=!guide;e.currentTarget.classList.toggle('off',!guide);draw()};
 $$('#modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
 $('bCopy').onclick=async()=>{out();const t=$('out').value;try{await navigator.clipboard.writeText(t);$('bCopy').textContent='✅ 已複製'}catch(e){const a=$('out');a.focus();a.select();$('bCopy').textContent='請長按下面框框 → 全選 → 拷貝'}};
