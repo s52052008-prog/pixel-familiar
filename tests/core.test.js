@@ -558,7 +558,7 @@ t('V1.86.7 放生', () => {
   const k = C.sanitize(JSON.parse(JSON.stringify(s)), T0 + 1); assert.equal(C.whereIs(k, id), 'released');
 });
 t('V1.88 裝飾＝裝備：加成、套裝、強化五級、存檔', () => {
-  const s = hatched(); s.accOwned = ['crown', 'glasses', 'cigar', 'necklace']; s.acc = ['crown', 'glasses', 'cigar', 'necklace'];
+  const s = hatched(); s.accOwned = ['crown', 'fedora', 'glasses', 'cigar', 'necklace']; s.acc = ['crown', 'fedora', 'glasses', 'cigar', 'necklace'];
   const a = C.buffFighter(C.mkFighter('a', 'k', 10, null, 1, 80, 0), s), b = C.buffFighter(C.mkFighter('a', 'k', 10, null, 1, 80, 0), s, s.accLv);
   assert.ok(b.atk > a.atk && b.critUp > (a.critUp || 0) && b.eqScare > 0 && b.eqStun > 0, '老大套＋皇冠');
   s.coins = 600; s.inv.mush = 3; let r = C.accUpgrade(s, 'crown'); assert.ok(r.ok); assert.equal(s.accLv.crown, 1); assert.equal(s.inv.mush, 3); assert.equal(s.coins, 100);   // V1.91.2 只要金幣

@@ -13,6 +13,8 @@ SHEETS = {
   'mushhat': (2, 1, [('mushhat', 28), ('mushhat_s', 24)]),
   'headband': (1, 1, [('headband', 32)]),
   'acc2': (5, 2, [('gradcap', 26), ('halo', 24), ('pumpkin', 28), ('monocle', 16), ('eyepatch', 24), ('rose', 18), ('lollipop', 12), ('bowtie', 16), ('scarf', 20)]),
+  'acc3': (4, 2, [('fedora', 26), ('snowglass', 24), ('candycane', 16), ('pipe', 18), ('_cape', 20), ('starglass', 24), ('trumpet', 18), ('whistle', 14)]),   # V1.92 補齊套裝
+  'batbow': (1, 1, [('batbow', 20)]),
   'acc': (5, 2, [('bow', 18), ('tophat', 24), ('crown', 22), ('glasses', 24), ('wreath', 30), ('chef', 24), ('necklace', 22), ('cigar', 20), ('turkey', 28), ('antler', 30)]),
 }
 def fg_mask(path):
@@ -56,7 +58,7 @@ if _o.path.exists('art/px-edits.json'):
             _i = int(_i); _im.putpixel((_i % _W, _i // _W), (0, 0, 0, 0) if _v == 'x' else (int(_v[1:3], 16), int(_v[3:5], 16), int(_v[5:7], 16), 255))
         _im.save(_f); print('套用修圖', _f)
 
-mp = {os.path.basename(f)[:-4]: base64.b64encode(open(f, 'rb').read()).decode() for f in sorted(glob.glob('sprites/acc/*.png'))}
+mp = {os.path.basename(f)[:-4]: base64.b64encode(open(f, 'rb').read()).decode() for f in sorted(glob.glob('sprites/acc/*.png')) if not os.path.basename(f).startswith('_')}
 line = 'const ACC_B64=' + '{' + ','.join(f"{k}:'{v}'" for k, v in mp.items()) + '};   // 由 tools/import_acc.py 產生'
 h = open('index.html').read()
 if 'const ACC_B64=' in h: h = re.sub(r'const ACC_B64=\{.*?\};[^\n]*', lambda _: line, h, count=1)
