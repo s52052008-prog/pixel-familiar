@@ -116,9 +116,8 @@ async def main():
         for hrs in (2, 24, 168):
             await p.evaluate("PF.debug.set({hunger:80,mood:80,clean:80,energy:20})"); await p.evaluate(f"PF.debug.skip({hrs*60})")
             await p.wait_for_timeout(300); s = await st(p); eff = min(hrs, 12)
-            ok(f'離線 {hrs} 小時 → 只計算 {eff} 小時（飽食用真實時間，20 小時會餓到 0）', abs(s['hunger'] - (0 if hrs >= 20 else 80 - 4 * eff)) < .2 and (s['runaway'] is not None) == (hrs >= 32) and abs(s['energy'] - min(100, 20 + 8 * eff)) < .2, (round(s['hunger'], 1), round(s['energy'], 1)))
-        await p.wait_for_timeout(500); ok('離家出走時畫面提示要走路找回來', '離家出走' in await p.inner_text('#growText'))
-        await p.evaluate("PF.creditSteps((PF.state.steps.days[PF.PC.dayKey(Date.now())]||0)+10000)"); await p.wait_for_timeout(300); s = await st(p); ok('走 1 萬步把牠找回來', s['runaway'] is None and abs(s['hunger'] - 40) < .1, (s['runaway'], s['hunger']))
+            ok(f'離線 {hrs} 小時 → 只計算 {eff} 小時（飽食用真實時間，20 小時會餓到 0）', abs(s['hunger'] - (0 if hrs >= 20 else 80 - 4 * eff)) < .2 and s['runaway'] is None and abs(s['energy'] - min(100, 20 + 8 * eff)) < .2, (round(s['hunger'], 1), round(s['energy'], 1)))
+        await p.wait_for_timeout(500); ok('V1.92 餓很久也不會離家出走，只提醒快餵', '離家出走' not in await p.inner_text('#growText') and '餓壞了' in await p.inner_text('#growText'))
         await p.evaluate("PF.debug.set({hunger:80,mood:80,clean:80,energy:60})")
         # ---------- 5. 成長門檻（用 debug 把孵化時間往前移） ----------
         await p.evaluate("PF.debug.set({xp:449})"); await p.evaluate("PF.debug.age(12)"); await p.wait_for_timeout(4500)
