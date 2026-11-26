@@ -31,6 +31,8 @@ h1{margin:0;font-size:20px;letter-spacing:1px;white-space:nowrap}
 .warn{background:#5a2232;box-shadow:inset 0 0 0 2px #c0465a}
 .stagewrap{position:relative;border:3px solid var(--line);box-shadow:0 0 0 2px var(--hi),0 5px 0 2px #000c}
 #scene{display:block;width:100%;aspect-ratio:128/112;height:auto;image-rendering:pixelated;image-rendering:crisp-edges;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;cursor:pointer;background:#6fb8e8}
+#vsBub{position:absolute;transform:translate(-50%,-100%);max-width:70%;width:max-content;background:#fff9e8;color:#4a2a10;border:3px solid #4a2a10;border-radius:10px;box-shadow:2px 2px 0 #0005;padding:3px 9px;font-size:13px;font-weight:700;pointer-events:none;transition:opacity .3s;opacity:0;z-index:3}
+#vsBub::after{content:'';position:absolute;left:50%;bottom:-9px;margin-left:-6px;border:6px solid transparent;border-top-color:#4a2a10}
 #bubble{position:absolute;top:8px;left:50%;transform:translateX(-50%);max-width:90%;width:max-content;background:#fff9e8;color:#273753;border:3px solid #273753;box-shadow:3px 3px 0 #0006;padding:5px 10px;font-size:14px;font-weight:700;text-align:center;line-height:1.35;transition:opacity .25s;pointer-events:none}
 #bubble.off{opacity:0}
 .viewbtn{position:absolute;left:6px;top:6px;min-width:44px;min-height:44px;background:#2b4264e6;border:2px solid var(--line);box-shadow:inset 0 0 0 2px #50698f;padding:6px 10px;font-size:13px;font-weight:800}
@@ -994,6 +996,7 @@ const ICONS={
  leaf:{o:'#1a3a1a',p:{g:'#7ccc5a',d:'#3a8a3a'},m:['....gg','..gggd','.ggggd','gggdd.','gdd...','d.....']},
  fire:{o:'#5a1a10',p:{y:'#ffe066',o:'#ff8a2a'},m:['...o...','..oo...','..ooo.o','.ooyoo.','.oyyyoo','oyyyyyo','.oyyyo.','..ooo..']},
  shoe:{o:'#2a1a10',p:{w:'#ffffff',r:'#e8433f',g:'#c8c8d0'},m:['..rrr....','..rwr....','..rrrr...','.rrrrrrr.','rrrrrrrrr','ggggggggg']},
+ hand:{o:'#5a3a10',p:{s:'#ffd8b0',h:'#e8b888',w:'#fff0dc'},m:['..s.s.s..','..s.s.s.s','.ss.s.s.s','.sssssss.','ssswsssss','.sssssss.','..sssss..','..hhhhh..']},
  sponge:{o:'#5a3a10',p:{y:'#ffd34a',h:'#c89020',d:'#e0a020'},m:['.yyyyyyyy.','yyhyyyyhyy','yyyyyhyyyy','yhyyyyyyhy','yyyyhyyyyy','dddddddddd','.dddddddd.']},
  tub:{o:'#2a3a5a',p:{w:'#ffffff',g:'#c8d0e0',b:'#5fb4f0',f:'#a8703e'},m:['.........gg.','.........g..','wwwwwwwwwwww','wbbbbbbbbbbw','wbbbbbbbbbbw','wwwwwwwwwwww','.gwwwwwwwwg.','..gggggggg..','..f......f..']},
  bite:{o:'#3a1a1a',p:{r:'#e8433f',R:'#ff9a8a',d:'#a8282e',G:'#5fbf4a',s:'#7a4a2a',w:'#fff3d0'},m:['....s....','....sGG..','.rrrsw...','rRRrrw...','rRrrrrw..','rrrrrrrrd','rrrrrrrrd','.rrrrrrd.','..rrdrd..']},
@@ -1290,7 +1293,7 @@ const EMB=window.EMB||{},SP=p=>EMB[p]||p;   // V1.91.1 小圖在 emb.js
 /* V1.91 UI 零件包：主畫面的外框、按鈕、標籤、進度條統一成冠宏畫的那套（小圖內嵌，用 JS 產生樣式） */
 const UIK=n=>`url(${SP(`sprites/uik/${n}.png`)})`;
 (()=>{const st=document.createElement('style');st.id='uikCss';st.textContent=`
-#infoSlot,#app>section.panel,#stats .stat{background:#f6e2bd!important;border:11px solid transparent!important;border-image:${UIK('slot')} 11 fill / 11px stretch!important;box-shadow:none!important;image-rendering:pixelated;color:#4a2a10!important;border-radius:0!important}
+#infoSlot,#app>section.panel,#stats .stat{background:transparent!important;border:11px solid transparent!important;border-image:${UIK('slot')} 11 fill / 11px stretch!important;box-shadow:none!important;image-rendering:pixelated;color:#4a2a10!important;border-radius:0!important}
 #infoSlot{padding:2px 4px 4px!important}#app>section.panel{padding:2px 6px 4px!important}#stats .stat{padding:0 0 1px!important;border-width:7px!important;border-image-width:7px!important}#stats .sh{font-size:12.5px!important;gap:1px!important;justify-content:center}#stats{gap:3px!important}
 #infoSlot *:not(.chip):not(.chip *):not(button):not(button *),#app>section.panel *,#stats .stat *{color:#4a2a10!important;text-shadow:none!important}
 #petname{color:#4a2a10!important}
@@ -1307,14 +1310,14 @@ const UIK=n=>`url(${SP(`sprites/uik/${n}.png`)})`;
 header h1{background:${UIK('title')} center/100% 100% no-repeat;image-rendering:pixelated;width:200px;height:48px;display:flex!important;align-items:center;justify-content:center;padding-top:8px;color:#4a2a10!important;text-shadow:none!important;font-size:19px!important;margin:0!important}
 header h1 .hleaf{display:none!important}header .ver{text-align:center;color:#e8c890!important}
 header .coin{background:none!important;border:9px solid transparent!important;border-image:${UIK('wood')} 9 fill / 9px stretch!important;box-shadow:none!important;color:#fff3dc!important;padding:0 4px!important;min-height:44px;image-rendering:pixelated;text-shadow:0 1px 0 #2a170a,1px 0 0 #2a170a,-1px 0 0 #2a170a,0 -1px 0 #2a170a}
-#homeTip,#saveWarn,#msgSlot{background:#f6e2bd!important;border:11px solid transparent!important;border-image:${UIK('slot')} 11 fill / 11px stretch!important;box-shadow:none!important;color:#4a2a10!important;image-rendering:pixelated;border-radius:0!important}
+#homeTip,#saveWarn,#msgSlot{background:transparent!important;border:11px solid transparent!important;border-image:${UIK('slot')} 11 fill / 11px stretch!important;box-shadow:none!important;color:#4a2a10!important;image-rendering:pixelated;border-radius:0!important}
 #homeTip{padding:0 30px 0 4px!important}#msgSlot{padding:0 6px!important;height:auto!important;min-height:40px}#msgSlot *{color:#4a2a10!important}
 #homeTipX{color:#4a2a10!important;background:none!important}
-.stagewrap{border:13px solid transparent!important;border-image:${UIK('frame')} 13 / 13px stretch!important;box-shadow:0 6px 0 2px #0007!important;image-rendering:pixelated;margin:14px 2px 6px!important}
+.stagewrap{border:13px solid transparent!important;border-image:${UIK('frame')} 13 / 13px stretch!important;box-shadow:0 6px 0 2px #0007!important;image-rendering:pixelated;margin:14px 0 6px!important;width:100%!important;box-sizing:border-box}
 .stagewrap::before,.stagewrap::after{display:none!important}
 #wxChip{background:#fff3d8!important;border:2px solid #2a170a!important;box-shadow:inset 0 0 0 1.5px #e0a84a,0 2px 0 #8a5a2a!important;color:#5a3412!important;border-radius:10px!important}
 .viewbtn{background:none!important;border:8px solid transparent!important;border-image:${UIK('wood')} 9 fill / 8px stretch!important;box-shadow:none!important;color:#fff3dc!important;image-rendering:pixelated;border-radius:0!important;text-shadow:0 1px 0 #2a170a,1px 0 0 #2a170a,-1px 0 0 #2a170a}
-.snav{background:${UIK('ib_back')} center/30px 30px no-repeat!important;border:0!important;box-shadow:none!important;image-rendering:pixelated;border-radius:0!important}.snav span{opacity:0}.snav.r{transform:translateY(-50%) scaleX(-1)}.snav:active{background-image:${UIK('ib_back_p')}!important}
+.snav{width:34px!important;height:40px!important;background:${UIK('ib_back')} center/30px 30px no-repeat!important;border:0!important;box-shadow:none!important;image-rendering:pixelated;border-radius:0!important}.snav span{opacity:0}.snav.l{left:1px!important}.snav.r{right:1px!important;transform:translateY(-50%) scaleX(-1)}.snav.r:active{transform:translateY(-50%) scaleX(-1) scale(.92)}.snav:active{background-image:${UIK('ib_back_p')}!important}
 /* 第 2 步：所有視窗 */
 #modal .sheet{border:13px solid transparent!important;border-image:${UIK('frame')} 13 / 13px stretch!important;border-radius:0!important;box-shadow:0 10px 30px #000a!important;padding:10px 10px 12px!important;image-rendering:pixelated;background-clip:padding-box!important}
 .sheet .mhd h2{background:#fff3d8;border:2px solid #2a170a;box-shadow:inset 0 0 0 2px #e0a84a,0 3px 0 #8a5a2a;color:#4a2a10!important;border-radius:12px;padding:3px 12px;text-align:center;text-shadow:none!important}
@@ -1587,7 +1590,7 @@ function draw(now){
  const fr=FRAMES[fname]||{};const lift=-(fr.dy||0),PX=Math.round(petX),LIFT=(S.lift&&S.lift[fi])||0;   // LIFT：手繪造型跳太高時，超出格子的那段高度
  const gone=(!!s.runaway&&!evo)||hideP||nestMe;   // 離家出走中：畫面上沒有幻獸
  if(gone&&!hideP&&!nestMe)drawRunaway(now);
- else{ctx.fillStyle='rgba(20,60,30,.28)';const sw=Math.max(10,(key.startsWith('egg')?22:26)-lift);ctx.fillRect(PX+24-sw/2,PET_Y+44,sw,2);ctx.fillRect(PX+24-sw/2+2,PET_Y+43,sw-4,1)}
+ else if(!hideP){ctx.fillStyle='rgba(20,60,30,.28)';const sw=Math.max(10,(key.startsWith('egg')?22:26)-lift);ctx.fillRect(PX+24-sw/2,PET_Y+44,sw,2);ctx.fillRect(PX+24-sw/2+2,PET_Y+43,sw-4,1)}
  if(gone){}else if(evo){const e=(now-evo.t0)/1000;
   if(e<2.6){const per=Math.max(.06,.32-e*.11);const useNew=Math.floor(e/per)%2===1;const SS=sheet(useNew?evo.to:evo.from);
    ctx.fillStyle='rgba(10,14,40,.55)';ctx.fillRect(0,0,W,H);ctx.drawImage(SS.sil,SS.idx.idle0*CELL,0,CELL,CELL,PX,PET_Y,CELL,CELL)}
@@ -2548,13 +2551,13 @@ async function startVisit(code){const r=await pushPost('/visit',{code}).catch(()
  for(const[k,v]of Object.entries(D.pos||{}))if(Array.isArray(v)&&v.length===2&&v.every(Number.isFinite))ps[k]=v;for(const k in(D.flip||{}))if(D.flip[k])fl[k]=1;
  cancelMode();lgClose();closeModal();VISIT.decor={placed:pl,pos:ps,flip:fl};VISIT.f=r;const p=C.pet;VISIT.key=p&&p.gene?petKey('x:'+p.gene,formCode(p.stage,p.route)):'';
  VISIT.r={x:PET_X,tx:null,face:0,act:'idle',until:performance.now()+1500,hop:0,dep:2,key:'v'};VISIT.on=true;roomKey=null;document.body.classList.add('visitMode');visitCard();renderUI();sfx('tap');
- say(p?`來到 ${r.name} 的家！${p.name} 在這裡～`:`來到 ${r.name} 的家！`,{log:false});try{fitStage()}catch(e){}}
-function endVisit(){VISIT.on=false;VISIT.f=null;roomKey=null;document.body.classList.remove('visitMode');$('vsCard').classList.add('hidden');renderUI();say('回到家了～',{log:false});try{fitStage()}catch(e){}socialPoll()}
+ say(p&&visitGone()?`來到 ${r.name} 的家…${p.name} 離家出走了，不在家`:p?`來到 ${r.name} 的家！${p.name} 在這裡～`:`來到 ${r.name} 的家！`,{log:false});try{fitStage()}catch(e){}}
+function endVisit(){const vb=$('vsBub');if(vb)vb.style.opacity='0';VISIT.rub=null;VISIT.on=false;VISIT.f=null;roomKey=null;document.body.classList.remove('visitMode');$('vsCard').classList.add('hidden');renderUI();say('回到家了～',{log:false});try{fitStage()}catch(e){}socialPoll()}
 function visitCard(){const f=VISIT.f,ra=f.card&&f.card.runaway,p=f.card&&f.card.pet,U=f.used||{},L=f.limit||{},left=k=>(L[k]||0)-(U[k]||0);
  $('vsName').textContent=`🏠 ${f.name} 的家`;$('vsSub').textContent=p?`${p.name}${p.sex==='m'?' ♂':p.sex==='f'?' ♀':''}・Lv.${p.lv||1}・圖鑑 ${f.card.dex||0} 種`:'還沒孵蛋';
  const c=$('vsCv'),x=c.getContext('2d');x.clearRect(0,0,48,48);if(VISIT.key)try{thumb(c,VISIT.key,'happy1')}catch(e){}
  const set=(id,t,ok)=>{const b=$(id);b.textContent=t;b.disabled=!ok};
- set('vsPet',left('pet')>0?'✋ 摸摸':'✋ 摸過了',left('pet')>0&&!!p);{const PL=f.card.pl||[],th=PL.filter(x=>x[1]).length;set('vsWater',left('water')>0?(th?`💧 澆水（口渴 ${th}）`:f.card.plots?`💧 澆水（${f.card.plots}）`:'💧 沒有田'):'💧 澆過了',left('water')>0&&(f.card.plots>0||th>0));
+ set('vsPet',ra?'✋ 不在家':left('pet')>0?'✋ 摸摸':'✋ 摸過了',left('pet')>0&&!!p&&!ra);{const PL=f.card.pl||[],th=PL.filter(x=>x[1]).length;set('vsWater',left('water')>0?(th?`💧 澆水（口渴 ${th}）`:f.card.plots?`💧 澆水（${f.card.plots}）`:'💧 沒有田'):'💧 澆過了',left('water')>0&&(f.card.plots>0||th>0));
   const box=$('vsPlots');box.classList.toggle('hidden',!PL.length);box.innerHTML=PL.map(([st,t])=>`<span class="vsPl${t?' dry':''}"><canvas data-st="${st}"></canvas>${t?'<i>💧</i>':''}</span>`).join('');box.querySelectorAll('canvas').forEach(c=>{const S=PLOT_SPR[c.dataset.st];if(!S)return;c.width=S.width;c.height=S.height;c.getContext('2d').drawImage(S,0,0)})}
  set('vsGift','🎁 送禮',left('gift')>0||left('daily')>0);set('vsMsg','💌 留言',left('msg')>0);set('vsBoard',`📜 留言板（${(f.board||[]).length}）`,true);set('vsMate','💞 配對',!!p&&left('mate')>0);$('vsDuel').classList.toggle('hidden',!PVP_ON);set('vsDuel',left('duel')>0?'⚔️ 挑戰':'⚔️ 打完了',!!p&&left('duel')>0&&!ra);set('vsSearch',ra?(left('search')>0?'🔍 幫忙找':'🔍 找過了'):'',!!ra&&left('search')>0);$('vsSearch').classList.toggle('hidden',!ra);{const mn=(f.card.mush||[]).length;$('vsMush').classList.toggle('hidden',!mn);set('vsMush',left('mush')>0?`🍄 採蘑菇（${mn}）`:'🍄 採過了',mn>0&&left('mush')>0)}
  {const away=Date.now()-(f.seen||0)>(window.PF_AWAY_CARE??12*3600e3)&&!!p&&!ra;$('vsCare').classList.toggle('hidden',!away);set('vsCare',left('care')>0?'🍖 幫忙照顧':'🍖 照顧過了',away&&left('care')>0)}
@@ -2566,16 +2569,24 @@ const HELP_REWARD={pet:{coins:10,mood:5,t:'摸摸讓你的幻獸也開心'},wate
 function helpReward(kind){const R=HELP_REWARD[kind];if(!R)return'';const L=[];if(R.coins){s.coins+=R.coins;L.push(`🪙+${R.coins}`)}if(R.seeds){s.inv.seeds=(s.inv.seeds||0)+R.seeds;L.push(`🌱種子+${R.seeds}`)}
  if(s.hatched&&R.mood){s.mood=Math.min(100,s.mood+R.mood);L.push(`💗${s.name} 心情+${R.mood}`)}if(s.hatched&&R.bond){s.bond=Math.min(100,(s.bond||0)+R.bond);L.push(`💞親密度+${R.bond}`)}save();renderUI();return`\n🤝 ${R.t}：${L.join('、')}`}
 async function visitAct(kind,data){const f=VISIT.f;const r=await pushPost('/act',{code:f.code,kind,data}).catch(()=>null);if(!r||!r.ok){toast('❌ '+(r&&r.msg||'連不到伺服器'),3000);return null}f.used[kind]=(f.used[kind]||0)+1;if(r.spark)f.spark=r.spark;visitCard();toast(r.msg+helpReward(kind)+(r.hit?`\n🔥 好友火花 ${r.hit} 天！`:''),4200);return r}
-function visitPetHop(){const r=VISIT.r,t=performance.now();r.tx=null;r.act='idle';r.hop=t+800;r.until=t+2500;spawn('heart',5,{x:r.x+24,y:PET_Y+8,vy:-18,spread:14});sfx('pet')}
-async function visitPet(){if(!VISIT.f.card.pet)return;if((VISIT.f.used.pet||0)>=(VISIT.f.limit.pet||1)){visitPetHop();say(`${VISIT.f.card.pet.name}：嘿嘿～`,{log:false});return}const r=await visitAct('pet');if(r){visitPetHop();say(`${VISIT.f.card.pet.name}：好舒服～謝謝你！`,{log:false})}}
-function visitTap(x,y){const r=VISIT.r;if(r&&VISIT.key&&x>=r.x+6&&x<=r.x+42&&y>=PET_Y+r.dep+8&&y<=PET_Y+r.dep+46)visitPet()}
-function drawVisit(now,dt){const r=VISIT.r;if(!r||!VISIT.key||(VISIT.f&&VISIT.f.card&&VISIT.f.card.runaway))return;
+const visitGone=()=>!VISIT.key||!!(VISIT.f&&VISIT.f.card&&VISIT.f.card.runaway)||!!(VISIT.f&&(SOC.friends||[]).some(x=>x.code===VISIT.f.code&&x.card&&x.card.runaway));   // V1.92.1 朋友的幻獸離家出走：房間裡不畫影子、點了也不會冒愛心
+function visitPetHop(){if(visitGone())return;const r=VISIT.r,t=performance.now();r.tx=null;r.act='idle';r.hop=t+800;r.until=t+2500;spawn('heart',5,{x:r.x+24,y:PET_Y+8,vy:-18,spread:14});sfx('pet')}
+/* V1.92.1 幫朋友摸幻獸：小手在牠身上摸 2 秒，然後牠頭上冒出「謝謝你」的對話泡泡 */
+function visitRub(then){const r=VISIT.r;if(!r)return;r.tx=null;r.act='idle';r.until=performance.now()+4000;VISIT.rub={t0:performance.now(),then};sfx('pet')}
+function visitBubble(t,ms=2600){const cv=$('scene'),par=cv&&cv.parentNode;if(!par)return;let e=$('vsBub');if(!e){e=document.createElement('div');e.id='vsBub';par.appendChild(e)}
+ const r=VISIT.r;e.textContent=t;e.style.left=((r.x+24)/W*100)+'%';e.style.top=((PET_Y+r.dep+6)/H*100)+'%';e.style.opacity='1';clearTimeout(VISIT.bubT);VISIT.bubT=setTimeout(()=>{e.style.opacity='0'},ms)}
+function drawVisitFx(now){const r=VISIT.r;if(!r||!VISIT.rub)return;const x=Math.round(r.x),y=PET_Y+r.dep,e=(now-VISIT.rub.t0)/1000;
+ if(e<2){const H=ICV.hand,w=H.width*2,h=H.height*2,hx=x+24-w/2+Math.sin(e*8)*8,hy=y+20+Math.abs(Math.cos(e*8))*3;ctx.drawImage(H,Math.round(hx),Math.round(hy),w,h);if(Math.random()<.06)spawn('heart',1,{x:x+24,y:y+14,vy:-16,spread:12})}
+ else{const f=VISIT.rub.then;VISIT.rub=null;f&&f()}}
+async function visitPet(){if(!VISIT.f.card.pet||visitGone())return;if(VISIT.rub)return;const pn=VISIT.f.card.pet.name,me=s.owner||'你';if((VISIT.f.used.pet||0)>=(VISIT.f.limit.pet||1)){visitRub(()=>{visitPetHop();visitBubble('嘿嘿～再摸一下嘛');say(`${pn}：嘿嘿～`,{log:false})});return}visitRub(async()=>{const r=await visitAct('pet');if(r){visitPetHop();visitBubble(`${me}，謝謝你～～💕`);say(`${pn}：好舒服～ ${me} 謝謝你！`,{log:false})}})}
+function visitTap(x,y){const r=VISIT.r;if(r&&!visitGone()&&x>=r.x+6&&x<=r.x+42&&y>=PET_Y+r.dep+8&&y<=PET_Y+r.dep+46)visitPet()}
+function drawVisit(now,dt){const r=VISIT.r;if(!r||visitGone())return;
  if(r.tx!=null){const d=r.tx-r.x,st=20*dt;if(Math.abs(d)<=st){r.x=r.tx;r.tx=null;r.act=r.next||'idle';r.until=now+(r.act==='sleep'?8000:2000)+Math.random()*3000}else{r.x+=Math.sign(d)*st;r.face=d>0?1:0}}
  else if(now>r.until){const q=Math.random();r.next='idle';if(q<.15&&VISIT.decor.placed.bed){r.next='sleep';r.tx=clamp(Math.round(bedX()),2,W-CELL-2)}else if(q<.75)r.tx=clamp(Math.round(4+Math.random()*(W-CELL-8)),2,W-CELL-2);else r.until=now+2000}
  const S=sheet(VISIT.key),fn=lgFrame(r,now),fi=S.idx[fn]??S.idx.idle0??0,x=Math.round(r.x),y=PET_Y+r.dep;
  ctx.fillStyle='rgba(20,60,30,.25)';ctx.fillRect(x+13,y+44,22,2);
  {const cp=VISIT.f.card.pet||{};drawAcc(ctx,S,fi,x,y,CELL,r.face===1,cp.acc,cp.accAdj,'back',cp.accLv)}if(r.face===1){ctx.save();ctx.translate(x+CELL,0);ctx.scale(-1,1);ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,0,y,CELL,CELL);ctx.restore()}else ctx.drawImage(S.cv,fi*CELL,0,CELL,CELL,x,y,CELL,CELL);{const cp=VISIT.f.card.pet||{};drawAcc(ctx,S,fi,x,y,CELL,r.face===1,cp.acc,cp.accAdj,'front',cp.accLv)}
- if(!rm()&&r.act==='sleep'&&r.tx==null&&Math.random()<.012)spawn('z',1,{x:x+34,y:y+14,vx:5,vy:-7,jx:1,jy:1,life:1.8,spread:2})}
+ if(!rm()&&r.act==='sleep'&&r.tx==null&&Math.random()<.012)spawn('z',1,{x:x+34,y:y+14,vx:5,vy:-7,jx:1,jy:1,life:1.8,spread:2});drawVisitFx(now)}
 let GSEL=null,GQN=1;
 function giftDialog(){const f=VISIT.f,U=f.used,L=f.limit,dl=(L.daily||1)-(U.daily||0),gl=(L.gift||3)-(U.gift||0),have=k=>k==='coins'?s.coins:(s.inv[k]||0),own=GIFTS.filter(([k,t,Q])=>have(k)>=Q[0]);   // V1.89.1 只列出背包裡有的東西
  if(!own.find(g=>g[0]===GSEL))GSEL=own.length?own[0][0]:null;const G=GIFTS.find(g=>g[0]===GSEL),qs=G?G[2].filter(n=>n<=have(GSEL)):[];if(!qs.includes(GQN))GQN=qs[0]||1;
@@ -2594,7 +2605,7 @@ function msgDialog(){openModal(`💌 留言給 ${esc(VISIT.f.name)}`,`<textarea 
  document.querySelectorAll('[data-qm]').forEach(b=>b.onclick=()=>{$('msIn').value=QUICK[+b.dataset.qm]});
  $('msGo').onclick=async()=>{const t=$('msIn').value.trim();if(!t)return;$('msGo').disabled=true;const r=await visitAct('msg',{text:t});if(r){closeModal();(VISIT.f.board=VISIT.f.board||[]).unshift({text:t,at:Date.now(),name:ownerName()});visitCard()}else $('msGo').disabled=false}}
 $('vsHome').onclick=()=>{sfx('tap');endVisit()};$('vsPet').onclick=visitPet;$('vsWater').onclick=async()=>{const r=await visitAct('water');if(r){if(VISIT.f.card.pl)VISIT.f.card.pl.forEach(x=>x[1]=0);visitCard();sfx('splash');spawn('bubble',8,{x:64,y:60,vy:-10,spread:40})}};
-$('vsGift').onclick=giftDialog;$('vsCare').onclick=async()=>{const r=await visitAct('care');if(r){visitPetHop();say(`${VISIT.f.card.pet.name}：吃飽飽了！謝謝你陪我～`,{log:false})}};$('vsMush').onclick=async()=>{const L=VISIT.f.card.mush||[];if(!L.length)return;const k=L[Math.floor(Math.random()*L.length)];const r=await visitAct('mush',{k});if(r){const key=k==='mushW'&&Math.random()<.5?'mushX':k;s.inv[key]=(s.inv[key]||0)+1;if(!s.mushDex.includes(k==='mushX'?'mushS':k))s.mushDex.push(key==='mushX'?'mushS':k);L.splice(L.indexOf(k),1);mushDexCheck();save();renderUI();visitCard();sfx('leaf');toast(`🍄 你也拿到一朵「${CONFIG.mush.kinds[key==='mushX'?'mushS':k].n}」！`,3000)}};$('vsSearch').onclick=async()=>{const r=await visitAct('search');if(r){const ra=VISIT.f.card.runaway;if(ra)ra.got=Math.min(ra.need,ra.got+CONFIG.runaway.help);visitCard();spawn('shoe',4,{x:64,y:70,vy:-16,spread:30});sfx('level')}};$('vsDuel').onclick=()=>duelAsk(VISIT.f.code);$('vsMsg').onclick=msgDialog;$('vsBoard').onclick=()=>boardDialog(VISIT.f.board,`📜 ${esc(VISIT.f.name)} 的留言板`);
+$('vsGift').onclick=giftDialog;$('vsCare').onclick=async()=>{const r=await visitAct('care');if(r){visitPetHop();visitBubble(`${s.owner||'你'}，謝謝你陪我～`);say(`${VISIT.f.card.pet.name}：吃飽飽了！謝謝你陪我～`,{log:false})}};$('vsMush').onclick=async()=>{const L=VISIT.f.card.mush||[];if(!L.length)return;const k=L[Math.floor(Math.random()*L.length)];const r=await visitAct('mush',{k});if(r){const key=k==='mushW'&&Math.random()<.5?'mushX':k;s.inv[key]=(s.inv[key]||0)+1;if(!s.mushDex.includes(k==='mushX'?'mushS':k))s.mushDex.push(key==='mushX'?'mushS':k);L.splice(L.indexOf(k),1);mushDexCheck();save();renderUI();visitCard();sfx('leaf');toast(`🍄 你也拿到一朵「${CONFIG.mush.kinds[key==='mushX'?'mushS':k].n}」！`,3000)}};$('vsSearch').onclick=async()=>{const r=await visitAct('search');if(r){const ra=VISIT.f.card.runaway;if(ra)ra.got=Math.min(ra.need,ra.got+CONFIG.runaway.help);visitCard();spawn('shoe',4,{x:64,y:70,vy:-16,spread:30});sfx('level')}};$('vsDuel').onclick=()=>duelAsk(VISIT.f.code);$('vsMsg').onclick=msgDialog;$('vsBoard').onclick=()=>boardDialog(VISIT.f.board,`📜 ${esc(VISIT.f.name)} 的留言板`);
 $('vsMate').onclick=()=>{if(!isAdult()){toast(`${s.name} 要先長到成年期才能配對`,3000);return}const fp=VISIT.f.card.pet;if(fp&&fp.sex===s.sex){toast('要一公一母才能配對喔',3000);return}
  confirmBox('💞 邀請配對',`邀請 ${esc(VISIT.f.name)} 的「${esc(fp.name)}」跟 ${esc(s.name)} 配對？<br><span class="small">對方答應後，你們會各拿到一顆蛋（各自付 ${BREED_COST} 金幣）。</span>`,'送出邀請',()=>{visitAct('mate',{code:mateCode(),pet:s.name})})};
 function menuDialog(){
