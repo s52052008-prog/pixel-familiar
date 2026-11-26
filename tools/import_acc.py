@@ -15,6 +15,7 @@ SHEETS = {
   'acc2': (5, 2, [('gradcap', 26), ('halo', 24), ('pumpkin', 28), ('monocle', 16), ('eyepatch', 24), ('rose', 18), ('lollipop', 12), ('bowtie', 16), ('scarf', 20)]),
   'acc3': (4, 2, [('fedora', 26), ('snowglass', 24), ('candycane', 16), ('pipe', 18), ('_cape', 20), ('starglass', 24), ('trumpet', 18), ('whistle', 14)]),   # V1.92 補齊套裝
   'batbow': (1, 1, [('batbow', 20)]),
+  'acc4': (4, 2, [('campscarf', 22), ('moonclip', 18), ('glowwreath', 28), ('crystalpend', 14), ('stargoggle', 26), ('rainbowtie', 18), ('gearmono', 16)]),   # V1.94 祕密景點專屬裝飾
   'acc': (5, 2, [('bow', 18), ('tophat', 24), ('crown', 22), ('glasses', 24), ('wreath', 30), ('chef', 24), ('necklace', 22), ('cigar', 20), ('turkey', 28), ('antler', 30)]),
 }
 def fg_mask(path):
@@ -30,6 +31,13 @@ def fg_mask(path):
             h, w = sl[0].stop - sl[0].start, sl[1].stop - sl[1].start
             if w > h * 1.8: big.append(i + 1)   # 扁扁的（光環中間、繩子圈）才挖掉；骷髏頭那種方方的留著
         keep &= ~np.isin(lab, big)
+    if 'acc4' in path:   # V1.94 花冠中間、單眼鏡鍊子圈住的白底挖掉（只挖這兩格，月亮髮夾本身是淺灰白不能挖）
+        H, W = bg.shape; holes = []
+        for i, sl in enumerate(ndimage.find_objects(lab)):
+            if sl is None or (i + 1) in border: continue
+            cy, cx = (sl[0].start + sl[0].stop) / 2, (sl[1].start + sl[1].stop) / 2; cell = int(cy // (H / 2)) * 4 + int(cx // (W / 4))
+            if cell in (2, 6): holes.append(i + 1)
+        keep &= ~np.isin(lab, holes)
     return a, keep
 for sheet, (C, R, ITEMS) in SHEETS.items():
     a, m = fg_mask(f'art/src/acc/{sheet}.png'); H, W = m.shape

@@ -622,5 +622,25 @@ t('V1.93.1 下雨天作物自己喝水（離線也算）、下雨種下去不用
   C.CONFIG.weatherOn = false;
 });
 
+t('V1.94 祕密景點：親密度 60、對的時段才去；第一次拿專屬裝飾、祝福 +1、7 天後才能再去；祝福讓能力變強', () => {
+  const s = hatched(); s.route = 'flame'; s.bond = 70; s.accOwned = []; const H = 3600e3;
+  const tw = new Date('2026-11-26T18:00:00+08:00').getTime(), bad = new Date('2026-11-26T12:00:00+08:00').getTime();
+  assert.equal(C.spotReady(s, bad), null); assert.equal(C.spotReady(s, tw), 'flame');
+  s.bond = 50; assert.equal(C.spotReady(s, tw), null); s.bond = 70;
+  const f0 = C.buffFighter(C.mkFighter('a', 'k', 10, 'flame', 0, 80, 70), s, null).atk;
+  const r = C.visitSpot(s, tw, () => .9); assert.ok(r.ok && r.first); assert.ok(s.accOwned.includes('campscarf')); assert.equal(s.spot.bless, 1);
+  assert.equal(C.spotReady(s, tw + 24 * H), null); assert.equal(C.spotReady(s, tw + 7 * 24 * H), 'flame');
+  const f1 = C.buffFighter(C.mkFighter('a', 'k', 10, 'flame', 0, 80, 70), s, null).atk; assert.ok(Math.abs(f1 / f0 - 1.02) < 1e-9);
+  const sn = C.sanitizePet(s, tw); assert.equal(sn.spot.bless, 1);
+  const s2 = hatched(); s2.route = 'tide'; s2.bond = 61; const n2 = new Date('2026-11-26T21:00:00+08:00').getTime(); assert.ok(C.visitSpot(s2, n2, () => .9).ok); assert.ok(s2.events.moonspring);
+});
+t('V1.94 同屬性只能養一隻：生蛋一定是還沒有的屬性；七種都有就不能買蛋', () => {
+  const s = hatched(); s.route = 'flame'; s.roster = ['tide', 'forest', 'earth', 'bird', 'elec'].map(e => Object.assign(C.sanitizePet(Object.assign({}, s, { route: e, seed: C.seedForEl(e) }), T0)));
+  assert.deepEqual(C.freeEls(s), ['metal']); const G = C.makeGenome(C.seedForEl('flame')); C.fixEggEl(s, G); assert.equal(G.el, 'metal');
+  s.coins = 99999; s.roster.push(C.sanitizePet(Object.assign({}, s, { route: 'metal', seed: C.seedForEl('metal') }), T0)); assert.equal(C.freeEls(s).length, 0); assert.ok(!C.buyEgg(s).ok);
+});
+t('V1.94 親密度 40 每日小禮物、100 存錢筒 +10%', () => { const s = hatched(); s.bond = 45; s.mood = 90; s.daily.date = C.dayKey(T0); s.care.petLastRewardAt = 0; const r = C.pet(s, T0); assert.ok(r.gift && r.gift.name);
+  const a = C.piggyRateOf(Object.assign({}, s, { bond: 99 })), b = C.piggyRateOf(Object.assign({}, s, { bond: 100 })); assert.ok(Math.abs(b / a - 1.1) < 1e-9); });
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

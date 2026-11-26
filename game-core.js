@@ -31,8 +31,14 @@ const CONFIG = {
   gather: { cooldownMin: 2, food: 1 },
   stages: { juvenile: { hours: 4, xp: 150 }, adolescent: { hours: 12, xp: 450 }, adult: { hours: 48, xp: 1200 }, ascended: { hours: 168, xp: 3000 } },   // V1.65 成長經驗門檻 ×1.5   // V1.20：嬰兒期＋門檻提高
   routeTie: ['tide', 'forest', 'flame', 'earth', 'bird', 'elec', 'metal'],   // 平手時的固定順序（GDD 前三個 + V1.11 新增四個）
-  bondTiers: [20, 50, 80],
-  moonspringBond: 60,
+  bondTiers: [20, 40, 60, 80, 100],   // V1.94 親密度 5 階：熟悉／好朋友／很要好（祕密景點）／摯友／心靈相通
+  bondFx: { gift: [['coins', 40], ['seeds2', 1], ['potion', 1], ['berry', 2], ['gem_ruby', 1]], giftW: [.4, .2, .15, .15, .1], cry: .15, cryX: 1.3, bondTap: 2, piggy: .1 },
+  /* V1.94 七屬性祕密景點：親密度 60，在特定時段摸牠會帶你去；第一次拿專屬裝飾，之後每 7 天再去一次拿「景點祝福」（能力永久 +1 級，最多 10 級） */
+  spots: { bond: 60, week: 7, blessMax: 10, drop: .4,
+    flame: { n: '星火營地', acc: 'campscarf', when: '傍晚 5～7 點', stat: '攻擊', each: '攻擊 +2%' }, tide: { n: '月光泉', acc: 'moonclip', when: '晚上 7 點～凌晨 5 點', stat: '血量', each: '血量 +3%' },
+    forest: { n: '螢光森林小徑', acc: 'glowwreath', when: '清晨 5～9 點', stat: '回血', each: '每回合回血 +0.3%' }, earth: { n: '水晶洞窟', acc: 'crystalpend', when: '白天，剛打贏冒險的 2 小時內', stat: '防禦', each: '防禦 +2%' },
+    bird: { n: '流星崖頂', acc: 'stargoggle', when: '晴朗的夜晚', stat: '速度', each: '速度 +0.5' }, elec: { n: '雨後彩虹橋', acc: 'rainbowtie', when: '雨剛停的時候', stat: '暴擊', each: '暴擊率 +1%' },
+    metal: { n: '午夜鐘樓', acc: 'gearmono', when: '晚上 11 點～凌晨 1 點', stat: '減傷', each: '受到傷害 −1%' } },
   harvestsForOldTree: 10,
   bossStages: { volcano: 15, oldtree: 20, canyon: 25, skypeak: 30, thunder: 35, mine: 40 },
   /* V1.37 高階條件（七屬性一樣）：① 終極素材 3 個（第 10、20、30 關大王各掉一次，依你這隻的屬性）② 專屬任務（長到成年期才出現、從那時開始算）
@@ -200,13 +206,16 @@ const CONFIG = {
     headband: { slot: 'head', pk: 1 },
     // V1.92 補齊套裝（頭、眼、嘴、脖子）
     fedora: { slot: 'head', price: 600 }, snowglass: { slot: 'face', price: 400, month: 11 }, candycane: { slot: 'mouth', price: 300, month: 11 }, pipe: { slot: 'mouth', price: 500 },
-    batbow: { slot: 'neck', price: 400, month: 9 }, starglass: { slot: 'face', drop: 'final' }, trumpet: { slot: 'mouth', dex: 'mushAll' }, whistle: { slot: 'mouth', pk: 30 } },   // V1.90 ⚽ 足球頭帶：PK 踢出全部 10 種球路才拿得到
+    batbow: { slot: 'neck', price: 400, month: 9 }, starglass: { slot: 'face', drop: 'final' }, trumpet: { slot: 'mouth', dex: 'mushAll' }, whistle: { slot: 'mouth', pk: 30 },
+    // V1.94 祕密景點專屬：只有那個屬性的幻獸能戴
+    campscarf: { slot: 'neck', spot: 'flame', el: 'flame' }, moonclip: { slot: 'head', spot: 'tide', el: 'tide' }, glowwreath: { slot: 'head', spot: 'forest', el: 'forest' }, crystalpend: { slot: 'neck', spot: 'earth', el: 'earth' },
+    stargoggle: { slot: 'face', spot: 'bird', el: 'bird' }, rainbowtie: { slot: 'neck', spot: 'elec', el: 'elec' }, gearmono: { slot: 'face', spot: 'metal', el: 'metal' } },   // V1.90 ⚽ 足球頭帶：PK 踢出全部 10 種球路才拿得到
   accDrop: .15,   // 打贏小王：15% 掉一件還沒有的「小王裝飾」（咬玫瑰、海盜眼罩）；最終大王第一次必掉天使光環
   /* V1.88 裝飾＝裝備：每件一個小能力；強化五級（普通灰→優秀綠→精良藍→完美紫→超級金），等級越高越強、會發光 */
   eq: {
     fx: { santa: { gift: .25 }, antler: { spd: .06 }, bow: { def: .05 }, tophat: { dodge: .03 }, crown: { atk: .05 }, wreath: { regen: .02 },
       chef: { heal: .2 }, turkey: { hp: .06 }, mushhat: { poison: .08 }, glasses: { crit: .03 }, cigar: { scare: .15 }, necklace: { coin: .1 },
-      gradcap: { xp: .05 }, halo: { endure: .12 }, pumpkin: { slow: .1 }, monocle: { aim: .05 }, eyepatch: { rage: .1 }, rose: { charm: .03 }, lollipop: { cure: .3 }, bowtie: { critRes: .25 }, scarf: { elemCut: .1 }, headband: { spd: .04, dodge: .02, pkAim: .3 }, fedora: { atk: .05 }, snowglass: { gift: .2 }, candycane: { regen: .02 }, pipe: { def: .05 }, batbow: { scare: .15 }, starglass: { xp: .05 }, trumpet: { cure: .3 }, whistle: { pkAim: .3 } },
+      gradcap: { xp: .05 }, halo: { endure: .12 }, pumpkin: { slow: .1 }, monocle: { aim: .05 }, eyepatch: { rage: .1 }, rose: { charm: .03 }, lollipop: { cure: .3 }, bowtie: { critRes: .25 }, scarf: { elemCut: .1 }, campscarf: { atk: .06 }, moonclip: { hp: .08 }, glowwreath: { regen: .025 }, crystalpend: { def: .06 }, stargoggle: { spd: .08 }, rainbowtie: { crit: .04 }, gearmono: { critRes: .3 }, headband: { spd: .04, dodge: .02, pkAim: .3 }, fedora: { atk: .05 }, snowglass: { gift: .2 }, candycane: { regen: .02 }, pipe: { def: .05 }, batbow: { scare: .15 }, starglass: { xp: .05 }, trumpet: { cure: .3 }, whistle: { pkAim: .3 } },
     mult: [1, 1.5, 2, 2.5, 3],
     tiers: ['普通', '優秀', '精良', '完美', '超級'], colors: ['#b8b8b8', '#5ad86a', '#4aa8ff', '#b070ff', '#ffd040'],
     up: [{ coins: 500 }, { coins: 1500 }, { coins: 4000 }, { coins: 10000 }],   // V1.91.2 強化只要金幣，越高級越貴（不再用蘑菇）
@@ -389,6 +398,8 @@ function sanitize(o, now = Date.now()) {
   r.coins = int(o.coins, legacy ? 20 : CONFIG.start.coins, 0, 1e9);
   for (const k of ['hunger', 'mood', 'clean', 'energy']) r[k] = num(o[k], r[k], 0, 100);
   r.bond = num(o.bond, 0, 0, 100);
+  { const S = o.spot && typeof o.spot === 'object' ? o.spot : null; r.spot = { n: int(S && S.n, 0, 0, 1e5), last: num(S && S.last, 0, 0, 9e15), bless: int(S && S.bless, 0, 0, CONFIG.spots.blessMax) }; }
+  r.lastWinAt = num(o.lastWinAt, 0, 0, 9e15); r.spotAll = o.spotAll === true;
   r.sleeping = r.hatched && o.sleeping === true;
   const route = ROUTES.includes(o.route) ? o.route : OLD_ROUTE[o.route] || null;
   r.route = route;
@@ -636,7 +647,7 @@ function applyTime(st, now = Date.now()) {
   return { hours, eff, warn: hours > CONFIG.jumpWarnDays * 24 ? 'jump' : null, events };
 }
 /* 存錢筒：幻獸等級越高，每小時存越多；鋼系 ×1.5；一起出來的第二隻再加牠的一半 */
-function piggyRateOf(p) { const P = CONFIG.piggy, T = traitOf(p.route); return (P.base + P.per * Math.min(level(p.xp), P.maxLv)) * (T.coinX || 1) * (p.awake ? CONFIG.starHeart.piggyX : 1); }
+function piggyRateOf(p) { const P = CONFIG.piggy, T = traitOf(p.route); return (P.base + P.per * Math.min(level(p.xp), P.maxLv)) * (T.coinX || 1) * (p.awake ? CONFIG.starHeart.piggyX : 1) * ((p.bond || 0) >= 100 ? 1 + CONFIG.bondFx.piggy : 1); }   // V1.94 心靈相通 +10%
 const pigLevel = st => Math.min(6, 1 + ((st.pigCores && st.pigCores.length) || 0) + (st.pigBought ? 1 : 0));
 function piggyRate(st) {   // V1.93.1 全部的幻獸（主角、第二隻、小窩裡、寄養的）各自存的錢加在一起，集中到同一個撲滿
   if (!st.hatched) return 0; const L = [st, ...(st.pair ? [st.pair] : []), ...(st.roster || []), ...(st.foster || [])].filter(p => p && p.hatched !== false);
@@ -746,6 +757,37 @@ function act(st, a, now = Date.now(), opt) {
   return { ok: false, msg: '未知動作', tm };
 }
 function bondTier(b) { return CONFIG.bondTiers.filter(t => b >= t).length; }
+function bondGift(st, r = Math.random) { const B = CONFIG.bondFx; let x = r(), i = 0; for (; i < B.gift.length - 1; i++) { x -= B.giftW[i]; if (x < 0) break; }
+  const [k, n0] = B.gift[i], n = k === 'coins' ? n0 + Math.floor(r() * 41) : n0;
+  if (k === 'coins') st.coins += n; else if (GOODS[k]) lootOf(st)[k] += n; else st.inv[k] = (st.inv[k] || 0) + n;
+  return { k, n, name: k === 'coins' ? '金幣' : GOODS[k] ? GOODS[k].name : CONFIG.foods[k] ? CONFIG.foods[k].name : { seeds2: '優良種子', potion: '回復藥水' }[k] || k }; }
+/* V1.94 祕密景點 */
+const elOfPet = p => (p && (p.route || genomeFromId(gidOf(p)).el)) || 'tide';
+function spotCond(st, now = Date.now()) { const el = elOfPet(st), h = hourIn(now), W = CONFIG.weatherOn;
+  switch (el) { case 'flame': return h >= 17 && h < 19; case 'tide': return h >= 19 || h < 5; case 'forest': return h >= 5 && h < 9;
+    case 'earth': return h >= 9 && h < 17 && now - (st.lastWinAt || 0) < 2 * H; case 'bird': return (h >= 19 || h < 5) && (!W || weatherAt(now) === 'clear');
+    case 'elec': return W && !isWet(weatherAt(now)) && isWet(weatherAt(now - CONFIG.weather.slotHours * H)); case 'metal': return h >= 23 || h < 1; }
+  return false; }
+function spotWait(st, now = Date.now()) { const S = st.spot; return S && S.last ? Math.max(0, S.last + CONFIG.spots.week * 24 * H - now) : 0; }
+function spotReady(st, now = Date.now()) { if (!st.hatched || st.sleeping || st.runaway || st.bond < CONFIG.spots.bond || spotWait(st, now) > 0) return null; return spotCond(st, now) ? elOfPet(st) : null; }
+function visitSpot(st, now = Date.now(), r = Math.random) {
+  const el = spotReady(st, now); if (!el) return { ok: false, msg: '現在不是去祕密景點的時候' };
+  const C = CONFIG.spots, K = C[el], S = st.spot || (st.spot = { n: 0, last: 0, bless: 0 }), first = !S.n; S.n++; S.last = now;
+  const out = { ok: true, el, name: K.n, first, got: [] };
+  if (first) { if (!st.accOwned.includes(K.acc)) st.accOwned.push(K.acc); out.acc = K.acc; journal(st, now, `${st.name} 帶你去了祕密景點「${K.n}」！`); if (el === 'tide') st.events.moonspring = true;
+    const all = EL_LIST.every(e => st.accOwned.includes(C[e].acc)); if (all && !st.spotAll) { st.spotAll = true; out.all = true; journal(st, now, '七個祕密景點全部去過了！得到稱號「七景旅人」'); } }
+  if (S.bless < C.blessMax) { S.bless++; out.bless = S.bless; }
+  if (r() < C.drop) { const x = r(); if (x < .34) { st.inv.shards = (st.inv.shards || 0) + 1; out.got.push(['shards', '星辰碎片']); } else if (x < .67) { st.inv.seeds4 = (st.inv.seeds4 || 0) + 1; out.got.push(['seeds4', '神奇種子']); }
+    else { const g = x < .8 ? 'gem_ruby' : x < .92 ? 'gem_sapphire' : 'gem_emerald'; lootOf(st)[g]++; out.got.push([g, GOODS[g].name]); } }
+  st.mood = clamp(st.mood + 10); return out; }
+function spotBless(f, p) { const S = p && p.spot, n = S ? Math.min(CONFIG.spots.blessMax, S.bless | 0) : 0; if (!n) return f; switch (elOfPet(p)) {
+  case 'flame': f.atk *= 1 + .02 * n; break; case 'tide': f.max = f.hp = Math.round(f.max * (1 + .03 * n)); break; case 'forest': f.regen = (f.regen || 0) + .003 * n; break;
+  case 'earth': f.def *= 1 + .02 * n; break; case 'bird': f.spd += .5 * n; break; case 'elec': f.critUp = (f.critUp || 0) + .01 * n; break; case 'metal': f.dmgCut = (f.dmgCut || 0) + .01 * n; break; } f.spotN = n; return f; }
+/* V1.94 同屬性只能養一隻：現在有的屬性（主角、第二隻、小窩、寄養、蛋籃、愛的小窩裡的蛋） */
+function ownedEls(st) { const s = new Set(); for (const p of [st.hatched ? st : null, st.pair, ...(st.roster || []), ...(st.foster || [])]) if (p && p.hatched !== false) s.add(elOfPet(p));
+  for (const e of [...(st.eggs || []), ...(st.loveEgg ? [st.loveEgg] : [])]) { const g = genomeFromId(e.id); if (g && g.el) s.add(g.el); } return [...s]; }
+function freeEls(st) { const o = ownedEls(st); return EL_LIST.filter(e => !o.includes(e)); }
+const FULL_ELS = '七種屬性都養齊了（每種屬性只能養一隻）';
 function pet(st, now = Date.now()) {
   const tm = applyTime(st, now);
   if (!st.hatched) return { ok: false, tm };
@@ -756,11 +798,8 @@ function pet(st, now = Date.now()) {
     st.care.petLastRewardAt = now; if (st.mood >= C.minMood) st.bond = clamp(st.bond + C.bond); else out.lowMood = true; st.mood = clamp(st.mood + C.mood); st.path.tide += C.tide;
     out.reward = true; track(st, 'pet', now); const t1 = bondTier(st.bond);
     if (t1 > t0) { out.bondUp = CONFIG.bondTiers[t1 - 1]; journal(st, now, `親密度達到 ${out.bondUp}！`); }
-    // 親密度 50：每天一次，牠會撿東西送你
-    if (st.bond >= 50 && !st.daily.gift && st.daily.date === dayKey(now)) { st.daily.gift = true; st.inv.food++; out.gift = true; }
-    // 月泉事件：親密度 >= 60、晚上（19:00–04:59）摸摸時發生一次
-    const h = hourIn(now);
-    if (!st.events.moonspring && st.bond >= CONFIG.moonspringBond && (h >= 19 || h < 5)) { out.events.push(discover(st, now, 'moonspring')); }
+    // V1.94 親密度 40：每天一次，牠會從院子撿東西送你（金幣、優良種子、藥水、莓果、紅寶石隨機一樣）
+    if (st.bond >= CONFIG.bondTiers[1] && !st.daily.gift && st.daily.date === dayKey(now)) { st.daily.gift = true; out.gift = bondGift(st); }
   }
   return out;
 }
@@ -928,6 +967,7 @@ function buffFighter(f, p, lv) {
     if (R.def) f.def *= 1 + R.def; if (R.atk) f.atk *= 1 + R.atk; if (R.hp) f.max = f.hp = Math.round(f.max * (1 + R.hp));
     if (R.crit) f.critUp = (f.critUp || 0) + R.crit; if (R.cut) f.dmgCut = (f.dmgCut || 0) + R.cut; if (R.regen) f.regen = (f.regen || 0) + R.regen; if (R.revive) f.revive = R.revive; if (R.sp) f.spUp = (f.spUp || 0) + R.sp; if (R.dodge) f.dodge = (f.dodge || 0) + R.dodge; }
   if (lv) eqApply(f, p.acc, lv);   // V1.88 裝飾＝裝備
+  spotBless(f, p);   // V1.94 祕密景點祝福
   return f;
 }
 /* V1.86 戰鬥天賦等級：少年期 1（弱化版）、成年期以後 2（完整版） */
@@ -1003,7 +1043,7 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
   const A = CONFIG.adventure, out = { xp: 0, coins: 0, food: 0, seeds: 0, unlocked: 0, events: [] };
   if (result === 'win' || result === 'loss') st.mood = clamp(st.mood + (result === 'win' ? A.winMood : A.lossMood));
   if (result === 'win') {
-    st.adv.wins++; track(st, 'win', now);
+    st.adv.wins++; st.lastWinAt = now; track(st, 'win', now);
     const xp = Math.round((A.xp + CONFIG.battleWin.xp) * CONFIG.battleLen.reward);   // V1.86 戰鬥變長，經驗金幣也多一點
     const q = eqStats(st.acc, st.accLv, new Date(now).getMonth());   // V1.88 裝備：學士帽經驗、聖誕帽禮物、金項鍊金幣
     if (full) { const T = trait(st); out.xp = addXP(st, Math.round(xp * (1 + (q.xp || 0)))); if (q.xp) out.eqXp = 1;
@@ -1329,7 +1369,7 @@ function finishTrain(st, kind, success, now = Date.now()) {
 const FRESH_KEYS = ['food', 'berry', 'cranberry', 'blueberry', 'strawberry'];   // 自己種的（會發光、能賣）
 /* V1.44 迎接新的蛋要花錢 */
 const eggPrice = st => CONFIG.eggPrice[Math.min(CONFIG.eggPrice.length - 1, st.eggBuys || 0)];
-function buyEgg(st) { const p = eggPrice(st); if (st.coins < p) return { ok: false, msg: `金幣不足（新的蛋要 ${p} 金幣）` }; st.coins -= p; st.eggBuys = (st.eggBuys || 0) + 1; return { ok: true, price: p }; }
+function buyEgg(st) { if (!freeEls(st).length) return { ok: false, msg: FULL_ELS }; const p = eggPrice(st); if (st.coins < p) return { ok: false, msg: `金幣不足（新的蛋要 ${p} 金幣）` }; st.coins -= p; st.eggBuys = (st.eggBuys || 0) + 1; return { ok: true, price: p }; }
 function fixFresh(st) { const f = st.inv.fresh || (st.inv.fresh = {}); for (const k of FRESH_KEYS) f[k] = Math.min(f[k] || 0, st.inv[k] || 0); }
 /* 賣自己種的水果（一顆 15 元）。商店買來的不能賣，避免買低賣高 */
 function sellFruit(st, kind) {
@@ -1423,7 +1463,7 @@ function finishBallGame(st, score, now = Date.now()) {
 }
 
 /* ---------------- 小窩：升級、讓多隻寵物住進來 ---------------- */
-const PET_FIELDS = ['acc', 'accAdj', 'nestUntil', 'trainLv', 'relics', 'fosterPaid', 'trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt'];
+const PET_FIELDS = ['acc', 'accAdj', 'nestUntil', 'trainLv', 'relics', 'fosterPaid', 'trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt', 'spot'];
 function snapshotPet(st) { const p = {}; for (const k of PET_FIELDS) if (st[k] !== undefined) p[k] = JSON.parse(JSON.stringify(st[k])); p.sleeping = false; return p; }
 function sanitizePet(p, now = Date.now()) { const r = sanitize(Object.assign({ v: 6 }, p, { roster: [], dex: [], pair: null }), now); return snapshotPet(r); }
 /* V1.45 神秘老爺爺的家：寄養不想養的幻獸（不佔小窩、數值不會變），每隻付一次錢 */
@@ -1561,11 +1601,13 @@ function canLove(st, ref, now = Date.now()) {
   if (st.mood < B.minMood) return `${st.name} 的心情要 ${B.minMood}% 以上`;
   if (st.loveEgg) return `${st.loveEgg.names} 還在${st.loveEgg.away ? '朋友家' : '愛的小窩裡'}，等牠們回來再說`;
   if (st.eggs.length >= B.basket) return `蛋籃滿了（最多 ${B.basket} 顆）`;
+  if (!freeEls(st).length) return FULL_ELS;
   return null;
 }
+function fixEggEl(st, G, r = Math.random) { const F = freeEls(st); if (F.length && !F.includes(G.el)) G.el = F[Math.floor(r() * F.length) % F.length]; return G; }   // V1.94 生出來的蛋一定是還沒有的屬性
 function love(st, ref, now = Date.now(), r = Math.random) {
   applyTime(st, now); const why = canLove(st, ref, now); if (why) return { ok: false, msg: why };
-  const p = ref === 'pair' ? st.pair : st.roster[ref], G = breedGenome(genomeFromId(gidOf(st)), genomeFromId(gidOf(p)), r);
+  const p = ref === 'pair' ? st.pair : st.roster[ref], G = breedGenome(genomeFromId(gidOf(st)), genomeFromId(gidOf(p)), r); fixEggEl(st, G, r);
   st.loveAt = now; st.mood = clamp(st.mood + CONFIG.loveNest.mood); p.mood = clamp(p.mood + CONFIG.loveNest.mood);
   const end = now + CONFIG.breed.nestHours * H, egg = { id: 'x:' + encodeGenome(G), from: `${st.name} ♥ ${p.name}` };
   st.loveEgg = { id: egg.id, from: egg.from, end, names: `${st.name} 和 ${p.name}`, away: 0 }; st.nestUntil = end; p.nestUntil = end;
@@ -1644,6 +1686,7 @@ function canBreed(st, friend, now = Date.now()) {
   if (st.coins < B.cost) return `金幣不足（需要 ${B.cost}）`;
   if (st.loveEgg) return `${st.loveEgg.names} 還在${st.loveEgg.away ? '朋友家' : '愛的小窩裡'}，等牠們回來再說`;
   if (st.eggs.length >= B.basket) return `蛋籃滿了（最多 ${B.basket} 顆）`;
+  if (!freeEls(st).length) return FULL_ELS;
   return null;
 }
 /* V1.86.2 愛的小窩住滿一天：蛋放進蛋籃（再暖 6 小時才能孵），兩隻出來 */
@@ -1656,7 +1699,7 @@ function loveTick(st, now = Date.now()) {
 const inNest = (p, now = Date.now()) => !!(p && p.nestUntil > now);
 function breed(st, friend, now = Date.now(), r = Math.random) {
   const why = canBreed(st, friend, now); if (why) return { ok: false, msg: why };
-  const G = breedGenome(genomeFromId(gidOf(st)), friend.G, r);
+  const G = breedGenome(genomeFromId(gidOf(st)), friend.G, r); fixEggEl(st, G, r);
   st.coins -= CONFIG.breed.cost; st.breedAt = now; st.mood = clamp(st.mood + 10);
   const end = now + CONFIG.breed.nestHours * H, host = st.sex === 'f', egg = { id: 'x:' + encodeGenome(G), from: `${st.name} × ${friend.name}` };
   st.loveEgg = { id: egg.id, from: egg.from, end, names: `${st.name} 和 ${friend.name}`, away: host ? 0 : 1 }; st.nestUntil = end;
@@ -1761,7 +1804,7 @@ const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, S
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   eqStats, eqApply, accUpgrade, eqGift,
-  plotState, plant, harvest, water, thirstyPlots, rainWater, isWet, buySprinkler, buySeed, buyDecor, placeDecor, loungeTick, upgradeLounge, helpSearch, lureFood, mushTick, pickMush, mushSell, mushCook, mushEat, MUSH_KEYS, MUSH_BUFFS, buyItem, useCandy,
+  plotState, plant, harvest, water, thirstyPlots, rainWater, isWet, bondGift, spotCond, spotReady, spotWait, visitSpot, spotBless, elOfPet, ownedEls, freeEls, fixEggEl, buySprinkler, buySeed, buyDecor, placeDecor, loungeTick, upgradeLounge, helpSearch, lureFood, mushTick, pickMush, mushSell, mushCook, mushEat, MUSH_KEYS, MUSH_BUFFS, buyItem, useCandy,
   toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, releasePet, PET_NAMES, CORE_KINDS, LEFT_NAME, guideStep, guideDo, fosterSwap, whereIs, inNest, loveTick, moveOut, eggReady, lostPets, recallLost, ownedIds, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, selectRod, allPets, giveEmber, emberShare, setTeam, TRAIN_TIER, trainLvOf, trainTier, trainLvUp, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 Object.assign(API, { EARN_NAME, SPEND_NAME, BADGES, BADGE, statsOf, statAdd, statVal, checkBadges, playTick, weekKey, sumOf }); wrapStats(API);
