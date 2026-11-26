@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
+<style>:root{--pff:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif}</style>
+<script>/* V1.94.1 字型：俐方體 11 號（預設）／jf open 粉圓／系統字型，先載入選好的那個 */(function(){var k="cubic";try{k=localStorage.getItem("pf-font")||"cubic"}catch(e){}window.PF_FONT_KEY=k;if(k!=="sys"){var x=document.createElement("script");x.src="font_"+k+".js";x.onload=function(){window.pfFontApply&&pfFontApply(k,1)};document.head.appendChild(x)}})()</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111a30">
@@ -17,7 +19,7 @@
 :root{--bg:#0e1528;--panel:#1d2c4a;--line:#0a1020;--hi:#3f5a88;--text:#fff3d5;--muted:#b9c8e6;--gold:#f2c55c}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{touch-action:manipulation;-webkit-text-size-adjust:100%;background:var(--bg)}
-body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;overscroll-behavior:none}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--pff);overscroll-behavior:none}
 button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
 #app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;gap:9px;
  padding:calc(env(safe-area-inset-top) + 10px) calc(env(safe-area-inset-right) + 12px) calc(env(safe-area-inset-bottom) + 14px) calc(env(safe-area-inset-left) + 12px);
@@ -2631,12 +2633,26 @@ $('vsHome').onclick=()=>{sfx('tap');endVisit()};$('vsPet').onclick=visitPet;$('v
 $('vsGift').onclick=giftDialog;$('vsCare').onclick=async()=>{const r=await visitAct('care');if(r){visitPetHop();visitBubble(`${s.owner||'你'}，謝謝你陪我～`);say(`${VISIT.f.card.pet.name}：吃飽飽了！謝謝你陪我～`,{log:false})}};$('vsMush').onclick=async()=>{const L=VISIT.f.card.mush||[];if(!L.length)return;const k=L[Math.floor(Math.random()*L.length)];const r=await visitAct('mush',{k});if(r){const key=k==='mushW'&&Math.random()<.5?'mushX':k;s.inv[key]=(s.inv[key]||0)+1;if(!s.mushDex.includes(k==='mushX'?'mushS':k))s.mushDex.push(key==='mushX'?'mushS':k);L.splice(L.indexOf(k),1);mushDexCheck();save();renderUI();visitCard();sfx('leaf');toast(`🍄 你也拿到一朵「${CONFIG.mush.kinds[key==='mushX'?'mushS':k].n}」！`,3000)}};$('vsSearch').onclick=async()=>{const r=await visitAct('search');if(r){const ra=VISIT.f.card.runaway;if(ra)ra.got=Math.min(ra.need,ra.got+CONFIG.runaway.help);visitCard();spawn('shoe',4,{x:64,y:70,vy:-16,spread:30});sfx('level')}};$('vsDuel').onclick=()=>duelAsk(VISIT.f.code);$('vsMsg').onclick=msgDialog;$('vsBoard').onclick=()=>boardDialog(VISIT.f.board,`📜 ${esc(VISIT.f.name)} 的留言板`);
 $('vsMate').onclick=()=>{if(!isAdult()){toast(`${s.name} 要先長到成年期才能配對`,3000);return}const fp=VISIT.f.card.pet;if(fp&&fp.sex===s.sex){toast('要一公一母才能配對喔',3000);return}
  confirmBox('💞 邀請配對',`邀請 ${esc(VISIT.f.name)} 的「${esc(fp.name)}」跟 ${esc(s.name)} 配對？<br><span class="small">對方答應後，你們會各拿到一顆蛋（各自付 ${BREED_COST} 金幣）。</span>`,'送出邀請',()=>{visitAct('mate',{code:mateCode(),pet:s.name})})};
+/* V1.94.1 字型切換（俐方體 11 號：ACh-K／jf open 粉圓：justfont，都是 SIL OFL 1.1 開源授權） */
+const FONTS={cubic:['俐方體 11 號','像素點陣字，跟像素畫最搭'],huninn:['jf open 粉圓','圓滾滾、可愛好讀'],sys:['系統字型','手機內建的字']};
+const SYS_FONT='-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif';
+function pfFontApply(k,boot){window.PF_FONT_KEY=k;try{localStorage.setItem('pf-font',k)}catch(e){}const root=document.documentElement;
+ if(k==='sys'){root.style.setProperty('--pff',SYS_FONT);return Promise.resolve(true)}
+ const go=()=>{const d=(window.PF_FONTS||{})[k];if(!d)return Promise.resolve(false);const fam='PF_'+k;if([...document.fonts].some(f=>f.family===fam)){root.style.setProperty('--pff',`"${fam}",${SYS_FONT}`);return Promise.resolve(true)}
+  const f=new FontFace(fam,`url(${d})`);return f.load().then(x=>{document.fonts.add(x);root.style.setProperty('--pff',`"${fam}",${SYS_FONT}`);return true}).catch(()=>false)};
+ if((window.PF_FONTS||{})[k])return go();return new Promise(res=>{const x=document.createElement('script');x.src=`font_${k}.js`;x.onload=()=>go().then(res);x.onerror=()=>res(false);document.head.appendChild(x)})}
+if(window.PF_FONT_KEY&&window.PF_FONT_KEY!=='sys'&&(window.PF_FONTS||{})[window.PF_FONT_KEY])pfFontApply(window.PF_FONT_KEY,1);
+function fontDialog(back){openModal('🔤 字型',`<p class="small">選一個喜歡的字型，整個遊戲的文字會一起換。</p>${Object.entries(FONTS).map(([k,f])=>`<button class="btn${PF_FONT_KEY===k?' pri':''}" data-font="${k}" style="display:block;width:100%;text-align:left;margin:6px 0;font-family:${(k==='sys'?SYS_FONT:`'PF_${k}',${SYS_FONT}`).replace(/"/g,"'")}"><b style="font-size:17px">${PF_FONT_KEY===k?'✅ ':''}${f[0]}</b><br><span class="small" style="color:inherit;opacity:.85">${f[1]}・今天也要好好照顧牠！ABC 123</span></button>`).join('')}
+ <p class="small" style="opacity:.75">俐方體 11 號 © ACh-K、jf open 粉圓 © justfont，皆為 SIL Open Font License 1.1 開源字型。</p>`,[{t:'返回',fn:()=>setTimeout(back||menuDialog,50)}]);
+ for(const k of['cubic','huninn'])if(!(window.PF_FONTS||{})[k]){const x=document.createElement('script');x.src=`font_${k}.js`;x.onload=()=>{const d=PF_FONTS[k];if(d&&![...document.fonts].some(f=>f.family==='PF_'+k))new FontFace('PF_'+k,`url(${d})`).load().then(f=>document.fonts.add(f)).catch(()=>{})};document.head.appendChild(x)}
+ document.querySelectorAll('[data-font]').forEach(b=>b.onclick=async()=>{sfx('tap');b.disabled=true;const ok=await pfFontApply(b.dataset.font);if(!ok)toast('字型載入失敗，請稍後再試');fontDialog(back)})}
 function menuDialog(){
  const snd=()=>s.settings.sound?'🔊 音效：開':'🔇 音效：關',mus=()=>musicOn()?'🎵 音樂：開':'🔇 音樂：關',mo=()=>s.settings.reducedMotion?'🐢 減少動畫：開':'✨ 減少動畫：關';
  openModal('⚙️ 選單',`
 <div class="row" style="margin-top:0"><button class="btn" id="mHelp">❔ 遊戲說明</button><button class="btn" id="mSave">💾 存檔</button></div>
 <div class="row"><button class="btn" id="mRename">✏️ 幻獸改名</button><button class="btn" id="mOwner">👤 主人名字：${esc(ownerName())}</button>${!s.hatched&&s.eggTaps===0?'<button class="btn" id="mQuiz">🔮 性格測驗選蛋</button>':''}</div>
 <div class="row"><button class="btn" id="mSound">${snd()}</button><button class="btn" id="mMusic">${mus()}</button><button class="btn" id="mMotion">${mo()}</button></div>
+<div class="row"><button class="btn" id="mFont">🔤 字型：${FONTS[PF_FONT_KEY]?FONTS[PF_FONT_KEY][0]:"系統字型"}</button></div>
 <p style="margin-top:10px"><b>🪄 金手指</b></p><div class="row"><input id="mCheat" placeholder="輸入密碼" autocomplete="off" autocapitalize="off" style="flex:1;min-width:0;font-size:16px;padding:8px;border:3px solid var(--line)"><button class="btn" id="mCheatGo">確定</button></div>
 <div class="row"><button class="btn" id="mBasketM">🧺 蛋籃（${s.eggs.length}）</button></div>
 <div class="row"><button class="btn" id="mNotify">🔔 手機通知：${s.settings.notify.on?'開':'關'}</button></div>
@@ -2650,6 +2666,7 @@ function menuDialog(){
  $('mCheatGo').onclick=()=>{const c=$('mCheat').value.trim().toLowerCase().replace(/\s+/g,' ');$('mCheat').value='';
   if(c==='poor me'){s.coins+=500;PC.journal(s,Date.now(),'用了金手指 poor me');save();renderUI();sfx('level');buzz(20);toast('🪄 金手指生效！金幣 +500 💰',3000)}else{sfx('no');toast('❌ 密碼不對喔')}};
  $('mMotion').onclick=()=>{s.settings.reducedMotion=!s.settings.reducedMotion;save();renderUI();$('mMotion').textContent=mo()};
+ $('mFont').onclick=()=>{sfx('tap');fontDialog(menuDialog)};
  $('mUpdate').onclick=()=>{toast('正在下載最新版本，請稍等幾秒…',8000);swRefresh()};
  $('mReset').onclick=()=>{if(modeBusy()){toast('先完成現在的互動吧');return}if(s.hatched&&!PC.freeEls(s).length){toast('🥚 七種屬性都養齊了（每種屬性只能養一隻），不能再迎接新的蛋',4000);sfx('no');return}const ep=PC.eggPrice(s);if(s.coins<ep){toast(`❌ 新的蛋要 ${ep} 金幣（你有 ${s.coins}）`,3000);sfx('no');return}confirmBox('🥚 迎接新的蛋？',`<b>新的蛋要 🪙 ${ep}</b>（第 1 顆 300、第 2 顆 700、之後每顆 1000）。<br>${!s.hatched?'目前的蛋會被換掉':PC.petCount(s)<PC.denCap(s)?'小窩還有空位：「'+esc(s.name)+'」會搬進小窩休息，隨時可以換回來':'小窩已經滿了：「'+esc(s.name)+'」會告別（永遠留在「📖 圖鑑」裡）。升級小窩就能讓更多夥伴住下來'}。金幣、食物、步數、冒險進度、日記都會保留。<br><br>建議先到「存檔」匯出存檔碼備份。`,`花 ${ep} 迎接新蛋`,()=>{const r=PC.buyEgg(s);if(!r.ok){toast('❌ '+r.msg);return}cancelMode();newPet(null);setTimeout(()=>quizIntro(false),900)})}}
 function denDialog(){const D=CONFIG.den,L=s.den.level,cur=D[L-1],next=D[L],cap=PC.denCap(s);

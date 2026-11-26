@@ -2,7 +2,7 @@
 import { cpSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 const out = 'www';
 rmSync(out, { recursive: true, force: true }); mkdirSync(out);
-for (const f of ['index.html', 'game-core.js', 'emb.js', 'spots.js', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'])
+for (const f of ['index.html', 'game-core.js', 'emb.js', 'spots.js', 'font_cubic.js', 'font_huninn.js', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'])
   if (existsSync(f)) cpSync(f, `${out}/${f}`);
 cpSync('sprites', `${out}/sprites`, { recursive: true });
 console.log('www/ ready');
