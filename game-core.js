@@ -638,10 +638,9 @@ function applyTime(st, now = Date.now()) {
 /* 存錢筒：幻獸等級越高，每小時存越多；鋼系 ×1.5；一起出來的第二隻再加牠的一半 */
 function piggyRateOf(p) { const P = CONFIG.piggy, T = traitOf(p.route); return (P.base + P.per * Math.min(level(p.xp), P.maxLv)) * (T.coinX || 1) * (p.awake ? CONFIG.starHeart.piggyX : 1); }
 const pigLevel = st => Math.min(6, 1 + ((st.pigCores && st.pigCores.length) || 0) + (st.pigBought ? 1 : 0));
-function piggyRate(st) {   // V1.86.7 以養過最高等的那隻來算（換照顧小隻的不會變少）；第二隻一起出來再加一半
+function piggyRate(st) {   // V1.93.1 全部的幻獸（主角、第二隻、小窩裡、寄養的）各自存的錢加在一起，集中到同一個撲滿
   if (!st.hatched) return 0; const L = [st, ...(st.pair ? [st.pair] : []), ...(st.roster || []), ...(st.foster || [])].filter(p => p && p.hatched !== false);
-  const best = L.reduce((a, p) => piggyRateOf(p) > piggyRateOf(a) ? p : a, st), extra = st.pair && st.pair !== best ? piggyRateOf(st.pair) * CONFIG.piggy.pairShare : best === st.pair ? piggyRateOf(st) * CONFIG.piggy.pairShare : 0;
-  return (piggyRateOf(best) + extra) * CONFIG.piggy.rateX[pigLevel(st) - 1];
+  return L.reduce((a, p) => a + piggyRateOf(p), 0) * CONFIG.piggy.rateX[pigLevel(st) - 1];
 }
 function piggyCap(st) { return Math.max(1, Math.round(piggyRate(st) * CONFIG.piggy.capH[pigLevel(st) - 1])); }
 function buyPigCore(st) { const P = CONFIG.piggy; if (st.pigBought) return { ok: false, msg: '小豬撲滿核心只有一個，已經買過了' }; if (st.coins < P.corePrice) return { ok: false, msg: `金幣不足（需要 ${P.corePrice}）` };

@@ -4251,7 +4251,7 @@ const TRAIN_INIT={
   const lx=(b,p)=>{if(b.type==='split'&&b.gx!=null)return LX[b.lane]+(LX[b.gx]-LX[b.lane])*(1-ss((p-.54)/.18))*Math.min(2.2,1/(p+.15));if(b.type==='curve')return LX[b.from]+(LX[b.lane]-LX[b.from])*ss((p-.3)/.45);if(b.type==='knuckle')return LX[b.from]+(LX[b.lane]-LX[b.from])*ss((p-.42)/.3)+Math.sin(p*28+b.ph)*6*(1-p);return LX[b.lane]};
   const bx=(b,p)=>HX+(lx(b,p)-HX)*p,by=(b,p)=>HY+64*p+(b.type==='sinker'?-9*Math.sin(Math.PI*Math.min(1,p*1.25)):0);
   Object.assign(G,{lane:1,px:64,balls:[],next:1.1,thrown:0,done:0,hits:0,dodged:0,btns:[['L','◀ 左'],['R','右 ▶']],
-   btn(b){G.lane=Math.max(0,Math.min(2,G.lane+(b==='L'?-1:1)));sfx('tap')},
+   btn(b){G.lane=Math.max(0,Math.min(2,G.lane+(b==='L'?-1:1)));G.faceR=b==='R';sfx('tap')},   // V1.93.1 往右跑要轉身，不是倒退走
    tap(x){G.btn(x<G.px?'L':'R')},
    hud(){return`${Q.tag}　${'❤️'.repeat(Math.max(0,LIVES-G.hits))}${'🖤'.repeat(Math.min(LIVES,G.hits))}　躲過 ${G.dodged}/${N}`},
    update(dt){G.px+=(LX[G.lane]-G.px)*Math.min(1,dt*16);const nx=plan[G.thrown];G.aura=nx==='super'&&G.thrown<N&&G.t>G.next-1.1;
@@ -4276,7 +4276,7 @@ const TRAIN_INIT={
      if(r>=2){const a=now/(b.type==='knuckle'?400:70)+b.lane;c.strokeStyle='#e8433f';c.lineWidth=1;for(const sd of[-1,1]){c.beginPath();c.arc(x+Math.cos(a)*r*.9*sd,y+Math.sin(a)*r*.9*sd,r*.65,a+(sd>0?Math.PI*.6:-Math.PI*.4),a+(sd>0?Math.PI*1.4:Math.PI*.4));c.stroke()}}
      else{c.fillStyle='#e8433f';c.fillRect(Math.round(x),Math.round(y),1,1)}};
     const ball3=b=>{if(b.type==='split'&&b.p<.72&&!b.hit){for(const j of[0,1,2]){b.gx=j;ball(b)}b.gx=null;return}ball(b)};   // 分身球：先分成三顆，快到面前才合成一顆
-    const pre=G.balls.filter(b=>b.p<HIT),post=G.balls.filter(b=>b.p>=HIT);pre.forEach(ball3);tPet(c,fr,G.px-24,68);post.forEach(ball3)}})},
+    const pre=G.balls.filter(b=>b.p<HIT),post=G.balls.filter(b=>b.p>=HIT);pre.forEach(ball3);tPet(c,fr,G.px-24,68,!!G.faceR);post.forEach(ball3)}})},
  /* 沙包連打：2 秒內 28 下，寵物跳過去撞沙包 */
  rush(G){const Q=TLV('rush'),GOAL=[70,90,105,118][Q.t]+Q.sub*4;Object.assign(G,{n:0,sw:0,hopT:9,btns:[['P','👊 撞！（點螢幕也可以）']],
    btn(){G.n++;G.hopT=0;G.sw=Math.min(1.3,G.sw+.3);G.dir=-(G.dir||1);sfx(G.n%4===0?'punch':'punchL');buzz(6);tPop(G.n%3?'spark':'star',86+BSH(),56+Math.random()*16,G.n%5===0?3:1);if(G.n%7===0)G.shake=.12},tap(){G.btn()},
@@ -4437,20 +4437,25 @@ function pkPos(B,k){const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2,lin=k,x0=B.sx+(B.t
 function pkShoot(){const Z=PKZ,pl=Z.plan,K=PK_KINDS[pl.k],a=Z.acc,ab=Math.abs(a),p=Z.power;
  const q=PC.eqStats(s.acc,s.accLv),pz=.16*(1+(q.pkAim||0));let dx=0,dy=0,grade;if(ab<pz){grade='perfect'}else if(ab<.5){grade='ok';dx=Math.sign(a)*(4+ab*6);dy=-ab*4}else{grade='bad';dx=Math.sign(a)*(10+ab*14);dy=-ab*10*(Math.random()<.5?1:-.4)}
  const tx=pl.tx+dx,ty=pl.ty+dy,T=pl.k==='chip'?1.05-p*.2:pl.k==='rocket'?.36-p*.12:.78-p*.36;
- Z.ball={k:pl.k,t:0,T,tx,ty,curve:pl.curve,side:pl.side,power:p,grade,sx:PK_SPOT.x,sy:PK_SPOT.y};Z.used[pl.k]=(Z.used[pl.k]||0)+1;pkPhase('fly');Z.kick=performance.now();sfx(pl.k==='rocket'?'punch':'header');
+ Z.ball={k:pl.k,t:-PK_RUN,T,tx,ty,curve:pl.curve,side:pl.side,power:p,grade,sx:PK_SPOT.x,sy:PK_SPOT.y};Z.used[pl.k]=(Z.used[pl.k]||0)+1;pkPhase('fly');Z.kick=performance.now()+PK_RUN*1000;Z.pred=null;
  const isNew=!s.pk.kinds.includes(pl.k);if(isNew){s.pk.kinds.push(pl.k);if(s.pk.kinds.length>=Object.keys(PK_KINDS).length&&!s.accOwned.includes('headband')){s.accOwned.push('headband');PC.journal(s,Date.now(),'十種球路全部踢出來了！得到「足球頭帶」');setTimeout(()=>{toast('🏆 十種球路全部踢出來了！得到裝飾「⚽ 足球頭帶」',5000);sfx('level')},1800)}save()}
  pkMsg(`${K.n}　${grade==='perfect'?'🎯 完美！':grade==='ok'?'稍微偏了一點':'😵 偏很多！'}${isNew?'<br>📖 新球路收進球路圖鑑！':''}`);
  // 守門員：看你一開始往哪邊踢來猜；同一招用越多次越會猜
  const zone=x=>x<52?0:x>76?2:1,seen=zone(pl.startX),n=Z.shot,H=Z.hist,tot=H[0]+H[1]+H[2],rep=(Z.used[pl.k]-1);
  let pick;if(Math.random()<.25+n*.06+rep*.12)pick=rep>0&&Math.random()<.5?zone(tx):seen;else if(tot&&Math.random()<.3)pick=H.indexOf(Math.max(...H));else pick=Math.floor(Math.random()*3);
- H[zone(tx)]++;const g=Z.gk;g.tx=[42,64,86][pick]+(Math.random()-.5)*6;g.t=-(.14-n*.012)*(pl.k==='rocket'?.5:1);g.dive=pick===1?0:(pick===0?-1:1);g.high=ty<40&&Math.random()<.5;g.rep=rep}
+ H[zone(tx)]++;const g=Z.gk;g.tx=[42,64,86][pick]+(Math.random()-.5)*6;g.t=-(.14-n*.012)*(pl.k==='rocket'?.5:1)-PK_RUN;g.dive=pick===1?0:(pick===0?-1:1);g.high=ty<40&&Math.random()<.5;g.rep=rep;
+ // V1.93.1 先算好撲不撲得到：撲得到就讓守門員真的撲到球的位置；撲不到就不要讓球穿過牠的身體
+ const G=PK_GOAL;if(tx>=G.l+2&&tx<=G.r-2&&ty>=G.top-1){const reach=pkReach(Z,Z.ball,g,ty);if(Math.abs(tx-g.tx)<reach){Z.pred='save';g.tx=tx;g.high=ty<40;g.dive=tx<60?-1:tx>68?1:g.dive}else{Z.pred='goal';if(Math.abs(tx-g.tx)<17)g.tx=clamp(tx+(g.tx<tx?-1:1)*17,30,98)}}}
+const PK_RUN=.36;   // 助跑時間：先跑過去踢到球，球才飛出去
+function pkReach(Z,B,g,y){return(g.dive?14:9)*(B.power>.85?.8:1)*(y<36&&!g.high&&g.dive?.7:1)*PK_KINDS[B.k].r*(B.grade==='perfect'?.85:1)*(1+.18*(g.rep||0))+Z.shot*.6}
 function pkUpdate(dt,now){const Z=PKZ,g=Z.gk;
  for(let i=Z.fx.length-1;i>=0;i--){const p=Z.fx[i];p.t+=dt;if(p.t>p.life){Z.fx.splice(i,1);continue}p.vy+=(p.g||0)*dt;p.x+=p.vx*dt;p.y+=p.vy*dt}
  if(Z.phase!=='fly'&&Z.phase!=='after'){g.x+=(64+Math.sin(now/500)*6-g.x)*Math.min(1,dt*3);g.rot*=.8;return}
- if(Z.phase==='fly'){const B=Z.ball;B.t+=dt;g.t+=dt;if(g.t>0){g.x+=(g.tx-g.x)*Math.min(1,dt*9);g.rot+=(g.dive*1.1-g.rot)*Math.min(1,dt*10)}
+ if(Z.phase==='fly'){const B=Z.ball;B.t+=dt;g.t+=dt;if(B.t>=0&&!B.kicked){B.kicked=true;sfx(B.k==='rocket'?'punch':'header');buzz(15);for(let i=0;i<7;i++)Z.fx.push({ic:'star',x:PK_SPOT.x,y:PK_SPOT.y-3,vx:(Math.random()-.5)*70,vy:-20-Math.random()*40,g:90,t:0,life:.45})}if(g.t>0){g.x+=(g.tx-g.x)*Math.min(1,dt*9);g.rot+=(g.dive*1.1-g.rot)*Math.min(1,dt*10)}
   if(B.t>=B.T){const x=B.tx,y=B.ty,G=PK_GOAL;let r;
    if(x<G.l-1||x>G.r+1)r='wide';else if(y<G.top-1)r='over';else if(x<G.l+2||x>G.r-2||(y<G.top+2&&Math.random()<.5))r=Math.random()<.5?'post':'goal';
-   else{let reach=(g.dive?14:9)*(B.power>.85?.8:1)*(y<36&&!g.high&&g.dive?.7:1)*PK_KINDS[B.k].r*(B.grade==='perfect'?.85:1)*(1+.18*(g.rep||0))+Z.shot*.6;r=Math.abs(x-g.x)<reach?'save':'goal'}
+   else r=Z.pred||(Math.abs(x-g.x)<pkReach(Z,B,g,y)?'save':'goal');
+   if(r==='save'){g.x=x;g.tx=x;for(let i=0;i<8;i++)Z.fx.push({ic:'star',x,y,vx:(Math.random()-.5)*80,vy:(Math.random()-.5)*60,g:40,t:0,life:.5})}
    pkResult(r)}}
  else if(Z.phase==='after'&&now>Z.msgT){if(!Z.practice&&Z.res.length>=CONFIG.pk.shots)pkEnd();else{Z.ball=null;Z.plan=null;Z.path=[];Z.gk={x:64,tx:64,dive:0,t:0,rot:0};pkPhase('aim');pkMsg(Z.practice?'再畫一條試試看～':`第 ${Z.res.length+1} 球，畫線決定怎麼踢！`)}}}
 function pkResult(r){const Z=PKZ,B=Z.ball,ok=r==='goal',warm=Z.warm;B.done=r;Z.phase='after';Z.msgT=performance.now()+1600;
@@ -4487,9 +4492,11 @@ function pkDraw(now){const c=pkx,Z=PKZ,G=PK_GOAL;
  // 正在畫的線（同步畫到球場上）
  if(Z.phase==='aim'&&Z.path.length>1){c.fillStyle='rgba(255,255,255,.75)';for(const q of Z.path){const f=pkToField(q);c.fillRect(Math.round(f.x),Math.round(f.y),1,1)}}
  // 自己的幻獸（踢球的人）
- const kicking=Z.kick&&now-Z.kick<300;pkPet(c,formKey(),kicking?'jump1':(Math.floor(now/450)%2?'idle0':'idle1'),40,108,.8,true,0,s.acc,s.accAdj);
+ {const RUN=PK_RUN*1000,sn=Z.kick?now-Z.kick:1e9;let x=40,y=108,f=Math.floor(now/450)%2?'idle0':'idle1';
+  if(sn<0&&sn>-RUN){const u=1+sn/RUN;x=40+15*u;y=108-11*u;f=Math.floor(now/90)%2?'jump0':'idle0'}else if(sn>=0&&sn<260){x=55;y=97;f='jump1'}else if(sn>=260&&sn<900){const u=(sn-260)/640;x=55-15*u;y=97+11*u}
+  pkPet(c,formKey(),f,Math.round(x),Math.round(y),.8,true,0,s.acc,s.accAdj)}
  // 球
- const B=Z.ball;if(!B)pkBall(c,PK_SPOT.x,PK_SPOT.y-3,4,0);else{const k=Math.min(1,B.t/B.T),p=pkPos(B,k);
+ const B=Z.ball;if(!B)pkBall(c,PK_SPOT.x,PK_SPOT.y-3,4,0);else{const k=Math.max(0,Math.min(1,B.t/B.T)),p=pkPos(B,k);
   if(B.done==='goal'){pkBall(c,B.tx,B.ty+Math.min(6,(now-Z.msgT+1600)/80),2.2,0)}else if(B.done==='save'){pkBall(c,B.tx+(B.tx<64?-1:1)*Math.min(30,(now-Z.msgT+1600)/25),B.ty+Math.min(30,(now-Z.msgT+1600)/30),2.2,now/80)}
   else if(B.done){pkBall(c,B.tx+(B.tx-64)*.2,B.ty-4,2,now/80)}
   else{if(B.k==='rocket'){c.fillStyle='rgba(255,180,60,.6)';for(let j=1;j<6;j++){const q=pkPos(B,Math.max(0,k-j*.03));c.fillRect(Math.round(q.x)-1,Math.round(q.y)-1,2,2)}}
