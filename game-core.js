@@ -613,6 +613,7 @@ function applyTime(st, now = Date.now()) {
   const hours = (now - st.lastTick) / H, eff = Math.min(hours, CONFIG.offlineCapHours);
   const last = st.lastTick; st.lastTick = now;
   const events = digest(st, now);
+  const rw = rainWater(st, last, now); if (rw) { events.push('rainwater'); st.rainWatered = rw; }
   if (st.hatched && eff > 0) {
     const R = CONFIG.rates[st.sleeping ? 'sleep' : 'awake'], T = trait(st);
     const hr = -R.hunger * ((T.rate && T.rate.hunger) || 1), h0 = st.hunger;   // 每小時掉多少飽食
@@ -1205,7 +1206,8 @@ function plant(st, i, now = Date.now(), r = Math.random, good = false) {
   if ((st.inv[key] || 0) < 1) return { ok: false, code: 'noseed', msg: magic ? '沒有神奇種子了（打贏王才拿得到）' : myst ? '沒有稀有種子了（冒險、打王才撿得到）' : good ? '沒有優良種子了（商店道具可以買）' : '沒有種子了（冒險有機會撿到，或花金幣買）' };
   st.inv[key]--; if (st.hatched) st.energy = Math.max(0, st.energy - en); st.plots[i].at = now; if (st.sprinkler) delete st.plots[i].wn; else st.plots[i].wn = 0; const PW0 = Object.keys(CONFIG.foods).filter(x => CONFIG.foods[x].power); st.plots[i].k = magic ? PW0[Math.floor(r() * PW0.length) % PW0.length] : pickFruit(myst ? 'rare' : !!good, r); if (good) st.plots[i].g = magic ? 3 : myst ? 2 : 1; else delete st.plots[i].g; track(st, 'plant', now);   // 長出來才知道：紅色＝蘋果、紫色＝莓果
   const hh = +growHoursOf(st, st.plots[i].g || 0).toFixed(1);
-  const tail = (st.hatched ? `，體力 −${en}` : '') + (st.sprinkler ? '' : '。記得澆水才會開始長喔 💧');
+  const rain = !st.sprinkler && CONFIG.weatherOn && isWet(weatherAt(now)); if (rain) water(st, i, now, true);   // V1.93.1 下雨天種下去直接喝到雨水
+  const tail = (st.hatched ? `，體力 −${en}` : '') + (st.sprinkler ? '' : rain ? '。下雨天，不用澆水 🌧️' : '。記得澆水才會開始長喔 💧');
   const res = plantMsg(magic, myst, good, hh); res.msg += tail; res.en = en; return res;
 }
 function plantMsg(magic, myst, good, hh) {
@@ -1236,6 +1238,17 @@ function water(st, i, now = Date.now(), free = false) {   // V1.90 澆水：剛�
   const p = st.plots[i], grow = growHoursOf(st, p.g || 0) * H;
   if (p.wn === 0) { p.at = now; p.wn = 1; } else { p.at = now - grow / 2; delete p.wn; }
   track(st, 'water', now); return { ok: true, second: !p.wn, msg: (p.wn ? '💧 澆好水了，開始長囉！長到一半會再口渴一次' : '💧 又喝飽水了，會一路長到成熟！') + (we ? `（體力 −${we}）` : '') };
+}
+/* V1.93.1 下雨天田會自己喝水：口渴之後只要遇到下雨/暴風雨時段，就當作那時候澆過水（離線期間也算） */
+function rainWater(st, from, now = Date.now()) {
+  if (!CONFIG.weatherOn || st.sprinkler || !(st.plots || []).length) return 0;
+  const S = CONFIG.weather.slotHours * H; let n = 0;
+  st.plots.forEach((p, i) => { for (let k = 0; k < 3; k++) {
+    const q = plotState(st, i, now); if (!q || q.empty || !q.thirsty) return;
+    const t0 = Math.max(from || now, q.wn === 0 ? p.at : q.thirstyAt); let t = null;
+    for (let x = Math.floor((t0 + 8 * H) / S) * S - 8 * H; x <= now; x += S) { const y = Math.max(x, t0); if (y <= now && isWet(weatherAt(y))) { t = y; break; } }
+    if (t == null) return; if (water(st, i, t, true).ok) n++; else return; } });
+  return n;
 }
 function thirstyPlots(st, now = Date.now()) { return (st.plots || []).map((_, i) => i).filter(i => { const q = plotState(st, i, now); return q && !q.empty && q.thirsty; }); }
 function buySprinkler(st) {
@@ -1749,7 +1762,7 @@ const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, S
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   eqStats, eqApply, accUpgrade, eqGift,
-  plotState, plant, harvest, water, thirstyPlots, buySprinkler, buySeed, buyDecor, placeDecor, loungeTick, upgradeLounge, helpSearch, lureFood, mushTick, pickMush, mushSell, mushCook, mushEat, MUSH_KEYS, MUSH_BUFFS, buyItem, useCandy,
+  plotState, plant, harvest, water, thirstyPlots, rainWater, isWet, buySprinkler, buySeed, buyDecor, placeDecor, loungeTick, upgradeLounge, helpSearch, lureFood, mushTick, pickMush, mushSell, mushCook, mushEat, MUSH_KEYS, MUSH_BUFFS, buyItem, useCandy,
   toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, releasePet, PET_NAMES, CORE_KINDS, LEFT_NAME, guideStep, guideDo, fosterSwap, whereIs, inNest, loveTick, moveOut, eggReady, lostPets, recallLost, ownedIds, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, selectRod, allPets, giveEmber, emberShare, setTeam, TRAIN_TIER, trainLvOf, trainTier, trainLvUp, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 Object.assign(API, { EARN_NAME, SPEND_NAME, BADGES, BADGE, statsOf, statAdd, statVal, checkBadges, playTick, weekKey, sumOf }); wrapStats(API);

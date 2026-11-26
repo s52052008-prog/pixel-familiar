@@ -612,5 +612,15 @@ t('V1.92 離家出走關掉：餓很久也不會跑掉；之前跑掉的自己�
   C.CONFIG.runaway.off = false;
 });
 
+t('V1.93.1 下雨天作物自己喝水（離線也算）、下雨種下去不用澆', () => {
+  const H = 3600e3; let r = Date.UTC(2026, 10, 1); while (!C.isWet(C.weatherAt(r))) r += 3 * H;
+  let d = r - 30 * H; while (C.isWet(C.weatherAt(d)) || C.isWet(C.weatherAt(d + 3 * H))) d -= 3 * H;
+  const st = C.fresh(d); st.plots = [{}, {}]; st.inv.seeds = 5;
+  C.CONFIG.weatherOn = true; PLANT0(st, 0, d); assert.ok(C.plotState(st, 0, d + 60e3).thirsty, '晴天種下要澆水');
+  st.lastTick = d; const o = C.applyTime(st, r + 60e3); assert.ok(o.events.includes('rainwater')); assert.ok(!C.plotState(st, 0, r + 60e3).thirsty);
+  const p = PLANT0(st, 1, r + 2 * 60e3); assert.match(p.msg, /下雨天/); assert.equal(C.plotState(st, 1, r + 3 * 60e3).wn, 1);
+  C.CONFIG.weatherOn = false;
+});
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

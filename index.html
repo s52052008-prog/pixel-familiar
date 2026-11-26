@@ -669,8 +669,9 @@ function save(){if(WIPING)return;pushSoon();cardSoon();
 
 /* ---------------- 時間（離線模擬規則在 game-core.js） ---------------- */
 let clockWarned=false;
+function whenFree(fn,n=0){if((typeof B!=='undefined'&&B)&&n<600){setTimeout(()=>whenFree(fn,n+1),1000);return}setTimeout(fn,200)}   // V1.93.1 戰鬥中先不跳生活訊息，打完再說
 function handleTime(r){if(!r)return;
- if(r.events&&r.events.length&&s.hatched){if(r.events.includes('toilet'))setTimeout(()=>toast('🚽 牠自己去上廁所了，好乖！',3000),200);
+ if(r.events&&r.events.length&&s.hatched){if(r.events.includes('toilet'))whenFree(()=>toast('🚽 牠自己去上廁所了，好乖！',3000));if(r.events.includes('rainwater'))whenFree(()=>toast(`🌧️ 下雨了，田裡 ${s.rainWatered||''} 塊作物喝飽雨水，不用澆了`,3500));
   if(r.events.includes('poop')&&r.hours<.05){say('嗯嗯…💩 大便了！快點一下清掉');sfx('crack')}
   if(r.events.includes('runaway')){setTimeout(()=>{toast(`😢 ${s.name}餓太久，離家出走了…走 ${CONFIG.runaway.steps.toLocaleString()} 步才能找回來`,5000);sfx('no')},300)}}if(r.warn==='back'&&!clockWarned){clockWarned=true;toast('⚠️ 裝置時間好像倒退了，遊戲不會回溯進度',4000)}
  if(r.warn==='jump')toast('⚠️ 離開很久了：離線變化最多只計算 12 小時',4000)}
@@ -1580,7 +1581,7 @@ function draw(now){
    {const g=s.plots[i].g;if(g&&!q.empty&&!q.rotten)seedGlow(ctx,g,cx,cy,w,h,now,i)}   // V1.82 優良金、稀有紫、神奇彩虹
    if(st==='rot'&&!rm()){const a=now/300+i;ctx.drawImage(ICV.fly,Math.round(cx+3*Math.cos(a)),Math.round(y+2+2*Math.sin(a*1.7)))}
    if(q.thirsty&&ICV.ic_drop){const D=ICV.ic_drop,dw=Math.max(5,Math.round(D.width*.6)),dh=Math.round(D.height*dw/D.width);ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(D,Math.round(cx-dw/2),Math.round(y-dh-1+Math.round(Math.sin(now/260+i)*1.5)),dw,dh);ctx.restore()}   // V1.90 口渴的田頭上冒水滴
-   if(WATER_FX[i]&&now<WATER_FX[i]){const t0=1-(WATER_FX[i]-now)/1200;ctx.fillStyle='#8ac4ff';for(let d=0;d<5;d++){const ph=(t0*2+d/5)%1;ctx.fillRect(Math.round(cx-w*.3+d*w*.15),Math.round(y-6+ph*(h+4)),1,2)}}}
+   if(WATER_FX[i]&&Date.now()<WATER_FX[i]){const t0=1-(WATER_FX[i]-Date.now())/1200;ctx.fillStyle='#8ac4ff';for(let d=0;d<5;d++){const ph=(t0*2+d/5)%1;ctx.fillRect(Math.round(cx-w*.3+d*w*.15),Math.round(y-6+ph*(h+4)),1,2)}}}
   if(s.sprinkler&&s.plots.length){const[cx,cy,k]=plotP(0),fr=WATER_SPR.spr[Math.floor(now/250)%2],sw=Math.max(9,Math.round(12*k)),sh=Math.round(fr.height*sw/fr.width),sx=Math.round(cx-sw-6*k),sy=Math.round(cy-sh);ctx.save();ctx.imageSmoothingEnabled=!!WATER_SPR.hd;ctx.drawImage(fr,sx,sy,sw,sh);ctx.restore();
    if(Math.floor(now/4000)%3===0&&!rm()){ctx.fillStyle='#bfe2ff';const a=(now%4000)/4000*Math.PI*2;for(let d=0;d<6;d++){const r=3+((now/90+d*7)%10);ctx.fillRect(Math.round(sx+sw/2+Math.cos(a+d)*r),Math.round(sy+1+Math.sin(a+d)*r*.35-r*.25),1,1)}}}}   // V1.90 自動灑水器：轉一轉噴水
  if(mode==='play')drawRing();
@@ -1623,6 +1624,11 @@ function drawAura(c,S,fi,x,y,flip,col,now){if(!col||!S||!S.cv)return;S.glow=S.gl
  for(const[dx,dy,k]of[[-3,0,.2],[3,0,.2],[0,-3,.2],[-2,-2,.25],[2,-2,.25],[-2,0,.5],[2,0,.5],[0,-2,.5],[0,2,.35],[-1,-1,.9],[1,-1,.9],[-1,1,.9],[1,1,.9],[-1,0,1],[1,0,1],[0,-1,1],[0,1,1]]){c.globalAlpha=a*k;c.drawImage(g,fi*CELL,0,CELL,CELL,x+dx,y+dy,CELL,CELL)}
  c.restore()}
 const FX_TMP=document.createElement('canvas');FX_TMP.width=CELL;FX_TMP.height=CELL;
+/* V1.93.1 頂球的「頭」：跳過頭上細細的角／葉子／呆毛，從夠寬的那一排算起（岩角的角太高，球還沒碰到頭就被頂出去） */
+const HEADC=new Map();
+function headTopY(key){const F=formOf(key),A=artFor(F),base=petTopY(key,0);if(!A)return base;const im=A.open;if(!HEADC.has(im)){let t=0;try{const c=document.createElement('canvas');c.width=CELL;c.height=CELL;const g=c.getContext('2d');g.drawImage(im,0,0);const d=g.getImageData(0,0,CELL,CELL).data,wd=[];let mx=0;
+ for(let y=0;y<CELL;y++){let a=-1,b=-1;for(let x=0;x<CELL;x++)if(d[(y*CELL+x)*4+3]>40){if(a<0)a=x;b=x}const w=a<0?0:b-a+1;wd.push(w);if(w>mx)mx=w}
+ const top=wd.findIndex(w=>w>0),hd=wd.findIndex(w=>w>=mx*.4);if(top>=0&&hd>=0)t=Math.min(10,Math.max(0,hd-top))}catch(e){}HEADC.set(im,t)}return base+HEADC.get(im)+(F&&F.route==='earth'?3:0)}   // 岩系頭上的岩石比較厚，再往下 3
 function petTopY(key,LIFT){const F=formOf(key),A=artFor(F);return PET_Y+LIFT+(A?artBox(A.open).top:10)}
 function drawStatusFx(now,S,fi,PX,LIFT,key){const top=petTopY(key,LIFT),cx=PX+24,t=now/1000,still=rm();
  if(s.awake&&!still&&Math.random()<.08)spawn('spark',1,{x:cx+(Math.random()-.5)*34,y:top+6+Math.random()*30,vy:-8,jx:4,life:.8,spread:2});   // 星耀覺醒：身上一直有星光
@@ -3722,7 +3728,7 @@ function updateWorld(now,dt){updatePair(now,dt);updateRally(now);
  const b=BALL.b;
  if(b){const py=b.y,ax=b.hit&&!b.in?BALL.wind:0;b.vy+=b.g*dt;b.vx+=ax*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;
   if(!b.hit)petTarget=clamp(Math.round(b.x-24),0,W-CELL);
-  const headX=petX+24,lift=anim.once==='header'?7:0,headY=petTopY(formKey(),0)+3-lift,since=now-BALL.tapAt;   // V1.46 頭頂位置跟著寵物的圖（每個造型高度不同）
+  const headX=petX+24,lift=anim.once==='header'?7:0,headY=headTopY(formKey())+3-lift,since=now-BALL.tapAt;   // V1.46 頭頂位置跟著寵物的圖（每個造型高度不同）
   // 點一下就跳：球到頭上那一刻，頭必須正在往上頂（最近一次點擊後 0.33 秒內），可以一直點
   if(!b.hit&&!b.passed&&b.vy>0&&Math.abs(b.x-headX)<13&&b.y>=headY-4&&b.y<=headY+8){
    if(b.tapped&&since<=360){b.hit=true;const perfect=since<=220,good=since<=320;b.q=perfect?2:good?1:0;   // V1.64 時機放寬：球碰到頭前 0.22 秒內點都算完美
@@ -4028,6 +4034,9 @@ const TOURS=[
   {open:()=>{closeModal();closeFarm()},sel:'#npEq',t:'完成！',d:'去試試看吧～'}]}
 ];
 let TOUR=null;
+/* V1.93.1 看過/跳過的導覽記在整台裝置上（不是每隻幻獸各記一份）：換照顧別隻、讀雲端存檔都不會再跳出來 */
+function toursSeen(){let g=[];try{g=JSON.parse(store.get('pf-tours')||'[]')}catch(e){}return[...new Set([...(Array.isArray(g)?g:[]),...(s&&s.tours||[])])]}
+function markTour(...ids){const all=[...new Set([...toursSeen(),...ids])];store.set('pf-tours',JSON.stringify(all));if(s){s.tours=all.slice(-50);save()}}
 function tourStart(id){const T=TOURS.find(x=>x.id===id);if(!T||TOUR)return;TOUR={T,i:-1};const blk=document.createElement('div');blk.id='tourBlock';blk.onclick=e=>{e.stopPropagation();sfx('no')};document.body.append(blk);tourNext()}
 function tourNext(){if(!TOUR)return;const T=TOUR.T;TOUR.i++;if(TOUR.i>=T.steps.length){tourEnd(true);return}const S=T.steps[TOUR.i];$('tourCard')&&$('tourCard').remove();$('tourHole')&&($('tourHole').style.opacity=0);
  try{S.open&&S.open()}catch(e){}
@@ -4039,11 +4048,11 @@ function tourShow(el,S){if(!TOUR)return;const T=TOUR.T,r=el.getBoundingClientRec
  c.innerHTML=`<small>🆕 新功能導覽・${T.t}　${TOUR.i+1}/${T.steps.length}</small><b class="tt">${S.t}</b><p>${S.d}</p><div class="row"><button id="tourSkip">跳過</button><button class="go" id="tourGo">${last?'完成 🎉':'下一步 ▶'}</button></div>`;
  document.body.append(c);const below=r.top+r.height/2<innerHeight/2;c.style[below?'top':'bottom']=(below?r.bottom+14:innerHeight-r.top+14)+'px';
  $('tourGo').onclick=()=>{sfx('tap');tourNext()};$('tourSkip').onclick=()=>{sfx('tap');tourEnd(false)}}
-function tourEnd(done){if(!TOUR)return;const id=TOUR.T.id;TOUR=null;if(PKZ&&PKZ.practice)closePK();['tourCard','tourHole','tourBlock'].forEach(x=>$(x)&&$(x).remove());s.tours=[...new Set([...(s.tours||[]),id])];save();closeModal();if(done){toast('🎉 導覽完成！之後想再看，到「選單 → 🆕 新功能導覽」',3500);sfx('level')}setTimeout(tourCheck,4000)}
-function tourCheck(){if(window.PF_NO_GUIDE||TOUR||!s.hatched||B||mode||!$('modal').classList.contains('hidden'))return;const seen=s.tours||[],T=TOURS.find(x=>!seen.includes(x.id));if(!T)return;
- if(PC.guideStep(s)&&!(s.guide&&s.guide.off)){s.tours=TOURS.map(x=>x.id);save();return}   // 新手還在跑新手手冊：新功能就不另外介紹
- openModal('🆕 有新功能！',`<p>這次更新多了：</p><ul style="margin:4px 0 8px;padding-left:20px;line-height:1.6">${T.new.map(x=>`<li>${x}</li>`).join('')}</ul><p class="small">花一分鐘帶你看一遍怎麼用？</p>`,[{t:'之後再說',fn:()=>{s.tours=[...new Set([...(s.tours||[]),T.id])];save();toast('之後想看，到「選單 → 🆕 新功能導覽」',3000)}},{t:'▶ 帶我看看',cls:'pri',fn:()=>{setTimeout(()=>tourStart(T.id),80)}}])}
-function tourListDialog(){openModal('🆕 新功能導覽',`<p class="small">每次更新的新東西，點一下重新帶你看一遍。</p>${TOURS.map(T=>`<div class="dm"><b>${(s.tours||[]).includes(T.id)?'✅':'🆕'} ${T.t}</b><span class="small">${T.new.join('、')}</span><button class="btn pri" data-tour="${T.id}" style="margin-top:4px">▶ 看導覽</button></div>`).join('')}`);
+function tourEnd(done){if(!TOUR)return;const id=TOUR.T.id;TOUR=null;if(PKZ&&PKZ.practice)closePK();['tourCard','tourHole','tourBlock'].forEach(x=>$(x)&&$(x).remove());markTour(id);closeModal();if(done){toast('🎉 導覽完成！之後想再看，到「選單 → 🆕 新功能導覽」',3500);sfx('level')}setTimeout(tourCheck,4000)}
+function tourCheck(){if(window.PF_NO_GUIDE||TOUR||!s.hatched||B||mode||!$('modal').classList.contains('hidden'))return;const seen=toursSeen(),T=TOURS.find(x=>!seen.includes(x.id));if(!T)return;
+ if(PC.guideStep(s)&&!(s.guide&&s.guide.off)){markTour(...TOURS.map(x=>x.id));return}   // 新手還在跑新手手冊：新功能就不另外介紹
+ openModal('🆕 有新功能！',`<p>這次更新多了：</p><ul style="margin:4px 0 8px;padding-left:20px;line-height:1.6">${T.new.map(x=>`<li>${x}</li>`).join('')}</ul><p class="small">花一分鐘帶你看一遍怎麼用？</p>`,[{t:'之後再說',fn:()=>{markTour(T.id);toast('之後想看，到「選單 → 🆕 新功能導覽」',3000)}},{t:'▶ 帶我看看',cls:'pri',fn:()=>{setTimeout(()=>tourStart(T.id),80)}}])}
+function tourListDialog(){openModal('🆕 新功能導覽',`<p class="small">每次更新的新東西，點一下重新帶你看一遍。</p>${TOURS.map(T=>`<div class="dm"><b>${toursSeen().includes(T.id)?'✅':'🆕'} ${T.t}</b><span class="small">${T.new.join('、')}</span><button class="btn pri" data-tour="${T.id}" style="margin-top:4px">▶ 看導覽</button></div>`).join('')}`);
  document.querySelectorAll('[data-tour]').forEach(b=>b.onclick=()=>{closeModal();setTimeout(()=>tourStart(b.dataset.tour),80)})}
 setTimeout(tourCheck,4000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(tourCheck,2500)});
 /* ================= V1.86.4 新手手冊 ================= */
@@ -4795,7 +4804,7 @@ function badgeDialog(){const B=PC.BADGES.map(x=>PC.BADGE[x[0]]),got=B.filter(b=>
   return`<div class="bdg ${at?'on':''}"><i>${at?b.icon:'🔒'}</i><b>${b.name}</b><span class="small">${at?fmtDate(at)+' 獲得':`${Math.floor(v)} / ${b.need}`}</span>${at?'':`<div class="prog"><i style="width:${pct}%"></i></div>`}<span class="small">🪙 ${b.coins}</span></div>`}).join('')}</div>`);wireJTabs()}
 function diaryDialog(){const J=s.journal.slice().reverse();openModal('📔 日記',codexTabs('diary')+(J.length?J.map(j=>`<p><span class="small">${fmtTime(j.at)}</span>　${esc(j.t)}</p>`).join(''):'<p>日記還是空白的。孵化之後，重要的事都會自動記下來。</p>'));wireJTabs()}
 
-window.PF={openFarm:()=>openFarm(),get FMZ(){return FMZ},weekRecap:()=>weekRecap(),statsDialog:()=>statsDialog(),badgeDialog:()=>badgeDialog(),openFish:()=>openFish(),fishBag:()=>fishBag(),fishShop:()=>fishShop(),fishDex:()=>fishDexDialog(),checkSkills:()=>checkSkills(),get FZ(){return FZ},get state(){return s},startArrange:()=>startArrange(),startYardArrange:()=>startYardArrange(),get YA(){return YA},get ARR(){return ARR},arrItems:()=>arrItems(),headY:()=>petTopY(formKey(),0)+3,denDialog:()=>denDialog(),makePig:lv=>makePig(lv),startTraining:k=>startTraining(k),trainDialog:()=>trainDialog(),get TG(){return TG},PET_Y,toy:TOY,arena:makeArena,bUI:()=>bUI(),get mode(){return mode},get ball(){return BALL},get apple(){return FEED.apple},get petX(){return petX},PC,goDrink:()=>goDrink(),makeDecor:id=>makeDecor(id),playAnim:(...a)=>playAnim(...a),formKey:()=>formKey(),creditSteps,mateCode,decodeMate,encodeGenome,decodeGenome,startBattle,onMove,get B(){return B},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
+window.PF={openFarm:()=>openFarm(),get FMZ(){return FMZ},weekRecap:()=>weekRecap(),statsDialog:()=>statsDialog(),badgeDialog:()=>badgeDialog(),openFish:()=>openFish(),fishBag:()=>fishBag(),fishShop:()=>fishShop(),fishDex:()=>fishDexDialog(),checkSkills:()=>checkSkills(),get FZ(){return FZ},get state(){return s},startArrange:()=>startArrange(),startYardArrange:()=>startYardArrange(),get YA(){return YA},get ARR(){return ARR},arrItems:()=>arrItems(),headY:()=>headTopY(formKey())+3,denDialog:()=>denDialog(),makePig:lv=>makePig(lv),startTraining:k=>startTraining(k),trainDialog:()=>trainDialog(),get TG(){return TG},PET_Y,toy:TOY,arena:makeArena,bUI:()=>bUI(),get mode(){return mode},get ball(){return BALL},get apple(){return FEED.apple},get petX(){return petX},PC,goDrink:()=>goDrink(),makeDecor:id=>makeDecor(id),playAnim:(...a)=>playAnim(...a),formKey:()=>formKey(),creditSteps,mateCode,decodeMate,encodeGenome,decodeGenome,startBattle,onMove,get B(){return B},SHEETS,sheet,formOf,makeGenome,genomeForm,petKey,FORMS,FRAMES,ICV,exportCode,decodeCode,sanitize,VERSION,
  debug:{info(){return{busy:busyUntil-Date.now(),evo:!!evo,modal:!$('modal').classList.contains('hidden'),taps:s.eggTaps,h:s.hatched,battle:!!B}},skip(min){s.lastTick-=min*60000;tick();renderUI();save()},age(h){s.hatchedAt-=h*3600000;save();runStages();renderUI()},xp(n){const x0=s.xp;PC.addXP(s,n);save();renderUI();afterChange(x0)},set(o){Object.assign(s,o);renderUI();save()}}};
 try{init()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<div style="padding:12px;background:#a8394c;color:#fff">啟動錯誤：${esc(e.message)}</div>`);throw e}
 </script>
