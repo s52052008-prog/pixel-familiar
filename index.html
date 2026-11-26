@@ -4052,7 +4052,34 @@ function spotCheck(){if(!s.hatched||B||mode||!$('modal').classList.contains('hid
  openModal('🗺️ 祕密景點',`<p style="font-size:1.1em">${esc(s.name)} 拉了拉你的手…</p><p><b>「${ownerName()}，我想帶你去一個地方！」</b></p><p class="small">${ROUTE_ICON[K.el]} 只有${ROUTE_LABEL[K.el]}的幻獸知道的祕密景點</p>`,[{t:'下次再說'},{t:'跟牠去 ▶',cls:'pri',fn:()=>setTimeout(goSpot,120)}])}
 function loadSpots(){return new Promise(res=>{if(window.SPOT_IMG)return res(true);let sc=$('spotsJs');if(!sc){sc=document.createElement('script');sc.id='spotsJs';sc.src='spots.js';document.head.appendChild(sc)}sc.addEventListener('load',()=>res(!!window.SPOT_IMG));sc.addEventListener('error',()=>res(false));setTimeout(()=>res(!!window.SPOT_IMG),8000)})}
 async function goSpot(){const r=PC.visitSpot(s,Date.now());if(!r.ok){toast(r.msg);return}save();renderUI();await loadSpots();showSpot(r)}
-function spotCanvas(el,cv,p=s,happy=true){const c=cv.getContext('2d');c.imageSmoothingEnabled=false;const im=new Image();im.onload=()=>{c.drawImage(im,0,0,240,180);try{const S=sheet(p===s?formKey():petKey(gidOf(p),formCode(p.stage,p.route))),fi=S.idx[happy?'happy0':'idle0']??0,w=CELL*1.45,[px,py]={bird:[78,124],tide:[120,172],earth:[120,160],metal:[118,166]}[el]||[120,168];c.fillStyle='rgba(0,0,0,.28)';c.beginPath();c.ellipse(px,py-2,22,5,0,0,7);c.fill();c.drawImage(S.cv,fi*CELL,0,CELL,CELL,px-w/2,py-w,w,w)}catch(e){}};im.src=(window.SPOT_IMG||{})[el]||SP(`sprites/spots/${el}.png`)}
+/* V1.94.2 祕密景點動起來：幻獸會走來走去、跳、撒嬌冒愛心；每個景點有自己的小動態（火星、螢火蟲、流星…） */
+function spotCanvas(el,cv,p=s,happy=true){const c=cv.getContext('2d');c.imageSmoothingEnabled=false;const im=new Image();let S=null;try{S=sheet(p===s?formKey():petKey(gidOf(p),formCode(p.stage,p.route)))}catch(e){}
+ const[bx,by]={bird:[78,124],tide:[120,172],earth:[120,160],metal:[118,166]}[el]||[120,168],w=Math.round(CELL*1.45),P={x:bx,y:0,dir:-1,act:happy?'happy':'idle',t0:0,tx:bx,until:0,heart:0},FX=[];
+ const R=Math.random,px=(x,y,sz,col)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),sz,sz)};
+ const emit=()=>{switch(el){
+  case'flame':if(R()<.35)FX.push({x:118+(R()-.5)*14,y:128,vx:(R()-.5)*8,vy:-18-R()*16,l:1.4,c:R()<.5?'#ffb030':'#ff6a1a',z:R()<.3?2:1});break;
+  case'tide':if(R()<.15)FX.push({x:60+R()*130,y:110+R()*40,vx:0,vy:-2,l:1.2,c:'#e8f8ff',z:1,tw:1});break;
+  case'forest':if(R()<.08&&FX.length<26)FX.push({x:R()*240,y:40+R()*120,vx:(R()-.5)*10,vy:(R()-.5)*6,l:4,c:'#d8ff6a',z:2,tw:1,wob:R()*9});break;
+  case'earth':if(R()<.07)FX.push({x:R()*240,y:20+R()*140,vx:0,vy:0,l:.6,c:'#ffffff',z:1,star:1});break;
+  case'bird':if(R()<.012)FX.push({x:60+R()*170,y:R()*30,vx:-70,vy:38,l:.9,c:'#bfe8ff',z:1,trail:1});if(R()<.006)FX.push({x:R()*240,y:-4,vx:6,vy:10,l:5,c:'#ffffff',z:2,feather:1,wob:R()*9});break;
+  case'elec':if(R()<.1)FX.push({x:R()*240,y:R()*150,vx:0,vy:0,l:.25,c:R()<.5?'#ffe14a':'#ffffff',z:2});break;
+  case'metal':if(R()<.12&&FX.length<40)FX.push({x:120+R()*120,y:60+R()*110,vx:-2-R()*3,vy:-1+R()*2,l:3,c:'#e8e0c8',z:1,tw:1});break}};
+ const drawFx=dt=>{for(let i=FX.length-1;i>=0;i--){const f=FX[i];f.l-=dt;if(f.l<=0){FX.splice(i,1);continue}if(f.wob!=null){f.vx=Math.sin(f.wob+=dt*2)*8}f.x+=f.vx*dt;f.y+=f.vy*dt;c.globalAlpha=f.tw?.5+.5*Math.sin(f.l*9):Math.min(1,f.l*2);
+  if(f.trail){for(let j=0;j<10;j++)px(f.x+j*1.8,f.y-j,1,j<3?'#ffffff':f.c)}else if(f.star){px(f.x,f.y-2,1,f.c);px(f.x,f.y+2,1,f.c);px(f.x-2,f.y,1,f.c);px(f.x+2,f.y,1,f.c);px(f.x-1,f.y-1,3,f.c)}else if(f.feather){px(f.x,f.y,1,'#9ab0d8');px(f.x+1,f.y-1,2,f.c);px(f.x+2,f.y-2,2,f.c)}else px(f.x,f.y,f.z,f.c)}c.globalAlpha=1};
+ const heart=(x,y,a)=>{c.globalAlpha=a;const H=['.##.##.','#######','.#####.','..###..','...#...'];c.fillStyle='#ff5a8a';H.forEach((r,j)=>{for(let i=0;i<7;i++)if(r[i]==='#')c.fillRect(Math.round(x)+i,Math.round(y)+j,1,1)});c.globalAlpha=1},HS=[];
+ im.onload=()=>{let last=performance.now();const loop=now=>{if(!cv.isConnected)return;const dt=Math.min(.05,(now-last)/1000);last=now;const t=now/1000;
+  if(now>P.until){const r=R();P.t0=now;if(r<.38){P.act='walk';P.tx=Math.max(bx-40,Math.min(bx+40,P.x+(R()<.5?-1:1)*(14+R()*26)));P.until=now+4000}else if(r<.56){P.act='hop';P.until=now+700}else if(r<.78){P.act='happy';P.until=now+1600}else if(r<.88){P.act='shy';P.until=now+1300}else{P.act='idle';P.until=now+1500+R()*1200}}
+  let f='idle0',y=0;
+  if(P.act==='walk'){const d=P.tx-P.x;if(Math.abs(d)<1){P.act='idle';P.until=now+900}else{P.dir=Math.sign(d);P.x+=P.dir*Math.min(Math.abs(d),22*dt)}f=Math.floor(t*6)%2?'idle0':'jump0';y=-Math.abs(Math.sin(t*12))*2}
+  else if(P.act==='hop'){const u=Math.min(1,(now-P.t0)/700);y=-Math.sin(Math.PI*u)*16;f=u<.15?'jump0':u<.85?'jump1':'jump2'}
+  else if(P.act==='happy'){f=Math.floor(t*4)%2?'happy0':'happy1';y=-Math.abs(Math.sin(t*8))*3;if(now-P.heart>420){P.heart=now;HS.push({x:P.x-4+(R()-.5)*20,y:by-w*.8,l:1})}}
+  else if(P.act==='shy')f='shy0';else f=(t%3.2)<.15?'blink':Math.floor(t*2)%2?'idle0':'idle1';
+  c.drawImage(im,0,0,240,180);emit();drawFx(dt);
+  c.fillStyle='rgba(0,0,0,.28)';c.beginPath();c.ellipse(P.x,by-2,22-Math.min(8,-y*.5),5,0,0,7);c.fill();
+  if(S){const fi=S.idx[f]??S.idx.idle0??0;c.save();c.translate(Math.round(P.x),Math.round(by+y));if(P.dir>0)c.scale(-1,1);c.drawImage(S.cv,fi*CELL,0,CELL,CELL,-w/2,-w,w,w);c.restore()}
+  for(let i=HS.length-1;i>=0;i--){const h=HS[i];h.l-=dt*.8;h.y-=dt*14;if(h.l<=0){HS.splice(i,1);continue}heart(h.x,h.y,Math.min(1,h.l*1.5))}
+  requestAnimationFrame(loop)};requestAnimationFrame(loop)};
+ im.src=(window.SPOT_IMG||{})[el]||SP(`sprites/spots/${el}.png`)}
 function showSpot(r){const K=PC.CONFIG.spots[r.el],S=s.spot||{};sfx('level');
  const rows=[];if(r.first)rows.push(`🎀 專屬裝飾「<b>${ACC[r.acc].n}</b>」（${ROUTE_LABEL[r.el]}專屬，到換裝戴上）`);
  if(r.bless)rows.push(`✨ 景點祝福 <b>Lv.${r.bless}</b>/${PC.CONFIG.spots.blessMax}：${K.stat}永久提升（每級${K.each}）`);else rows.push(`✨ 景點祝福已經滿級（${K.stat}）`);

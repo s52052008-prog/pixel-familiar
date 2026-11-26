@@ -642,5 +642,8 @@ t('V1.94 同屬性只能養一隻：生蛋一定是還沒有的屬性；七種�
 t('V1.94 親密度 40 每日小禮物、100 存錢筒 +10%', () => { const s = hatched(); s.bond = 45; s.mood = 90; s.daily.date = C.dayKey(T0); s.care.petLastRewardAt = 0; const r = C.pet(s, T0); assert.ok(r.gift && r.gift.name);
   const a = C.piggyRateOf(Object.assign({}, s, { bond: 99 })), b = C.piggyRateOf(Object.assign({}, s, { bond: 100 })); assert.ok(Math.abs(b / a - 1.1) < 1e-9); });
 
+t('V1.94.2 小窩／第二隻的幻獸讀檔後身上的裝飾還在', () => { const s = hatched(); s.accOwned = ['crown', 'scarf']; const p = C.sanitizePet(Object.assign({}, s, { acc: ['crown', 'scarf'] }), T0); assert.deepEqual(p.acc, ['crown', 'scarf']);
+  s.roster = [p]; const back = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.deepEqual(back.roster[0].acc, ['crown', 'scarf']); });
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

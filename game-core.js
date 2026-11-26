@@ -1465,7 +1465,7 @@ function finishBallGame(st, score, now = Date.now()) {
 /* ---------------- 小窩：升級、讓多隻寵物住進來 ---------------- */
 const PET_FIELDS = ['acc', 'accAdj', 'nestUntil', 'trainLv', 'relics', 'fosterPaid', 'trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt', 'spot'];
 function snapshotPet(st) { const p = {}; for (const k of PET_FIELDS) if (st[k] !== undefined) p[k] = JSON.parse(JSON.stringify(st[k])); p.sleeping = false; return p; }
-function sanitizePet(p, now = Date.now()) { const r = sanitize(Object.assign({ v: 6 }, p, { roster: [], dex: [], pair: null }), now); return snapshotPet(r); }
+function sanitizePet(p, now = Date.now()) { const r = sanitize(Object.assign({ v: 6 }, p, { roster: [], dex: [], pair: null, accOwned: Array.isArray(p && p.acc) ? p.acc : [] }), now); return snapshotPet(r); }   // V1.94.2 小窩／第二隻／寄養的幻獸身上的裝飾不會被清掉（以前讀檔時會被當成「沒擁有」脫掉）
 /* V1.45 神秘老爺爺的家：寄養不想養的幻獸（不佔小窩、數值不會變），每隻付一次錢 */
 function fosterOut(st, i, now = Date.now()) {
   const p = st.roster[i]; if (!p) return { ok: false, msg: '小窩裡沒有這隻' };
