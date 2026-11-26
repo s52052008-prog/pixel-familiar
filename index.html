@@ -146,7 +146,11 @@ img.uic{width:21px;height:21px;vertical-align:-5px;margin-right:5px;display:inli
 .cmb{display:inline-block;border:2px solid #fff3d0;padding:0 4px;margin-right:3px}.cmb.ok{background:#6fcf5a;color:#1a1008}
 .thead{margin:10px 0 0;font-size:15px}.ehint{padding:0 3px;color:#fff!important;font-size:11px}.ehint.up{background:#2f9a3a}.ehint.dn{background:#c8402a}.tgoal{margin:2px 0 4px}
 #tapZone{position:fixed;inset:0;z-index:25;background:#2a0a20cc;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;touch-action:none;-webkit-user-select:none;user-select:none;text-align:center}#tapZone b{font-size:72px;color:#ffd0e0}
-#sticks{position:relative;display:flex;align-items:flex-end;justify-content:center;gap:6px;height:150px}#sticks canvas{width:42px;height:140px;image-rendering:pixelated;transition:transform .07s;transform-origin:50% 100%}#stickL{transform:rotate(-22deg)}#stickR{transform:rotate(22deg)}#sticks.bang #stickL{transform:rotate(8deg)}#sticks.bang #stickR{transform:rotate(-8deg)}#bang{position:absolute;top:4px;left:50%;transform:translateX(-50%) scale(.3);opacity:0;font-weight:900;font-size:22px;color:#fff066;text-shadow:0 2px 0 #c0306a,2px 0 0 #c0306a,-2px 0 0 #c0306a;transition:all .12s}#sticks.bang #bang{opacity:1;transform:translateX(-50%) scale(1.15)}#tapMsg{font-size:22px;font-weight:900}
+#sticks{position:relative;display:flex;align-items:flex-end;justify-content:center;gap:6px;height:150px}#sticks canvas{width:42px;height:140px;image-rendering:pixelated;transition:transform .07s;transform-origin:50% 100%}#stickL{transform:rotate(-22deg)}#stickR{transform:rotate(22deg)}#sticks #stickL{transform:rotate(-14deg)}#sticks #stickR{transform:rotate(14deg)}#sticks.hitL #stickL{transform:rotate(26deg) translateX(8px)}#sticks.hitR #stickR{transform:rotate(-26deg) translateX(-8px)}
+.tapfx{position:absolute;left:50%;top:38%;pointer-events:none;font-weight:900;color:#fff3a0;text-shadow:0 0 6px #ff6a9a;animation:tapfx .5s ease-out forwards}
+.tapring{position:absolute;left:50%;top:40%;width:20px;height:20px;margin:-10px 0 0 -10px;border:4px solid #fff066;border-radius:50%;pointer-events:none;box-shadow:0 0 10px #ff6a9a;animation:tapring .32s ease-out forwards}@keyframes tapring{0%{transform:scale(.4);opacity:1}100%{transform:scale(4.5);opacity:0}}
+@keyframes tapfx{0%{transform:translate(-50%,-50%) scale(.6);opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.3) rotate(var(--r));opacity:0}}
+#tapPow{font-weight:900;font-size:18px;color:#ffe066;text-shadow:0 2px 0 #c0306a;transition:transform .1s}#tapZone.flash{background:#5a1440dd}#bang{position:absolute;top:4px;left:50%;transform:translateX(-50%) scale(.3);opacity:0;font-weight:900;font-size:22px;color:#fff066;text-shadow:0 2px 0 #c0306a,2px 0 0 #c0306a,-2px 0 0 #c0306a;transition:all .12s}#sticks.bang #bang{opacity:1;transform:translateX(-50%) scale(1.15)}#tapMsg{font-size:22px;font-weight:900}
 #blog{white-space:pre-line;min-height:2.8em;background:#fff9e8;color:#273753;border:3px solid #273753;padding:7px 10px;font-weight:700;font-size:14px;line-height:1.4}
 .trainbox{display:flex;flex-direction:column;gap:6px;border:3px solid var(--line);background:#fff3d0;color:#3a2a2a;padding:8px;margin:8px 0}.trainbox .btn{width:100%}
 .sellrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
@@ -562,7 +566,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
   <button class="btn fs4" id="fsShop"><img class="uic" src="sprites/ui/shop.png" alt="">釣具店</button><button class="btn fs4" id="fsBag"><img class="uic" src="sprites/ui2/basket.png" alt="">魚簍</button><button class="btn fs4" id="fsDex"><img class="uic" src="sprites/ui/book.png" alt="">圖鑑</button><button class="btn fs4" id="fsHome"><img class="uic" src="sprites/ui/house.png" alt="">回院子</button>
   <button class="btn pri" id="fsCast">🎣 按住蓄力，放開甩竿</button><button class="btn pri" id="fsReel">等魚上鉤…</button></div>
  <div id="fsHeavy"><div class="hvL"><div class="hvc"><span>張力</span><div class="hvbar"><i id="hvTen"></i></div></div><div class="hvc"><span>收線</span><div class="hvbar g"><i id="hvProg"></i></div></div><p class="small">張力變紅就轉慢一點<br>偶爾會被猛拉一下！</p></div><div class="hvDial" id="hvDial"><div class="hvKnob" id="hvKnob"></div><b>↻</b><span>順時針轉</span></div></div></div></div>
-<div id="tapZone" class="hidden"><div id="tapMsg"></div><div id="sticks"><canvas id="stickL" width="12" height="40"></canvas><span id="bang">BANG!</span><canvas id="stickR" width="12" height="40"></canvas></div><b id="tapN"></b><div class="small">點螢幕任何地方都算</div></div>
+<div id="tapZone" class="hidden"><div id="tapMsg"></div><div id="sticks"><canvas id="stickL" width="12" height="40"></canvas><span id="bang">BANG!</span><canvas id="stickR" width="12" height="40"></canvas></div><b id="tapN"></b><div id="tapPow"></div><div class="small">點螢幕任何地方都算</div></div>
 <div id="modal" class="hidden" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
 <div id="toast" class="off"></div>
 <script src="emb.js"></script>
@@ -2271,7 +2275,7 @@ function helpDialog(){const C=CONFIG;openModal('❔ 遊戲說明',pixify(`
 <p><b>高階條件（七個屬性都一樣）：</b>① 長到成年期時會跳出 🔔 專屬任務，從那時開始算 ② 集滿 3 個該屬性的終極素材：第 ${C.ascend.bigBoss.join('、')} 關的大王各掉一次（依你目前這隻的屬性；換別的屬性的幻獸可以再拿）。每 5 關有小王、每 10 關有大王。</p>
 <p><b>專屬任務：</b>${PC.ROUTES.map(r=>ROUTE_ICON[r]+' '+C.ascend.tasks[r].map(([k,n])=>({wins:'打贏 '+n+' 場',washes:'洗澡 '+n+' 次',harvests:'收成 '+n+' 次',steps:'走 '+n.toLocaleString('en-US')+' 步',earthWins:'打贏 '+n+' 隻土屬性怪',goals:'頂球進 '+n+' 球',bondUses:'羈絆之力 '+n+' 次',cleanups:'清理 '+n+' 次'})[k]).join('或')).join('；')}。</p>
 <p><b>親密度（點主畫面的「💗 親密度」看詳細）：</b>20 熟悉：撒嬌、打開遊戲跑來打招呼；40 好朋友：每天從院子撿小禮物送你；60 很要好：祕密景點（每種屬性一個，在特定時段摸牠會帶你去，第一次拿專屬裝飾，之後每 7 天再去一次拿景點祝福）；80 摯友：撐住一擊、戰鬥中為你吶喊、羈絆之力更好打；100 心靈相通：腳下冒愛心、存錢筒 +10%。<br><b>每種屬性只能養一隻</b>：新的蛋一定是你還沒有的屬性。</p>
-<p><b>⚔️ 戰鬥技巧：</b>戰鬥地點依怪獸屬性變成草原、岩石地、水邊、森林或星之塔。戰鬥選單有「⚔️ 技能、🛡️ 防禦、🎒 背包、🏃 逃跑」：技能點開有衝撞、輔助（蓄力，下一擊 ×1.5）、屬性技、大絕招（屬性技 2.2 倍，每場一次）；背包點開可以喝回復藥水（回復 50%）或超級藥水（回復全部）。按鈕上會顯示預估傷害（▲效果好、▼效果差）。打不贏的時候，可以按主畫面的「🏋️ 訓練」：閃避（躲避球）、攻擊（沙包連打、組合拳、靈光一閃）、防禦（瀑布打坐），每次 20 金幣，達成目標才有經驗。快被打倒時會出現「💗 羈絆之力」：花 10 金幣買加油棒，倒數後 2 秒內連打螢幕，20 下 2.2 倍、22 下 2.5 倍、25 下 2.7 倍、28 下以上 3 倍（每場一次）；發揮超常能力後要休息 2 小時才能再冒險。敵人出招前會猜拳：猜贏完全躲開，平手受 0.8 倍傷害，猜輸或沒選受 1.2 倍。</p>
+<p><b>⚔️ 戰鬥技巧：</b>戰鬥地點依怪獸屬性變成草原、岩石地、水邊、森林或星之塔。戰鬥選單有「⚔️ 技能、🛡️ 防禦、🎒 背包、🏃 逃跑」：技能點開有衝撞、輔助（蓄力，下一擊 ×1.5）、屬性技、大絕招（屬性技 2.2 倍，每場一次）；背包點開可以喝回復藥水（回復 50%）或超級藥水（回復全部）。按鈕上會顯示預估傷害（▲效果好、▼效果差）。打不贏的時候，可以按主畫面的「🏋️ 訓練」：閃避（躲避球）、攻擊（沙包連打、組合拳、靈光一閃）、防禦（瀑布打坐），每次 20 金幣，達成目標才有經驗。快被打倒時會出現「💗 羈絆之力」：花 10 金幣買加油棒，倒數後 3 秒內連打螢幕，40 下 1.5 倍、60 下 2 倍、80 下 3 倍、95 下 4 倍、110 下以上 5 倍（每場一次；親密度 80 以上多算 5 下）；發揮超常能力後要休息 2 小時才能再冒險。敵人出招前會猜拳：猜贏完全躲開，平手受 0.8 倍傷害，猜輸或沒選受 1.2 倍。</p>
 <p><b>每天：</b>第一次打開送金幣 +${C.daily.coins}、食物 +${C.daily.food}。沒食物又沒錢時可以免費「採集」。冒險不限次數，有體力就能出發。</p>
 <p><b>👟 步數：</b>每 1,000 步經驗 +10、每 2,000 步草系點數 +1；每 10 萬步突破一次（戰鬥 +10%）。</p>
 <p><b>💞 配對：</b>成年期以後可以和朋友交換「配對碼」，生出混合雙方基因的蛋。</p>
@@ -3363,18 +3367,25 @@ async function doMove(a,d,mv,side,boost=1){
  if(revived&&d===B.foe){BOSSFX.rebirth();bossBanner('🔥 浴火重生！',d.ult?d.ult.col:'#ffb030','火鳳從火焰中復活了！');bossFlash('#ffb030',900);spawn('fire',18,{x:tx,y:ty,vy:-26,jx:46,life:1.3,spread:26},bparts);sfx('evolve');buzz(80);blog(`🔥 ${d.name} 從火焰中重生了！HP 回到 ${d.hp}！`);D.faint=0;d.aura=null;bUI();await sleep(1600)}
  else if(revived){blog(`🪶 不死鳥羽毛發光！${d.name} 浴火重生，HP 回到 ${d.hp}！`);spawn('heart',8,{x:tx,y:ty,vy:-22,jx:24,life:1,spread:14},bparts);sfx('level');D.faint=0;bUI();await sleep(1100)}
  await afterHit(a,d,mv,{dmg,sprouted},side)}
-/* 羈絆之力：倒數後 2 秒內連打螢幕，點越多下越強（20 下 2.2 倍…28 下 3 倍） */
+/* 羈絆之力：倒數後 3 秒內連打螢幕，點越多下越強（40 下 1.5 倍…110 下 5 倍） */
 /* V1.55 加油棒（像素畫）：每點一下兩支互敲一次 */
 function drawSticks(){for(const[id,a,b]of[['stickL','#ff6a9a','#ffd0e0'],['stickR','#ffd34a','#fff3b0']]){const c=$(id),x=c.getContext('2d');x.clearRect(0,0,12,40);
  x.fillStyle='#2a170a';x.fillRect(2,0,8,34);x.fillRect(1,2,10,30);x.fillStyle=a;x.fillRect(2,1,8,32);x.fillStyle=b;x.fillRect(3,2,2,29);for(let y=5;y<32;y+=6){x.fillStyle='#ffffff';x.fillRect(2,y,8,2)}
  x.fillStyle='#5a3a2a';x.fillRect(4,33,4,7);x.fillStyle='#8a5a3a';x.fillRect(5,33,1,7)}}
 function tapRush(o={}){return new Promise(res=>{const z=$('tapZone'),n=$('tapN'),msg=$('tapMsg');let taps=0,live=false;z.classList.remove('hidden');n.textContent='';
  drawSticks();const st=$('sticks');let bt=0;
- const on=e=>{e.preventDefault();if(!live)return;taps++;n.textContent=taps;buzz(8);sfx('tap');st.classList.add('bang');clearTimeout(bt);bt=setTimeout(()=>st.classList.remove('bang'),130);spawn('heart',1,{x:20+Math.random()*90,y:30+Math.random()*60,vy:-20,life:.6,spread:4},bparts)};
+ const pw=$('tapPow'),extra=o.go?0:(PC.bondTier(s.bond)>=4?PC.CONFIG.bondFx.bondTap:0);pw.textContent='';
+ const on=e=>{e.preventDefault();if(!live)return;taps++;n.textContent=taps;buzz(8);sfx('tap');const L=taps%2===1;   // V1.94.1 加油棒左右交替打，打一下噴星星
+  st.classList.remove('hitL','hitR');void st.offsetWidth;st.classList.add(L?'hitL':'hitR','bang');clearTimeout(bt);bt=setTimeout(()=>st.classList.remove('bang','hitL','hitR'),110);
+  $('bang').textContent=['BANG!','POW!','咚！','加油！','衝啊！'][taps%5];z.classList.add('flash');setTimeout(()=>z.classList.remove('flash'),60);
+  {const rg=document.createElement('span');rg.className='tapring';rg.style.left=(L?42:58)+'%';rg.style.borderColor=L?'#ff8ac0':'#fff066';st.appendChild(rg);setTimeout(()=>rg.remove(),340)}
+  if(st.querySelectorAll('.tapfx').length<18)for(let i=0;i<3;i++){const f=document.createElement('span');f.className='tapfx';f.textContent=['✦','★','♥','✧'][Math.floor(Math.random()*4)];f.style.color=['#fff066','#ff8ac0','#8ae8ff'][Math.floor(Math.random()*3)];const a=(L?Math.PI:0)+(Math.random()-.5)*2.2,d=40+Math.random()*50;f.style.setProperty('--dx',Math.round(Math.cos(a)*d)+'px');f.style.setProperty('--dy',Math.round(Math.sin(a)*d-20)+'px');f.style.setProperty('--r',Math.round((Math.random()-.5)*180)+'deg');f.style.fontSize=(20+Math.random()*14)+'px';st.appendChild(f);setTimeout(()=>f.remove(),520)}
+  if(!o.go){const m=PC.bondBoost(taps+extra);pw.textContent=`威力 ×${m.toFixed(1)}`;pw.style.transform=`scale(${1+Math.min(.6,(m-1)*.15)})`}
+  spawn('heart',1,{x:20+Math.random()*90,y:30+Math.random()*60,vy:-20,life:.6,spread:4},bparts)};
  z.addEventListener('pointerdown',on);let k=3;msg.textContent=o.ready||'為牠打氣！準備…';n.textContent=k;
  const iv=setInterval(()=>{k--;if(k>0){n.textContent=k;sfx('tap');return}clearInterval(iv);live=true;n.textContent='0';const GO=o.go||'快點螢幕！連打！';msg.textContent=GO;sfx('wake');
-  const T=CONFIG.bond.seconds,t0=performance.now(),cd=setInterval(()=>{const left=Math.max(0,T-(performance.now()-t0)/1000);msg.textContent=`${GO}（${left.toFixed(1)} 秒）`},100);
-  setTimeout(()=>{clearInterval(cd);live=false;z.removeEventListener('pointerdown',on);msg.textContent=o.go?`連打 ${taps} 下！`:`連打 ${taps} 下！威力 ×${PC.bondBoost(taps+(PC.bondTier(s.bond)>=4?PC.CONFIG.bondFx.bondTap:0)).toFixed(1)}`;setTimeout(()=>{z.classList.add('hidden');res(taps)},900)},T*1000)},700)})}
+  const T=o.secs||CONFIG.bond.seconds,t0=performance.now(),cd=setInterval(()=>{const left=Math.max(0,T-(performance.now()-t0)/1000);msg.textContent=`${GO}（${left.toFixed(1)} 秒）`},100);
+  setTimeout(()=>{clearInterval(cd);live=false;z.removeEventListener('pointerdown',on);msg.textContent=o.go?`連打 ${taps} 下！`:`連打 ${taps} 下！威力 ×${PC.bondBoost(taps+extra).toFixed(1)}`;setTimeout(()=>{z.classList.add('hidden');res(taps)},900)},T*1000)},700)})}
 /* 猜拳：敵人攻擊前 2 秒內選一個，回傳 { result, mult, me, foe } */
 const RPS_ICON={rock:'✊',scissors:'✌️',paper:'✋'};
 function rpsRound(){return new Promise(res=>{const PEEK=B&&B.peek>0?PC.RPS[Math.floor(Math.random()*3)]:null;if(PEEK)B.peek=0;const z=$('rpsZone'),T=CONFIG.rps.seconds,bar=$('rpsBar').firstElementChild,btns=[...z.querySelectorAll('[data-rps]')];let done=false;

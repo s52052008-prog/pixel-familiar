@@ -32,7 +32,7 @@ const CONFIG = {
   stages: { juvenile: { hours: 4, xp: 150 }, adolescent: { hours: 12, xp: 450 }, adult: { hours: 48, xp: 1200 }, ascended: { hours: 168, xp: 3000 } },   // V1.65 成長經驗門檻 ×1.5   // V1.20：嬰兒期＋門檻提高
   routeTie: ['tide', 'forest', 'flame', 'earth', 'bird', 'elec', 'metal'],   // 平手時的固定順序（GDD 前三個 + V1.11 新增四個）
   bondTiers: [20, 40, 60, 80, 100],   // V1.94 親密度 5 階：熟悉／好朋友／很要好（祕密景點）／摯友／心靈相通
-  bondFx: { gift: [['coins', 40], ['seeds2', 1], ['potion', 1], ['berry', 2], ['gem_ruby', 1]], giftW: [.4, .2, .15, .15, .1], cry: .15, cryX: 1.3, bondTap: 2, piggy: .1 },
+  bondFx: { gift: [['coins', 40], ['seeds2', 1], ['potion', 1], ['berry', 2], ['gem_ruby', 1]], giftW: [.4, .2, .15, .15, .1], cry: .15, cryX: 1.3, bondTap: 5, piggy: .1 },
   /* V1.94 七屬性祕密景點：親密度 60，在特定時段摸牠會帶你去；第一次拿專屬裝飾，之後每 7 天再去一次拿「景點祝福」（能力永久 +1 級，最多 10 級） */
   spots: { bond: 60, week: 7, blessMax: 10, drop: .4,
     flame: { n: '星火營地', acc: 'campscarf', when: '傍晚 5～7 點', stat: '攻擊', each: '攻擊 +2%' }, tide: { n: '月光泉', acc: 'moonclip', when: '晚上 7 點～凌晨 5 點', stat: '血量', each: '血量 +3%' },
@@ -150,7 +150,7 @@ const CONFIG = {
   foster: { price: 399 },                                   // V1.45 神秘老爺爺寄養：每隻付一次 399，之後隨時可以接回、再寄
   fusionHouse: { price: 1000 },                             // V1.45 血繼限界的特殊幻獸要先花 1000 佈置新的小屋                               // V1.44 迎接新的蛋：第 1 顆 300、第 2 顆 700、之後 1000                        // V1.42 打贏小王／大王額外金幣                                    // V1.40 大絕招：屬性技 2.2 倍，每場一次
   rps: { seconds: 2, win: 0, tie: .8, lose: 1.2 },          // 敵人出招前猜拳：贏＝躲開、平手 0.8 倍、輸或超時 1.2 倍
-  bond: { seconds: 2, steps: [[0, 1], [20, 2.2], [22, 2.5], [25, 2.7], [28, 3]], cost: 10, restHours: 2 },   // 羈絆之力：2 秒內連打；20 下 2.2 倍、22 下 2.5、25 下 2.7、28 下以上 3 倍（中間按比例）。要花 10 金幣買加油棒，之後 2 小時要休息不能冒險
+  bond: { seconds: 3, steps: [[0, 1], [40, 1.5], [60, 2], [80, 3], [95, 4], [110, 5]], cost: 10, restHours: 2 },   // V1.94.1 3 秒連打（認真按大約 100 下）：40／60／80／95／110 下＝1.5／2／3／4／5 倍（中間按比例），最高 5 倍   // 羈絆之力：2 秒內連打；20 下 2.2 倍、22 下 2.5、25 下 2.7、28 下以上 3 倍（中間按比例）。要花 10 金幣買加油棒，之後 2 小時要休息不能冒險
   ballGame: { lives: 3, max: 99, goalCap: 5, coinEvery: 3, coinMax: 10, xpPer: 3, xpMax: 30 },   // V1.64 每進一球 +3 經驗（一場最多 30）   // 頂球：3 條命一直玩到漏接 3 次；每 3 球 1 金幣（最多 10）；冒險路線最多算 5 球
   den: [ { name: '草叢小窩', cap: 1, cost: 0 }, { name: '稻草窩', cap: 2, cost: 120 }, { name: '樹根洞窟', cap: 3, cost: 300 }, { name: '大樹屋', cap: 4, cost: 600 }, { name: '燈籠樹屋', cap: 5, cost: 1000 }, { name: '旗幟樹屋', cap: 6, cost: 1500 }, { name: '星光樹屋', cap: 7, cost: 2200 } ],   // V1.45 最多 7 隻（每個屬性一隻）                            // 商店零食「星星糖」
   lounge: [ { name: '基本款', xpH: 0, cost: 0 }, { name: '大容量款', xpH: 3, cost: 400 }, { name: '豪華營養款', xpH: 6, cost: 1200 } ],   // V1.86.7 休息室的自動投餵機＋飲水機：免費，升級後休息的寵物每小時慢慢長經驗
@@ -1009,7 +1009,7 @@ function rps(me, foe) {
   return win ? { result: 'win', mult: R.win } : { result: 'lose', mult: R.lose };
 }
 function bondBoost(taps) {
-  const P = CONFIG.bond.steps; taps = Math.max(0, num(taps, 0));
+  const P = CONFIG.bond.steps; taps = Math.max(0, num(taps, 0, 0, 9999));
   for (let i = 1; i < P.length; i++) if (taps <= P[i][0]) { const [x0, y0] = P[i - 1], [x1, y1] = P[i]; return Math.round((y0 + (y1 - y0) * (taps - x0) / (x1 - x0)) * 100) / 100; }
   return P[P.length - 1][1];
 }
