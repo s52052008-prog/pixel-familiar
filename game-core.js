@@ -106,7 +106,8 @@ const CONFIG = {
   seedOdds: { normal: [['cranberry', .55], ['blueberry', .3], ['strawberry', .15]], good: [['cranberry', .3], ['blueberry', .4], ['strawberry', .3]], rare: [['cranberry', .2], ['blueberry', .3], ['strawberry', .5]] },   // V1.41 種子都是綜合：蔓越莓／藍莓／草莓
   train: { cost: 20, energy: -15, hunger: -10, clean: -8, minEnergy: 15, base: 10, perLv: 4,   // V1.41 訓練場：每次 20 金幣（器材＋場地費），達成目標才拿到經驗＝10＋等級×4
     kinds: { dodge: { name: '閃避訓練：躲避球', skill: 'dodge' }, rush: { name: '攻擊訓練：沙包連打', skill: 'attack' }, combo: { name: '攻擊訓練：組合拳', skill: 'attack' }, flash: { name: '攻擊訓練：靈光一閃', skill: 'attack' }, zen: { name: '防禦訓練：瀑布打坐', skill: 'defense' } } },
-  ult: { power: 2.2 },
+  ult: { power: 2.2, bind: .4 },
+  compost: { price: 800, need: 50, hours: 24 },   // V1.95 草系大絕招「森羅萬象」40% 機率用藤蔓捆住對手一回合
   stageX: { egg: 1, baby: 1, juvenile: 1, adolescent: 1.1, adult: 1.3, ascended: 1.5 },   // V1.43 進化階段加能力：幼年 ×1.0、成長 ×1.1、成年 ×1.3、高階 ×1.5（星耀覺醒再 ×2）
   trainBonus: { per: .02, max: .2 },   // V1.44：每次 +2%，每種 10 次練滿                       // V1.42 訓練成功一次 +1%，每種最多 +20%：閃避＝猜拳輸也可能閃開、攻擊＝攻擊力、防禦＝防禦力和血量
   bossCoins: { mini: 15, big: 30 },
@@ -131,7 +132,7 @@ const CONFIG = {
     leaf:  { name: '森林守護', icon: '🌿', text: '兩隻接下來 3 回合，每回合回復 10% HP', turns: 3, heal: .1 },
     earth: { name: '大地壁壘', icon: '🪨', text: '這一回合兩隻受到的傷害只剩 30%', cut: .7 },
     bird:  { name: '疾之風',   icon: '🌪️', text: '兩隻接下來 2 回合閃避 +50%（猜拳輸了也可能閃開）', turns: 2, dodge: .5 },
-    elec:  { name: '雷電麻痺', icon: '⚡', text: '敵人麻痺 2 回合，很容易動不了，王的絕招也會被打斷、延後' },
+    elec:  { name: '雷電麻痺', icon: '⚡', text: '無視防禦打掉敵人 10% 血量，而且一定麻痺 1 回合（王的絕招也會被打斷、延後）', pct: .1 },   // V1.95
     metal: { name: '荊棘鐵甲', icon: '⚙️', text: '下一次被攻擊時，把 60% 的傷害反彈回去', reflect: .6 },
     none:  { name: '星光守護', icon: '⭐', text: '回復 20% HP，下一次受到的傷害減半', heal: .2 } },
   combo: { mult: 1.6 },   // 羈絆合擊：兩隻一起衝上去，各打一次 1.6 倍   // V1.55 其他六隻王再強一點
@@ -485,9 +486,9 @@ function sanitize(o, now = Date.now()) {
   r.loveNest = o.loveNest === true; r.loveAt = num(o.loveAt, 0, 0, 9e15); r.nestUntil = num(o.nestUntil, 0, 0, 9e15);
   r.loveEgg = o.loveEgg && okId(o.loveEgg.id) ? { id: o.loveEgg.id, from: typeof o.loveEgg.from === 'string' ? chars(o.loveEgg.from).slice(0, 40).join('') : '', end: num(o.loveEgg.end, now, 0, 9e15), names: typeof o.loveEgg.names === 'string' ? chars(o.loveEgg.names).slice(0, 40).join('') : '', away: o.loveEgg.away ? 1 : 0 } : null;
   r.loveNote = typeof o.loveNote === 'string' ? chars(o.loveNote).slice(0, 80).join('') : '';
-  r.harvests = int(o.harvests, 0, 0, 1e7); r.bondUses = int(o.bondUses, 0, 0, 1e7); r.cleanups = int(o.cleanups, 0, 0, 1e7); r.trains = int(o.trains, 0, 0, 1e7); { const tl = o.trainLog && typeof o.trainLog === 'object' ? o.trainLog : {}; r.trainLog = { dodge: int(tl.dodge, 0, 0, 1e7), attack: int(tl.attack, 0, 0, 1e7), defense: int(tl.defense, 0, 0, 1e7) }; }
+  r.harvests = int(o.harvests, 0, 0, 1e7); r.bondUses = int(o.bondUses, 0, 0, 1e7); r.petBond = o.petBond != null ? int(o.petBond, 0, 0, 1e7) : (o.ascBase && o.stage === 'adult' ? Math.max(0, r.bondUses - num(o.ascBase.bondUses, 0, 0, 1e9)) : 0); r.cleanups = int(o.cleanups, 0, 0, 1e7); r.trains = int(o.trains, 0, 0, 1e7); { const tl = o.trainLog && typeof o.trainLog === 'object' ? o.trainLog : {}; r.trainLog = { dodge: int(tl.dodge, 0, 0, 1e7), attack: int(tl.attack, 0, 0, 1e7), defense: int(tl.defense, 0, 0, 1e7) }; }
   if (Array.isArray(o.plots)) r.plots = Array.from({ length: Math.max(CONFIG.farm.plots, Math.min(CONFIG.farm.maxPlots, o.plots.length)) }, (_, i) => ({ at: num(o.plots[i] && o.plots[i].at, 0, 0, 9e15), k: o.plots[i] && PLOT_KINDS.includes(o.plots[i].k) ? o.plots[i].k : 'food', ...(o.plots[i] && o.plots[i].g ? { g: [1, 2, 3].includes(o.plots[i].g) ? o.plots[i].g : 1 } : {}), ...(o.plots[i] && [0, 1].includes(o.plots[i].wn) ? { wn: o.plots[i].wn } : {}) }));
-  r.sprinkler = !!o.sprinkler;
+  r.sprinkler = !!o.sprinkler; r.composter = !!o.composter; r.compost = int(o.compost, 0, 0, 999); r.fertUntil = num(o.fertUntil, 0, 0, 9e15); r.inv.fert = int(iv.fert, 0, 0, 999);
   const gl = o.goals && typeof o.goals === 'object' ? o.goals : {};
   r.goalLv = int(o.goalLv, 0, 0, CONFIG.goals.maxLv);
   if (/^\d{4}-\d\d-\d\d$/.test(gl.date) && Array.isArray(gl.list)) r.goals = { date: gl.date, list: gl.list.filter(g => g && GOALS[g.id]).slice(0, 5).map((g, i) => { const tier = int(g.tier, Math.min(i, 2), 0, 2); return { id: g.id, tier, need: int(g.need, goalNeed(g.id, tier, r.goalLv), 1, 1e6), n: int(g.n, 0, 0, 1e6), claimed: g.claimed === true }; }) };
@@ -825,7 +826,7 @@ function counterSnap(st) { const o = {}; for (const k in COUNTER_TEXT) o[k] = co
 /* 專屬任務：成年期才出現；從長成成年期那一刻開始算（ascBase＝那時的計數） */
 function taskOf(st, route) {
   const T = CONFIG.ascend.tasks[route]; if (!T) return null; const base = st.ascBase || counterSnap(st);
-  const alts = T.map(([k, need]) => { const have = Math.max(0, counter(st, k) - (base[k] || 0)); return { k, need, have: Math.min(have, need), done: have >= need, text: COUNTER_TEXT[k](need) }; });
+  const alts = T.map(([k, need]) => { const have = k === 'bondUses' ? (st.petBond || 0) : Math.max(0, counter(st, k) - (base[k] || 0)); /* V1.95 羈絆之力改成算「這隻自己發動的次數」（以前用共用計數，換隻或讀檔時可能歸零） */ return { k, need, have: Math.min(have, need), done: have >= need, text: COUNTER_TEXT[k](need) }; });
   const done = alts.some(a => a.done), best = alts.reduce((a, b) => (b.have / b.need > a.have / a.need ? b : a));
   return { done, have: best.have, need: best.need, alts, text: alts.map(a => a.text).join('，或') };
 }
@@ -1124,7 +1125,8 @@ function lootOf(st) { const L = st.loot || (st.loot = {}); if (!L.fossils || typ
 const rodOf = st => RODS.find(r => r.id === fishOf(st).rod);
 /* 生活技能：成年（含高階）才開放；目前這隻＋一起出來的那隻，同一系只算一次 */
 const adultPet = p => !!(p && p.hatched !== false && p.route && (p.stage === 'adult' || p.stage === 'ascended') && !p.runaway);
-function skillPets(st) { const out = []; for (const p of [st.hatched ? st : null, st.pair]) if (adultPet(p) && !out.some(o => o.route === p.route)) out.push({ route: p.route, name: p.name || '幻獸' }); return out; }
+/* V1.95 生活技能：家裡（主角、第二隻、小窩／休息室）有成年的那個屬性就能用，不用牠出來在外面；寄養在老爺爺家的不算 */
+function skillPets(st) { const out = []; for (const p of [st.hatched ? st : null, st.pair, ...(st.roster || [])]) if (adultPet(p) && !out.some(o => o.route === p.route)) out.push({ route: p.route, name: p.name || '幻獸' }); return out; }
 const hasSkill = (st, route) => skillPets(st).some(p => p.route === route);
 const fossilLuck = st => { const n = Object.keys(lootOf(st).fossils).length; return n * CONFIG.skills.fossilLuck + (n >= 6 ? CONFIG.skills.fossilAll : 0); };
 function fishPool(st, now = Date.now()) {
@@ -1259,14 +1261,15 @@ function harvest(st, i, now = Date.now(), r = Math.random) {
   if (!q.ripe) return { ok: false, msg: `還沒成熟，再等 ${Math.ceil(q.left / MIN)} 分鐘` };
   const F = CONFIG.farm, k = q.kind, name = CONFIG.foods[k].name, g = st.plots[i].g || 0, good = g >= 1, myst = g === 2, magic = g === 3, G = CONFIG.goodSeed; st.plots[i].at = 0; delete st.plots[i].g; delete st.plots[i].wn;
   if (q.rotten) { track(st, 'harvest', now); return { ok: true, rotten: true, n: 0, xp: 0, msg: `${name}放太久爛掉了…只好丟掉 🪰` }; }
-  const MG = CONFIG.magicSeed, lo = magic ? MG.min : good ? G.fruitMin : F.fruitMin, hi = magic ? MG.maxN : good ? G.fruitMax : F.fruitMax, n = lo + Math.floor(r() * (hi - lo + 1));
+  const MG = CONFIG.magicSeed, lo = magic ? MG.min : good ? G.fruitMin : F.fruitMin, hi = magic ? MG.maxN : good ? G.fruitMax : F.fruitMax; let n = lo + Math.floor(r() * (hi - lo + 1));
   const PW = Object.keys(CONFIG.foods).filter(x => CONFIG.foods[x].power), M = CONFIG.mysterySeed;
   let bonus = null, bn = 0; if (magic) {} else if (myst ? r() < M.powerChance : good && r() < G.powerChance) { bonus = PW[Math.floor(r() * PW.length) % PW.length]; bn = myst ? M.powerMin + Math.floor(r() * (M.powerMax - M.powerMin + 1)) : 1; st.inv[bonus] = (st.inv[bonus] || 0) + bn; }
+  const fx2 = fertOn(st, now); if (fx2) n *= 2;   // V1.95 肥料：收成加倍
   st.inv[k] = (st.inv[k] || 0) + n; if (FRESH_KEYS.includes(k)) st.inv.fresh[k] = (st.inv.fresh[k] || 0) + n; st.harvests++;   // V1.77 過熟的也還是自己種的：會發光、能賣、體力 +5
   let xp = 0; if (st.hatched) { xp = addXP(st, F.xp); st.path.forest += F.forest; }
   track(st, 'harvest', now);
   if (st.harvests === CONFIG.harvestsForOldTree) journal(st, now, `收成第 ${st.harvests} 次了！`);
-  return { ok: true, kind: k, n, over: q.over, xp, good, myst, magic, bonus, bonusN: bn, forest: st.hatched ? F.forest : 0, msg: (magic ? `✨神奇種子長出了能力水果！${name} +${n}` : q.over ? `${name}有點過熟了，趕快收！收成 ${n} 顆` : `收成！✨${name} +${n}`) + (bonus ? `、⚡能力水果 ${CONFIG.foods[bonus].name} +${bn}！` : '') + (xp ? `、經驗 +${xp}、🌿 森 +${F.forest}` : '') };
+  return { ok: true, kind: k, n, fert: fx2, over: q.over, xp, good, myst, magic, bonus, bonusN: bn, forest: st.hatched ? F.forest : 0, msg: (magic ? `✨神奇種子長出了能力水果！${name} +${n}` : q.over ? `${name}有點過熟了，趕快收！收成 ${n} 顆` : `收成！✨${name} +${n}`) + (bonus ? `、⚡能力水果 ${CONFIG.foods[bonus].name} +${bn}！` : '') + (xp ? `、經驗 +${xp}、🌿 森 +${F.forest}` : '') };
 }
 function water(st, i, now = Date.now(), free = false) {   // V1.90 澆水：剛種下澆一次開始長，長到一半口渴再澆一次
   const q = plotState(st, i, now); if (!q || q.empty) return { ok: false, msg: '這塊田是空的' };
@@ -1449,7 +1452,13 @@ const CORE_KINDS = ['core', 'poop', 'bone', 'fbone', 'banana', 'melonw', 'melon'
 const LEFT_NAME = { core: '果核', poop: '大便', bone: '肉骨頭', fbone: '魚骨', banana: '香蕉皮', melonw: '西瓜皮', melon: '哈密瓜皮', dragon: '火龍果皮', coconut: '椰子殼', nut: '堅果殼', potato: '地瓜皮' };
 function addCore(st, x, now = Date.now(), v = 'yard', k = 'core') { st.cores.push({ x: clamp(x, 4, 124), at: now, v: ['room', 'lounge'].includes(v) ? v : 'yard', k: CORE_KINDS.includes(k) ? k : 'core' }); while (st.cores.length > CONFIG.core.max) st.cores.shift(); }
 const isRotten = (c, now = Date.now()) => now - c.at >= rotMin(c) * MIN;
-function clearCore(st, i, now = Date.now()) { const c = st.cores[i]; if (!c) return null; applyTime(st, now); const k = st.cores.indexOf(c); if (k >= 0) st.cores.splice(k, 1); st.cleanups++; if (st.hatched) st.path.metal += 1; return { rotten: isRotten(c, now), kind: c.k }; }
+function clearCore(st, i, now = Date.now()) { const c = st.cores[i]; if (!c) return null; applyTime(st, now); const k = st.cores.indexOf(c); if (k >= 0) st.cores.splice(k, 1); st.cleanups++; if (st.hatched) st.path.metal += 1;
+  const out = { rotten: isRotten(c, now), kind: c.k }; if (st.composter) { const C = CONFIG.compost; st.compost++; out.compost = st.compost; if (st.compost >= C.need) { st.compost -= C.need; st.inv.fert = (st.inv.fert || 0) + 1; out.fert = true; journal(st, now, '廚餘機做好一包肥料了！'); } } return out; }
+/* V1.95 廚餘機：放在院子，清掉的果皮、果核、骨頭會自己丟進去，滿 50 個做出一包肥料；肥料灑滿全部的田，24 小時內收成加倍 */
+function buyComposter(st) { const C = CONFIG.compost; if (st.composter) return { ok: false, msg: '已經有廚餘機了' }; if (st.coins < C.price) return { ok: false, msg: `金幣不足（需要 ${C.price}）` }; st.coins -= C.price; st.composter = true; return { ok: true, msg: `廚餘機放好了！之後清掉的果皮、骨頭會自己丟進去，滿 ${C.need} 個就會做出肥料 🌱` }; }
+function useFert(st, now = Date.now()) { if (!(st.inv.fert > 0)) return { ok: false, msg: '沒有肥料（廚餘機滿 50 個會做出一包）' }; if (now < (st.fertUntil || 0)) return { ok: false, msg: '田裡的肥料還有效，等效果結束再灑吧' };
+  st.inv.fert--; st.fertUntil = now + CONFIG.compost.hours * H; track(st, 'fert', now); return { ok: true, msg: `🌱 肥料灑滿了全部的田！接下來 ${CONFIG.compost.hours} 小時收成加倍` }; }
+const fertOn = (st, now = Date.now()) => now < (st.fertUntil || 0);
 
 /* ---------------- 頂球小遊戲 ---------------- */
 function finishBallGame(st, score, now = Date.now()) {
@@ -1463,7 +1472,7 @@ function finishBallGame(st, score, now = Date.now()) {
 }
 
 /* ---------------- 小窩：升級、讓多隻寵物住進來 ---------------- */
-const PET_FIELDS = ['acc', 'accAdj', 'nestUntil', 'trainLv', 'relics', 'fosterPaid', 'trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt', 'spot'];
+const PET_FIELDS = ['acc', 'accAdj', 'nestUntil', 'trainLv', 'relics', 'fosterPaid', 'trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt', 'spot', 'petBond'];
 function snapshotPet(st) { const p = {}; for (const k of PET_FIELDS) if (st[k] !== undefined) p[k] = JSON.parse(JSON.stringify(st[k])); p.sleeping = false; return p; }
 function sanitizePet(p, now = Date.now()) { const r = sanitize(Object.assign({ v: 6 }, p, { roster: [], dex: [], pair: null, accOwned: Array.isArray(p && p.acc) ? p.acc : [] }), now); return snapshotPet(r); }   // V1.94.2 小窩／第二隻／寄養的幻獸身上的裝飾不會被清掉（以前讀檔時會被當成「沒擁有」脫掉）
 /* V1.45 神秘老爺爺的家：寄養不想養的幻獸（不佔小窩、數值不會變），每隻付一次錢 */
@@ -1672,7 +1681,7 @@ function claimGoal(st, idx, now = Date.now(), r = Math.random) {
 /* ---------------- 雷系：戰鬥中蓄力、羈絆之力 ---------------- */
 function battleCharge(st) { if (st.hatched) st.path.elec += 1; }
 function canBond(st) { return st.coins < CONFIG.bond.cost ? `要 ${CONFIG.bond.cost} 金幣買加油棒才能發動` : null; }
-function battleBond(st, now = Date.now()) { if (canBond(st)) return false; st.coins -= CONFIG.bond.cost; st.bondRestUntil = now + CONFIG.bond.restHours * H; st.bondUses++; if (st.hatched) st.path.elec += 3; if (st.bondUses === 1) journal(st, now, '第一次發動羈絆之力！'); return true; }
+function battleBond(st, now = Date.now()) { if (canBond(st)) return false; st.coins -= CONFIG.bond.cost; st.bondRestUntil = now + CONFIG.bond.restHours * H; st.bondUses++; st.petBond = (st.petBond || 0) + 1; if (st.hatched) st.path.elec += 3; if (st.bondUses === 1) journal(st, now, '第一次發動羈絆之力！'); return true; }
 
 /* ---------------- 配對 ---------------- */
 function canBreed(st, friend, now = Date.now()) {
@@ -1804,7 +1813,7 @@ const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, S
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   eqStats, eqApply, accUpgrade, eqGift,
-  plotState, plant, harvest, water, thirstyPlots, rainWater, isWet, bondGift, spotCond, spotReady, spotWait, visitSpot, spotBless, elOfPet, ownedEls, freeEls, fixEggEl, buySprinkler, buySeed, buyDecor, placeDecor, loungeTick, upgradeLounge, helpSearch, lureFood, mushTick, pickMush, mushSell, mushCook, mushEat, MUSH_KEYS, MUSH_BUFFS, buyItem, useCandy,
+  plotState, plant, harvest, water, thirstyPlots, rainWater, isWet, buyComposter, useFert, fertOn, bondGift, spotCond, spotReady, spotWait, visitSpot, spotBless, elOfPet, ownedEls, freeEls, fixEggEl, buySprinkler, buySeed, buyDecor, placeDecor, loungeTick, upgradeLounge, helpSearch, lureFood, mushTick, pickMush, mushSell, mushCook, mushEat, MUSH_KEYS, MUSH_BUFFS, buyItem, useCandy,
   toNextLv, lvBase, piggyRateOf, fosterOut, fosterBack, buyFusionHouse, MAX_LV, foeFighter, releasePet, PET_NAMES, CORE_KINDS, LEFT_NAME, guideStep, guideDo, fosterSwap, whereIs, inNest, loveTick, moveOut, eggReady, lostPets, recallLost, ownedIds, talLv, talentOn, bossTalOn, bossSeen, eliteBonus, hasHeritage, eggPrice, buyEgg, pigLevel, buyPigCore, piggyRate, piggyCap, collectPiggy, placeBed2, canAwaken, awaken, playedRoutes, unplayedRoutes, seedForEl, ascendInfo, taskOf, counterSnap, canAct, addCore, clearCore, isRotten, finishBallGame, snapshotPet, sexOfId, bringOut, sendIn, switchPair, pairCanJoin, pairAdventureCost, pairGain, pairStages, buyLoveNest, lovePartners, canLove, love, isAdult, sanitizePet, denCap, petCount, upgradeDen, moveToDen, swapPet, GOALS, goalsFor, ensureGoals, track, claimGoal,
   trainBonus, buffFighter, FISH, JUNK, GOODS, FOSSILS, RODS, SKILL, SLOT_NAME, WEATHER_NAME, fishSlot, bushBerries, pickBerries, fishOf, lootOf, rodOf, skillPets, hasSkill, fossilLuck, fishPool, buyBait, buyRod, selectRod, allPets, giveEmber, emberShare, setTeam, TRAIN_TIER, trainLvOf, trainTier, trainLvUp, castLine, landFish, fishFood, eatFish, cookFish, sellFish, runSkills, growHoursOf,  useSoup, canTrain, startTrain, finishTrain, trainXp, pickFruit, FRESH_KEYS, ITEM_NAME, ELEM, BEATS, elemMult, AREA_ROUTE, ROUTE_CH, battleCharge, battleBond, canBond, expectDamage, bondBoost, rps, RPS, goalText, goalReward, goalNeed, comeHome, trait, traitOf, washCost, sellFruit, expandFarm, expandPrice, useEmber, fixFresh, digest, canAdventure, startAdventure, weatherAt, weatherFx, pickCrave, ensureCrave, markSeen, growTree, dropApple, pickApple, mkFighter, foeFor, damage, finishAdventure, canBreed, breed, addXP };
 Object.assign(API, { EARN_NAME, SPEND_NAME, BADGES, BADGE, statsOf, statAdd, statVal, checkBadges, playTick, weekKey, sumOf }); wrapStats(API);

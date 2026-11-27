@@ -365,7 +365,7 @@ t('高階（V1.37）：168h、3000 XP、專屬任務（成年期才開始算）�
   s.inv.mats.flame = 3; assert.equal(C.checkStages(s, T0 + 168 * H)[0].to, 'ascended'); assert.equal(s.inv.mats.flame, 0);
 });
 t('專屬任務七屬性：水洗澡 30、草收成 30、土 6 萬步或打贏 20 隻土屬性怪…', () => {
-  const need = { flame: s => { s.adv.wins += 30; }, tide: s => { s.washes += 30; }, forest: s => { s.harvests += 30; }, earth: s => { s.earthWins += 20; }, bird: s => { s.ball.goals += 30; }, elec: s => { s.bondUses += 5; }, metal: s => { s.cleanups += 40; } };
+  const need = { flame: s => { s.adv.wins += 30; }, tide: s => { s.washes += 30; }, forest: s => { s.harvests += 30; }, earth: s => { s.earthWins += 20; }, bird: s => { s.ball.goals += 30; }, elec: s => { s.bondUses += 5; s.petBond = 5; }, metal: s => { s.cleanups += 40; } };
   for (const r in need) { const s = hatched(); s.xp = 3000; s.route = r; s.inv.mats[r] = 3; C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'adult', r); need[r](s); C.checkStages(s, T0 + 200 * H); assert.equal(s.stage, 'ascended', r); }
   const e = hatched(); e.xp = 3000; e.route = 'earth'; e.inv.mats.earth = 3; C.checkStages(e, T0 + 200 * H); e.steps.total += 60000; C.checkStages(e, T0 + 200 * H); assert.equal(e.stage, 'ascended');
   const w = hatched(); w.route = 'tide'; w.stage = 'adult'; C.checkStages(w, T0); w.clean = 10; w.coins = 99; assert.ok(C.act(w, 'wash', T0).ok); assert.equal(C.ascendInfo(w).task.have, 1);
@@ -644,6 +644,11 @@ t('V1.94 親密度 40 每日小禮物、100 存錢筒 +10%', () => { const s = h
 
 t('V1.94.2 小窩／第二隻的幻獸讀檔後身上的裝飾還在', () => { const s = hatched(); s.accOwned = ['crown', 'scarf']; const p = C.sanitizePet(Object.assign({}, s, { acc: ['crown', 'scarf'] }), T0); assert.deepEqual(p.acc, ['crown', 'scarf']);
   s.roster = [p]; const back = C.sanitize(JSON.parse(JSON.stringify(s)), T0); assert.deepEqual(back.roster[0].acc, ['crown', 'scarf']); });
+
+t('V1.95 廚餘機：清掉的果皮骨頭滿 50 個做出肥料；灑肥料 24 小時收成加倍', () => { const s = hatched(); s.coins = 2000; assert.ok(C.buyComposter(s).ok); s.compost = 49; s.cores = [{ k: 'core', at: T0, x: 50 }];
+  const r = C.clearCore(s, 0, T0); assert.ok(r.fert); assert.equal(s.inv.fert, 1); assert.equal(s.compost, 0);
+  assert.ok(C.useFert(s, T0).ok); assert.ok(C.fertOn(s, T0 + 23 * H)); assert.ok(!C.fertOn(s, T0 + 25 * H)); assert.ok(!C.useFert(s, T0).ok); });
+t('V1.95 生活技能：小窩裡有成年火系也能免費烤魚', () => { const s = hatched(); s.route = 'tide'; s.stage = 'baby'; const f = Object.assign(C.sanitizePet(Object.assign({}, s, { route: 'flame', stage: 'adult', seed: C.seedForEl('flame') }), T0)); s.roster = [f]; assert.ok(C.hasSkill(s, 'flame')); });
 
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);
