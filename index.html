@@ -1109,8 +1109,8 @@ const plotP=i=>{const[cx,cy,k]=PLOT_POS[i],[x,y]=yP('plots',cx,cy);return[x,y,k*
 const PLOT_POS=[[64,73,.5],[74,73,.5],[84,73,.5],[60,79,.6],[72,79,.6],[84,79,.6],[56,86,.7],[70,86,.7],[84,86,.7]];   // V1.64 九塊田：三排   // V1.47 六塊田：右上方遠處兩排（後排小、前排大），[中心x, 底部y, 縮放]   // 池塘中心（V1.24 往後移）
 /* V1.95 農場：院子往右一格，田、灑水器、廚餘機都搬到這裡，點田直接種、澆水、收成 */
 let FARMBG=null;const farmBg=()=>{if(!FARMBG){FARMBG=new Image();FARMBG.src=SP('sprites/scene/farm.png')}return FARMBG};
-const FARM_POS=[[16,80,1.1],[42,80,1.1],[66,80,1.1],[22,68,.95],[46,68,.95],[70,68,.95],[28,56,.8],[50,56,.8],[72,56,.8]];   // 前排先種，往後排長
-const FARM_COMP=[108,78],FARM_SPR=[96,52];
+const FARM_POS=[[16,83,1],[40,83,1],[64,83,1],[14,72,.88],[36,72,.88],[58,72,.88],[80,72,.88],[12,61,.76],[32,61,.76],[74,61,.76],[94,61,.76],[18,50,.66],[42,50,.66],[66,50,.66],[90,50,.66]];   // V1.95 十五塊田：前排先開，灑水器在正中間
+const FARM_COMP=[108,80],FARM_SPR=[53,62];
 const farmP=i=>FARM_POS[i]||FARM_POS[FARM_POS.length-1];
 const FV={fx:[],water:null,sel:'normal'};
 function drawFarmView(now,ph){
@@ -1128,7 +1128,7 @@ function drawFarmView(now,ph){
    if(WATER_FX[i]&&Date.now()<WATER_FX[i]){const t0=1-(WATER_FX[i]-Date.now())/1200;ctx.fillStyle='#8ac4ff';for(let d=0;d<5;d++){const ph=(t0*2+d/5)%1;ctx.fillRect(Math.round(cx-w*.3+d*w*.15),Math.round(y-6+ph*(h+4)),1,2)}}}
   if(s.composter&&s.plots.length&&ICV.compost){const[bx,by]=FARM_COMP,I=ICV.compost,w=I.width,h=I.height;ctx.drawImage(I,Math.round(bx-w/2),Math.round(by-h),w,h);if(s.compost>=CONFIG.compost.need*.8&&Math.floor(now/400)%2){ctx.fillStyle='#b8ff7a';ctx.fillRect(Math.round(bx),Math.round(by-h-3),1,2)}}   // V1.95 廚餘機
   if(s.sprinkler&&s.plots.length){const[cx,cy]=FARM_SPR,k=1,fr=WATER_SPR.spr[Math.floor(now/250)%2],sw=Math.max(9,Math.round(12*k)),sh=Math.round(fr.height*sw/fr.width),sx=Math.round(cx-sw-6*k),sy=Math.round(cy-sh);ctx.save();ctx.imageSmoothingEnabled=!!WATER_SPR.hd;ctx.drawImage(fr,sx,sy,sw,sh);ctx.restore();
-   if(Math.floor(now/4000)%3===0&&!rm()){ctx.fillStyle='#bfe2ff';const a=(now%4000)/4000*Math.PI*2;for(let d=0;d<6;d++){const r=3+((now/90+d*7)%10);ctx.fillRect(Math.round(sx+sw/2+Math.cos(a+d)*r),Math.round(sy+1+Math.sin(a+d)*r*.35-r*.25),1,1)}}}
+   if(Math.floor(now/4000)%3===0&&!rm()){ctx.fillStyle='#bfe2ff';const a=(now%4000)/4000*Math.PI*2;for(let d=0;d<12;d++){const r=4+((now/60+d*7)%30);ctx.fillRect(Math.round(sx+sw/2+Math.cos(a+d)*r),Math.round(sy+1+Math.sin(a+d)*r*.35-r*.25),1,1)}}}
  FV.fx=FV.fx.filter(f=>now-f.t<700);for(const f of FV.fx){const e=(now-f.t)/1000;ctx.fillStyle=f.col;ctx.fillRect(Math.round(f.x+f.vx*e),Math.round(f.y+f.vy*e+60*e*e),1,1)}
  if(FV.water){const e=(Date.now()-FV.water.t0)/1000,[cx,cy,k]=farmP(FV.water.i);if(e<1.1){const S2=WATER_SPR.can,cw=Math.round(16*k),chh=Math.round(S2.height*cw/S2.width),ang=e<.25?-e/.25*.7:e<.85?-.7:-.7+(e-.85)/.25*.7;ctx.save();ctx.translate(Math.round(cx+8*k),Math.round(cy-18*k));ctx.rotate(ang);ctx.imageSmoothingEnabled=!!WATER_SPR.hd;ctx.drawImage(S2,-cw,-chh/2,cw,chh);ctx.restore()}else FV.water=null}}
 function farmHint(){if(window.PF_NO_GUIDE||(s.tipsSeen||{}).farmView)return;(s.tipsSeen||(s.tipsSeen={})).farmView=1;save();setTimeout(()=>toast('🌾 這裡是農場！直接點田就能種、澆水、收成；買種子、選種子、賣水果按「🌱 種田」',5500),600)}
@@ -1331,7 +1331,8 @@ function drawDresser(c){const{x,w,top,bot}=DRESSER,h=bot-top;c.fillStyle='#5c3a2
  c.fillStyle='#5c3a20';c.fillRect(x+1,bot-2,2,2);c.fillRect(x+w-3,bot-2,2,2)}   // 五斗櫃（三層抽屜、金色把手）
 const bedCache={};function bigBed(id,sp){const k=id;if(bedCache[k]&&bedCache[k].src===sp)return bedCache[k].cv;const w=BED_W,h=Math.round(sp.height*1.15),cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.drawImage(sp,0,0,w,h);bedCache[k]={src:sp,cv};return cv}   // 床加寬（寵物比較大）
 const DSPR={};
-const EMB=window.EMB||{},SP=p=>EMB[p]||p;   // V1.91.1 小圖在 emb.js
+const EMB=window.EMB||{},SP=p=>EMB[p]||p;
+{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);ICV.compost=c;delete MI_URL.compost;document.querySelectorAll('canvas.picon[data-icon="compost"]').forEach(c=>paintIcon(c,'compost'))};im.src=SP('sprites/uik/compost.png')}   // V1.95 廚餘機圖   // V1.91.1 小圖在 emb.js
 /* V1.91 UI 零件包：主畫面的外框、按鈕、標籤、進度條統一成冠宏畫的那套（小圖內嵌，用 JS 產生樣式） */
 const UIK=n=>`url(${SP(`sprites/uik/${n}.png`)})`;
 (()=>{const st=document.createElement('style');st.id='uikCss';st.textContent=`
@@ -4815,7 +4816,8 @@ $('fsHome').onclick=closeFish;$('fsShop').onclick=fishShop;$('fsDex').onclick=fi
 const FMIMG=new Image();FMIMG.src='sprites/arena/farm_fp.png';
 let FMZ=null;const fmcv=$('fmcv'),fmctx=fmcv.getContext('2d');fmctx.imageSmoothingEnabled=false;
 const SEEDK=[['normal','seeds','seed','種子'],['good','seeds2','seed2','優良'],['rare','seeds3','seed3','稀有'],['magic','seeds4','seed4','神奇']];
-function fmLayout(){const n=s.plots.length,rows=Math.ceil(n/3),RY=[[96],[72,100],[56,78,104]][rows-1]||[56,78,104],RS=[[1.15],[.9,1.1],[.72,.88,1.05]][rows-1]||[.72,.88,1.05],out=[];
+function fmLayout(){return FARM_POS.slice(0,s.plots.length).map(([x,y,k])=>({x,y,sc:k*.8}))}
+function fmLayoutOld(){const n=s.plots.length,rows=Math.ceil(n/3),RY=[[96],[72,100],[56,78,104]][rows-1]||[56,78,104],RS=[[1.15],[.9,1.1],[.72,.88,1.05]][rows-1]||[.72,.88,1.05],out=[];
  for(let i=0;i<n;i++){const r=Math.floor(i/3),c=i%3,inRow=Math.min(3,n-r*3),sc=RS[r],gap=40*sc,x=64+(c-(inRow-1)/2)*gap;out.push({x,y:RY[r],sc})}return out}
 function openFarm(){if(modeBusy()){toast('先完成現在的互動吧');return}if(firstTip('farm',openFarm))return;cancelMode();unlockAudio();PC.claimDaily(s,Date.now());
  FMZ={fx:[],get sel(){return FV.sel},set sel(v){FV.sel=v}};$('farmZone').classList.remove('hidden');fmInfo();$('fmCompT').textContent=compostLabel();document.querySelectorAll('#fmComp canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));fmMsg(s.sprinkler?'點空地種下選好的種子，成熟了點一下收成（💦 自動灑水器會幫你澆水）':'點空地種下選好的種子，土乾了（💧）點一下澆水，成熟了點一下收成');sfx('tap');
@@ -4836,7 +4838,7 @@ function fmTap(x,y,fi){const VW=fi!=null,Z=VW?FV:FMZ,L=VW?FARM_POS.map(([x,y,k])
   else{msg(`🌱 ${CONFIG.foods[q.kind].name}還要 ${fmtLeft(q.left)} 才成熟`);sfx('tap');return}
   if(r){msg(r.ok?r.msg:'❌ '+r.msg);if(!r.ok){sfx('no');if(r.code==='noseed')setTimeout(farmShop,350)}save();renderUI();fmInfo()}return}}}
 function fmDraw(now){const c=fmctx,ph=phase(),nowMs=Date.now();c.clearRect(0,0,128,112);
- if(FMIMG.complete&&FMIMG.naturalWidth)c.drawImage(FMIMG,0,0);else{c.fillStyle='#8a5a30';c.fillRect(0,0,128,112)}
+ {const F=farmBg();if(F.complete&&F.naturalWidth)c.drawImage(F,0,0);else if(FMIMG.complete&&FMIMG.naturalWidth)c.drawImage(FMIMG,0,0);else{c.fillStyle='#8a5a30';c.fillRect(0,0,128,112)}}
  if(ph==='night'||ph==='dusk'){c.fillStyle=ph==='night'?'rgba(20,24,70,.45)':'rgba(255,120,60,.18)';c.fillRect(0,0,128,112)}
  wxScene(c,now,16);
  const L=fmLayout();L.forEach((p,i)=>{const q=PC.plotState(s,i,nowMs),st=plotStage(q),SP=PLOT_SPR[st]||PLOT_SPR.empty;if(!SP)return;const k=28*p.sc/SP.width,w=Math.round(SP.width*k),h=Math.round(SP.height*k);
@@ -4849,7 +4851,7 @@ function fmDraw(now){const c=fmctx,ph=phase(),nowMs=Date.now();c.clearRect(0,0,1
   if(FMZ.water&&FMZ.water.i===i){const t=(nowMs-FMZ.water.t0)/1000;if(t<1.1){const S2=WATER_SPR.can,cw=Math.round(18*p.sc),chh=Math.round(S2.height*cw/S2.width),ang=t<.25?-t/.25*.7:t<.85?-.7:-.7+(t-.85)/.25*.7;c.save();c.translate(Math.round(p.x+8*p.sc),Math.round(p.y-h-4));c.rotate(ang);c.imageSmoothingEnabled=!!WATER_SPR.hd;c.drawImage(S2,-cw,-chh/2,cw,chh);c.restore();
    if(t>.25&&t<.95){c.fillStyle='#8ac4ff';for(let d=0;d<6;d++){const ph=((t-.25)*3+d/6)%1;c.fillRect(Math.round(p.x-6*p.sc+d*2*p.sc),Math.round(p.y-h+ph*(h-2)),1,2)}}}}
   if(st==='rot'&&ICV.fly){const a=now/300+i;c.drawImage(ICV.fly,Math.round(p.x+4*Math.cos(a)),Math.round(p.y-h+3*Math.sin(a*1.7)))}
-  if(s.sprinkler&&i===0){const fr=WATER_SPR.spr[Math.floor(now/250)%2],sw=12,sh=Math.round(fr.height*sw/fr.width),sx=Math.round(p.x-24*p.sc-sw/2),sy=Math.round(p.y-sh);c.save();c.imageSmoothingEnabled=!!WATER_SPR.hd;c.drawImage(fr,sx,sy,sw,sh);c.restore();if(Math.floor(now/3000)%2===0){c.fillStyle='#bfe2ff';for(let d=0;d<8;d++){const r=4+((now/80+d*5)%14),a=now/400+d*.8;c.fillRect(Math.round(sx+sw/2+Math.cos(a)*r),Math.round(sy+1+Math.sin(a)*r*.3-r*.3),1,1)}}}
+  if(s.sprinkler&&i===0){const fr=WATER_SPR.spr[Math.floor(now/250)%2],sw=12,sh=Math.round(fr.height*sw/fr.width),sx=Math.round(FARM_SPR[0]-sw/2),sy=Math.round(FARM_SPR[1]-sh);c.save();c.imageSmoothingEnabled=!!WATER_SPR.hd;c.drawImage(fr,sx,sy,sw,sh);c.restore();if(Math.floor(now/3000)%2===0){c.fillStyle='#bfe2ff';for(let d=0;d<8;d++){const r=4+((now/80+d*5)%14),a=now/400+d*.8;c.fillRect(Math.round(sx+sw/2+Math.cos(a)*r),Math.round(sy+1+Math.sin(a)*r*.3-r*.3),1,1)}}}
   if(!q.empty&&!q.ripe&&!q.rotten){const bw=Math.round(20*p.sc),bx=Math.round(p.x-bw/2),by=Math.round(p.y+3);c.fillStyle='rgba(20,12,6,.75)';c.fillRect(bx-1,by-1,bw+2,4);c.fillStyle='#7ae06a';c.fillRect(bx,by,Math.round(bw*q.progress),2)}
   if(q.ripe&&!q.rotten&&Math.floor(now/500+i)%2){c.fillStyle='#fff6a0';c.fillRect(Math.round(p.x)-1,Math.round(p.y-h-2),3,1);c.fillRect(Math.round(p.x),Math.round(p.y-h-3),1,3)}
   if(q.empty&&Math.floor(now/700+i)%3===0){c.fillStyle='rgba(255,255,255,.6)';c.font='bold 7px sans-serif';c.fillText('+',Math.round(p.x-2),Math.round(p.y-3))}});
