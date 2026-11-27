@@ -2372,8 +2372,8 @@ const BOSS_INFO={   // 天賦、絕招：[圖示, 名稱, 效果, 破解提示]
  20:{tal:[['b_ghost','幽影飄忽','攻擊常常穿過牠的身體打空','蓄力後的攻擊一定打得到'],['b_chant','魔法詠唱','花一回合念咒、冒出魔法陣，下一回合放出很痛的魔法','看到魔法陣就防禦，或趁牠念咒全力打']],ult:['b_confuse','混亂詛咒','被詛咒的兩回合內攻擊常常打空','先蓄力或防禦拖過去；萬靈藥可以解']},
  25:{tal:[['b_reap','靈魂收割','你的血越少牠打越痛，打中還會吸血補自己','血一低就補，不要殘血硬撐']],ult:['b_doom','死亡宣告','倒數幾回合後，一定被打到只剩一絲血','倒數結束前打倒牠；被打到殘血要馬上補，不然靈魂收割會很痛']},
  30:{tal:[['b_flamewing','烈焰羽翼','永遠先手，攻擊會讓你點燃','火焰護盾可以把火燒掉，帶水系不會被點燃'],['b_firewind','乘風','常常閃開你的攻擊，之後反啄一下','牠剛閃開時別急著連打，先防禦']],ult:['b_rebirth','浴火重生','倒下一次會復活，要打倒兩次','留一個大招給第二條命']},
- 35:{tal:[['b_scale','逆鱗','被打中三次會暴怒，全身冒火，用衝撞碰到牠會被燙','牠暴怒時改用防禦和屬性技，等火退了再衝']],ult:['b_breath','龍炎吐息','連續兩回合噴火，兩隻都會被燒到，猜拳也閃不掉','先喝藥水把血補高']},
- 40:{tal:[['b_chill','寒氣逼人','戰鬥拖越久，你越容易被凍住（還會凍傷），只有火系可以抵抗','速戰速決，帶火系去'],['b_icetide','潮汐','每隔一回合自己回血','把大招和羈絆合擊集中在一起爆發']],ult:['b_zero','絕對零度','先把你凍住一回合，接著一記冰爆','先把血補高']}};
+ 35:{tal:[['b_scale','逆鱗','被打中三次會暴怒，全身冒火，用衝撞碰到牠會被燙','牠暴怒時改用防禦和屬性技，等火退了再衝'],['b_scale','隨機被動（每場三選一）','🎲 龍之寶藏：每回合叼走你 2% 金幣，打贏加倍拿回／龍威震懾：開場大吼，可能嚇到你第一回合打不痛／熔岩地面：每 3 回合地面變熔岩，用衝撞會被燙傷','開打時看清楚牠這場是哪一個']],ult:['b_breath','龍炎吐息','連續兩回合噴火，兩隻都會被燒到，猜拳也閃不掉','先喝藥水把血補高']},
+ 40:{tal:[['b_chill','寒氣逼人','戰鬥拖越久，你越容易被凍住（還會凍傷），只有火系可以抵抗','速戰速決，帶火系去'],['b_icetide','潮汐','每隔一回合自己回血','把大招和羈絆合擊集中在一起爆發'],['b_chill','隨機被動（每場三選一）','🎲 冰鏡：屬性技 25% 被彈回一半／冰封招式：連續同一招第二次威力減半／暴風雪：每 4 回合猜拳只剩 1 秒','冰封招式時衝撞、屬性技輪流用']],ult:['b_zero','絕對零度','先把你凍住一回合，接著一記冰爆','先把血補高']}};
 const STG_ORD=['egg','baby','juvenile','adolescent','adult','ascended'];
 function abilityDialog(route,stage,name,back){const L=ABIL[route];if(!L){toast('這隻還沒決定屬性');return}const si=STG_ORD.indexOf(stage),ok=u=>u==='r'?true:u==='a'?si>=3:si>=4,UL={r:'有屬性就有',a:'少年期解鎖',d:'成年期解鎖'};
  openModal(`${ROUTE_ICON[route]} ${ROUTE_LABEL[route]}的能力`,`<p class="small">${esc(name||'')}${stage?'　目前：'+STAGE_NAME[stage]:''}。灰色的是還沒解鎖的能力。</p><div class="abl">${L.map(([ic,cat,nm,tx,u])=>`<div class="ablr ${ok(u)?'':'lk'}"><img src="sprites/sk/${ic}.png" alt=""><div><span class="small">${cat}・${ok(u)?'已解鎖':UL[u]}</span><b>${nm}</b><p>${tx}</p></div></div>`).join('')}</div>`,[{t:'↩ 回圖鑑',fn:()=>setTimeout(back,0)}]);sfx('tap')}
@@ -3102,7 +3102,8 @@ function startBattle(n){if(modeBusy()){toast('先完成現在的互動吧');retu
   for(const f of[foe,foe2])if(f&&!f.boss&&n>=E.from&&Math.random()<E.chance){f.elite=true;f.name=f.name.replace('野生的 ','✨精英 ');f.max=f.hp=Math.round(f.max*E.hp);f.atk*=E.atk;PC.talentOn(f,f.el,1);B.elite=true}
   if(foe.boss){PC.bossSeen(s,n,'seen');save()}B.round=0;B.chill=0}   /* V1.86 戰鬥天賦、魔王天賦、精英野怪 */
  {const U=CONFIG.bossUlt[n];if(U){foe.ult=Object.assign({},U,BULT_FX[U.key]);foe.ultState='ready';if(U.key==='rebirth')foe.revive=U.hp}}
- {const fs=[foe,foe2].filter(Boolean),msg=[];for(const m of[me,me2])if(m){if(m.eqScare){for(const f of fs)f.scared=Math.max(f.scared||0,m.eqScare);msg.push('🚬 雪茄的煙圈嚇到對手了，第一回合打不太用力')}if(m.eqSlow){for(const f of fs)f.spd*=1-m.eqSlow;msg.push('🎃 南瓜頭好可怕，對手動作變慢了')}if(m.eqStun&&Math.random()<m.eqStun){foe.stun=1;msg.push(m.eqSets&&m.eqSets.includes('boss')?'😎 老大氣場全開！對手嚇呆了，第一回合不能動':'🎃 對手怕到發抖，第一回合不能動')}if(m.halfNext&&m.eqSets&&m.eqSets.includes('gent'))msg.push('🎩 紳士風度：第一次被打只受一半傷害')}B.eqMsg=[...new Set(msg)]}   /* V1.88 裝備的開場效果 */$('bBanner').classList.add('hidden');
+ {const fs=[foe,foe2].filter(Boolean),msg=[];{const rr=[foe,foe2].find(f=>f&&f.bt&&f.bt.includes('roar'));if(rr){const sc=[me,me2].filter(m=>m&&Math.random()<CONFIG.btX.roar.chance);for(const m of sc)m.scared=Math.max(m.scared||0,CONFIG.btX.roar.cut);msg.push(sc.length?`🐲 ${rr.name} 大吼一聲！${sc.map(m=>m.name).join('、')} 被嚇到了，第一回合打不痛`:`🐲 ${rr.name} 大吼一聲！你的幻獸沒被嚇到！`)}}
+ for(const m of[me,me2])if(m){if(m.eqScare){for(const f of fs)f.scared=Math.max(f.scared||0,m.eqScare);msg.push('🚬 雪茄的煙圈嚇到對手了，第一回合打不太用力')}if(m.eqSlow){for(const f of fs)f.spd*=1-m.eqSlow;msg.push('🎃 南瓜頭好可怕，對手動作變慢了')}if(m.eqStun&&Math.random()<m.eqStun){foe.stun=1;msg.push(m.eqSets&&m.eqSets.includes('boss')?'😎 老大氣場全開！對手嚇呆了，第一回合不能動':'🎃 對手怕到發抖，第一回合不能動')}if(m.halfNext&&m.eqSets&&m.eqSets.includes('gent'))msg.push('🎩 紳士風度：第一次被打只受一半傷害')}B.eqMsg=[...new Set(msg)]}   /* V1.88 裝備的開場效果 */$('bBanner').classList.add('hidden');
  $('battle').classList.remove('hidden');$('bResult').classList.add('hidden');$('moves').classList.remove('hidden');showPanel('mpMain');
  $('bFast').textContent=`⏩ ×${BSPD}`;$('bFast').classList.toggle('on',BSPD>1);unlockAudio();B.bgm=battleTrack(foe.big?'big':foe.boss?'mini':'normal');bgmPlay(B.bgm);   // V1.81 戰鬥音樂
  setTimeout(()=>{for(const t of B.eqMsg||[])blog(t)},900);$('mvSp').textContent='✨ '+SP_NAME[me.el];blog(`📍 ${ARENA_NAME[arenaFor(n,foe)]}\n${foe.name} 出現了！（${foe.elTxt||EL_NAME[foe.el]} Lv.${foe.level}）${foe2?`\n${foe2.name} 也跳出來了！（${EL_NAME[foe2.el]} Lv.${foe2.level}）`:''}${duo?`\n🐾 ${me.name} 和 ${me2.name} 一起上場！點敵人可以選要打哪一隻`:s.pair?`\n（${s.pair.name} 體力不夠，留在家休息）`:''}`);mushBuffApply(me,foe);bUI();sfx('play')}
@@ -3331,8 +3332,9 @@ function bossStat(f){const L=[stChips(f)].filter(Boolean);if(f.ultState==='warne
 function petStat(t){if(!t)return'';const c=stChips(t);return c?' '+c:''}
 /* ================= V1.86 戰鬥天賦、魔王天賦、狀態 ================= */
 const SKI=(n,t='')=>`<img class="ski" src="sprites/sk/${n}.png" alt="" title="${t}">`;
-const BT_ICON={shell:'b_mossshell',lava:'b_lavabody',ignite:'b_rhinoburn',bone:'b_bonearmor',ghost:'b_ghost',chant:'b_chant',reap:'b_reap',wing:'b_flamewing',firewind:'b_firewind',scale:'b_scale',chill:'b_chill',icetide:'b_icetide'};
-const BT_NAME={shell:'苔石鎧甲',lava:'熔岩之軀',ignite:'灼燒',bone:'不死骨架',ghost:'幽影飄忽',chant:'魔法詠唱',reap:'靈魂收割',wing:'烈焰羽翼',firewind:'乘風',scale:'逆鱗',chill:'寒氣逼人',icetide:'潮汐'};
+const BT_ICON={shell:'b_mossshell',lava:'b_lavabody',ignite:'b_rhinoburn',bone:'b_bonearmor',ghost:'b_ghost',chant:'b_chant',reap:'b_reap',wing:'b_flamewing',firewind:'b_firewind',scale:'b_scale',chill:'b_chill',icetide:'b_icetide',hoard:'b_scale',roar:'b_scale',lavafloor:'b_scale',mirror:'b_chill',freezemv:'b_chill',blizzard:'b_icetide'};
+const BT_NAME={shell:'苔石鎧甲',lava:'熔岩之軀',ignite:'灼燒',bone:'不死骨架',ghost:'幽影飄忽',chant:'魔法詠唱',reap:'靈魂收割',wing:'烈焰羽翼',firewind:'乘風',scale:'逆鱗',chill:'寒氣逼人',icetide:'潮汐',hoard:'龍之寶藏',roar:'龍威震懾',lavafloor:'熔岩地面',mirror:'冰鏡',freezemv:'冰封招式',blizzard:'暴風雪'};
+const BT_TIP={hoard:'每回合叼走你 2% 金幣，打贏全部拿回來還加倍，打輸就沒了',roar:'開場大吼，你的幻獸有一半機率嚇到，第一回合打不痛',lavafloor:'每 3 回合地面變熔岩，下一回合用衝撞會被燙傷',mirror:'屬性技有 25% 被冰鏡彈回一半傷害',freezemv:'連續用同一招，第二次威力減半，要換招打',blizzard:'每 4 回合下大雪，猜拳只剩 1 秒'};
 const TAL_KEY={fire:'fire',water:'water',leaf:'leaf',earth:'earth',bird:'bird',elec:'elec',metal:'metal'};
 function talChips(t){if(!t)return'';let h='';if(t.elite)h+=SKI('s_elite','精英');if(t.tal)h+=SKI(`${t.tal}_tal${t.talLv}`,CONFIG.talents[t.tal].name+(t.talLv===1?'（少年版）':''));for(const b of t.bt||[])h+=SKI(BT_ICON[b],BT_NAME[b]);return h}
 function stChips(t){const L=[];if(t.burnT>0)L.push(SKI('s_burn','點燃'));if(t.frost)L.push(SKI('s_frost','凍傷'));if(t.frozen)L.push(SKI('s_frozen','冰凍'));if(t.paraT>0||t.stun>0)L.push(SKI('s_para','麻痺'));if(t.curseT)L.push(SKI('b_confuse','混亂')+t.curseT);if(t.doomT)L.push(SKI('b_doom','死亡宣告')+t.doomT);
@@ -3358,6 +3360,11 @@ async function afterHit(a,d,mv,r,side){const K=CONFIG.bt,has=(f,k)=>!!(f&&f.bt&&
  if(hit){bUI();await sleep(800)}}
 /* 回合結束：點燃、凍傷、潮汐、新芽、寒氣、逆鱗冷卻 */
 async function roundEnd(){const S=CONFIG.status,K=CONFIG.bt,T=CONFIG.talents;B.round=(B.round||0)+1;const all=[B.me,B.me2,B.foe,B.foe2].filter(t=>t&&t.hp>0&&!t.out);let any=false;
+ for(const t of all)if(t.scared)t.scared=0;   // 嚇到只有第一回合
+ {const X=CONFIG.btX,dr=[B.foe,B.foe2].find(f=>f&&f.hp>0&&f.bt);if(dr){   // V1.95 赤龍／冰龍的隨機被動
+  if(dr.bt.includes('hoard')&&s.coins>0){const g=Math.max(1,Math.round(s.coins*X.hoard));s.coins-=g;B.hoard=(B.hoard||0)+g;tpop(dr,`🪙-${g}`,'#ffd34a');blog(`💰 ${dr.name} 叼走了你 ${g} 金幣丟進龍窩（龍窩裡有 ${B.hoard}）！打贏就能全部拿回來還加倍！`);any=true}
+  if(dr.bt.includes('lavafloor')&&B.round%X.lavafloor.every===0){B.lavaR=B.round+1;B.tint={col:'#ff6a1a',until:performance.now()+900};blog('🌋 地面變成熔岩了！下一回合用衝撞會被燙到！');any=true}
+  if(dr.bt.includes('blizzard')&&(B.round+1)%X.blizzard.every===0){B.blizzR=B.round+1;B.tint={col:'#e8f8ff',until:performance.now()+900};blog('❄️ 暴風雪要來了！下一回合猜拳只剩 1 秒！');any=true}}}
  for(const t of[B.me,B.me2,B.foe,B.foe2])if(t)t.scared=0;
  for(const t of all)if(t.eqCure&&t.poisonT>0&&Math.random()<t.eqCure){t.poisonT=0;blog(`🍭 ${t.name} 舔了舔棒棒糖，毒解掉了！`);any=true}
  for(const t of all){const sd=sideOf(t),[x,y]=BPOS[sd];
@@ -3393,11 +3400,15 @@ async function doMove(a,d,mv,side,boost=1){
  if(mv==='potion'||mv==='potion2'){const sup=mv==='potion2',h=Math.min(a.max-a.hp,Math.round(a.max*(sup?CONFIG.superPotion.heal:CONFIG.potion.heal*(1+(a.eqHeal||0)))));a.hp+=h;s.inv[mv]--;save();blog(`${a.name} 喝下${sup?'超級藥水，HP 全滿':'回復藥水'}！HP +${h}`);A.anim='happy';A.t0=performance.now();sfx('level');spawn('heart',4,{x:BPOS[side][0],y:BPOS[side][1]-2,vy:-18,jx:20,life:1,spread:14},bparts);bUI();await sleep(1000);return}
  const sp=mv==='special'||mv==='bond'||mv==='ult';if(mv==='special')a.cd=3;if(sp&&a.el2&&a.el2!=='dragon'&&Math.random()<.5){const e=a.el;a.el=a.el2;a.el2=e}   // V1.53 雙屬性的王：屬性技隨機用其中一個屬性if(mv==='ult')boost*=CONFIG.ult.power;
  blog(mv==='bond'?`💗 ${a.name} 的羈絆之力爆發！`:mv==='ult'?`🌟 ${a.name} 的大絕招「${ULT_NAME[a.el]||'大絕招'}」！${a.charged?'（蓄力 ×1.5）':''}`:`${a.name} 使出${sp?'「'+SP_NAME[a.el]+'」':'衝撞'}！${a.charged?'（蓄力 ×1.5）':''}`);A.anim='jump';A.t0=performance.now();const dir=side.startsWith('foe')?-1:1;A.dx=10*dir;A.dy=-6*dir;sfx(sp?'evolve':'tap');await sleep(220);A.dx=0;A.dy=0;await moveFx(mv,a,side,dside);
+ {const X=CONFIG.btX,mine=a===B.me||a===B.me2;   // V1.95 赤龍／冰龍的隨機被動
+  if(mine&&mv==='tackle'&&B.lavaR===B.round&&[B.foe,B.foe2].some(f=>f&&f.hp>0&&f.bt&&f.bt.includes('lavafloor'))){if(ignite(a,X.lavafloor.turns))blog(`🌋 ${a.name} 踩到熔岩地面，被燙傷了！`)}
+  if(mine&&d.bt&&d.bt.includes('freezemv')&&(mv==='tackle'||mv==='special')){if(a.lastMv===mv){boost*=X.freezemv;tpop(d,'冰封！','#bfefff');blog(`🧊 冰封招式：${d.name} 早就看穿這招了，威力減半！換一招打吧`)}a.lastMv=mv}}
  if(a===B.me&&(mv==='tackle'||mv==='special')&&s.bond>=80&&Math.random()<PC.CONFIG.bondFx.cry){boost*=PC.CONFIG.bondFx.cryX;blog(`📣 ${a.name}：「為了${ownerName()}！」攻擊加強了！`);sfx('evolve')}   // V1.94 親密度 80：為你吶喊
  const{dmg,mult,crit,endured,revived,reflect,amulet,sprouted,haloed}=PC.damage(a,d,sp,Math.random,boost);if(crit&&!side.startsWith('foe'))PC.statAdd(s,'crit');if(crit)d._crit=performance.now();if(amulet&&s.loot){s.loot.amulet=Math.max(0,s.loot.amulet-1);save();setTimeout(()=>blog(`🧿 小護身符擋下一半的傷害，碎掉了…`),300)}D.flash=performance.now()+500;buzz(mv==='bond'||mv==='ult'?60:20);if(mv==='ult'){flashUntil=performance.now()+400}
  const tx=BPOS[dside][0],ty=BPOS[dside][1];{const g=sp&&{fire:'burn',water:'splash',elec:'zap'}[a.el];if(g)B.anim={g,x:tx,y:ty+12,t0:performance.now()}}spawn(mv==='bond'?'heart':sp?SP_ICON[a.el]:'spark',mv==='bond'||mv==='ult'?12:sp?6:3,{x:tx,y:ty,vy:-20,jx:30,life:.8,spread:16},bparts);sfx(sp&&EL_SND[a.el]?EL_SND[a.el]:(crit||mv==='ult'||mv==='bond')?'punchBig':'punch');if(mv==='ult'||mv==='bond')setTimeout(()=>sfx('boom'),120);bUI();
  await sleep(450);blog(`${crit?'會心一擊！':''}造成 ${dmg} 點傷害${mult>1?'，效果絕佳！':mult<1?'，效果不太好…':''}`);await sleep(750);
  if(mv==='ult'&&a.el==='leaf'&&d.hp>0&&!d.out&&Math.random()<CONFIG.ult.bind){d.stun=1;d.stunBy='bind';tpop(d,'捆住了！','#8aff6a');spawn('leaf',10,{x:BPOS[dside][0],y:BPOS[dside][1],vy:-10,jx:30,life:1,spread:16},bparts);blog(`🌿 藤蔓把 ${d.name} 緊緊捆住了，下一回合動不了！`);bUI();await sleep(800)}   // V1.95 森羅萬象
+ if((a===B.me||a===B.me2)&&sp&&d.bt&&d.bt.includes('mirror')&&dmg>0&&Math.random()<CONFIG.btX.mirror.chance){const back=Math.max(1,Math.round(dmg*CONFIG.btX.mirror.part));a.hp=Math.max(a.hp>1?1:0,a.hp-back);tpop(a,'-'+back,'#bfefff');B.fx[side].flash=performance.now()+400;blog(`🪞 冰鏡把攻擊彈回來了！${a.name} 受到 ${back} 點傷害`);bUI();await sleep(600)}   // V1.95 冰鏡（不會直接打倒你）
  if(mv==='ult'&&a.el==='fire'&&(a===B.me||a===B.me2)){const o=[B.foe,B.foe2].find(f=>f&&f!==d&&f.hp>0&&!f.out);if(o){const os=sideOf(o);fxImpact(vPos(os),'fire');const r2=PC.damage(a,o,true,Math.random,boost);tpop(o,'-'+r2.dmg,'#ff8a3a');B.fx[os].flash=performance.now()+500;blog(`🔥 烈焰風暴延燒到 ${o.name}！造成 ${r2.dmg} 點傷害${r2.mult>1?'（效果超群！）':''}`);bUI();await sleep(700)}}   // V1.95 火系大絕招是範圍技：兩隻怪一起燒
  if(haloed){blog(`😇 天使光環亮起來！${d.name} 撐住了一口氣${d.eqAngel?'，還回了一點血':''}！`);tpop(d,'撐住！','#ffe066');bUI();await sleep(800)}
  if(!side.startsWith('foe')&&d.hp>0&&!d.out){if(a.eqPoison&&!(d.poisonT>0)&&Math.random()<a.eqPoison){d.poisonT=2;blog(`🍄 蘑菇孢子飄過去，${d.name} 中毒了！`);tpop(d,'中毒','#9ae86a');await sleep(650)}if(a.eqCharm&&!d.stun&&Math.random()<a.eqCharm){d.stun=1;blog(`🌹 ${d.name} 被玫瑰迷住了，下一回合發呆！`);tpop(d,'迷住','#ff8aa8');await sleep(650)}}   /* V1.88 裝備效果 */
@@ -3427,8 +3438,8 @@ function tapRush(o={}){return new Promise(res=>{const z=$('tapZone'),n=$('tapN')
   setTimeout(()=>{clearInterval(cd);live=false;z.removeEventListener('pointerdown',on);msg.textContent=o.go?`連打 ${taps} 下！`:`連打 ${taps} 下！威力 ×${PC.bondBoost(taps+extra).toFixed(1)}`;setTimeout(()=>{z.classList.add('hidden');res(taps)},900)},T*1000)},700)})}
 /* 猜拳：敵人攻擊前 2 秒內選一個，回傳 { result, mult, me, foe } */
 const RPS_ICON={rock:'✊',scissors:'✌️',paper:'✋'};
-function rpsRound(){return new Promise(res=>{const PEEK=B&&B.peek>0?PC.RPS[Math.floor(Math.random()*3)]:null;if(PEEK)B.peek=0;const z=$('rpsZone'),T=CONFIG.rps.seconds,bar=$('rpsBar').firstElementChild,btns=[...z.querySelectorAll('[data-rps]')];let done=false;
- z.classList.remove('hidden');btns.forEach(b=>{b.classList.remove('pick');b.disabled=false});$('rpsMsg').textContent=PEEK?`👀 猴頭菇看穿了！敵人要出 ${RPS_ICON[PEEK]}`:'敵人要攻擊了！猜拳躲開它！';const t0=performance.now();
+function rpsRound(){return new Promise(res=>{const PEEK=B&&B.peek>0?PC.RPS[Math.floor(Math.random()*3)]:null;if(PEEK)B.peek=0;const z=$('rpsZone'),T=B&&B.blizzR===B.round?CONFIG.btX.blizzard.seconds:CONFIG.rps.seconds,bar=$('rpsBar').firstElementChild,btns=[...z.querySelectorAll('[data-rps]')];let done=false;
+ z.classList.remove('hidden');btns.forEach(b=>{b.classList.remove('pick');b.disabled=false});$('rpsMsg').textContent=PEEK?`👀 猴頭菇看穿了！敵人要出 ${RPS_ICON[PEEK]}`:B&&B.blizzR===B.round?'❄️ 暴風雪！看不清楚，快猜！':'敵人要攻擊了！猜拳躲開它！';const t0=performance.now();
  const tick=setInterval(()=>{bar.style.width=Math.max(0,100-(performance.now()-t0)/(T*10))+'%'},50);
  const finish=me=>{if(done)return;done=true;clearInterval(tick);btns.forEach(b=>{b.disabled=true;if(b.dataset.rps===me)b.classList.add('pick')});
   const foe=PEEK||PC.RPS[Math.floor(Math.random()*3)],r=PC.rps(me,foe);
@@ -3549,7 +3560,7 @@ function chestScene(kind,relic){return new Promise(res=>{const z=$('chestScene')
  item.onclick=()=>{if(st!==2)return;st=3;sfx('net');item.classList.add('fly');$('csHint').textContent='🎒 收進背包了！';z.querySelector('.csCard').classList.add('hidden');
   setTimeout(()=>{z.classList.add('hidden');res()},900)};
  z.classList.remove('hidden')})}
-function endBattle(win){if(B&&B.pvp){pvpEnd(win);return}B.over=true;bgmJingle(win===true);$('moves').classList.add('hidden');$('mvBond').classList.add('hidden');const n=B.n,x0=s.xp;
+function endBattle(win){if(B&&B.pvp){pvpEnd(win);return}B.over=true;if(B.hoard){if(win===true){s.coins+=B.hoard*2;setTimeout(()=>toast(`💰 打贏赤龍！龍窩裡的 ${B.hoard} 金幣全部拿回來還加倍：+${B.hoard*2}`,4500),1500)}else setTimeout(()=>toast(`💸 龍窩裡的 ${B.hoard} 金幣被赤龍帶走了…`,4000),1500)}bgmJingle(win===true);$('moves').classList.add('hidden');$('mvBond').classList.add('hidden');const n=B.n,x0=s.xp;
  const res=win===null?'run':win?'win':'loss',r=PC.finishAdventure(s,n,res,B.full,Date.now()),px=B.duo&&s.pair?PC.pairGain(s,r.xp||0,res):0,es=res==='win'?PC.emberShare(s,r.xp||0,[s.seed].concat(B.duo&&s.pair?[s.pair.seed]:[])):null;
  // 結算：一行一個戰利品（圖示＋名稱＋數量）
  if(B.foe&&(B.foe.boss||(B.foe2&&B.foe2.boss))||CONFIG.bosses[n])PC.bossSeen(s,n,res==='win'?'win':res==='loss'?'loss':'seen');const eb=res==='win'&&B.elite?PC.eliteBonus(s,r):null;

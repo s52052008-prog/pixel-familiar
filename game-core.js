@@ -86,6 +86,8 @@ const CONFIG = {
     elec:  { name: '蓄電',     w: { need: 4, mult: 1.3 }, f: { need: 3, mult: 1.6 } },
     metal: { name: '越打越硬', w: { per: .05, max: 3 }, f: { per: .06, max: 5 } } },
   /* V1.86 魔王天賦（第幾關 → 天賦） */
+  bossTalX: { 35: ['hoard', 'roar', 'lavafloor'], 40: ['mirror', 'freezemv', 'blizzard'] },
+  btX: { hoard: .02, roar: { chance: .5, cut: .5 }, lavafloor: { every: 3, turns: 2 }, mirror: { chance: .25, part: .5 }, freezemv: .5, blizzard: { every: 4, seconds: 1 } },
   bossTal: { 5: ['shell'], 10: ['lava', 'ignite'], 15: ['bone'], 20: ['ghost', 'chant'], 25: ['reap'], 30: ['wing', 'firewind'], 35: ['scale'], 40: ['chill', 'icetide'] },
   bt: { shell: .7, lava: .06, ignite: .5, bone: { per: .08, max: 5, reflect: .5 }, ghost: .3, chant: { mult: 2, chance: .35, cd: 3 }, reap: { up: .8, drain: .3 },
     wing: .4, firewind: { dodge: 1 / 3, peck: .6 }, scale: { hits: 3, turns: 2, atk: 1.3, burn: .06 }, chill: { per: .06, max: .4 }, icetide: { every: 2, heal: .06 } },
@@ -935,7 +937,7 @@ function mkFighter(name, key, lvl, route, tierN, mood, bond) {
 function foeFighter(n, myLvl, name = '野生怪', key = 'k') {
   const f = foeFor(n, myLvl), H0 = CONFIG.foeHp, T = CONFIG.tower, ft = mkFighter(name, key, f.level, f.route, 0, 80, 0), tw = n >= T.from;
   ft.max = ft.hp = Math.round(ft.max * (f.big ? H0.big : f.boss ? H0.mini : H0.normal) * (tw ? T.hp : 1)); if (tw) ft.atk *= T.atk; ft.tower = tw; if (f.route2) ft.el2 = f.route2 === 'dragon' ? 'dragon' : ELEM[f.route2];
-  { const BB = CONFIG.bossBuff; if (CONFIG.bosses[n] && !BB.skip.includes(n)) { ft.max = ft.hp = Math.round(ft.max * BB.hp); ft.atk *= BB.atk; } } ft.bt = (CONFIG.bossTal[n] || []).slice(); ft.boss = !!f.boss; ft.big = !!f.big; return ft;
+  { const BB = CONFIG.bossBuff; if (CONFIG.bosses[n] && !BB.skip.includes(n)) { ft.max = ft.hp = Math.round(ft.max * BB.hp); ft.atk *= BB.atk; } } ft.bt = (CONFIG.bossTal[n] || []).slice(); { const X = CONFIG.bossTalX[n]; if (X) ft.bt.push(X[Math.floor(Math.random() * X.length) % X.length]); } /* V1.95 赤龍／冰龍每場隨機多一個被動 */ ft.boss = !!f.boss; ft.big = !!f.big; return ft;
 }
 const hasHeritage = st => !!(st.awake || (st.pair && st.pair.awake) || (st.roster || []).some(p => p.awake));
 /* V1.42 我方加成：進化階段、訓練成果、星耀覺醒 */

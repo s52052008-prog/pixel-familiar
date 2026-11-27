@@ -650,5 +650,7 @@ t('V1.95 廚餘機：清掉的果皮骨頭滿 50 個做出肥料；灑肥料 24 
   assert.ok(C.useFert(s, T0).ok); assert.ok(C.fertOn(s, T0 + 23 * H)); assert.ok(!C.fertOn(s, T0 + 25 * H)); assert.ok(!C.useFert(s, T0).ok); });
 t('V1.95 生活技能：小窩裡有成年火系也能免費烤魚', () => { const s = hatched(); s.route = 'tide'; s.stage = 'baby'; const f = Object.assign(C.sanitizePet(Object.assign({}, s, { route: 'flame', stage: 'adult', seed: C.seedForEl('flame') }), T0)); s.roster = [f]; assert.ok(C.hasSkill(s, 'flame')); });
 
+t('V1.95 赤龍／冰龍每場隨機多一個被動', () => { for (let k = 0; k < 20; k++) { const a = C.foeFighter(35, 30), b = C.foeFighter(40, 30); assert(a.bt.length === 2 && ['hoard','roar','lavafloor'].includes(a.bt[1])); assert(b.bt.length === 3 && ['mirror','freezemv','blizzard'].includes(b.bt[2])); } assert(C.foeFighter(30, 30).bt.length === 2); });
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);
