@@ -1107,6 +1107,35 @@ const POND={x:106,y:80};
 function plotsBox(){let x1=999,y1=999,x2=-999,y2=-999;for(const[cx,cy,k]of PLOT_POS){x1=Math.min(x1,cx-10*k);x2=Math.max(x2,cx+10*k);y1=Math.min(y1,cy-16*k);y2=Math.max(y2,cy)}return[x1,y1,x2,y2]}
 const plotP=i=>{const[cx,cy,k]=PLOT_POS[i],[x,y]=yP('plots',cx,cy);return[x,y,k*yardOf('plots')[2]]};
 const PLOT_POS=[[64,73,.5],[74,73,.5],[84,73,.5],[60,79,.6],[72,79,.6],[84,79,.6],[56,86,.7],[70,86,.7],[84,86,.7]];   // V1.64 九塊田：三排   // V1.47 六塊田：右上方遠處兩排（後排小、前排大），[中心x, 底部y, 縮放]   // 池塘中心（V1.24 往後移）
+/* V1.95 農場：院子往右一格，田、灑水器、廚餘機都搬到這裡，點田直接種、澆水、收成 */
+let FARMBG=null;const farmBg=()=>{if(!FARMBG){FARMBG=new Image();FARMBG.src=SP('sprites/scene/farm.png')}return FARMBG};
+const FARM_POS=[[16,80,1.1],[42,80,1.1],[66,80,1.1],[22,68,.95],[46,68,.95],[70,68,.95],[28,56,.8],[50,56,.8],[72,56,.8]];   // 前排先種，往後排長
+const FARM_COMP=[108,78],FARM_SPR=[96,52];
+const farmP=i=>FARM_POS[i]||FARM_POS[FARM_POS.length-1];
+const FV={fx:[],water:null,sel:'normal'};
+function drawFarmView(now,ph){
+ {const F=farmBg();if(F.complete&&F.naturalWidth)ctx.drawImage(F,0,0);else{ctx.fillStyle='#6aa84a';ctx.fillRect(0,0,W,H)}}
+ if(ph==='night'||ph==='dusk'){ctx.fillStyle=ph==='night'?'rgba(20,24,70,.45)':'rgba(255,120,60,.18)';ctx.fillRect(0,0,W,H)}
+  const nowMs=Date.now();for(let i=0;i<s.plots.length;i++){const q=PC.plotState(s,i,nowMs),st=plotStage(q),[cx,cy,k]=farmP(i),SP=PLOT_SPR[st],sc=SP&&SP.hd?20*k/SP.width:k,w=Math.round((SP?SP.width:20)*sc),h=Math.round((SP?SP.height:16)*sc),x=Math.round(cx-w/2),y=Math.round(cy-h);   // V1.47 田在右上方遠處：小一點、糊一點，生長和家園同步
+   ctx.fillStyle='rgba(40,20,8,.25)';ctx.beginPath();ctx.ellipse(cx,cy,11*k,2.6*k,0,0,Math.PI*2);ctx.fill();ctx.save();ctx.imageSmoothingEnabled=true;if(q.thirsty)ctx.filter='sepia(.5) saturate(.6) brightness(1.15)';if(SP)ctx.drawImage(SP,x,y,w,h);ctx.filter='none';ctx.restore();
+   if(PC.fertOn(s,nowMs)&&Math.floor(now/300+i)%5===0){ctx.fillStyle='#b8ff7a';ctx.fillRect(Math.round(cx+((i*7+Math.floor(now/300))%17)-8),Math.round(cy-3-(now/80+i*5)%8),1,1)}
+   if(!q.empty&&!q.ripe&&!q.rotten){const bw=Math.round(16*k),bx=Math.round(cx-bw/2),by=Math.round(cy+2);ctx.fillStyle='rgba(20,12,6,.7)';ctx.fillRect(bx-1,by-1,bw+2,3);ctx.fillStyle='#7ae06a';ctx.fillRect(bx,by,Math.max(1,Math.round(bw*q.progress)),1)}
+   if(q.empty&&Math.floor(now/700+i)%3===0){ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillRect(Math.round(cx)-1,Math.round(cy-4),3,1);ctx.fillRect(Math.round(cx),Math.round(cy-5),1,3)}
+   if(['food','berry','cranberry','blueberry','strawberry'].includes(st)&&Math.floor(now/400)%3===0){ctx.fillStyle='#ffffff';ctx.fillRect(cx,y,1,1)}
+   {const g=s.plots[i].g;if(g&&!q.empty&&!q.rotten)seedGlow(ctx,g,cx,cy,w,h,now,i)}   // V1.82 優良金、稀有紫、神奇彩虹
+   if(st==='rot'&&!rm()){const a=now/300+i;ctx.drawImage(ICV.fly,Math.round(cx+3*Math.cos(a)),Math.round(y+2+2*Math.sin(a*1.7)))}
+   if(q.thirsty&&ICV.ic_drop){const D=ICV.ic_drop,dw=Math.max(5,Math.round(D.width*.6)),dh=Math.round(D.height*dw/D.width);ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(D,Math.round(cx-dw/2),Math.round(y-dh-1+Math.round(Math.sin(now/260+i)*1.5)),dw,dh);ctx.restore()}   // V1.90 口渴的田頭上冒水滴
+   if(WATER_FX[i]&&Date.now()<WATER_FX[i]){const t0=1-(WATER_FX[i]-Date.now())/1200;ctx.fillStyle='#8ac4ff';for(let d=0;d<5;d++){const ph=(t0*2+d/5)%1;ctx.fillRect(Math.round(cx-w*.3+d*w*.15),Math.round(y-6+ph*(h+4)),1,2)}}}
+  if(s.composter&&s.plots.length&&ICV.compost){const[bx,by]=FARM_COMP,I=ICV.compost,w=I.width,h=I.height;ctx.drawImage(I,Math.round(bx-w/2),Math.round(by-h),w,h);if(s.compost>=CONFIG.compost.need*.8&&Math.floor(now/400)%2){ctx.fillStyle='#b8ff7a';ctx.fillRect(Math.round(bx),Math.round(by-h-3),1,2)}}   // V1.95 廚餘機
+  if(s.sprinkler&&s.plots.length){const[cx,cy]=FARM_SPR,k=1,fr=WATER_SPR.spr[Math.floor(now/250)%2],sw=Math.max(9,Math.round(12*k)),sh=Math.round(fr.height*sw/fr.width),sx=Math.round(cx-sw-6*k),sy=Math.round(cy-sh);ctx.save();ctx.imageSmoothingEnabled=!!WATER_SPR.hd;ctx.drawImage(fr,sx,sy,sw,sh);ctx.restore();
+   if(Math.floor(now/4000)%3===0&&!rm()){ctx.fillStyle='#bfe2ff';const a=(now%4000)/4000*Math.PI*2;for(let d=0;d<6;d++){const r=3+((now/90+d*7)%10);ctx.fillRect(Math.round(sx+sw/2+Math.cos(a+d)*r),Math.round(sy+1+Math.sin(a+d)*r*.35-r*.25),1,1)}}}
+ FV.fx=FV.fx.filter(f=>now-f.t<700);for(const f of FV.fx){const e=(now-f.t)/1000;ctx.fillStyle=f.col;ctx.fillRect(Math.round(f.x+f.vx*e),Math.round(f.y+f.vy*e+60*e*e),1,1)}
+ if(FV.water){const e=(Date.now()-FV.water.t0)/1000,[cx,cy,k]=farmP(FV.water.i);if(e<1.1){const S2=WATER_SPR.can,cw=Math.round(16*k),chh=Math.round(S2.height*cw/S2.width),ang=e<.25?-e/.25*.7:e<.85?-.7:-.7+(e-.85)/.25*.7;ctx.save();ctx.translate(Math.round(cx+8*k),Math.round(cy-18*k));ctx.rotate(ang);ctx.imageSmoothingEnabled=!!WATER_SPR.hd;ctx.drawImage(S2,-cw,-chh/2,cw,chh);ctx.restore()}else FV.water=null}}
+function farmHint(){if(window.PF_NO_GUIDE||(s.tipsSeen||{}).farmView)return;(s.tipsSeen||(s.tipsSeen={})).farmView=1;save();setTimeout(()=>toast('🌾 這裡是農場！直接點田就能種、澆水、收成；買種子、選種子、賣水果按「🌱 種田」',5500),600)}
+function farmViewTap(x,y){if(curView()!=='farm'||!s.hatched)return false;
+ {const[bx,by]=FARM_COMP;if(s.composter&&Math.abs(x-bx)<=8&&y>=by-14&&y<=by+2){compostDialog();return true}}
+ for(let i=Math.min(s.plots.length,FARM_POS.length)-1;i>=0;i--){const[cx,cy,k]=farmP(i);if(Math.abs(x-cx)<=11*k&&y>=cy-16*k&&y<=cy+3){fmTap(x,y,i);return true}}
+ return false}
 function makeBg(ph,lvl=1,wx){
  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d'),night=ph==='night',dusk=ph==='dusk',wet=wx==='rain'||wx==='storm',storm=wx==='storm';
  const sky=wet?(night?['#080c18','#0c1222','#10182c','#141e36']:dusk?(storm?['#2a2838','#343042','#3e384c','#484256']:['#4a4560','#544c66','#5e546c','#685c72']):storm?['#3a4252','#444c5c','#4e5666','#586070']:['#7a8696','#848fa0','#8e98a8','#98a2b0']):{day:['#5aa6e0','#76bdea','#94d0f0','#b8e4f4'],dusk:['#3b3f7a','#7a4f8f','#d9767a','#f4b07a'],night:['#0c1430','#132042','#1a2b55','#233a68']}[ph];   // V1.86.7 下雨、暴風雨：灰色陰天，沒有太陽月亮
@@ -1583,22 +1612,13 @@ function draw(now){
  const ph=phase(),bk=ph+'|'+weather()+'|'+s.den.level+'|'+(s.loveNest?1:0)+'|'+JSON.stringify(s.yard||{})+'|'+(s.hatched&&PC.bushBerries(s,Date.now())>0?1:0);if(bk!==bgKey){bgKey=bk;bgCache=makeBg(ph,s.den.level,weather())}
  const dt=Math.min(.1,(now-lastFrameT)/1000||0);lastFrameT=now;
  updateWorld(now,dt);
- const inRoom=curView()!=='yard';let rph=null;{const dz=DIZZY>now&&!rm();if(dz||cv.style.transform)cv.style.transform=dz?`translate(${(Math.sin(now/90)*4).toFixed(1)}px,${(Math.cos(now/130)*3).toFixed(1)}px) rotate(${(Math.sin(now/200)*2).toFixed(2)}deg)`:''}const t=now/1000;
- if(inRoom){rph=drawRoom(now);if(curView()==='lounge')drawLounge(now,dt);if(VISIT.on)drawVisit(now,dt)}else{
+ const inRoom=!outside(),FARMV=curView()==='farm';let rph=null;{const dz=DIZZY>now&&!rm();if(dz||cv.style.transform)cv.style.transform=dz?`translate(${(Math.sin(now/90)*4).toFixed(1)}px,${(Math.cos(now/130)*3).toFixed(1)}px) rotate(${(Math.sin(now/200)*2).toFixed(2)}deg)`:''}const t=now/1000;
+ if(inRoom){rph=drawRoom(now);if(curView()==='lounge')drawLounge(now,dt);if(VISIT.on)drawVisit(now,dt)}else if(FARMV)drawFarmView(now,ph);else{
   ctx.drawImage(bgCache,0,0);drawBushBerries(now);drawGen(now);drawFire(now);
   const ca=ph==='night'?.35:ph==='dusk'?.75:1;ctx.globalAlpha=ca;
   const wsp=weather()==='breeze'?3:weather()==='storm'?4:1;const CL=wetW()?cloudWet():cloudCv;ctx.drawImage(CL,Math.round(((t*2*wsp)%(W+60))-30),10);ctx.drawImage(CL,Math.round(((t*1.3*wsp+80)%(W+60))-30),26);if(wetW()){ctx.drawImage(CL,Math.round(((t*1.7*wsp+40)%(W+60))-30),2);ctx.drawImage(CL,Math.round(((t*1.1*wsp+120)%(W+60))-30),16)}ctx.globalAlpha=1;
   drawAmbient(now,ph);drawTreeApples(now);
-  const nowMs=Date.now();for(let i=0;i<s.plots.length;i++){const q=PC.plotState(s,i,nowMs),st=plotStage(q),[cx,cy,k]=plotP(i),SP=PLOT_SPR[st],sc=SP&&SP.hd?20*k/SP.width:k,w=Math.round((SP?SP.width:20)*sc),h=Math.round((SP?SP.height:16)*sc),x=Math.round(cx-w/2),y=Math.round(cy-h);   // V1.47 田在右上方遠處：小一點、糊一點，生長和家園同步
-   ctx.save();ctx.imageSmoothingEnabled=true;ctx.globalAlpha=.92;if(SP)ctx.drawImage(SP,x,y,w,h);ctx.restore();
-   if(['food','berry','cranberry','blueberry','strawberry'].includes(st)&&Math.floor(now/400)%3===0){ctx.fillStyle='#ffffff';ctx.fillRect(cx,y,1,1)}
-   {const g=s.plots[i].g;if(g&&!q.empty&&!q.rotten)seedGlow(ctx,g,cx,cy,w,h,now,i)}   // V1.82 優良金、稀有紫、神奇彩虹
-   if(st==='rot'&&!rm()){const a=now/300+i;ctx.drawImage(ICV.fly,Math.round(cx+3*Math.cos(a)),Math.round(y+2+2*Math.sin(a*1.7)))}
-   if(q.thirsty&&ICV.ic_drop){const D=ICV.ic_drop,dw=Math.max(5,Math.round(D.width*.6)),dh=Math.round(D.height*dw/D.width);ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(D,Math.round(cx-dw/2),Math.round(y-dh-1+Math.round(Math.sin(now/260+i)*1.5)),dw,dh);ctx.restore()}   // V1.90 口渴的田頭上冒水滴
-   if(WATER_FX[i]&&Date.now()<WATER_FX[i]){const t0=1-(WATER_FX[i]-Date.now())/1200;ctx.fillStyle='#8ac4ff';for(let d=0;d<5;d++){const ph=(t0*2+d/5)%1;ctx.fillRect(Math.round(cx-w*.3+d*w*.15),Math.round(y-6+ph*(h+4)),1,2)}}}
-  if(s.composter&&s.plots.length&&ICV.compost){const[cx,cy,k]=plotP(s.plots.length-1),I=ICV.compost,w=Math.round(I.width*Math.max(.8,k)),h=Math.round(I.height*Math.max(.8,k));ctx.drawImage(I,Math.round(cx+15*k),Math.round(cy-h),w,h);if(s.compost>=CONFIG.compost.need*.8&&Math.floor(now/400)%2){ctx.fillStyle='#b8ff7a';ctx.fillRect(Math.round(cx+15*k+w/2),Math.round(cy-h-3),1,2)}}   // V1.95 廚餘機
-  if(s.sprinkler&&s.plots.length){const[cx,cy,k]=plotP(0),fr=WATER_SPR.spr[Math.floor(now/250)%2],sw=Math.max(9,Math.round(12*k)),sh=Math.round(fr.height*sw/fr.width),sx=Math.round(cx-sw-6*k),sy=Math.round(cy-sh);ctx.save();ctx.imageSmoothingEnabled=!!WATER_SPR.hd;ctx.drawImage(fr,sx,sy,sw,sh);ctx.restore();
-   if(Math.floor(now/4000)%3===0&&!rm()){ctx.fillStyle='#bfe2ff';const a=(now%4000)/4000*Math.PI*2;for(let d=0;d<6;d++){const r=3+((now/90+d*7)%10);ctx.fillRect(Math.round(sx+sw/2+Math.cos(a+d)*r),Math.round(sy+1+Math.sin(a+d)*r*.35-r*.25),1,1)}}}}   // V1.90 自動灑水器：轉一轉噴水
+  }
  if(mode==='play')drawRing();
  const hideP=(ARR.on||YA.on||LOVE.in||curView()==='lounge'||VISIT.on)&&!evo,nestMe=s.hatched&&PC.inNest(s)&&!LOVE.walk;   /* V1.83 佈置時把寵物藏起來 */
  if(!hideP&&!(s.pair&&PC.inNest(s.pair)&&!LOVE.walk))drawPair(now);
@@ -1794,7 +1814,7 @@ function updatePair(now,dt){const p=s.pair;if(!p||!s.hatched)return;
  if(PAIR.target===null&&!window.PF_NO_WANDER&&!s.ballBroken&&!TOY.held&&!RALLY.on&&pairCloser()&&curView()==='yard'&&(Math.abs(TOY.vx)>25||TOY.y<TOY_GROUND-TOY.r-4)&&now>(PAIR.chaseAt||0)&&Math.random()<.5){PAIR.chaseAt=now+700;const lead=TOY.x+TOY.vx*.4;pairWalk(lead-24+(lead>PAIR.x+24?8:-8));return}   // 球在滾：第二隻也會追
  if(PAIR.target===null&&!RALLY.on&&!TOY.held&&petTarget===null&&!window.PF_NO_WANDER&&Math.abs(PAIR.x-petX)<18&&now>(PAIR.sepAt||0)){PAIR.sepAt=now+1500;pairWalk(clamp(PAIR.x+(PAIR.x>=petX?30:-30),4,W-CELL-4)>=petX+18||clamp(PAIR.x+(PAIR.x>=petX?30:-30),4,W-CELL-4)<=petX-18?clamp(PAIR.x+(PAIR.x>=petX?30:-30),4,W-CELL-4):clamp(PAIR.x+(PAIR.x>=petX?-30:30),4,W-CELL-4));return}   // V1.69 太靠近就分開一點
  if(PAIR.target!==null||now<PAIR.next||window.PF_NO_WANDER)return;
- PAIR.next=now+3000+Math.random()*4500;const r=Math.random(),lo=curView()!=='yard'?16:4,hi=W-CELL-4;
+ PAIR.next=now+3000+Math.random()*4500;const r=Math.random(),lo=curView()!=='yard'?16:4,hi=curView()==='farm'?44:W-CELL-4;
  if(r<.22&&!s.ballBroken&&!TOY.held&&curView()==='yard'&&Math.abs(TOY.x-meC())>34){const dir=TOY.x>PAIR.x+24?1:-1;pairWalk(TOY.x-24+dir*10)}
  else if(r<.42&&petTarget===null&&!anim.once){const side=PAIR.x<petX?-1:1;pairWalk(petX+side*22,()=>{PAIR.face=-side;PAIR.anim='happy';PAIR.t0=performance.now();
    if(!anim.once&&!s.sleeping){petFace=side;playAnim('happy')}spawn('heart',2,{x:Math.min(PAIR.x,petX)+35,y:66,vy:-14,life:1,spread:10});
@@ -2003,7 +2023,7 @@ function bgmJingle(win){bgmStop(win?.08:1.6);BGM_AFTER=performance.now()+4000;if
 document.addEventListener('visibilitychange',()=>{if(document.hidden)bgmStop()});
 /* V1.86.7 背景音樂：依照現在在哪裡自動換曲（房間、院子、休息室、晚上／睡覺、下雨、釣魚；冒險用原本的戰鬥曲） */
 function sceneTrack(){if(TG)return'normal';if(PKZ)return'yard';if(FZ)return'fish';if(FMZ)return'yard';if(!s.hatched)return'home';const ph=phase(),v=curView();
- if(ph==='night'||s.sleeping)return'night';if(wetW()&&v==='yard')return'rain';return v==='lounge'||v==='visit'?'lounge':v==='room'?'home':'yard'}
+ if(ph==='night'||s.sleeping)return'night';if(wetW()&&(v==='yard'||v==='farm'))return'rain';return v==='lounge'||v==='visit'?'lounge':v==='room'?'home':'yard'}
 setInterval(()=>{if(typeof WIPING!=='undefined'&&WIPING)return;if(B||!actx||!musicOn()||document.visibilityState!=='visible'||performance.now()<BGM_AFTER)return;const want=sceneTrack();
  if(BGM.name!==want){try{if(actx.state==='suspended')actx.resume()}catch(_){}bgmPlay(want)}},1500);
 const EL_SND={fire:'fire',water:'water',leaf:'leaf',earth:'rock',bird:'wind',elec:'zap',metal:'metal',flame:'fire',tide:'water',forest:'leaf'};
@@ -2170,7 +2190,7 @@ function renderUI(){if(s&&s.inv)PC.markSeen(s);
  $('goalDot').classList.toggle('hidden',!(s.goals.list||[]).some(g=>!g.claimed&&g.n>=g.need));
  {const need=s.hatched&&!s.sleeping?STATS.map(([k])=>[k,s[k]]).filter(([,v])=>v<35).sort((a,b)=>a[1]-b[1])[0]:null,A={hunger:'feed',mood:'play',clean:'wash',energy:'sleep'};document.querySelectorAll('[data-act]').forEach(b=>b.classList.toggle('need',!!need&&b.dataset.act===A[need[0]]))}   /* V1.86 最需要照顧的那一項會發光 */
  renderGuide();wxChip();$('navL').classList.toggle('hidden',!s.hatched);$('navR').classList.toggle('hidden',!s.hatched)}
-function wxChip(){const el=$('wxChip');if(!el)return;const room=!s.hatched||curView()!=='yard';el.classList.toggle('hidden',room);if(room)return;const w=weather(),ic=w==='clear'?(phase()==='night'?'ui/moon':'items/ic_sun'):w==='breeze'?'ui/leaf':w==='rain'?'items/ic_drop':'ui/bolt',nm=w==='clear'?(phase()==='night'?'晴朗的夜晚':'晴'):PC.WEATHER_NAME[w];const k=ic+nm;if(el.dataset.k===k)return;el.dataset.k=k;el.innerHTML=`<img src="sprites/${ic}.png" alt="">${nm}`}
+function wxChip(){const el=$('wxChip');if(!el)return;const room=!s.hatched||!outside();el.classList.toggle('hidden',room);if(room)return;const w=weather(),ic=w==='clear'?(phase()==='night'?'ui/moon':'items/ic_sun'):w==='breeze'?'ui/leaf':w==='rain'?'items/ic_drop':'ui/bolt',nm=w==='clear'?(phase()==='night'?'晴朗的夜晚':'晴'):PC.WEATHER_NAME[w];const k=ic+nm;if(el.dataset.k===k)return;el.dataset.k=k;el.innerHTML=`<img src="sprites/${ic}.png" alt="">${nm}`}
 setInterval(()=>{try{wxChip()}catch(e){}},60000);
 
 /* =========================================================
@@ -2928,10 +2948,10 @@ function goalsDialog(){PC.claimDaily(s,Date.now());PC.ensureGoals(s,Date.now());
 /* =========================================================
    🛒 商店與房間裝飾
    ========================================================= */
-const VIEWS=['lounge','room','yard'];   // V1.86.7 ◀ ▶ 三個畫面輪流：休息室 ↔ 房間 ↔ 院子
+const VIEWS=['lounge','room','yard','farm'];   // V1.95 院子往右是農場   // V1.86.7 ◀ ▶ 三個畫面輪流：休息室 ↔ 房間 ↔ 院子
 function toggleView(dir){if(!s.hatched||modeBusy())return;if(VISIT.on){toast('在朋友家喔，先按「🏠 回家」');return}if(s.sleeping){say('噓…牠在睡覺，先叫醒牠才能出門');return}cancelMode();lgClose();petX=PET_X;petTarget=null;
- const cur=curView(),nv=dir?VIEWS[(VIEWS.indexOf(cur)+dir+3)%3]:(cur==='room'?'yard':'room');s.view=nv;save();renderUI();sfx('tap');
- say(nv==='room'?'回到小窩了～':nv==='lounge'?(lgPets().length?'來休息室看看大家～':'休息室還沒有其他夥伴，空蕩蕩的'):'出門走走！',{log:false})}
+ const cur=curView(),nv=dir?VIEWS[(VIEWS.indexOf(cur)+dir+VIEWS.length)%VIEWS.length]:(cur==='room'?'yard':'room');s.view=nv;save();renderUI();sfx('tap');
+ if(nv==='farm')farmHint();say(nv==='farm'?'到農場看看田～':nv==='room'?'回到小窩了～':nv==='lounge'?(lgPets().length?'來休息室看看大家～':'休息室還沒有其他夥伴，空蕩蕩的'):'出門走走！',{log:false})}
 const SLOT_NAME={paper:'壁紙',wall:'牆上',window:'窗戶',cushion:'軟墊',tower:'貓跳台',lamp:'燈',plant:'植物',bed:'床',rug:'地毯',toy:'玩具',toilet:'廁所'};
 function decorPreview(id){if(id.startsWith('paper_')){const c=document.createElement('canvas');c.width=24;c.height=16;const x=c.getContext('2d'),[a,b]=PAPER[id];x.fillStyle=a;x.fillRect(0,0,24,16);x.fillStyle=b;
   if(id==='paper_night'){x.fillStyle='#fff3a6';for(let i=0;i<8;i++)x.fillRect((i*7)%24,(i*5)%16,1,1)}else for(let i=0;i<24;i+=6)x.fillRect(i,0,2,16);return c}return makeDecor(id)}
@@ -3695,7 +3715,8 @@ window.addEventListener('storage',e=>{if(e.key===SAVE_KEY&&e.newValue){const o=p
    觸控互動：放蘋果餵食、海綿刷洗、頂球小遊戲、清果核
    ========================================================= */
 let mode=null,petX=PET_X,petTarget=null,walkCb=null,homeAt=0,petFace=-1,idleAt=0;   // petFace：-1 原本方向（朝左／正面），1 左右翻轉（朝右）
-const curView=()=>VISIT.on?'visit':s.hatched&&(s.view==='room'||s.view==='lounge')?s.view:'yard';
+const curView=()=>VISIT.on?'visit':s.hatched&&(s.view==='room'||s.view==='lounge'||s.view==='farm')?s.view:'yard';
+const outside=()=>{const v=curView();return v==='yard'||v==='farm'};   // V1.95 院子、農場都算外面
 function walkTo(x,cb){petTarget=clamp(Math.round(x),0,W-CELL);walkCb=cb||null}
 const overPet=(x,y)=>curView()!=='lounge'&&!VISIT.on&&x>=petX+6&&x<=petX+42&&y>=PET_Y+8&&y<=PET_Y+46;
 const FEED={apple:null},WASH={t:0,down:false,px:0,py:0,lastMove:0,sfxAt:0},BALL={lives:3,score:0,combo:0,b:null,tapAt:0,started:false,nextAt:0,over:false,wind:0},RING={x:108,y:44,r:10,bx:108,by:44,net:0};   // V1.61 籃框加大（7→10）
@@ -3707,7 +3728,7 @@ function modeBusy(){return(mode==='feed'&&FEED.apple)||(mode==='play'&&(BALL.b||
 function cancelMode(){if(!mode)return;setMode(null)}
 /* ---- 待命時自己動：走來走去、跳一下、去踢皮球 ---- */
 const TOY={x:96,y:96,vx:0,vy:0,rot:0,held:false,r:6,chaseAt:0};const TOY_GROUND=PET_Y+46;   // 球心最低 = 地面 − 半徑
-function idleAct(now){idleAt=now+2500+Math.random()*4500;const r=Math.random(),lo=curView()!=='yard'?16:4,hi=W-CELL-4;
+function idleAct(now){idleAt=now+2500+Math.random()*4500;const r=Math.random(),lo=curView()!=='yard'?16:4,hi=curView()==='farm'?44:W-CELL-4;
  if(r<.35&&!TOY.held&&!s.ballBroken&&curView()==='yard'&&!RALLY.on&&!(s.pair&&Math.abs(TOY.x-paC())<34)){const dir=TOY.x>petX+24?1:-1;walkTo(TOY.x-24+dir*10)}           // 去踢球
  else if(r<.47){playAnim('happy');busyUntil=0}                                                         // 原地開心跳一下
  else if(r<.6&&curView()==='yard')goDrink();   // 走到池塘邊舔水
@@ -4011,6 +4032,7 @@ cv.addEventListener('pointerdown',e=>{const p=toLogical(e);unlockAudio();request
  if(ARR.on){if(arrDown(p.x,p.y))try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
  if(YA.on){if(yaDown(p.x,p.y))try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
  if(mode==='wash'){WASH.down=true;WASH.px=p.x;WASH.py=p.y;WASH.lastMove=performance.now();try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
+ if(!mode&&!coreAt(p.x,p.y)&&farmViewTap(p.x,p.y))return;   // V1.95 農場的田
  if(!mode&&!coreAt(p.x,p.y)&&treeTap(p.x,p.y))return;   // V1.76 蘋果樹
  if(!mode&&!coreAt(p.x,p.y)&&!nearToy(p.x,p.y)&&bushTap(p.x,p.y))return;   /* V1.83 野莓叢 */
  if(!mode&&nearToy(p.x,p.y)&&!coreAt(p.x,p.y)){toyGrab(p.x,p.y);try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
@@ -4024,7 +4046,7 @@ $('arrDone').onclick=()=>{if(YA.on){endYardArrange();sfx('level');toast('🌳 �
 /* V1.82 院子佈置：拖曳房子、小窩、樹、灌木、步道、水池、田地；選中後可以用 ＋／－ 放大縮小 */
 const YA={on:false,sel:null,drag:false,x0:0,y0:0,st:null};
 const YNAME={fire:'營火',gen:'小發電機',den:'小窩',nest:'愛的小窩',tree1:'小樹',tree2:'蘋果樹',bush:'野莓叢',path:'石板步道',pond:'水池',plots:'田地'};
-const yaIds=()=>['path','pond','plots','bush','tree1','tree2','den'].concat(s.loveNest?['nest']:[],hasGen()?['gen']:[],hasFire()?['fire']:[]);
+const yaIds=()=>['path','pond','bush','tree1','tree2','den'].concat(s.loveNest?['nest']:[],hasGen()?['gen']:[],hasFire()?['fire']:[]);
 function startYardArrange(){if(!s.hatched||modeBusy())return;cancelMode();if(curView()!=='yard'){s.view='yard';petX=PET_X;petTarget=null;renderUI()}YA.on=true;YA.sel=null;arrPanel('yard');yaHint();sfx('tap')}
 function endYardArrange(){YA.on=false;YA.sel=null;YA.drag=false;arrPanel(null);save()}
 /* V1.86.7 佈置房間：下方家具欄，拖進房間擺放、把家具拖回來收起，點一下也能擺上／收起 */
@@ -4135,6 +4157,9 @@ let GREET_AT=0;function bondGreet(){if(!s||!s.hatched||s.sleeping||B||mode||s.ru
  const b=PC.bondTier(s.bond),O=ownerName();say(b>=5?`${O}！我一直在等你～💞`:b>=3?`${O}，你來了！好想你～`:`${O}～你來啦！`,{log:false})}
 setTimeout(bondGreet,1800);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(bondGreet,1200)});
 const TOURS=[
+ {id:'v195',t:'農場・廚餘機・更強的魔王',new:['🌾 院子往右是農場，點田直接種、澆水、收成','♻️ 廚餘機：果皮骨頭做肥料，收成加倍','⚡🌿🔥 雷電麻痺、森羅萬象捆綁、火系大招打兩隻','👹 魔王變強：越級打會被壓制、大招第 2 回合就放','🐲 赤龍冰龍每場隨機多一個被動','🎵 五首以上戰鬥音樂輪流放'],steps:[
+  {open:()=>{closeModal();if(curView()!=='yard'){s.view='yard';renderUI()}},wait:500,sel:'#navR',t:'🌾 農場',d:'在院子按右邊的箭頭，就會走到農場。田、灑水器、廚餘機都搬到這裡了，直接點田就能種、澆水、收成。'},
+  {open:()=>{s.view='farm';renderUI()},wait:600,sel:'#bFarm',t:'🌱 種田',d:'選種子、買種子、賣水果、廚餘機，都還是在「種田」裡。'}]},
  {id:'v194',t:'親密度 5 階・祕密景點',new:['💗 親密度變成 5 階，每階都有新效果','🗺️ 七種屬性各有一個祕密景點','🎀 景點專屬裝飾（只有那個屬性能戴）','✨ 景點祝福：能力永久提升','🥚 每種屬性只能養一隻'],steps:[
   {sel:'.chip.bond',t:'💗 親密度',d:'點這裡可以看每一階解鎖什麼：打招呼、每日小禮物、祕密景點、為你吶喊、心靈相通。'},
   {open:()=>bondDialog(),wait:900,sel:'#spotCv2',t:'🗺️ 祕密景點',d:'親密度 60 以上，在牠屬性專屬的時段摸摸牠，牠會拉著你去祕密景點。第一次去送專屬裝飾，之後每 7 天可以再去一次，能力永久提升。'}]},
@@ -4234,7 +4259,7 @@ $('bAdv').onclick=()=>advDialog();$('bFarm').onclick=()=>openFarm();$('bGoals').
 $('viewBtn').onclick=()=>toggleView();$('navL').onclick=()=>{if(modeBusy()){toast('先完成現在的互動吧');return}toggleView(-1)};$('navR').onclick=()=>{if(modeBusy()){toast('先完成現在的互動吧');return}toggleView(1)};$('npEdit').onclick=()=>renameDialog(false);$('denBtn').onclick=()=>denDialog();
 $('lightBtn').onclick=()=>{s.settings.light=s.settings.light===false;save();syncLightBtn(true);sfx('tap');say(s.settings.light?'💡 開燈了，暖暖的～':'關燈了，好暗喔…',{log:false})};
 /* 開燈按鈕：只在小窩裡、傍晚到晚上出現 */
-function syncLightBtn(force){const show=s.hatched&&curView()!=='yard'&&['night','dusk'].includes(phase()),b=$('lightBtn');b.classList.toggle('hidden',!show);if(show)b.textContent=s.settings.light===false?'💡 開燈':'🌙 關燈'}
+function syncLightBtn(force){const show=s.hatched&&!outside()&&['night','dusk'].includes(phase()),b=$('lightBtn');b.classList.toggle('hidden',!show);if(show)b.textContent=s.settings.light===false?'💡 開燈':'🌙 關燈'}
 setInterval(syncLightBtn,1000);$('bSteps').onclick=stepsDialog;$('bMate').onclick=()=>friendsDialog();
 $('bFish').onclick=()=>{sfx('tap');openFish()};$('bCodex').onclick=codexDialog;$('bTrain').onclick=trainDialog;$('bMenu').onclick=menuDialog;
 $('homeTipX').onclick=()=>{$('homeTip').classList.add('hidden');store.set(TIP_KEY,'1')};
@@ -4793,23 +4818,23 @@ const SEEDK=[['normal','seeds','seed','種子'],['good','seeds2','seed2','優良
 function fmLayout(){const n=s.plots.length,rows=Math.ceil(n/3),RY=[[96],[72,100],[56,78,104]][rows-1]||[56,78,104],RS=[[1.15],[.9,1.1],[.72,.88,1.05]][rows-1]||[.72,.88,1.05],out=[];
  for(let i=0;i<n;i++){const r=Math.floor(i/3),c=i%3,inRow=Math.min(3,n-r*3),sc=RS[r],gap=40*sc,x=64+(c-(inRow-1)/2)*gap;out.push({x,y:RY[r],sc})}return out}
 function openFarm(){if(modeBusy()){toast('先完成現在的互動吧');return}if(firstTip('farm',openFarm))return;cancelMode();unlockAudio();PC.claimDaily(s,Date.now());
- FMZ={fx:[],sel:FMZ&&FMZ.sel||'normal'};$('farmZone').classList.remove('hidden');fmInfo();$('fmCompT').textContent=compostLabel();document.querySelectorAll('#fmComp canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));fmMsg(s.sprinkler?'點空地種下選好的種子，成熟了點一下收成（💦 自動灑水器會幫你澆水）':'點空地種下選好的種子，土乾了（💧）點一下澆水，成熟了點一下收成');sfx('tap');
+ FMZ={fx:[],get sel(){return FV.sel},set sel(v){FV.sel=v}};$('farmZone').classList.remove('hidden');fmInfo();$('fmCompT').textContent=compostLabel();document.querySelectorAll('#fmComp canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon));fmMsg(s.sprinkler?'點空地種下選好的種子，成熟了點一下收成（💦 自動灑水器會幫你澆水）':'點空地種下選好的種子，土乾了（💧）點一下澆水，成熟了點一下收成');sfx('tap');
  const loop=now=>{if(!FMZ)return;fmDraw(now);requestAnimationFrame(loop)};requestAnimationFrame(loop)}
 function closeFarm(){FMZ=null;$('farmZone').classList.add('hidden');save();renderUI()}
 const fmMsg=t=>{$('fmMsg').innerHTML=`<span>${t}</span>`};
 function fmInfo(){const now=Date.now();$('fmInfo').textContent=`${PC.SLOT_NAME[PC.fishSlot(now)]}・${PC.WEATHER_NAME[PC.weatherAt(now)]}・🪙 ${s.coins}`;
- if((s.inv[SEEDK.find(k=>k[0]===FMZ.sel)[1]]||0)<1){const f=SEEDK.find(k=>(s.inv[k[1]]||0)>0);if(f)FMZ.sel=f[0]}
- for(const[k,inv,ic,nm]of SEEDK){const b=$('fmS_'+k);b.innerHTML=`${MI(ic,'🌱')}<span>${nm} ×${s.inv[inv]||0}<small> ⚡${CONFIG.farm.energy[SEEDK.findIndex(x=>x[0]===k)]}</small></span>`;b.classList.toggle('on',FMZ.sel===k);b.disabled=(s.inv[inv]||0)<1&&k!=='normal'}}
-function fmTap(x,y){const L=fmLayout(),now=Date.now();for(let i=L.length-1;i>=0;i--){const p=L[i],w=24*p.sc,h=22*p.sc;if(x>=p.x-w/2-2&&x<=p.x+w/2+2&&y>=p.y-h-2&&y<=p.y+4){
+ if((s.inv[SEEDK.find(k=>k[0]===FV.sel)[1]]||0)<1){const f=SEEDK.find(k=>(s.inv[k[1]]||0)>0);if(f)FV.sel=f[0]}
+ for(const[k,inv,ic,nm]of SEEDK){const b=$('fmS_'+k);b.innerHTML=`${MI(ic,'🌱')}<span>${nm} ×${s.inv[inv]||0}<small> ⚡${CONFIG.farm.energy[SEEDK.findIndex(x=>x[0]===k)]}</small></span>`;b.classList.toggle('on',FV.sel===k);b.disabled=(s.inv[inv]||0)<1&&k!=='normal'}}
+function fmTap(x,y,fi){const VW=fi!=null,Z=VW?FV:FMZ,L=VW?FARM_POS.map(([x,y,k])=>({x,y,sc:k})):fmLayout(),now=Date.now(),msg=VW?(t=>toast(t,2600)):fmMsg;for(let i=L.length-1;i>=0;i--){const p=L[i],w=24*p.sc,h=22*p.sc;if(VW?i===fi:x>=p.x-w/2-2&&x<=p.x+w/2+2&&y>=p.y-h-2&&y<=p.y+4){
   PC.fixFresh(s);const q=PC.plotState(s,i,now),x0=s.xp;let r;
-  if(q.empty){const g=FMZ.sel==='magic'?'magic':FMZ.sel==='rare'?'mystery':FMZ.sel==='good';r=(setTimeout(()=>guideHit('plant'),900),PC.plant)(s,i,now,Math.random,g);if(r.ok){sfx('tap');for(let k=0;k<4;k++)FMZ.fx.push({x:p.x,y:p.y-4,vx:(Math.random()-.5)*30,vy:-20-Math.random()*15,t:now,col:'#8a5a30'})}}
-  else if(q.thirsty){if(FMZ.water&&now-FMZ.water.t0<1100)return;const we=CONFIG.farm.waterEnergy;if(s.hatched&&s.energy<we){fmMsg(`❌ 牠太累了（澆一次要 ${we} 體力），先休息一下吧`);sfx('no');return}
-   FMZ.water={i,t0:now};sfx('splash');buzz(10);setTimeout(()=>{const r2=PC.water(s,i,Date.now());fmMsg(r2.ok?r2.msg:'❌ '+r2.msg);if(r2.ok){WATER_FX[i]=Date.now()+1200;for(let k=0;k<6;k++)FMZ&&FMZ.fx.push({x:p.x,y:p.y-6,vx:(Math.random()-.5)*30,vy:-18-Math.random()*12,t:Date.now(),col:'#8ac4ff'});sfx('level')}save();renderUI();fmInfo()},1000);return}
-  else if(q.ripe||q.rotten){r=PC.harvest(s,i,now);if(r.ok){sfx(r.rotten?'no':'eat');buzz(20);if(!r.rotten){for(let k=0;k<8;k++)FMZ.fx.push({x:p.x,y:p.y-10*p.sc,vx:(Math.random()-.5)*50,vy:-30-Math.random()*25,t:now,col:'#ffe066'});
+  if(q.empty){const g=Z.sel==='magic'?'magic':Z.sel==='rare'?'mystery':Z.sel==='good';r=(setTimeout(()=>guideHit('plant'),900),PC.plant)(s,i,now,Math.random,g);if(r.ok){sfx('tap');for(let k=0;k<4;k++)Z.fx.push({x:p.x,y:p.y-4,vx:(Math.random()-.5)*30,vy:-20-Math.random()*15,t:now,col:'#8a5a30'})}}
+  else if(q.thirsty){if(Z.water&&now-Z.water.t0<1100)return;const we=CONFIG.farm.waterEnergy;if(s.hatched&&s.energy<we){msg(`❌ 牠太累了（澆一次要 ${we} 體力），先休息一下吧`);sfx('no');return}
+   Z.water={i,t0:now};sfx('splash');buzz(10);setTimeout(()=>{const r2=PC.water(s,i,Date.now());msg(r2.ok?r2.msg:'❌ '+r2.msg);if(r2.ok){WATER_FX[i]=Date.now()+1200;for(let k=0;k<6;k++)Z&&Z.fx.push({x:p.x,y:p.y-6,vx:(Math.random()-.5)*30,vy:-18-Math.random()*12,t:Date.now(),col:'#8ac4ff'});sfx('level')}save();renderUI();fmInfo()},1000);return}
+  else if(q.ripe||q.rotten){r=PC.harvest(s,i,now);if(r.ok){sfx(r.rotten?'no':'eat');buzz(20);if(!r.rotten){for(let k=0;k<8;k++)Z.fx.push({x:p.x,y:p.y-10*p.sc,vx:(Math.random()-.5)*50,vy:-30-Math.random()*25,t:now,col:'#ffe066'});
     const rows=[[CONFIG.foods[r.kind].icon,CONFIG.foods[r.kind].name,`×${r.n}`,(r.good?(r.magic?'✨神奇':r.myst?'🔮稀有':'🌟優良'):'')+(r.fert?' 🌱肥料×2':'')]];if(r.bonus)rows.push([CONFIG.foods[r.bonus].icon,CONFIG.foods[r.bonus].name,`×${r.bonusN||1}`,'⚡能力水果']);if(r.xp)rows.push(['star','經驗',`+${r.xp}`,'']);
     {const F=CONFIG.foods,t=`🌾 收成：${F[r.kind].name}×${r.n}${r.fert?'（🌱肥料加倍）':''}${r.good?(r.magic?'（✨神奇）':r.myst?'（🔮稀有）':'（🌟優良）'):''}${r.bonus?`、⚡${F[r.bonus].name}×${r.bonusN||1}`:''}${r.xp?`、經驗 +${r.xp}`:''}`;r.msg=t;setTimeout(()=>afterChange(x0),300)}}}}   /* V1.86.6 收成不用再點視窗 */
-  else{fmMsg(`🌱 ${CONFIG.foods[q.kind].name}還要 ${fmtLeft(q.left)} 才成熟`);sfx('tap');return}
-  if(r){fmMsg(r.ok?r.msg:'❌ '+r.msg);if(!r.ok){sfx('no');if(r.code==='noseed')setTimeout(farmShop,350)}save();renderUI();fmInfo()}return}}}
+  else{msg(`🌱 ${CONFIG.foods[q.kind].name}還要 ${fmtLeft(q.left)} 才成熟`);sfx('tap');return}
+  if(r){msg(r.ok?r.msg:'❌ '+r.msg);if(!r.ok){sfx('no');if(r.code==='noseed')setTimeout(farmShop,350)}save();renderUI();fmInfo()}return}}}
 function fmDraw(now){const c=fmctx,ph=phase(),nowMs=Date.now();c.clearRect(0,0,128,112);
  if(FMIMG.complete&&FMIMG.naturalWidth)c.drawImage(FMIMG,0,0);else{c.fillStyle='#8a5a30';c.fillRect(0,0,128,112)}
  if(ph==='night'||ph==='dusk'){c.fillStyle=ph==='night'?'rgba(20,24,70,.45)':'rgba(255,120,60,.18)';c.fillRect(0,0,128,112)}
@@ -4831,7 +4856,7 @@ function fmDraw(now){const c=fmctx,ph=phase(),nowMs=Date.now();c.clearRect(0,0,1
  const w=PC.weatherAt(nowMs);if(w==='rain'||w==='storm'){c.fillStyle='rgba(200,220,255,.55)';for(let i=0;i<(w==='storm'?40:22);i++){const x=(i*37+now/6)%132-2,y=(i*53+now/(w==='storm'?3:4))%112;c.fillRect(Math.round(x),Math.round(y),1,3)}}
  for(let i=FMZ.fx.length-1;i>=0;i--){const p=FMZ.fx[i],t=(now-p.t)/1000;if(t>.9){FMZ.fx.splice(i,1);continue}c.globalAlpha=1-t/.9;c.fillStyle=p.col;c.fillRect(Math.round(p.x+p.vx*t),Math.round(p.y+p.vy*t+40*t*t),2,2);c.globalAlpha=1}}
 fmcv.addEventListener('pointerdown',e=>{e.preventDefault();const r=fmcv.getBoundingClientRect();fmTap((e.clientX-r.left)/r.width*128,(e.clientY-r.top)/r.height*112)});
-for(const[k]of SEEDK)$('fmS_'+k).onclick=()=>{FMZ.sel=k;sfx('tap');fmInfo()};
+for(const[k]of SEEDK)$('fmS_'+k).onclick=()=>{FV.sel=k;sfx('tap');fmInfo()};
 $('fmShop').onclick=()=>{sfx('tap');farmShop()};$('fmComp').onclick=()=>{sfx('tap');compostDialog()};$('fmSell').onclick=()=>{sfx('tap');farmSell()};$('fmHome').onclick=closeFarm;
 /* V1.95 廚餘機＋肥料 */
 function compostLabel(){const C=CONFIG.compost,on=PC.fertOn(s);return !s.composter?`廚餘機（🪙${C.price}）：果皮骨頭變肥料`:on?`🌱 肥料加倍中（剩 ${Math.ceil((s.fertUntil-Date.now())/3600e3)} 小時）・廚餘 ${s.compost}/${C.need}`:`廚餘機 ${s.compost}/${C.need}・肥料 ${s.inv.fert||0} 包${s.inv.fert?'（點這裡灑）':''}`}
