@@ -314,7 +314,7 @@ t('V1.41 訓練場：每次 20 金幣，達成目標才有經驗', () => { const
   assert.ok(!C.startTrain(s, 'zen', T0).ok); s.coins = 20; assert.ok(C.startTrain(s, 'zen', T0).ok); const w = C.finishTrain(s, 'zen', true, T0); assert.equal(w.xp, Math.round(10 + 4 * L)); assert.equal(s.trainLog.defense, 1);
   s.coins = 99; s.energy = 10; assert.ok(!C.startTrain(s, 'rush', T0).ok); s.energy = 100; s.bondRestUntil = T0 + 9e6; assert.ok(C.startTrain(s, 'flash', T0).ok); assert.ok(!C.startTrain(s, 'nope', T0).ok); });
 t('蓄力：下一擊 1.5 倍，用完就消失', () => { const a = C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0), d = C.mkFighter('b', 'k', 5, 'flame', 0, 80, 0); const n = C.expectDamage(a, d, false); a.charged = true; assert.ok(Math.abs(C.expectDamage(a, d, false) - n * 1.5) <= 1); C.damage(a, d, false, () => .5); assert.ok(!a.charged); });
-t('羈絆之力：3 秒連打，40／60／80／95／110 下＝1.5／2／3／4／5 倍，最高 5 倍', () => { assert.equal(C.CONFIG.bond.seconds, 3); assert.equal(C.bondBoost(0), 1); assert.equal(C.bondBoost(20), 1.25); assert.equal(C.bondBoost(40), 1.5); assert.equal(C.bondBoost(60), 2); assert.equal(C.bondBoost(80), 3); assert.equal(C.bondBoost(95), 4); assert.equal(C.bondBoost(110), 5); assert.equal(C.bondBoost(160), 5); const a = C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0), d = C.mkFighter('b', 'k', 30, 'tide', 0, 80, 0); const r = C.damage(a, d, false, () => .5, 3); assert.ok(r.dmg >= C.expectDamage(a, d, false) * 2.5); });
+t('羈絆之力：3 秒連打，40／60／80／95／110 下＝1.5／2／3／4／5 倍，最高 5 倍', () => { assert.equal(C.CONFIG.bond.seconds, 3); assert.equal(C.bondBoost(0), 1); assert.equal(C.bondBoost(20), 1.25); assert.equal(C.bondBoost(40), 1.5); assert.equal(C.bondBoost(60), 2); assert.equal(C.bondBoost(80), 3); assert.equal(C.bondBoost(95), 4); assert.equal(C.bondBoost(110), 5); assert.equal(C.bondBoost(160), 5); const a = C.mkFighter('a', 'k', 5, 'flame', 0, 80, 0), d = C.mkFighter('b', 'k', 5, 'tide', 0, 80, 0); d.max = d.hp = 9999; const r = C.damage(a, d, false, () => .5, 3); assert.ok(r.dmg >= C.expectDamage(a, d, false) * 2.5); });
 t('預估傷害與實際平均一致（隨機 0.5、無會心）', () => { const a = C.mkFighter('a', 'k', 8, 'tide', 0, 80, 0), d = C.mkFighter('b', 'k', 8, 'flame', 0, 80, 0); const e = C.expectDamage(a, d, true); const r = C.damage(a, d, true, () => .5); assert.equal(r.dmg, e); });
 
 // 七種屬性
@@ -516,7 +516,7 @@ t('V1.86 戰鬥天賦、魔王天賦、萬靈藥、魔王圖鑑', () => {
   a.critUp = 1; const r0 = () => .5; const hit = C.damage(a, d, false, r0); const d2 = C.mkFighter('d', 'k', 10, 'earth', 0, 80, 0); const hit2 = C.damage(a, d2, false, r0); assert.ok(hit.crit && hit2.crit && hit.dmg < hit2.dmg);
   const g = C.mkFighter('g', 'k', 10, 'forest', 0, 80, 0); C.talentOn(g, 'leaf', 2); g.hp = 1; const s1 = C.damage(a, g, false, r0); assert.ok(s1.sprouted && g.hp === 1); const s2 = C.damage(a, g, false, r0); assert.ok(!s2.sprouted && g.hp === 0);
   const boss = C.foeFighter(5, 10); assert.deepEqual(boss.bt, ['shell']); assert.ok(boss.boss && !boss.big); C.bossTalOn(boss); const w = C.foeFighter(5, 10);
-  const sp1 = C.damage(a, boss, true, r0).dmg, sp2 = C.damage(a, w, true, r0).dmg; assert.ok(sp1 < sp2 * .5);
+  w.boss = false; boss.max = boss.hp = w.max = w.hp = 99999; const sp1 = C.damage(a, boss, true, r0).dmg, sp2 = C.damage(a, w, true, r0).dmg; assert.ok(sp1 < sp2 * .5);
   assert.ok(C.foeFighter(10, 10).big); assert.deepEqual(C.foeFighter(3, 10).bt, []);
   const s = hatched(); s.coins = 100; assert.ok(C.buyItem(s, 'elixir').ok); assert.equal(s.inv.elixir, 1);
   C.bossSeen(s, 5, 'seen', T0); C.bossSeen(s, 5, 'loss', T0); C.bossSeen(s, 10, 'win', T0); C.bossSeen(s, 3, 'win', T0);

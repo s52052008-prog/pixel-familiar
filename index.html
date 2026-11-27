@@ -3305,7 +3305,7 @@ const BOSSFX={
   for(const sd of[1,-1])for(let i=0;i<4;i++){const a=-.3-i*.3,r=12+i*5;vimg(c,'fireB',x+sd*Math.cos(a)*r,y-6+Math.sin(a)*r*.7-Math.sin(now/120)*2,sd>0?-.6:Math.PI+.6,.7*g)}})},
  zerohit(f,t){const[ex,ey]=t;return vfx(600,(c,p)=>{for(let i=0;i<6;i++){const a=i/6*Math.PI*2;vimg(c,'snow',ex+Math.cos(a)*p*20,ey+Math.sin(a)*p*14,p*3,.7,1-p)}if(p<.3)vFlash(c,'#ffffff',.4);vhit(c,'water',ex,ey,p,1.2)})}};
 async function bossAct(f,d,m){const U=f.ult,[fx,fy]=BPOS.foe,ds=sideOf(d),[tx,ty]=BPOS[ds];f.aura=null;
- if(m==='bossult'){f.ultState='done';bossBanner(`${U.icon} ${U.name}！`,U.col,f.name.replace(/^👑大王 |^小王 /,''));blog(`👑 ${f.name} 使出專屬絕招「${U.name}」！`);B.fx.foe.anim='jump';B.fx.foe.t0=performance.now();sfx('evolve');buzz(60);bossFlash(U.col,800);
+ if(m==='bossult'){f.ultState=f.ult&&f.ult.key!=='rebirth'&&(!f.ultT1||!f.ultT2)?'ready':'done';bossBanner(`${U.icon} ${U.name}！`,U.col,f.name.replace(/^👑大王 |^小王 /,''));blog(`👑 ${f.name} 使出專屬絕招「${U.name}」！`);B.fx.foe.anim='jump';B.fx.foe.t0=performance.now();sfx('evolve');buzz(60);bossFlash(U.col,800);
   spawn(U.ic,10,{x:fx,y:fy,vy:-20,jx:40,life:1.1,spread:26},bparts);await sleep(500);if(BOSSFX[U.key]&&U.key!=='breath')await BOSSFX[U.key](f,[tx,ty]);else await sleep(600);
   if(U.key==='moss'){f.mossT=U.turns;spawn('leaf',16,{x:fx,y:fy+6,vy:-16,jx:50,life:1.4,spread:30},bparts);blog(`🌿 ${f.name} 全身長出苔蘚！接下來 ${U.turns} 回合每回合回復 ${Math.round(U.heal*100)}% HP`)}
   else if(U.key==='charge'){await bossHit(f,d,U.mult,'rock',`🌋 ${f.name} 帶著熔岩全力衝撞 ${d.name}！`);if(U.burn&&ignite(d,99)){blog(`🔥 ${d.name} 被熔岩點燃了！`);bUI();await sleep(600)}}
@@ -3323,7 +3323,8 @@ async function bossTick(){const f=B.foe,U=f.ult;if(!U||f.hp<=0)return;const[fx,f
  if(f.wallT>0){f.wallT--;if(!f.wallT){blog(`🛡️ ${f.name} 的骸骨鐵壁消失了！`);await sleep(700)}}
  for(const t of[B.me,B.me2]){if(!t||t.hp<=0)continue;if(t.curseT>0){t.curseT--;if(!t.curseT){blog(`✨ ${t.name} 的混亂解除了！`);await sleep(600)}}
   if(t.doomT>0){t.doomT--;if(!t.doomT){const dm=Math.max(0,t.hp-Math.max(1,Math.round(t.max*(t.doomLeft||.01))));t.hp-=dm;bossBanner('💀 死亡宣告！',U.col);bossFlash(U.col,700);B.fx[sideOf(t)].flash=performance.now()+700;sfx('crack');buzz(80);blog(`💀 死亡宣告發動！${t.name} 被打到只剩一絲血！（受到 ${dm} 點傷害）\n💡 快補血！`);bUI();await sleep(1200)}else{blog(`💀 ${t.name} 的死亡倒數：${t.doomT}`);bUI();await sleep(600)}}}
- if(f.ultState==='ready'&&f.hp<=f.max/2){
+ const ultDue=f.ult&&f.ult.key!=='rebirth'?((B.round||0)>=2&&!f.ultT1)||(f.hp<=f.max/2&&!f.ultT2):f.hp<=f.max/2;   // V1.95 王的絕招：第 2 回合先放一次，血剩一半再放一次（不會還沒出招就被打爆）
+ if(f.ultState==='ready'&&ultDue){if((B.round||0)>=2&&!f.ultT1){f.ultT1=1;if(f.hp<=f.max/2)f.ultT2=1}else f.ultT2=1;
   if(U.key==='rebirth'){f.ultState='done';f.aura=U.col;bossBanner('🔥 火焰越燒越旺…',U.col,U.tip);blog(`🔥 ${f.name} 身上的火焰越燒越旺……\n💡 ${U.tip}`);sfx('wake');await sleep(1500)}
   else{f.ultState='warned';f.aura=U.col;bossBanner(`⚠️ ${f.name.replace(/^👑大王 |^小王 /,'')} 準備使出「${U.name}」！`,U.col,U.tip);blog(`⚠️ ${f.name} 正在凝聚力量，準備使出「${U.name}」！\n💡 ${U.tip}`);sfx('wake');buzz(40);spawn(U.ic,8,{x:fx,y:fy,vy:-14,jx:30,life:1,spread:24},bparts);await sleep(1800)}}}
 function bossStat(f){const L=[stChips(f)].filter(Boolean);if(f.ultState==='warned')L.push('⚠️絕招準備中');if(f.mossT)L.push('🌿再生'+f.mossT);if(f.wallT)L.push('🛡️鐵壁'+f.wallT);if(f.breathN>0)L.push('🐲吐息');if(f.zeroNext)L.push('❄️冰爆準備');if(f.ult&&f.ult.key==='rebirth'&&f.revive)L.push('🔥可重生');return L.length?' '+L.join(' '):''}
@@ -3374,7 +3375,7 @@ async function roundEnd(){const S=CONFIG.status,K=CONFIG.bt,T=CONFIG.talents;B.r
   if(Math.random()<Math.min(K.chill.max,K.chill.per*B.chill)){t.frozen=1;frostOn(t);tpop(t,'凍住了！','#bfefff');B.fx[sideOf(t)].flash=performance.now()+500;sfx('crack');blog(`❄️ 寒氣逼人！${t.name} 被凍住了，還凍傷了`);any=true}}}
  if(any){bUI();await sleep(700)}}
 async function bossSpell(f,d){f.chanting=false;f.chantCd=CONFIG.bt.chant.cd;f.aura=null;bossBanner('🔮 魔法發動！','#b070ff');await bossHit(f,d,CONFIG.bt.chant.mult*(1-(d.ultRes||0)),'star',`🔮 ${f.name} 放出詠唱完成的魔法！`)}
-async function foeStop(a,side){if(a.stun>0){a.stun=0;blog(`⚡ ${a.name} 全身麻痺，這回合動不了！`)}else if(a.paraT>0){a.paraT--;if(Math.random()>=CONFIG.status.para.chance)return false;blog(`⚡ ${a.name} 全身發麻，動不了！${a.ultState==='warned'||a.chanting?'（招式被打斷、延後了）':''}`)}else return false;
+async function foeStop(a,side){if(a.stun>0){a.stun=0;blog(a.stunBy==='bind'?`🌿 ${a.name} 被藤蔓捆住，這回合動不了！`:`⚡ ${a.name} 全身麻痺，這回合動不了！`);a.stunBy=null}else if(a.paraT>0){a.paraT--;if(Math.random()>=CONFIG.status.para.chance)return false;blog(`⚡ ${a.name} 全身發麻，動不了！${a.ultState==='warned'||a.chanting?'（招式被打斷、延後了）':''}`)}else return false;
  tpop(a,'麻痺','#ffe14a');B.fx[side].flash=performance.now()+600;spawn('bolt',4,{x:BPOS[side][0],y:BPOS[side][1]-6,vy:-10,jx:16,life:.7,spread:10},bparts);bUI();await sleep(900);return true}
 const sideOf=f=>f===B.foe?'foe':f===B.foe2?'foe2':f===B.me?'me':'me2';
 async function doMove(a,d,mv,side,boost=1){
@@ -3396,7 +3397,8 @@ async function doMove(a,d,mv,side,boost=1){
  const{dmg,mult,crit,endured,revived,reflect,amulet,sprouted,haloed}=PC.damage(a,d,sp,Math.random,boost);if(crit&&!side.startsWith('foe'))PC.statAdd(s,'crit');if(crit)d._crit=performance.now();if(amulet&&s.loot){s.loot.amulet=Math.max(0,s.loot.amulet-1);save();setTimeout(()=>blog(`🧿 小護身符擋下一半的傷害，碎掉了…`),300)}D.flash=performance.now()+500;buzz(mv==='bond'||mv==='ult'?60:20);if(mv==='ult'){flashUntil=performance.now()+400}
  const tx=BPOS[dside][0],ty=BPOS[dside][1];{const g=sp&&{fire:'burn',water:'splash',elec:'zap'}[a.el];if(g)B.anim={g,x:tx,y:ty+12,t0:performance.now()}}spawn(mv==='bond'?'heart':sp?SP_ICON[a.el]:'spark',mv==='bond'||mv==='ult'?12:sp?6:3,{x:tx,y:ty,vy:-20,jx:30,life:.8,spread:16},bparts);sfx(sp&&EL_SND[a.el]?EL_SND[a.el]:(crit||mv==='ult'||mv==='bond')?'punchBig':'punch');if(mv==='ult'||mv==='bond')setTimeout(()=>sfx('boom'),120);bUI();
  await sleep(450);blog(`${crit?'會心一擊！':''}造成 ${dmg} 點傷害${mult>1?'，效果絕佳！':mult<1?'，效果不太好…':''}`);await sleep(750);
- if(mv==='ult'&&a.el==='leaf'&&d.hp>0&&!d.out&&Math.random()<CONFIG.ult.bind){d.stun=1;tpop(d,'捆住了！','#8aff6a');spawn('leaf',10,{x:BPOS[dside][0],y:BPOS[dside][1],vy:-10,jx:30,life:1,spread:16},bparts);blog(`🌿 藤蔓把 ${d.name} 緊緊捆住了，下一回合動不了！`);bUI();await sleep(800)}   // V1.95 森羅萬象
+ if(mv==='ult'&&a.el==='leaf'&&d.hp>0&&!d.out&&Math.random()<CONFIG.ult.bind){d.stun=1;d.stunBy='bind';tpop(d,'捆住了！','#8aff6a');spawn('leaf',10,{x:BPOS[dside][0],y:BPOS[dside][1],vy:-10,jx:30,life:1,spread:16},bparts);blog(`🌿 藤蔓把 ${d.name} 緊緊捆住了，下一回合動不了！`);bUI();await sleep(800)}   // V1.95 森羅萬象
+ if(mv==='ult'&&a.el==='fire'&&(a===B.me||a===B.me2)){const o=[B.foe,B.foe2].find(f=>f&&f!==d&&f.hp>0&&!f.out);if(o){const os=sideOf(o);fxImpact(vPos(os),'fire');const r2=PC.damage(a,o,true,Math.random,boost);tpop(o,'-'+r2.dmg,'#ff8a3a');B.fx[os].flash=performance.now()+500;blog(`🔥 烈焰風暴延燒到 ${o.name}！造成 ${r2.dmg} 點傷害${r2.mult>1?'（效果超群！）':''}`);bUI();await sleep(700)}}   // V1.95 火系大絕招是範圍技：兩隻怪一起燒
  if(haloed){blog(`😇 天使光環亮起來！${d.name} 撐住了一口氣${d.eqAngel?'，還回了一點血':''}！`);tpop(d,'撐住！','#ffe066');bUI();await sleep(800)}
  if(!side.startsWith('foe')&&d.hp>0&&!d.out){if(a.eqPoison&&!(d.poisonT>0)&&Math.random()<a.eqPoison){d.poisonT=2;blog(`🍄 蘑菇孢子飄過去，${d.name} 中毒了！`);tpop(d,'中毒','#9ae86a');await sleep(650)}if(a.eqCharm&&!d.stun&&Math.random()<a.eqCharm){d.stun=1;blog(`🌹 ${d.name} 被玫瑰迷住了，下一回合發呆！`);tpop(d,'迷住','#ff8aa8');await sleep(650)}}   /* V1.88 裝備效果 */
  if(endured){blog(`💗 ${d.name} 想起和你的羈絆，撐住了！`);await sleep(1000)}

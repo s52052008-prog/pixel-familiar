@@ -107,7 +107,8 @@ const CONFIG = {
   train: { cost: 20, energy: -15, hunger: -10, clean: -8, minEnergy: 15, base: 10, perLv: 4,   // V1.41 訓練場：每次 20 金幣（器材＋場地費），達成目標才拿到經驗＝10＋等級×4
     kinds: { dodge: { name: '閃避訓練：躲避球', skill: 'dodge' }, rush: { name: '攻擊訓練：沙包連打', skill: 'attack' }, combo: { name: '攻擊訓練：組合拳', skill: 'attack' }, flash: { name: '攻擊訓練：靈光一閃', skill: 'attack' }, zen: { name: '防禦訓練：瀑布打坐', skill: 'defense' } } },
   ult: { power: 2.2, bind: .4 },
-  compost: { price: 800, need: 50, hours: 24 },   // V1.95 草系大絕招「森羅萬象」40% 機率用藤蔓捆住對手一回合
+  compost: { price: 800, need: 50, hours: 24 },
+  balance: { gapPer: .04, gapMax: .4, bossCap: .3 },   // V1.95 草系大絕招「森羅萬象」40% 機率用藤蔓捆住對手一回合
   stageX: { egg: 1, baby: 1, juvenile: 1, adolescent: 1.1, adult: 1.3, ascended: 1.5 },   // V1.43 進化階段加能力：幼年 ×1.0、成長 ×1.1、成年 ×1.3、高階 ×1.5（星耀覺醒再 ×2）
   trainBonus: { per: .02, max: .2 },   // V1.44：每次 +2%，每種 10 次練滿                       // V1.42 訓練成功一次 +1%，每種最多 +20%：閃避＝猜拳輸也可能閃開、攻擊＝攻擊力、防禦＝防禦力和血量
   bossCoins: { mini: 15, big: 30 },
@@ -1031,6 +1032,8 @@ function damage(a, d, special, r = Math.random, boost = 1) {
   if (d.halfNext) { dmg = Math.max(1, Math.round(dmg * .5)); d.halfNext = false; }   // 烈焰護盾／星光守護
   let reflect = 0; if (d.counterRefl) { reflect += Math.max(1, Math.round(dmg * d.counterRefl)); d.counterRefl = 0; } if (d.wallT > 0) { dmg = Math.max(1, Math.round(dmg * (1 - (d.wallCut || .5)))); reflect += Math.max(1, Math.round(dmg * (d.wallReflect || .3))); }   // V1.54 骸骨鐵壁
   const crit = r() < .08 + (a.critUp || 0); if (crit) dmg = Math.round(dmg * (1 + .5 * (1 - (d.critRes || 0))));   // 堅石之軀：抗暴擊
+  { const B2 = CONFIG.balance, gap = (d.level || 0) - (a.level || 0); if (gap > 0) dmg = Math.max(1, Math.round(dmg * (1 - Math.min(B2.gapMax, gap * B2.gapPer)))); }   // V1.95 等級差壓制：每低 1 級傷害 −4%，最多 −40%
+  if (d.boss && !d.mine) dmg = Math.min(dmg, Math.max(1, Math.round(d.max * CONFIG.balance.bossCap)));   // V1.95 王的霸體：一下最多打掉 30% 血
   let amulet = false; if (d.amulet) { dmg = Math.max(1, Math.round(dmg * .5)); d.amulet = false; amulet = true; }   // V1.83 小護身符：擋一次，傷害減半
   let endured = false, sprouted = false;
   if (dmg >= d.hp && d.sprout && !d.sproutUsed) { d.sproutUsed = true; if (r() < d.sprout) { dmg = d.hp - 1; sprouted = true; } }   // V1.86 生生不息
