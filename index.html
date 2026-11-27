@@ -1109,14 +1109,18 @@ const plotP=i=>{const[cx,cy,k]=PLOT_POS[i],[x,y]=yP('plots',cx,cy);return[x,y,k*
 const PLOT_POS=[[64,73,.5],[74,73,.5],[84,73,.5],[60,79,.6],[72,79,.6],[84,79,.6],[56,86,.7],[70,86,.7],[84,86,.7]];   // V1.64 九塊田：三排   // V1.47 六塊田：右上方遠處兩排（後排小、前排大），[中心x, 底部y, 縮放]   // 池塘中心（V1.24 往後移）
 /* V1.95 農場：院子往右一格，田、灑水器、廚餘機都搬到這裡，點田直接種、澆水、收成 */
 let FARMBG=null;const farmBg=()=>{if(!FARMBG){FARMBG=new Image();FARMBG.src=SP('sprites/scene/farm.png')}return FARMBG};
-const FARM_POS=[[16,83,1],[40,83,1],[64,83,1],[14,72,.88],[36,72,.88],[58,72,.88],[80,72,.88],[12,61,.76],[32,61,.76],[74,61,.76],[94,61,.76],[18,50,.66],[42,50,.66],[66,50,.66],[90,50,.66]];   // V1.95 十五塊田：前排先開，灑水器在正中間
-const FARM_COMP=[108,80],FARM_SPR=[53,62];
+const FARM_POS=[[10,72,.78],[27,72,.78],[43,72,.78],[60,72,.78],[76,72,.78],[10,61,.74],[30,61,.74],[70,61,.74],[90,61,.74],[13,50,.64],[30,50,.64],[47,50,.64],[63,50,.64],[80,50,.64],[97,50,.64]];   // V1.95 十五塊田順著土壟排：前排 5、中排 4（正中間是灑水器）、後排 6；前排先開，越後面越小
+const FARM_ORDER=()=>[...Array(Math.min(s.plots.length,FARM_POS.length)).keys()].sort((a,b)=>FARM_POS[a][1]-FARM_POS[b][1]||a-b);   // 從後面往前畫
+const FARM_COMP=[108,80],FARM_SPR=[50,61];
 const farmP=i=>FARM_POS[i]||FARM_POS[FARM_POS.length-1];
 const FV={fx:[],water:null,sel:'normal'};
+function drawFarmSpr(now){
+  if(s.sprinkler&&s.plots.length){const[cx,cy]=FARM_SPR,k=1,fr=WATER_SPR.spr[Math.floor(now/250)%2],sw=Math.max(9,Math.round(12*k)),sh=Math.round(fr.height*sw/fr.width),sx=Math.round(cx-sw/2),sy=Math.round(cy-sh);ctx.save();ctx.imageSmoothingEnabled=!!WATER_SPR.hd;ctx.drawImage(fr,sx,sy,sw,sh);ctx.restore();
+   if(Math.floor(now/4000)%3===0&&!rm()){ctx.fillStyle='#bfe2ff';const a=(now%4000)/4000*Math.PI*2;for(let d=0;d<12;d++){const r=4+((now/60+d*7)%30);ctx.fillRect(Math.round(sx+sw/2+Math.cos(a+d)*r),Math.round(sy+1+Math.sin(a+d)*r*.35-r*.25),1,1)}}}}
 function drawFarmView(now,ph){
  {const F=farmBg();if(F.complete&&F.naturalWidth)ctx.drawImage(F,0,0);else{ctx.fillStyle='#6aa84a';ctx.fillRect(0,0,W,H)}}
  if(ph==='night'||ph==='dusk'){ctx.fillStyle=ph==='night'?'rgba(20,24,70,.45)':'rgba(255,120,60,.18)';ctx.fillRect(0,0,W,H)}
-  const nowMs=Date.now();for(let i=0;i<s.plots.length;i++){const q=PC.plotState(s,i,nowMs),st=plotStage(q),[cx,cy,k]=farmP(i),SP=PLOT_SPR[st],sc=SP&&SP.hd?20*k/SP.width:k,w=Math.round((SP?SP.width:20)*sc),h=Math.round((SP?SP.height:16)*sc),x=Math.round(cx-w/2),y=Math.round(cy-h);   // V1.47 田在右上方遠處：小一點、糊一點，生長和家園同步
+  const nowMs=Date.now();let sprDone=false;for(const i of FARM_ORDER()){if(!sprDone&&farmP(i)[1]>FARM_SPR[1]){sprDone=true;drawFarmSpr(now)}const q=PC.plotState(s,i,nowMs),st=plotStage(q),[cx,cy,k]=farmP(i),SP=PLOT_SPR[st],sc=SP&&SP.hd?20*k/SP.width:k,w=Math.round((SP?SP.width:20)*sc),h=Math.round((SP?SP.height:16)*sc),x=Math.round(cx-w/2),y=Math.round(cy-h);   // V1.47 田在右上方遠處：小一點、糊一點，生長和家園同步
    ctx.fillStyle='rgba(40,20,8,.25)';ctx.beginPath();ctx.ellipse(cx,cy,11*k,2.6*k,0,0,Math.PI*2);ctx.fill();ctx.save();ctx.imageSmoothingEnabled=true;if(q.thirsty)ctx.filter='sepia(.5) saturate(.6) brightness(1.15)';if(SP)ctx.drawImage(SP,x,y,w,h);ctx.filter='none';ctx.restore();
    if(PC.fertOn(s,nowMs)&&Math.floor(now/300+i)%5===0){ctx.fillStyle='#b8ff7a';ctx.fillRect(Math.round(cx+((i*7+Math.floor(now/300))%17)-8),Math.round(cy-3-(now/80+i*5)%8),1,1)}
    if(!q.empty&&!q.ripe&&!q.rotten){const bw=Math.round(16*k),bx=Math.round(cx-bw/2),by=Math.round(cy+2);ctx.fillStyle='rgba(20,12,6,.7)';ctx.fillRect(bx-1,by-1,bw+2,3);ctx.fillStyle='#7ae06a';ctx.fillRect(bx,by,Math.max(1,Math.round(bw*q.progress)),1)}
@@ -1127,8 +1131,7 @@ function drawFarmView(now,ph){
    if(q.thirsty&&ICV.ic_drop){const D=ICV.ic_drop,dw=Math.max(5,Math.round(D.width*.6)),dh=Math.round(D.height*dw/D.width);ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(D,Math.round(cx-dw/2),Math.round(y-dh-1+Math.round(Math.sin(now/260+i)*1.5)),dw,dh);ctx.restore()}   // V1.90 口渴的田頭上冒水滴
    if(WATER_FX[i]&&Date.now()<WATER_FX[i]){const t0=1-(WATER_FX[i]-Date.now())/1200;ctx.fillStyle='#8ac4ff';for(let d=0;d<5;d++){const ph=(t0*2+d/5)%1;ctx.fillRect(Math.round(cx-w*.3+d*w*.15),Math.round(y-6+ph*(h+4)),1,2)}}}
   if(s.composter&&s.plots.length&&ICV.compost){const[bx,by]=FARM_COMP,I=ICV.compost,w=I.width,h=I.height;ctx.drawImage(I,Math.round(bx-w/2),Math.round(by-h),w,h);if(s.compost>=CONFIG.compost.need*.8&&Math.floor(now/400)%2){ctx.fillStyle='#b8ff7a';ctx.fillRect(Math.round(bx),Math.round(by-h-3),1,2)}}   // V1.95 廚餘機
-  if(s.sprinkler&&s.plots.length){const[cx,cy]=FARM_SPR,k=1,fr=WATER_SPR.spr[Math.floor(now/250)%2],sw=Math.max(9,Math.round(12*k)),sh=Math.round(fr.height*sw/fr.width),sx=Math.round(cx-sw-6*k),sy=Math.round(cy-sh);ctx.save();ctx.imageSmoothingEnabled=!!WATER_SPR.hd;ctx.drawImage(fr,sx,sy,sw,sh);ctx.restore();
-   if(Math.floor(now/4000)%3===0&&!rm()){ctx.fillStyle='#bfe2ff';const a=(now%4000)/4000*Math.PI*2;for(let d=0;d<12;d++){const r=4+((now/60+d*7)%30);ctx.fillRect(Math.round(sx+sw/2+Math.cos(a+d)*r),Math.round(sy+1+Math.sin(a+d)*r*.35-r*.25),1,1)}}}
+  if(!sprDone)drawFarmSpr(now);
  FV.fx=FV.fx.filter(f=>now-f.t<700);for(const f of FV.fx){const e=(now-f.t)/1000;ctx.fillStyle=f.col;ctx.fillRect(Math.round(f.x+f.vx*e),Math.round(f.y+f.vy*e+60*e*e),1,1)}
  if(FV.water){const e=(Date.now()-FV.water.t0)/1000,[cx,cy,k]=farmP(FV.water.i);if(e<1.1){const S2=WATER_SPR.can,cw=Math.round(16*k),chh=Math.round(S2.height*cw/S2.width),ang=e<.25?-e/.25*.7:e<.85?-.7:-.7+(e-.85)/.25*.7;ctx.save();ctx.translate(Math.round(cx+8*k),Math.round(cy-18*k));ctx.rotate(ang);ctx.imageSmoothingEnabled=!!WATER_SPR.hd;ctx.drawImage(S2,-cw,-chh/2,cw,chh);ctx.restore()}else FV.water=null}}
 function farmHint(){if(window.PF_NO_GUIDE||(s.tipsSeen||{}).farmView)return;(s.tipsSeen||(s.tipsSeen={})).farmView=1;save();setTimeout(()=>toast('🌾 這裡是農場！直接點田就能種、澆水、收成；買種子、選種子、賣水果按「🌱 種田」',5500),600)}
@@ -4841,7 +4844,8 @@ function fmDraw(now){const c=fmctx,ph=phase(),nowMs=Date.now();c.clearRect(0,0,1
  {const F=farmBg();if(F.complete&&F.naturalWidth)c.drawImage(F,0,0);else if(FMIMG.complete&&FMIMG.naturalWidth)c.drawImage(FMIMG,0,0);else{c.fillStyle='#8a5a30';c.fillRect(0,0,128,112)}}
  if(ph==='night'||ph==='dusk'){c.fillStyle=ph==='night'?'rgba(20,24,70,.45)':'rgba(255,120,60,.18)';c.fillRect(0,0,128,112)}
  wxScene(c,now,16);
- const L=fmLayout();L.forEach((p,i)=>{const q=PC.plotState(s,i,nowMs),st=plotStage(q),SP=PLOT_SPR[st]||PLOT_SPR.empty;if(!SP)return;const k=28*p.sc/SP.width,w=Math.round(SP.width*k),h=Math.round(SP.height*k);
+ const L=fmLayout();let sprD=false;const fmSpr=()=>{if(sprD||!s.sprinkler||!L.length)return;sprD=true;const fr=WATER_SPR.spr[Math.floor(now/250)%2],sw=12,sh=Math.round(fr.height*sw/fr.width),sx=Math.round(FARM_SPR[0]-sw/2),sy=Math.round(FARM_SPR[1]-sh);c.save();c.imageSmoothingEnabled=!!WATER_SPR.hd;c.drawImage(fr,sx,sy,sw,sh);c.restore();if(Math.floor(now/3000)%2===0){c.fillStyle='#bfe2ff';for(let d=0;d<12;d++){const r=4+((now/60+d*7)%28),a=now/400+d*.8;c.fillRect(Math.round(sx+sw/2+Math.cos(a)*r),Math.round(sy+1+Math.sin(a)*r*.35-r*.3),1,1)}}};
+ FARM_ORDER().forEach(i=>{const p=L[i];if(p.y>FARM_SPR[1])fmSpr();const q=PC.plotState(s,i,nowMs),st=plotStage(q),SP=PLOT_SPR[st]||PLOT_SPR.empty;if(!SP)return;const k=28*p.sc/SP.width,w=Math.round(SP.width*k),h=Math.round(SP.height*k);
   c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(p.x,p.y,13*p.sc,3*p.sc,0,0,Math.PI*2);c.fill();
   c.save();c.imageSmoothingEnabled=false;if(q.thirsty)c.filter='sepia(.5) saturate(.6) brightness(1.15)';c.drawImage(SP,Math.round(p.x-w/2),Math.round(p.y-h+2),w,h);c.filter='none';c.restore();
   if(WATER_FX[i]&&nowMs<WATER_FX[i]){c.save();c.globalAlpha=.35*(WATER_FX[i]-nowMs)/1200;c.fillStyle='#1a2a4a';c.beginPath();c.ellipse(p.x,p.y-2,12*p.sc,4*p.sc,0,0,Math.PI*2);c.fill();c.restore()}
@@ -4851,10 +4855,9 @@ function fmDraw(now){const c=fmctx,ph=phase(),nowMs=Date.now();c.clearRect(0,0,1
   if(FMZ.water&&FMZ.water.i===i){const t=(nowMs-FMZ.water.t0)/1000;if(t<1.1){const S2=WATER_SPR.can,cw=Math.round(18*p.sc),chh=Math.round(S2.height*cw/S2.width),ang=t<.25?-t/.25*.7:t<.85?-.7:-.7+(t-.85)/.25*.7;c.save();c.translate(Math.round(p.x+8*p.sc),Math.round(p.y-h-4));c.rotate(ang);c.imageSmoothingEnabled=!!WATER_SPR.hd;c.drawImage(S2,-cw,-chh/2,cw,chh);c.restore();
    if(t>.25&&t<.95){c.fillStyle='#8ac4ff';for(let d=0;d<6;d++){const ph=((t-.25)*3+d/6)%1;c.fillRect(Math.round(p.x-6*p.sc+d*2*p.sc),Math.round(p.y-h+ph*(h-2)),1,2)}}}}
   if(st==='rot'&&ICV.fly){const a=now/300+i;c.drawImage(ICV.fly,Math.round(p.x+4*Math.cos(a)),Math.round(p.y-h+3*Math.sin(a*1.7)))}
-  if(s.sprinkler&&i===0){const fr=WATER_SPR.spr[Math.floor(now/250)%2],sw=12,sh=Math.round(fr.height*sw/fr.width),sx=Math.round(FARM_SPR[0]-sw/2),sy=Math.round(FARM_SPR[1]-sh);c.save();c.imageSmoothingEnabled=!!WATER_SPR.hd;c.drawImage(fr,sx,sy,sw,sh);c.restore();if(Math.floor(now/3000)%2===0){c.fillStyle='#bfe2ff';for(let d=0;d<8;d++){const r=4+((now/80+d*5)%14),a=now/400+d*.8;c.fillRect(Math.round(sx+sw/2+Math.cos(a)*r),Math.round(sy+1+Math.sin(a)*r*.3-r*.3),1,1)}}}
   if(!q.empty&&!q.ripe&&!q.rotten){const bw=Math.round(20*p.sc),bx=Math.round(p.x-bw/2),by=Math.round(p.y+3);c.fillStyle='rgba(20,12,6,.75)';c.fillRect(bx-1,by-1,bw+2,4);c.fillStyle='#7ae06a';c.fillRect(bx,by,Math.round(bw*q.progress),2)}
   if(q.ripe&&!q.rotten&&Math.floor(now/500+i)%2){c.fillStyle='#fff6a0';c.fillRect(Math.round(p.x)-1,Math.round(p.y-h-2),3,1);c.fillRect(Math.round(p.x),Math.round(p.y-h-3),1,3)}
-  if(q.empty&&Math.floor(now/700+i)%3===0){c.fillStyle='rgba(255,255,255,.6)';c.font='bold 7px sans-serif';c.fillText('+',Math.round(p.x-2),Math.round(p.y-3))}});
+  if(q.empty&&Math.floor(now/700+i)%3===0){c.fillStyle='rgba(255,255,255,.6)';c.font='bold 7px sans-serif';c.fillText('+',Math.round(p.x-2),Math.round(p.y-3))}});fmSpr();
  const w=PC.weatherAt(nowMs);if(w==='rain'||w==='storm'){c.fillStyle='rgba(200,220,255,.55)';for(let i=0;i<(w==='storm'?40:22);i++){const x=(i*37+now/6)%132-2,y=(i*53+now/(w==='storm'?3:4))%112;c.fillRect(Math.round(x),Math.round(y),1,3)}}
  for(let i=FMZ.fx.length-1;i>=0;i--){const p=FMZ.fx[i],t=(now-p.t)/1000;if(t>.9){FMZ.fx.splice(i,1);continue}c.globalAlpha=1-t/.9;c.fillStyle=p.col;c.fillRect(Math.round(p.x+p.vx*t),Math.round(p.y+p.vy*t+40*t*t),2,2);c.globalAlpha=1}}
 fmcv.addEventListener('pointerdown',e=>{e.preventDefault();const r=fmcv.getBoundingClientRect();fmTap((e.clientX-r.left)/r.width*128,(e.clientY-r.top)/r.height*112)});
