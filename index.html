@@ -303,6 +303,7 @@ body.gdOn #guideBar{position:relative;z-index:42}body.gdOn .gpoint{z-index:42!im
 body.scrollm #app{height:auto!important;min-height:100dvh!important;overflow:visible!important}body.scrollm .stagearea{flex:none!important}body.scrollm #scene{touch-action:none}
 #denBtn{font-size:12px;padding:4px 9px}
 .stagewrap{border-color:#c8913a!important;box-shadow:0 0 0 3px #2a170a,inset 0 0 0 2px #5a3510,0 0 0 5px #f0c868,0 0 0 8px #2a170a,0 8px 0 6px #0009!important}.stagewrap::before,.stagewrap::after{background:#fff0b0!important;box-shadow:inset -2px -2px 0 #b8852a,0 0 0 2px #2a170a!important}
+#hurtChip{position:absolute;left:6px;top:34px;z-index:4;font:inherit;font-size:12px;font-weight:800;padding:2px 9px;border-radius:10px;background:#ffe2dc;border:2px solid #2a170a;box-shadow:inset 0 0 0 1.5px #ff8a7a,0 2px 0 #8a3a2a;color:#7a2a1a;cursor:pointer}
 #wxChip{position:absolute;left:6px;top:6px;z-index:3;display:flex;align-items:center;gap:4px;background:rgba(20,12,6,.6);color:#fff3d8;font-size:12px;font-weight:800;padding:2px 9px 2px 4px;border-radius:12px;border:2px solid rgba(255,230,170,.35);pointer-events:none}#wxChip img{width:20px;height:20px;image-rendering:pixelated}
 .snav{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:44px;height:48px;padding:0;border:0;background:none;min-width:0;display:flex;align-items:center}.snav span{display:flex;align-items:center;justify-content:center;width:24px;height:44px;border:2px solid #2a170a;background:#f0c868;color:#5a3510;font-size:12px;font-weight:900;border-radius:6px;box-shadow:inset 0 -3px 0 #b8852a;opacity:.92}.snav.l{left:-40px;justify-content:flex-end}.snav.r{right:-40px;justify-content:flex-start}.snav:active{transform:translateY(-50%) scale(.92)}
 .hleaf{width:18px;height:18px;image-rendering:pixelated;vertical-align:-2px;margin-right:4px;transform:rotate(-20deg)}.hleaf.r{margin:0 0 0 4px;transform:scaleX(-1) rotate(-20deg)}
@@ -476,7 +477,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
   <div id="evoCap" class="hidden"></div>
   <div class="scrop" id="scrop"><canvas id="scene" width="128" height="112" role="button" tabindex="0" aria-label="遊戲畫面，點擊幻獸互動"></canvas></div>
   <div id="bubble" class="off"></div>
-  <div id="wxChip" class="hidden"></div><button id="navL" class="snav l" aria-label="切換畫面"><span>◀</span></button><button id="navR" class="snav r" aria-label="切換畫面"><span>▶</span></button>
+  <div id="wxChip" class="hidden"></div><button id="hurtChip" class="hidden" aria-label="受傷了，去醫院"></button><button id="navL" class="snav l" aria-label="切換畫面"><span>◀</span></button><button id="navR" class="snav r" aria-label="切換畫面"><span>▶</span></button>
   <button id="viewBtn" class="viewbtn hidden">🏠 進屋</button>
   <button id="lightBtn" class="viewbtn hidden" style="top:56px">💡 開燈</button>
   <button id="denBtn" class="viewbtn hidden" style="left:auto;right:6px">🛠 小窩</button>
@@ -2195,9 +2196,19 @@ function renderUI(){if(s&&s.inv)PC.markSeen(s);
  $('viewBtn').classList.toggle('hidden',!s.hatched||s.view!=='room');$('viewBtn').textContent='🌳 出門';$('denBtn').classList.toggle('hidden',!s.hatched||(s.view!=='room'&&(!!mode||$('stagewrap').offsetWidth<240)));{const sl=Math.max(0,PC.denCap(s)-1-(s.pair?1:0)),t=sl?`🪺 小窩 ${(s.roster||[]).length}/${sl}`:'🪺 小窩';if($('denBtn').textContent!==t)$('denBtn').textContent=t}   // 進窩改成點兩下建築物
  $('goalDot').classList.toggle('hidden',!(s.goals.list||[]).some(g=>!g.claimed&&g.n>=g.need));
  {const need=s.hatched&&!s.sleeping?STATS.map(([k])=>[k,s[k]]).filter(([,v])=>v<35).sort((a,b)=>a[1]-b[1])[0]:null,A={hunger:'feed',mood:'play',clean:'wash',energy:'sleep'};document.querySelectorAll('[data-act]').forEach(b=>b.classList.toggle('need',!!need&&b.dataset.act===A[need[0]]))}   /* V1.86 最需要照顧的那一項會發光 */
- renderGuide();wxChip();$('navL').classList.toggle('hidden',!s.hatched);$('navR').classList.toggle('hidden',!s.hatched)}
+ renderGuide();wxChip();hurtChip();$('navL').classList.toggle('hidden',!s.hatched);$('navR').classList.toggle('hidden',!s.hatched)}
 function wxChip(){const el=$('wxChip');if(!el)return;const room=!s.hatched||!outside();el.classList.toggle('hidden',room);if(room)return;const w=weather(),ic=w==='clear'?(phase()==='night'?'ui/moon':'items/ic_sun'):w==='breeze'?'ui/leaf':w==='rain'?'items/ic_drop':'ui/bolt',nm=w==='clear'?(phase()==='night'?'晴朗的夜晚':'晴'):PC.WEATHER_NAME[w];const k=ic+nm;if(el.dataset.k===k)return;el.dataset.k=k;el.innerHTML=`<img src="sprites/${ic}.png" alt="">${nm}`}
-setInterval(()=>{try{wxChip()}catch(e){}},60000);
+setInterval(()=>{try{wxChip();hurtChip()}catch(e){}},60000);
+/* V1.95 醫院：受傷時主畫面左上出現提示，點了直接去醫院；選單和冒險畫面也有入口 */
+const hurtPets=()=>{const now=Date.now(),L=[];if(s.hatched)L.push(['main',s]);if(s.pair)L.push(['pair',s.pair]);(s.roster||[]).forEach((p,i)=>L.push([i,p]));return L.map(([w,p])=>({who:w,p,h:PC.hpNow(p,now)}))};
+function hurtChip(){const el=$('hurtChip');if(!el)return;const H=hurtPets().filter(x=>x.h<1&&x.who!=='pair'||x.h<1&&x.who==='pair'),worst=H.length?H.reduce((a,b)=>b.h<a.h?b:a):null,show=!!worst&&s.hatched&&!VISIT.on;el.classList.toggle('hidden',!show);if(!show)return;el.textContent=`${worst.h<CONFIG.clinic.minFrac?'🤕':'🩹'} ${worst.p.name||''} ${Math.round(worst.h*100)}% → 🏥`;el.onclick=()=>{sfx('tap');hospitalDialog()}}
+function hospitalDialog(){const L=hurtPets(),now=Date.now(),hurt=L.filter(x=>x.h<1),all=hurt.reduce((a,x)=>a+PC.clinicPrice(PC.level(x.p.xp||0)),0);
+ openModal('🏥 醫院',`<p class="small" style="margin-top:0">血量會自己慢慢回（約 ${CONFIG.clinic.regenHours} 小時回滿、睡覺快一倍），吃東西也會回一點；低於 ${Math.round(CONFIG.clinic.minFrac*100)}% 不能去冒險。看醫生馬上回滿。</p>
+${L.map(x=>{const pc=Math.round(x.h*100),col=x.h<CONFIG.clinic.minFrac?'#ff6a5a':x.h<.6?'#ffc94a':'#7ae06a',lv=PC.level(x.p.xp||0);return`<div class="advhp" style="margin:6px 0"><span style="white-space:nowrap">${x.h<CONFIG.clinic.minFrac?'🤕':x.h<1?'🩹':'💚'} ${esc(x.p.name||'')} <small>Lv.${lv}</small> <b style="color:${col}">${pc}%</b></span><span style="flex:1;min-width:30px;height:8px;border-radius:4px;background:#3a2414;overflow:hidden;margin:0 8px;display:block"><span style="display:block;height:100%;width:${pc}%;background:${col}"></span></span>${x.h<1?`<button class="btn" data-heal="${x.who}" style="padding:4px 10px;white-space:nowrap;flex:none;width:auto;min-height:0">治療 ${PC.clinicPrice(lv)} 金幣</button>`:'<span class="small">很健康</span>'}</div>`}).join('')}
+${hurt.length>1?`<div class="row"><button class="btn pri" id="healAll">🏥 全部治好（${all} 金幣）</button></div>`:''}${hurt.length?'':'<p>大家都很健康！💚</p>'}<p class="small">💰 身上 ${s.coins} 金幣</p>`);
+ const done=()=>{save();renderUI();hospitalDialog()};
+ document.querySelectorAll('[data-heal]').forEach(b=>b.onclick=()=>{const w=b.dataset.heal,r=PC.clinic(s,/^\d+$/.test(w)?+w:w);if(!r.ok){toast(r.msg);sfx('no');return}sfx('level');toast(r.msg,2500);done()});
+ if($('healAll'))$('healAll').onclick=()=>{if(s.coins<all){toast(`全部治好要 ${all} 金幣，錢不夠`);sfx('no');return}for(const x of hurt)PC.clinic(s,x.who);sfx('level');toast('🏥 大家都治好了！',2500);done()}}
 
 /* =========================================================
    對話框（取代 prompt / alert / confirm）
@@ -2703,13 +2714,13 @@ function menuDialog(){
 <div class="row"><button class="btn" id="mSound">${snd()}</button><button class="btn" id="mMusic">${mus()}</button><button class="btn" id="mMotion">${mo()}</button></div>
 <div class="row"><button class="btn" id="mFont">🔤 字型：${FONTS[PF_FONT_KEY]?FONTS[PF_FONT_KEY][0]:"系統字型"}</button></div>
 <p style="margin-top:10px"><b>🪄 金手指</b></p><div class="row"><input id="mCheat" placeholder="輸入密碼" autocomplete="off" autocapitalize="off" style="flex:1;min-width:0;font-size:16px;padding:8px;border:3px solid var(--line)"><button class="btn" id="mCheatGo">確定</button></div>
-<div class="row"><button class="btn" id="mBasketM">🧺 蛋籃（${s.eggs.length}）</button></div>
+<div class="row"><button class="btn" id="mBasketM">🧺 蛋籃（${s.eggs.length}）</button><button class="btn" id="mHosp">🏥 醫院</button></div>
 <div class="row"><button class="btn" id="mNotify">🔔 手機通知：${s.settings.notify.on?'開':'關'}</button></div>
 <div class="row"><button class="btn" id="mGuide">📖 新手手冊</button><button class="btn" id="mTour">🆕 新功能導覽</button><button class="btn" id="mUpdate">🔄 檢查更新</button></div>
 <div class="row"><button class="btn pri" id="mReset">🥚 迎接新的蛋（🪙 ${PC.eggPrice(s)}）</button></div>
 <div class="row" style="margin-top:14px"><button class="btn" id="mWipe" style="border-color:#a03a2a;color:#ffb0a0">🔄 全部重新開始</button></div>
 <p class="small" style="margin-top:12px">版本 V${VERSION}｜存檔位置：${standalone()?'主畫面 App':'瀏覽器'}（${location.host||'本機'}）${store.ok?'':'｜⚠️ 無法寫入'}</p>`);
- $('mWipe').onclick=wipeDialog;$('mNotify').onclick=notifyDialog;$('mGuide').onclick=guideListDialog;$('mTour').onclick=tourListDialog;$('mOwner').onclick=()=>ownerDialog(false);$('mRename').onclick=()=>renameDialog(false);if($('mQuiz'))$('mQuiz').onclick=()=>quizIntro(false);$('mHelp').onclick=helpDialog;$('mSave').onclick=saveDialog;$('mBasketM').onclick=basketDialog;
+ $('mWipe').onclick=wipeDialog;$('mNotify').onclick=notifyDialog;$('mGuide').onclick=guideListDialog;$('mTour').onclick=tourListDialog;$('mOwner').onclick=()=>ownerDialog(false);$('mRename').onclick=()=>renameDialog(false);if($('mQuiz'))$('mQuiz').onclick=()=>quizIntro(false);$('mHelp').onclick=helpDialog;$('mSave').onclick=saveDialog;$('mBasketM').onclick=basketDialog;$('mHosp').onclick=hospitalDialog;
  $('mSound').onclick=()=>{s.settings.sound=!s.settings.sound;save();unlockAudio();sfx('tap');$('mSound').textContent=snd()};
  $('mMusic').onclick=()=>{s.settings.music=!musicOn();if(!musicOn())bgmStop(.4);save();unlockAudio();sfx('tap');$('mMusic').textContent=mus()};
  $('mCheatGo').onclick=()=>{const c=$('mCheat').value.trim().toLowerCase().replace(/\s+/g,' ');$('mCheat').value='';
@@ -3614,7 +3625,7 @@ function endBattle(win){if(B&&B.pvp){pvpEnd(win);return}B.over=true;if(B.hoard){
  if(r.gift){const[k,v]=r.gift;rows.push(['gift','🎅 聖誕帽的禮物',k==='coins'?`🪙 +${v}`:`${(CONFIG.foods[k]&&CONFIG.foods[k].name)||{potion:'回復藥水',seeds:'種子',candy:'星星糖'}[k]||k} +${v}`,'打開禮物盒！'])}
  if(r.xp)rows.push(['star','經驗',`+${r.xp}`,'']);
  if(r.lostCoins)rows.push(['coin','💸 打輸掉了金幣',`−${r.lostCoins}`,'身上金幣的 5%']);
- if(res==='loss')rows.push(['heart','🤕 受傷倒下了','要休息',`自己慢慢回血（約 ${CONFIG.clinic.regenHours} 小時回滿），或到「⚔️ 冒險」帶牠去 🏥 看醫生（${PC.clinicPrice(lvl())} 金幣）`]);
+ if(res==='loss')rows.push(['heart','🤕 受傷倒下了','要休息',`自己慢慢回血（約 ${CONFIG.clinic.regenHours} 小時回滿），或點左上角的 🏥 去醫院看醫生（${PC.clinicPrice(lvl())} 金幣）`]);
  if(res==='win')setTimeout(()=>guideHit('adv'),2500);
  if(eb)rows.push(['coin','✨ 精英獎勵',`+${eb.coins}`,`打倒精英野怪・經驗也 +${eb.xp}`]);
  if(px)rows.push(['star',`🐾 ${s.pair.name} 經驗`,`+${px}`,'一起冒險']);
