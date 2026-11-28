@@ -12,6 +12,7 @@ const CONFIG = {
   tz: 'Asia/Taipei',                 // 每日重置使用的時區（GDD：預設 Asia/Taipei）
   offlineCapHours: 12,               // 離線狀態變化最多補算 12 小時
   jumpWarnDays: 30,                  // 一次跳過超過 30 天 → 提示時間異常
+  appetite: { baby: .8, juvenile: 1, adolescent: 1.2, adult: 1.4, ascended: 1.6, xp: { adult: 1.2, ascended: 1.2 } },   // V1.95 長大食量變大（肚子餓得比較快）；成年以後吃東西經驗 ×1.2
   rates: {                           // 每小時變化
     awake: { hunger: -4, mood: -3, clean: -2, energy: 8 },  // V1.19：變餓、變無聊、變髒都比較快   // 醒著也會慢慢恢復：約 1 小時可以再玩 1 次
     sleep: { hunger: -2, mood: 0, clean: -1, energy: 25 }   // 睡 4 小時左右就充飽
@@ -643,10 +644,10 @@ function applyTime(st, now = Date.now()) {
   const rw = rainWater(st, last, now); if (rw) { events.push('rainwater'); st.rainWatered = rw; }
   if (st.hatched && eff > 0) {
     const R = CONFIG.rates[st.sleeping ? 'sleep' : 'awake'], T = trait(st);
-    const hr = -R.hunger * ((T.rate && T.rate.hunger) || 1), h0 = st.hunger;   // 每小時掉多少飽食
+    const AP = CONFIG.appetite[st.stage] || 1, hr = -R.hunger * ((T.rate && T.rate.hunger) || 1) * AP, h0 = st.hunger;   // 每小時掉多少飽食
     if (h0 > 0) st.starveSince = 0;   // 有吃東西（飽食 >0）就重新計算
     let starveT = 0; if (!st.runaway && hr > 0 && hours >= h0 / hr) starveT = Math.round(last + (h0 / hr) * H);   // 這段時間內（真實時間）餓到 0 的時刻
-    for (const k in R) { let v = R[k]; if (v < 0 && T.rate && T.rate[k]) v *= T.rate[k]; if (k === 'energy' && v > 0 && T.energyUp) v *= T.energyUp; st[k] = clamp(st[k] + v * eff); }   // 屬性特性：某些狀態掉得比較快、體力恢復快慢不同
+    for (const k in R) { let v = R[k]; if (v < 0 && T.rate && T.rate[k]) v *= T.rate[k]; if (k === 'hunger') v *= AP; if (k === 'energy' && v > 0 && T.energyUp) v *= T.energyUp; st[k] = clamp(st[k] + v * eff); }   // 屬性特性：某些狀態掉得比較快、體力恢復快慢不同
     // 發臭的果核：只算「已經發臭」的那段時間，同樣最多 12 小時
     let rotH = 0; for (const c of st.cores) { const from = Math.max(last, c.at + rotMin(c) * MIN); if (now > from) rotH += Math.min((now - from) / H, CONFIG.offlineCapHours); }
     if (rotH > 0) st.mood = clamp(st.mood - rotH * CONFIG.core.moodPerHour);
@@ -679,7 +680,7 @@ function awaken(st, now = Date.now()) { const w = canAwaken(st); if (w) return {
 /* 一起出來的第二隻：狀態變化速度只有一半（不會離家出走，餓到 0 只會心情、親密度往下掉） */
 function decayPair(st, eff) {
   const p = st.pair, R = CONFIG.rates[st.sleeping ? 'sleep' : 'awake'], T = traitOf(p.route), k = eff * CONFIG.pair.rate;
-  for (const key in R) { let v = R[key]; if (v < 0 && T.rate && T.rate[key]) v *= T.rate[key]; if (key === 'energy' && v > 0 && T.energyUp) v *= T.energyUp; p[key] = clamp(p[key] + v * k); }
+  for (const key in R) { let v = R[key]; if (v < 0 && T.rate && T.rate[key]) v *= T.rate[key]; if (key === 'hunger') v *= CONFIG.appetite[p.stage] || 1; if (key === 'energy' && v > 0 && T.energyUp) v *= T.energyUp; p[key] = clamp(p[key] + v * k); }
   const N = CONFIG.neglect; if (Math.min(p.hunger, p.mood, p.clean) < N.below) p.bond = clamp(p.bond - N.bondPerHour * k);
   if (p.hunger <= 0) p.mood = clamp(p.mood - 2 * k);
 }
@@ -750,7 +751,7 @@ function act(st, a, now = Date.now(), opt) {
     if (FD.energy || freshEat || PB || CB) st.energy = clamp(st.energy + (FD.energy || 0) + (freshEat ? CONFIG.freshBonus.energy : 0) + (PB ? PB.energy : 0) + (CB ? CB.energy : 0)); fixFresh(st);
     if (CB) { st.bond = clamp(st.bond + CB.bond); st.crave = { kind: null, until: now + CONFIG.crave.cooldownHours * H }; }   // V1.73 餵到後吃飽滿足，3 小時後才會再想吃別的
     st.path.tide += CONFIG.feed.tide; track(st, 'feed', now); st.digest.push(now + CONFIG.poop.delayMin * MIN);
-    return { ok: true, anim: 'eat', sfx: 'eat', kind, left: FD.left, fav: fav || crave, crave, xp: addXP(st, FD.xp + (fav ? B.xp : 0) + (PB ? PB.xp : 0) + (CB ? CB.xp : 0)), power: !!PB, fresh: freshEat, msg: (freshEat ? '✨自己種的' : '') + (crave ? `就是想吃${FD.name}！幸福～💕（親密度 +${CB.bond}）` : fav ? `最愛的${FD.name}！超好吃！` : `好吃的${FD.name}！`) + (freshEat ? `體力多 +${CONFIG.freshBonus.energy}` : '') + `（${paid}）`, tm };
+    return { ok: true, anim: 'eat', sfx: 'eat', kind, left: FD.left, fav: fav || crave, crave, xp: addXP(st, Math.round((FD.xp + (fav ? B.xp : 0) + (PB ? PB.xp : 0) + (CB ? CB.xp : 0)) * (CONFIG.appetite.xp[st.stage] || 1))), power: !!PB, fresh: freshEat, msg: (freshEat ? '✨自己種的' : '') + (crave ? `就是想吃${FD.name}！幸福～💕（親密度 +${CB.bond}）` : fav ? `最愛的${FD.name}！超好吃！` : `好吃的${FD.name}！`) + (freshEat ? `體力多 +${CONFIG.freshBonus.energy}` : '') + `（${paid}）`, tm };
   }
   if (a === 'play') {
     const C = CONFIG.play;
