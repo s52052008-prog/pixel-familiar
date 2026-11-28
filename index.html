@@ -484,7 +484,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
   <button class="btn ya" id="yaMinus">－ 縮小</button><button class="btn ya" id="yaPlus">＋ 放大</button><button class="btn ya" id="yaFlip">↔ 鏡像</button>
   <button class="btn" id="arrReset">↺ 恢復</button><button class="btn pri" id="arrDone">✅ 完成</button></div></div>
  <div id="vsCard" class="hidden"><div class="lgTop"><canvas id="vsCv" width="48" height="48"></canvas><div class="lgInfo"><b id="vsName"></b><div id="vsSub"></div></div></div><div id="vsPlots" class="hidden"></div><div class="vsBtns"><button class="btn" id="vsPet">✋ 摸摸</button><button class="btn hidden" id="vsCare">🍖 幫忙照顧</button><button class="btn" id="vsWater">💧 澆水</button><button class="btn" id="vsGift">🎁 送禮</button><button class="btn" id="vsMsg">💌 留言</button><button class="btn" id="vsBoard">📜 留言板</button><button class="btn" id="vsMate">💞 配對</button><button class="btn" id="vsDuel">⚔️ 挑戰</button><button class="btn" id="vsSearch">🔍 幫忙找</button><button class="btn" id="vsMush">🍄 採蘑菇</button></div><button class="btn pri" id="vsHome">🏠 回家</button></div>
- <div id="lgCard" class="hidden"><div class="lgTop"><canvas id="lgCv" width="48" height="48"></canvas><div class="lgInfo"><b id="lgName"></b><div id="lgSub"></div><div id="lgBars"></div></div><button class="lgx" id="lgClose" aria-label="關閉">✕</button></div><div class="row"><button class="btn" id="lgPet">✋ 摸摸牠</button><button class="btn" id="lgEq">🎽 裝備</button><button class="btn pri" id="lgSwap">🔁 換牠出來陪你</button></div></div>
+ <div id="lgCard" class="hidden"><div class="lgTop"><canvas id="lgCv" width="48" height="48"></canvas><div class="lgInfo"><b id="lgName"></b><div id="lgSub"></div><div id="lgBars"></div></div><button class="lgx" id="lgClose" aria-label="關閉">✕</button></div><div class="row"><button class="btn" id="lgPet">✋ 摸摸牠</button><button class="btn" id="lgEq"><img src="sprites/uik/i_equip.png" alt="" style="width:18px;height:18px;vertical-align:-4px;image-rendering:pixelated"> 裝備</button><button class="btn pri" id="lgSwap">🔁 換牠出來陪你</button></div></div>
  <div id="infoSlot" class="wood">
   <div class="nameplate"><div class="nprow2"><img class="nleaf" src="sprites/ui/leaf.png" alt=""><div id="petname"></div><button id="npEdit" class="npedit" aria-label="改名">✏️</button><button id="npEq" class="npeq" aria-label="裝備"><img data-sp="sprites/uik/i_equip.png" alt="">裝備</button><img class="nleaf r" src="sprites/ui/leaf.png" alt=""></div><div id="stageText" class="chips"></div><div id="traitText" class="chips"></div><div id="bondRow" class="chips"></div><div id="growText"></div><div id="alertLine" class="hidden"></div></div>
   <div id="pairBar" class="pairbar hidden"></div>
@@ -581,7 +581,7 @@ body.arrMode #infoSlot,body.arrMode #app>.panel,body.arrMode #stats,body.arrMode
    幻獸日記 Pixel Familiar — V1.3
    單一檔案：遊戲邏輯 + 程式化 16-bit 像素 sprite sheet 產生器
    ========================================================= */
-const VERSION='1.94.2';
+const VERSION='1.95.0';
 const SAVE_KEY='pixel-familiar-save',BACKUP_KEY='pixel-familiar-save-backup',LEGACY_KEY='pixel-familiar-v1',TIP_KEY='pixel-familiar-tip-closed';
 const W=128,H=112,CELL=48,PET_X=40,PET_Y=56;           // 場景邏輯解析度與角色格位置
 const $=id=>document.getElementById(id);
@@ -1115,7 +1115,7 @@ const FARM_COMP=[108,80],FARM_SPR=[50,61];
 const farmP=i=>FARM_POS[i]||FARM_POS[FARM_POS.length-1];
 const FV={fx:[],water:null,sel:'normal'};
 function drawFarmSpr(now){
-  if(s.sprinkler&&s.plots.length){const[cx,cy]=FARM_SPR,k=1,fr=WATER_SPR.spr[Math.floor(now/250)%2],sw=Math.max(9,Math.round(12*k)),sh=Math.round(fr.height*sw/fr.width),sx=Math.round(cx-sw/2),sy=Math.round(cy-sh);ctx.save();ctx.imageSmoothingEnabled=!!WATER_SPR.hd;ctx.drawImage(fr,sx,sy,sw,sh);ctx.restore();
+  if(s.sprinkler&&s.plots.length){const[cx,cy]=FARM_SPR,I=ICV.sprinkler,fr=I||WATER_SPR.spr[Math.floor(now/250)%2],sw=I?I.width:12,sh=I?I.height:Math.round(fr.height*sw/fr.width),flip=I&&Math.floor(now/400)%2,sx=Math.round(cx-sw/2),sy=Math.round(cy-sh);ctx.save();ctx.imageSmoothingEnabled=!I&&!!WATER_SPR.hd;if(flip){ctx.translate(sx*2+sw,0);ctx.scale(-1,1)}ctx.drawImage(fr,sx,sy,sw,sh);ctx.restore();
    if(Math.floor(now/4000)%3===0&&!rm()){ctx.fillStyle='#bfe2ff';const a=(now%4000)/4000*Math.PI*2;for(let d=0;d<12;d++){const r=4+((now/60+d*7)%30);ctx.fillRect(Math.round(sx+sw/2+Math.cos(a+d)*r),Math.round(sy+1+Math.sin(a+d)*r*.35-r*.25),1,1)}}}}
 function drawFarmView(now,ph){
  {const F=farmBg();if(F.complete&&F.naturalWidth)ctx.drawImage(F,0,0);else{ctx.fillStyle='#6aa84a';ctx.fillRect(0,0,W,H)}}
@@ -1335,7 +1335,7 @@ function drawDresser(c){const{x,w,top,bot}=DRESSER,h=bot-top;c.fillStyle='#5c3a2
 const bedCache={};function bigBed(id,sp){const k=id;if(bedCache[k]&&bedCache[k].src===sp)return bedCache[k].cv;const w=BED_W,h=Math.round(sp.height*1.15),cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.drawImage(sp,0,0,w,h);bedCache[k]={src:sp,cv};return cv}   // 床加寬（寵物比較大）
 const DSPR={};
 const EMB=window.EMB||{},SP=p=>EMB[p]||p;
-{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);ICV.compost=c;delete MI_URL.compost;document.querySelectorAll('canvas.picon[data-icon="compost"]').forEach(c=>paintIcon(c,'compost'))};im.src=SP('sprites/uik/compost.png')}   // V1.95 廚餘機圖   // V1.91.1 小圖在 emb.js
+for(const nm of['compost','fert','sprinkler']){const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);ICV[nm]=c;try{delete MI_URL[nm]}catch(e){}document.querySelectorAll(`canvas.picon[data-icon="${nm}"]`).forEach(c=>paintIcon(c,nm))};im.src=SP('sprites/uik/'+nm+'.png')}   // V1.95 廚餘機、肥料、灑水器圖   // V1.91.1 小圖在 emb.js
 /* V1.91 UI 零件包：主畫面的外框、按鈕、標籤、進度條統一成冠宏畫的那套（小圖內嵌，用 JS 產生樣式） */
 const UIK=n=>`url(${SP(`sprites/uik/${n}.png`)})`;
 (()=>{const st=document.createElement('style');st.id='uikCss';st.textContent=`
@@ -4627,19 +4627,21 @@ function pkUpdate(dt,now){const Z=PKZ,g=Z.gk;
    if(r==='save'){g.x=x;g.tx=x;for(let i=0;i<8;i++)Z.fx.push({ic:'star',x,y,vx:(Math.random()-.5)*80,vy:(Math.random()-.5)*60,g:40,t:0,life:.5})}
    pkResult(r)}}
  else if(Z.phase==='after'&&now>Z.msgT){if(!Z.practice&&Z.res.length>=CONFIG.pk.shots)pkEnd();else{Z.ball=null;Z.plan=null;Z.path=[];Z.gk={x:64,tx:64,dive:0,t:0,rot:0};pkPhase('aim');pkMsg(Z.practice?'再畫一條試試看～':`第 ${Z.res.length+1} 球，畫線決定怎麼踢！`)}}}
-function pkResult(r){const Z=PKZ,B=Z.ball,ok=r==='goal',warm=Z.warm;B.done=r;Z.phase='after';Z.msgT=performance.now()+1600;
+function pkResult(r){const Z=PKZ,B=Z.ball,ok=r==='goal',warm=Z.warm;B.done=r;if(!TOUR)Z.kicks=(Z.kicks||0)+1;   // V1.95 練習踢過也算陪玩
+Z.phase='after';Z.msgT=performance.now()+1600;
  if(warm)Z.warm=false;else if(!Z.practice){Z.res.push(ok);Z.shot++;if(ok)Z.goals++;if(r==='save')Z.saves++}
  if(ok){sfx('net');setTimeout(()=>sfx('coin'),250);buzz(20);for(let i=0;i<10;i++)Z.fx.push({ic:Math.random()<.5?'star':'note',x:B.tx,y:B.ty,vx:(Math.random()-.5)*60,vy:-30-Math.random()*30,g:60,t:0,life:.9})}else sfx(r==='save'?'punch':r==='post'?'clang':'whoosh');
  pkMsg(({goal:['⚽ 進球！！','⚽ 漂亮的一腳！','⚽ 球進了！守門員看傻了！'][Math.floor(Math.random()*3)],save:`🧤 被${Z.kp.code?'朋友的幻獸':'守門員'}撲出去了！`,wide:'💨 打偏了…',over:'⬆️ 飛過橫桿了…',post:'🥅 噹！打中門柱！'})[r]+(warm?'<br><span class="small">（練習球不算分，接下來是正式的 5 球！）</span>':''))}
 function pkEnd(){const Z=PKZ,C=CONFIG.pk,g=Z.goals;Z.phase='done';const star=PC.eqStats(s.acc,s.accLv).pkCoin||0,coins=g*(C.coin+star)+(g>=C.shots?C.perfect:0),xp=g*C.xp,before=s.pk.goals||0;
- s.coins+=coins;PC.addXP(s,xp);s.mood=Math.min(100,s.mood+g*C.mood);s.pk.games++;s.pk.goals+=g;const nb=g>s.pk.best;if(nb)s.pk.best=g;save();renderUI();
+ s.coins+=coins;PC.addXP(s,xp);s.mood=Math.min(100,s.mood+g*C.mood);s.pk.games++;PC.track(s,'play');   // V1.95 踢足球也算陪玩
+ s.pk.goals+=g;const nb=g>s.pk.best;if(nb)s.pk.best=g;save();renderUI();
  const unl=Object.keys(PK_KINDS).filter(k=>PK_KINDS[k].unlock&&before<PK_KINDS[k].unlock&&s.pk.goals>=PK_KINDS[k].unlock);
  if(s.pk.goals>=CONFIG.acc.whistle.pk&&!s.accOwned.includes('whistle')){s.accOwned.push('whistle');save();setTimeout(()=>toast('📣 PK 累積踢進 30 球，得到裝飾「哨子」！',5000),1500)}
  if(Z.kp.code)pushPost('/act',{code:Z.kp.code,kind:'pk',data:{saves:Z.saves,goals:g}}).catch(()=>{});
  $('pkRT').innerHTML=(g>=C.shots?`<img class="rimg" src="${SP('sprites/gbtn/crown.png')}" alt=""><br>🏆 5 球全進！完美！`:g>=3?`<img class="rimg" src="${SP('sprites/gbtn/trophy.png')}" alt=""><br>🎉 踢得好！`:`<img class="rimg go" src="${SP('sprites/gbtn/gameover.png')}" alt=""><br>😅 下次會更好！`);
  $('pkRB').innerHTML=`進球 <b>${g} / ${C.shots}</b>${nb?'　🆕 新紀錄！':''}<br>${coinSpin()} +${coins}　⭐ 經驗 +${xp}　💗 心情 +${g*C.mood}${g>=C.shots?'<br>（全進加碼 🪙 +'+C.perfect+'）':''}${unl.length?`<br>🔓 解鎖新球路：<b>${unl.map(k=>PK_KINDS[k].n).join('、')}</b>！看「📖 球路」學怎麼畫`:''}<br><span class="small">最佳紀錄 ${s.pk.best} 球・守門員：${esc(Z.kp.name)}</span>`;
  $('pkAgain').textContent=`再踢一場（⚡${C.energy}）`;setTimeout(()=>{if(PKZ){$('pkRes').classList.remove('hidden');sfx(g>=3?'level':'tap')}},500);const x0=Z.x0;setTimeout(()=>afterChange(x0),600)}
-function closePK(){PKZ=null;$('pkZone').classList.add('hidden');$('pkRes').classList.add('hidden');renderUI()}
+function closePK(){if(PKZ&&PKZ.practice&&PKZ.kicks>0){PC.track(s,'play');save()}PKZ=null;$('pkZone').classList.add('hidden');$('pkRes').classList.add('hidden');renderUI()}
 $('pkHome').onclick=()=>{if(PKZ&&!PKZ.practice&&PKZ.res.length&&PKZ.phase!=='done'){confirmBox('離開 PK？','現在離開，這場踢進的球就不算獎勵了喔。','離開',()=>{closePK()});return}closePK()};
 $('pkClose').onclick=closePK;$('pkAgain').onclick=()=>{closePK();setTimeout(()=>openPK(),100)};
 $('pkBook').onclick=()=>pkBook();
@@ -4844,7 +4846,7 @@ function fmDraw(now){const c=fmctx,ph=phase(),nowMs=Date.now();c.clearRect(0,0,1
  {const F=farmBg();if(F.complete&&F.naturalWidth)c.drawImage(F,0,0);else if(FMIMG.complete&&FMIMG.naturalWidth)c.drawImage(FMIMG,0,0);else{c.fillStyle='#8a5a30';c.fillRect(0,0,128,112)}}
  if(ph==='night'||ph==='dusk'){c.fillStyle=ph==='night'?'rgba(20,24,70,.45)':'rgba(255,120,60,.18)';c.fillRect(0,0,128,112)}
  wxScene(c,now,16);
- const L=fmLayout();let sprD=false;const fmSpr=()=>{if(sprD||!s.sprinkler||!L.length)return;sprD=true;const fr=WATER_SPR.spr[Math.floor(now/250)%2],sw=12,sh=Math.round(fr.height*sw/fr.width),sx=Math.round(FARM_SPR[0]-sw/2),sy=Math.round(FARM_SPR[1]-sh);c.save();c.imageSmoothingEnabled=!!WATER_SPR.hd;c.drawImage(fr,sx,sy,sw,sh);c.restore();if(Math.floor(now/3000)%2===0){c.fillStyle='#bfe2ff';for(let d=0;d<12;d++){const r=4+((now/60+d*7)%28),a=now/400+d*.8;c.fillRect(Math.round(sx+sw/2+Math.cos(a)*r),Math.round(sy+1+Math.sin(a)*r*.35-r*.3),1,1)}}};
+ const L=fmLayout();let sprD=false;const fmSpr=()=>{if(sprD||!s.sprinkler||!L.length)return;sprD=true;const I=ICV.sprinkler,fr=I||WATER_SPR.spr[Math.floor(now/250)%2],sw=I?I.width:12,sh=I?I.height:Math.round(fr.height*sw/fr.width),sx=Math.round(FARM_SPR[0]-sw/2),sy=Math.round(FARM_SPR[1]-sh);c.save();c.imageSmoothingEnabled=!!WATER_SPR.hd;c.drawImage(fr,sx,sy,sw,sh);c.restore();if(Math.floor(now/3000)%2===0){c.fillStyle='#bfe2ff';for(let d=0;d<12;d++){const r=4+((now/60+d*7)%28),a=now/400+d*.8;c.fillRect(Math.round(sx+sw/2+Math.cos(a)*r),Math.round(sy+1+Math.sin(a)*r*.35-r*.3),1,1)}}};
  FARM_ORDER().forEach(i=>{const p=L[i];if(p.y>FARM_SPR[1])fmSpr();const q=PC.plotState(s,i,nowMs),st=plotStage(q),SP=PLOT_SPR[st]||PLOT_SPR.empty;if(!SP)return;const k=28*p.sc/SP.width,w=Math.round(SP.width*k),h=Math.round(SP.height*k);
   c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(p.x,p.y,13*p.sc,3*p.sc,0,0,Math.PI*2);c.fill();
   c.save();c.imageSmoothingEnabled=false;if(q.thirsty)c.filter='sepia(.5) saturate(.6) brightness(1.15)';c.drawImage(SP,Math.round(p.x-w/2),Math.round(p.y-h+2),w,h);c.filter='none';c.restore();
@@ -4866,10 +4868,10 @@ $('fmShop').onclick=()=>{sfx('tap');farmShop()};$('fmComp').onclick=()=>{sfx('ta
 /* V1.95 廚餘機＋肥料 */
 function compostLabel(){const C=CONFIG.compost,on=PC.fertOn(s);return !s.composter?`廚餘機（🪙${C.price}）：果皮骨頭變肥料`:on?`🌱 肥料加倍中（剩 ${Math.ceil((s.fertUntil-Date.now())/3600e3)} 小時）・廚餘 ${s.compost}/${C.need}`:`廚餘機 ${s.compost}/${C.need}・肥料 ${s.inv.fert||0} 包${s.inv.fert?'（點這裡灑）':''}`}
 function compostDialog(){const C=CONFIG.compost,on=PC.fertOn(s),pct=Math.round(s.compost/C.need*100);
- openModal('🗑️ 廚餘機',`<div style="text-align:center"><canvas class="picon" data-icon="compost" data-s="6"></canvas></div>
- ${s.composter?`<p>院子裡的廚餘機：清掉的<b>果皮、果核、魚骨、肋骨</b>會自己丟進去，滿 <b>${C.need}</b> 個做出一包肥料。</p><div class="bar" style="height:14px;background:#4a2a10;border-radius:7px;overflow:hidden"><i style="display:block;height:100%;width:${pct}%;background:#6ac06a"></i></div><p class="small" style="text-align:center">廚餘 ${s.compost}/${C.need}</p>
+ openModal('♻️ 廚餘機',`<div style="text-align:center"><canvas class="picon" data-icon="compost" data-s="6"></canvas></div>
+ ${s.composter?`<p>農場的廚餘機：清掉的<b>果皮、果核、魚骨、肋骨</b>會自己丟進去，滿 <b>${C.need}</b> 個做出一包肥料。</p><div class="bar" style="height:14px;background:#4a2a10;border-radius:7px;overflow:hidden"><i style="display:block;height:100%;width:${pct}%;background:#6ac06a"></i></div><p class="small" style="text-align:center">廚餘 ${s.compost}/${C.need}</p>
   <p><canvas class="picon" data-icon="fert" data-s="3" style="vertical-align:-6px"></canvas> 肥料 <b>${s.inv.fert||0}</b> 包：一包灑滿全部的田，<b>${C.hours} 小時內收成加倍</b>。</p>${on?`<p class="small">🌱 現在肥料有效中，還剩 ${Math.ceil((s.fertUntil-Date.now())/3600e3)} 小時。</p>`:''}`
- :`<p>把廚餘機放在院子，之後清掉的<b>果皮、果核、魚骨、肋骨</b>都會自己丟進去。滿 <b>${C.need}</b> 個就做出一包<b>肥料</b>：灑滿全部的田，<b>${C.hours} 小時內收成加倍</b>！</p>`}<div class="err" id="cpErr"></div>`,
+ :`<p>把廚餘機放在農場，之後清掉的<b>果皮、果核、魚骨、肋骨</b>都會自己丟進去。滿 <b>${C.need}</b> 個就做出一包<b>肥料</b>：灑滿全部的田，<b>${C.hours} 小時內收成加倍</b>！</p>`}<div class="err" id="cpErr"></div>`,
  s.composter?[{t:'關閉'},{t:`🌱 灑肥料（${s.inv.fert||0}）`,cls:'pri',fn:()=>{const r=PC.useFert(s,Date.now());if(!r.ok){$('cpErr').textContent='❌ '+r.msg;sfx('no');return false}toast(r.msg,3500);sfx('level');save();renderUI();if(FMZ){fmInfo();$('fmCompT').textContent=compostLabel();FMZ.fx&&FMZ.fx.push({fert:performance.now()})}}}]
  :[{t:'先不要'},{t:`買廚餘機 🪙${C.price}`,cls:'pri',fn:()=>{const r=PC.buyComposter(s);if(!r.ok){$('cpErr').textContent='❌ '+r.msg;sfx('no');return false}toast(r.msg,3500);sfx('level');save();renderUI();if(FMZ)$('fmCompT').textContent=compostLabel()}}]);
  document.querySelectorAll('#modal canvas.picon').forEach(c=>paintIcon(c,c.dataset.icon))}

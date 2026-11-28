@@ -652,5 +652,7 @@ t('V1.95 生活技能：小窩裡有成年火系也能免費烤魚', () => { con
 
 t('V1.95 赤龍／冰龍每場隨機多一個被動', () => { for (let k = 0; k < 20; k++) { const a = C.foeFighter(35, 30), b = C.foeFighter(40, 30); assert(a.bt.length === 2 && ['hoard','roar','lavafloor'].includes(a.bt[1])); assert(b.bt.length === 3 && ['mirror','freezemv','blizzard'].includes(b.bt[2])); } assert(C.foeFighter(30, 30).bt.length === 2); });
 
+t('V1.95 等級壓制最多算到 Lv.30', () => { const mk = (lv) => ({ atk: 50, def: 20, spd: 10, hp: 500, max: 500, el: 'fire', level: lv }); let a = 0, b = 0; for (let k = 0; k < 50; k++) { a += C.damage(mk(30), mk(30), false, () => .5).dmg; b += C.damage(mk(30), mk(45), false, () => .5).dmg; } assert(a === b, a + ' vs ' + b); });
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

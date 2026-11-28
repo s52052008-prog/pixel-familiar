@@ -1034,7 +1034,7 @@ function damage(a, d, special, r = Math.random, boost = 1) {
   if (d.halfNext) { dmg = Math.max(1, Math.round(dmg * .5)); d.halfNext = false; }   // 烈焰護盾／星光守護
   let reflect = 0; if (d.counterRefl) { reflect += Math.max(1, Math.round(dmg * d.counterRefl)); d.counterRefl = 0; } if (d.wallT > 0) { dmg = Math.max(1, Math.round(dmg * (1 - (d.wallCut || .5)))); reflect += Math.max(1, Math.round(dmg * (d.wallReflect || .3))); }   // V1.54 骸骨鐵壁
   const crit = r() < .08 + (a.critUp || 0); if (crit) dmg = Math.round(dmg * (1 + .5 * (1 - (d.critRes || 0))));   // 堅石之軀：抗暴擊
-  { const B2 = CONFIG.balance, gap = (d.level || 0) - (a.level || 0); if (gap > 0) dmg = Math.max(1, Math.round(dmg * (1 - Math.min(B2.gapMax, gap * B2.gapPer)))); }   // V1.95 等級差壓制：每低 1 級傷害 −4%，最多 −40%
+  { const B2 = CONFIG.balance, gap = Math.min(d.level || 0, MAX_LV) - (a.level || 0);   /* V1.95 壓制最多只算到 Lv.30，練滿就不會被壓 */ if (gap > 0) dmg = Math.max(1, Math.round(dmg * (1 - Math.min(B2.gapMax, gap * B2.gapPer)))); }   // V1.95 等級差壓制：每低 1 級傷害 −4%，最多 −40%
   if (d.boss && !d.mine) dmg = Math.min(dmg, Math.max(1, Math.round(d.max * CONFIG.balance.bossCap)));   // V1.95 王的霸體：一下最多打掉 30% 血
   let amulet = false; if (d.amulet) { dmg = Math.max(1, Math.round(dmg * .5)); d.amulet = false; amulet = true; }   // V1.83 小護身符：擋一次，傷害減半
   let endured = false, sprouted = false;
