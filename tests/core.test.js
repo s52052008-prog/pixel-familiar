@@ -654,5 +654,7 @@ t('V1.95 赤龍／冰龍每場隨機多一個被動', () => { for (let k = 0; k 
 
 t('V1.95 等級壓制最多算到 Lv.30', () => { const mk = (lv) => ({ atk: 50, def: 20, spd: 10, hp: 500, max: 500, el: 'fire', level: lv }); let a = 0, b = 0; for (let k = 0; k < 50; k++) { a += C.damage(mk(30), mk(30), false, () => .5).dmg; b += C.damage(mk(30), mk(45), false, () => .5).dmg; } assert(a === b, a + ' vs ' + b); });
 
+t('V1.95 血量保留、看醫生、打輸掉錢', () => { const now = Date.now(); const st = C.sanitize({ hatched: true, xp: C.lvBase ? C.lvBase(25) : 7.5 * 24 * 24, coins: 1000 }, now); assert(C.hpNow(st, now) === 1); C.setHp(st, 0, now); assert(typeof C.canAdventure(st, 1, now) === 'string' && C.canAdventure(st, 1, now).includes('受傷')); assert(Math.abs(C.hpNow(st, now + 3 * 3600e3) - .5) < .01); const L = C.level(st.xp), r = C.clinic(st, 'main', now); assert(r.ok && r.price === C.clinicPrice(L) && st.coins === 1000 - r.price && C.hpNow(st, now) === 1); assert(C.clinicPrice(10) === 50 && C.clinicPrice(25) === 250 && C.clinicPrice(30) === 600); const c0 = st.coins; const o = C.finishAdventure(st, 1, 'loss', true, now); assert(o.lostCoins === Math.floor(c0 * .05) && st.coins === c0 - o.lostCoins); });
+
 console.log(`\n${pass}/${pass + fail} passed`);
 process.exit(fail ? 1 : 0);

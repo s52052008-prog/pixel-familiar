@@ -86,9 +86,9 @@ const CONFIG = {
     elec:  { name: '蓄電',     w: { need: 4, mult: 1.3 }, f: { need: 3, mult: 1.6 } },
     metal: { name: '越打越硬', w: { per: .05, max: 3 }, f: { per: .06, max: 5 } } },
   /* V1.86 魔王天賦（第幾關 → 天賦） */
-  bossTalX: { 35: ['hoard', 'roar', 'lavafloor'], 40: ['mirror', 'freezemv', 'blizzard'] },
+  bossTalX: { 35: ['hoard', 'roar', 'lavafloor'], 40: ['mirror', 'freezemv', 'blizzard'], 60: ['hoard', 'roar', 'lavafloor', 'freezemv', 'blizzard'] },
   btX: { hoard: .02, roar: { chance: .5, cut: .5 }, lavafloor: { every: 3, turns: 2 }, mirror: { chance: .25, part: .5 }, freezemv: .5, blizzard: { every: 4, seconds: 1 } },
-  bossTal: { 5: ['shell'], 10: ['lava', 'ignite'], 15: ['bone'], 20: ['ghost', 'chant'], 25: ['reap'], 30: ['wing', 'firewind'], 35: ['scale'], 40: ['chill', 'icetide'] },
+  bossTal: { 45: ['firewind', 'mirror'], 50: ['ghost', 'ignite'], 55: ['shell', 'bone'], 60: ['scale', 'icetide'], 5: ['shell'], 10: ['lava', 'ignite'], 15: ['bone'], 20: ['ghost', 'chant'], 25: ['reap'], 30: ['wing', 'firewind'], 35: ['scale'], 40: ['chill', 'icetide'] },
   bt: { shell: .7, lava: .06, ignite: .5, bone: { per: .08, max: 5, reflect: .5 }, ghost: .3, chant: { mult: 2, chance: .35, cd: 3 }, reap: { up: .8, drain: .3 },
     wing: .4, firewind: { dodge: 1 / 3, peck: .6 }, scale: { hits: 3, turns: 2, atk: 1.3, burn: .06 }, chill: { per: .06, max: .4 }, icetide: { every: 2, heal: .06 } },
   status: { burn: .04, frost: .04, para: { turns: 2, chance: .7 } },   // 點燃、凍傷：每回合掉最大 HP 的一點點，打完才會好（萬靈藥、火焰護盾可解）
@@ -110,14 +110,17 @@ const CONFIG = {
     kinds: { dodge: { name: '閃避訓練：躲避球', skill: 'dodge' }, rush: { name: '攻擊訓練：沙包連打', skill: 'attack' }, combo: { name: '攻擊訓練：組合拳', skill: 'attack' }, flash: { name: '攻擊訓練：靈光一閃', skill: 'attack' }, zen: { name: '防禦訓練：瀑布打坐', skill: 'defense' } } },
   ult: { power: 2.2, bind: .4 },
   compost: { price: 800, need: 50, hours: 24 },
-  balance: { gapPer: .04, gapMax: .4, bossCap: .3 },   // V1.95 草系大絕招「森羅萬象」40% 機率用藤蔓捆住對手一回合
+  balance: { gapPer: .04, gapMax: .4, bossCap: .3 },
+  clinic: { tiers: [[20, 5], [29, 10], [99, 20]], regenHours: 6, sleepX: 2, minFrac: .25, lossCoin: .05, foodHeal: .15 },   /* V1.95 血量會保留：自己慢慢回、吃東西回一點、花錢看醫生馬上回滿；打輸掉 5% 金幣 */   // V1.95 草系大絕招「森羅萬象」40% 機率用藤蔓捆住對手一回合
   stageX: { egg: 1, baby: 1, juvenile: 1, adolescent: 1.1, adult: 1.3, ascended: 1.5 },   // V1.43 進化階段加能力：幼年 ×1.0、成長 ×1.1、成年 ×1.3、高階 ×1.5（星耀覺醒再 ×2）
   trainBonus: { per: .02, max: .2 },   // V1.44：每次 +2%，每種 10 次練滿                       // V1.42 訓練成功一次 +1%，每種最多 +20%：閃避＝猜拳輸也可能閃開、攻擊＝攻擊力、防禦＝防禦力和血量
   bossCoins: { mini: 15, big: 30 },
   // V1.52 固定的小王／大王（照長相決定屬性）與專屬寶物
   bosses: { 5: { mon: '苔石巨人', route: 'earth', route2: 'forest', relic: 'mossHeart' }, 10: { mon: '熔岩犀', route: 'earth', route2: 'flame', relic: 'rhinoCharm' }, 15: { mon: '骷髏騎士', route: 'metal', route2: 'forest', relic: 'boneShield' },
     20: { mon: '巫師幽靈', route: 'elec', route2: 'earth', relic: 'ghostHat' }, 25: { mon: '小死神', route: 'elec', route2: 'metal', relic: 'reaperBlade' }, 30: { mon: '火鳳', route: 'bird', route2: 'flame', relic: 'phoenixFeather' },
-    35: { mon: '赤龍', route: 'flame', route2: 'dragon', relic: 'dragonFang' }, 40: { mon: '冰龍', route: 'tide', route2: 'dragon', relic: 'iceScale' } },   // V1.53 王有雙屬性；龍＝全抗性
+    35: { mon: '赤龍', route: 'flame', route2: 'dragon', relic: 'dragonFang' }, 40: { mon: '冰龍', route: 'tide', route2: 'dragon', relic: 'iceScale' },
+    45: { mon: '星辰獨角獸', route: 'bird', route2: 'elec', relic: 'starHorn' }, 50: { mon: '暗影九尾', route: 'flame', route2: 'elec', relic: 'foxFlame' }, 55: { mon: '機械泰坦', route: 'metal', route2: 'earth', relic: 'titanCore' }, 60: { mon: '星之龍王', route: 'elec', route2: 'dragon', relic: 'starCrown' } },   // V1.95 星之塔四大魔王
+  towerMon: [['星砂史萊姆', 'tide'], ['流星鳥', 'flame'], ['隕石龜', 'earth'], ['月兔', 'elec'], ['星雲水母', 'tide'], ['齒輪蜘蛛', 'metal'], ['小影狐', 'flame'], ['星座貓頭鷹', 'bird'], ['黑洞球', 'elec'], ['星騎士', 'metal'], ['銀河小鯨', 'tide'], ['水晶小馬', 'earth']],   // V1.95 星之塔（41 關起）的小怪   // V1.53 王有雙屬性；龍＝全抗性
   // V1.54 王的專屬絕招：血量第一次掉到一半以下時，先預告一回合、下一回合施放（火鳳的浴火重生是倒下時觸發）
   bossUlt: { 5: { key: 'moss', name: '苔蘚再生', turns: 3, heal: .1, tip: '接下來 3 回合牠每回合會回血，趁現在全力攻擊！' },
     10: { key: 'charge', name: '熔岩衝鋒', mult: 2.2, tip: '下一回合會撞出超痛的一擊，而且一定點燃——快按「🛡️ 防禦」！', burn: true },
@@ -126,7 +129,11 @@ const CONFIG = {
     25: { key: 'doom', name: '死亡宣告', turns: 3, left: .01, tip: '倒數 3 回合後會被打到只剩一絲血——結束後馬上補血，不然靈魂收割會很痛！' },
     30: { key: 'rebirth', name: '浴火重生', hp: .3, tip: '火鳳倒下一次會用 30% 血量復活，要打倒兩次！' },
     35: { key: 'breath', name: '龍炎吐息', hits: 2, mult: 1.5, tip: '連續兩回合噴火，兩隻都會被燒到、猜拳也閃不掉——先喝藥水把血補高！', aoe: true },
-    40: { key: 'zero', name: '絕對零度', mult: 1.7, tip: '會被冰凍 1 回合，接著吃 1.7 倍冰爆——先把血補高！' } },
+    40: { key: 'zero', name: '絕對零度', mult: 1.7, tip: '會被冰凍 1 回合，接著吃 1.7 倍冰爆——先把血補高！' },
+    45: { key: 'curse', name: '星光幻惑', turns: 2, miss: .45, tip: '星光讓你眼花 2 回合，攻擊有 45% 會打空——先蓄力或防禦拖過去' },
+    50: { key: 'doom', name: '九尾冥火', turns: 3, left: .01, tip: '冥火倒數 3 回合後會燒到只剩一絲血——結束後馬上補血！' },
+    55: { key: 'wall', name: '鋼鐵堡壘', turns: 2, cut: .6, reflect: .35, tip: '2 回合內打牠只有四成傷害，還會反彈 35%——先防禦或喝藥水！' },
+    60: { key: 'breath', name: '星河吐息', hits: 2, mult: 1.7, tip: '連續兩回合噴出星河，兩隻都會被打到、猜拳也閃不掉——先把血補高！', aoe: true } },
   bossBuff: { hp: 1.05, atk: 1.05, skip: [10, 40] },
   // V1.55 屬性反擊技：成年期以後解鎖，每隻每場一次，會比敵人先出手
   counter: { stages: ['adult', 'ascended'],
@@ -147,7 +154,11 @@ const CONFIG = {
     mossHeart:      { name: '苔石之心',   icon: '💚', boss: '苔石巨人', regen: .15, text: '每回合回復 15% 血量' },
     phoenixFeather: { name: '不死鳥羽毛', icon: '🪶', boss: '火鳳',     revive: .4, text: '每場戰鬥倒下一次時，用 40% 血量復活' },
     dragonFang:     { name: '赤龍之牙',   icon: '🦷', boss: '赤龍',     atk: .2, hp: .2, text: '攻擊 +20%、血量 +20%' },
-    ghostHat:       { name: '幽靈魔帽',   icon: '🎩', boss: '巫師幽靈', sp: .2,    text: '屬性技和大絕招的傷害 +20%' } } },
+    ghostHat:       { name: '幽靈魔帽',   icon: '🎩', boss: '巫師幽靈', sp: .2,    text: '屬性技和大絕招的傷害 +20%' },
+    starHorn:       { name: '星光獨角',   icon: '🦄', boss: '星辰獨角獸', dodge: .15, crit: .1, text: '閃避 +15%、會心一擊機率 +10%' },
+    foxFlame:       { name: '九尾狐火',   icon: '🦊', boss: '暗影九尾', atk: .25, sp: .15, text: '攻擊 +25%、屬性技和大絕招 +15%' },
+    titanCore:      { name: '泰坦核心',   icon: '⚙️', boss: '機械泰坦', def: .25, cut: .1, text: '防禦 +25%、受到的傷害 −10%' },
+    starCrown:      { name: '星之王冠',   icon: '👑', boss: '星之龍王', atk: .2, def: .2, hp: .25, text: '攻擊 +20%、防禦 +20%、血量 +25%' } } },
   foeHp: { normal: 1.3, mini: 1.5, big: 2 }, tower: { from: 31, hp: 1.8, atk: 1.3 },   // V1.44 野生怪血量；第 31～40 關「星之塔」更硬更痛
   heritage: { xp: 3, train: 2 },                             // V1.44 傳承之力：已經有星耀覺醒的夥伴，其他幻獸經驗 ×2、訓練成果 ×2
   eggPrice: [300, 700, 1000],
@@ -480,7 +491,7 @@ function sanitize(o, now = Date.now()) {
   r.guide = { i: int(o.guide && o.guide.i, 0, 0, 99), off: !!(o.guide && o.guide.off) }; r.tours = Array.isArray(o.tours) ? o.tours.filter(x => typeof x === 'string').slice(0, 50) : []; r.tipsSeen = {}; if (o.tipsSeen && typeof o.tipsSeen === 'object') for (const k of ['farm', 'fish', 'train', 'adv']) if (o.tipsSeen[k]) r.tipsSeen[k] = 1;
   r.bossDex = {}; if (o.bossDex && typeof o.bossDex === 'object') for (const k in CONFIG.bosses) { const v = o.bossDex[k]; if (v && typeof v === 'object') r.bossDex[k] = { s: v.s ? 1 : 0, l: v.l ? 1 : 0, w: v.w ? 1 : 0, at: num(v.at, 0, 0, now) }; }   // V1.86 魔王圖鑑：遇過／輸過／打贏
   r.skillDay = typeof o.skillDay === 'string' ? o.skillDay.slice(0, 10) : '';
-  r.yard = {}; if (o.yard && typeof o.yard === 'object') for (const k of ['den', 'nest', 'tree1', 'tree2', 'bush', 'path', 'pond', 'plots', 'gen', 'fire']) { const v = o.yard[k]; if (Array.isArray(v) && (v.length === 3 || v.length === 4) && v.every(Number.isFinite)) r.yard[k] = [Math.max(-130, Math.min(130, Math.round(v[0]))), Math.max(-80, Math.min(80, Math.round(v[1]))), Math.max(.5, Math.min(1.8, Math.round(v[2] * 10) / 10)), v[3] ? 1 : 0]; }   // V1.82 院子佈置：位移與大小
+  r.yard = {}; if (o.yard && typeof o.yard === 'object') for (const k of ['den', 'nest', 'tree1', 'tree2', 'bush', 'path', 'pond', 'plots', 'gen', 'fire', 'comp']) { const v = o.yard[k]; if (Array.isArray(v) && (v.length === 3 || v.length === 4) && v.every(Number.isFinite)) r.yard[k] = [Math.max(-130, Math.min(130, Math.round(v[0]))), Math.max(-80, Math.min(80, Math.round(v[1]))), Math.max(.5, Math.min(1.8, Math.round(v[2] * 10) / 10)), v[3] ? 1 : 0]; }   // V1.82 院子佈置：位移與大小
   r.seen = {}; if (o.seen && typeof o.seen === 'object') for (const k in o.seen) if (/^[a-zA-Z0-9_]{1,30}$/.test(k) && o.seen[k]) r.seen[k] = 1;   // V1.74 圖鑑：拿到過的東西
   r.crave = o.crave && typeof o.crave === 'object' ? { kind: CONFIG.foods[o.crave.kind] ? o.crave.kind : null, until: num(o.crave.until, 0, 0, now + 24 * H) } : null;   // 想吃的水果（含冷卻）也要存
   r.matGot = {}; if (o.matGot && typeof o.matGot === 'object') for (const k of ROUTES) if (Array.isArray(o.matGot[k])) r.matGot[k] = o.matGot[k].filter(n => [10, 20, 30, 40].includes(n)).slice(0, 4);
@@ -489,6 +500,7 @@ function sanitize(o, now = Date.now()) {
   r.loveNest = o.loveNest === true; r.loveAt = num(o.loveAt, 0, 0, 9e15); r.nestUntil = num(o.nestUntil, 0, 0, 9e15);
   r.loveEgg = o.loveEgg && okId(o.loveEgg.id) ? { id: o.loveEgg.id, from: typeof o.loveEgg.from === 'string' ? chars(o.loveEgg.from).slice(0, 40).join('') : '', end: num(o.loveEgg.end, now, 0, 9e15), names: typeof o.loveEgg.names === 'string' ? chars(o.loveEgg.names).slice(0, 40).join('') : '', away: o.loveEgg.away ? 1 : 0 } : null;
   r.loveNote = typeof o.loveNote === 'string' ? chars(o.loveNote).slice(0, 80).join('') : '';
+  r.hpFrac = Number.isFinite(+o.hpFrac) ? Math.min(1, Math.max(0, +o.hpFrac)) : 1; r.hpAt = num(o.hpAt, 0, 0, 9e15);   // V1.95 血量保留
   r.harvests = int(o.harvests, 0, 0, 1e7); r.bondUses = int(o.bondUses, 0, 0, 1e7); r.petBond = o.petBond != null ? int(o.petBond, 0, 0, 1e7) : (o.ascBase && o.stage === 'adult' ? Math.max(0, r.bondUses - num(o.ascBase.bondUses, 0, 0, 1e9)) : 0); r.cleanups = int(o.cleanups, 0, 0, 1e7); r.trains = int(o.trains, 0, 0, 1e7); { const tl = o.trainLog && typeof o.trainLog === 'object' ? o.trainLog : {}; r.trainLog = { dodge: int(tl.dodge, 0, 0, 1e7), attack: int(tl.attack, 0, 0, 1e7), defense: int(tl.defense, 0, 0, 1e7) }; }
   if (Array.isArray(o.plots)) r.plots = Array.from({ length: Math.max(CONFIG.farm.plots, Math.min(CONFIG.farm.maxPlots, o.plots.length)) }, (_, i) => ({ at: num(o.plots[i] && o.plots[i].at, 0, 0, 9e15), k: o.plots[i] && PLOT_KINDS.includes(o.plots[i].k) ? o.plots[i].k : 'food', ...(o.plots[i] && o.plots[i].g ? { g: [1, 2, 3].includes(o.plots[i].g) ? o.plots[i].g : 1 } : {}), ...(o.plots[i] && [0, 1].includes(o.plots[i].wn) ? { wn: o.plots[i].wn } : {}) }));
   r.sprinkler = !!o.sprinkler; r.composter = !!o.composter; r.compost = int(o.compost, 0, 0, 999); r.fertUntil = num(o.fertUntil, 0, 0, 9e15); r.inv.fert = int(iv.fert, 0, 0, 999);
@@ -725,6 +737,7 @@ function act(st, a, now = Date.now(), opt) {
   if (a === 'feed') {
     const kind = CONFIG.foods[opt] ? opt : 'food', FD = CONFIG.foods[kind];
     if (st.hunger >= F) return { ok: false, msg: '飽飽的，吃不下了～', tm };
+    if (hpNow(st, now) < 1) healHp(st, CONFIG.clinic.foodHeal, now);   // V1.95 吃東西回一點血
     let paid = '';
     fixFresh(st); const fr0 = (st.inv.fresh && st.inv.fresh[kind]) || 0, freshEat = fr0 > 0 && (st.inv[kind] || 0) <= fr0;   // 先吃買來的，只剩自己種的才吃到
     if ((st.inv[kind] || 0) > 0) { st.inv[kind]--; paid = `用掉 1 個${FD.name}`; }
@@ -918,6 +931,7 @@ function canAdventure(st, n, now = Date.now()) {
   if (st.runaway) return '牠離家出走了，先把牠找回來吧';
   if ((st.bondRestUntil || 0) > now) return `發揮了超常能力，還要休息 ${Math.ceil((st.bondRestUntil - now) / MIN)} 分鐘才能再冒險`;
   if (st.sleeping) return '牠在睡覺，先叫醒牠吧';
+  if (hpNow(st, now) < CONFIG.clinic.minFrac) return `牠受傷倒下了（血量 ${Math.round(hpNow(st, now) * 100)}%），讓牠休息或帶去看醫生吧`;
   if (st.energy < CONFIG.adventure.minEnergy) return `體力要 ${CONFIG.adventure.minEnergy} 以上才能冒險`;
   if (n < 1 || n > st.adv.stage) return '這一關還沒解鎖';
   return null;
@@ -992,7 +1006,8 @@ function foeFor(n, myLvl = 1) {
   const BS = CONFIG.bosses[n], area = AREA_ROUTE[Math.min(AREA_ROUTE.length - 1, Math.floor((n - 1) / 5))], route = BS ? BS.route : area && (seed >>> 8) % 10 < 7 ? area : ROUTES[seed % ROUTES.length], stage = n >= 4 ? 'adult' : (n >= 2 ? 'adolescent' : 'juvenile');
   const lvl = boss ? (n <= 5 ? n + 1 : Math.round(4 + n * .6) + (big ? 4 : 2))   // V1.42：小王／大王固定等級，不會跟著你變強（練功就打得贏）
     : n <= 5 ? Math.max(n, Math.round(myLvl) - 2) : Math.max(1, Math.round(4 + n * .6), Math.round(myLvl) - 1);   // 一般野生怪：新手區比你低 2 級；之後跟著你的等級（最低 ≈ 4＋關卡×0.6）   // 新手區（1–5 關）比你低 2 級；之後野生怪跟著你的等級，最低等級 ≈ 4＋關卡×0.6（V1.33 前是關卡數，後期太難）
-  return { id: 'x:' + encodeGenome(G), route, route2: BS ? BS.route2 : null, stage, level: lvl, boss, big, mon: BS ? BS.mon : null };
+  const TM = !BS && n > 40 ? CONFIG.towerMon[(seed >>> 4) % CONFIG.towerMon.length] : null;   // V1.95 星之塔小怪
+  return { id: 'x:' + encodeGenome(G), route: TM ? TM[1] : route, route2: BS ? BS.route2 : null, stage, level: lvl, boss, big, mon: BS ? BS.mon : TM ? TM[0] : null };
 }
 function elemMult(a, d, special) { if (!special || !a.el || a.el === 'none' || a.el === 'dragon') return 1;   // V1.53 雙屬性相乘；龍屬性被打一律 ×0.75（全抗性）
   const one = y => !y || y === 'none' ? 1 : y === 'dragon' ? .75 : (BEATS[a.el] || []).includes(y) ? 1.4 : (BEATS[y] || []).includes(a.el) ? .75 : 1;
@@ -1045,6 +1060,21 @@ function damage(a, d, special, r = Math.random, boost = 1) {
   if (haloed && d.eqAngel) d.hp = Math.min(d.max, d.hp + Math.round(d.max * d.eqAngel));   // 天使套
   return { dmg, mult, crit, endured, revived, reflect, amulet, sprouted, haloed };
 }
+/* V1.95 血量保留：hpFrac＝剩下幾成（1＝滿），hpAt＝那時的時間；之後自己慢慢回（睡覺快一倍） */
+function hpNow(p, now = Date.now()) {
+  const f = p && Number.isFinite(+p.hpFrac) ? +p.hpFrac : 1; if (f >= 1) return 1;
+  const K = CONFIG.clinic, dt = Math.max(0, now - (+p.hpAt || now)) / (K.regenHours * H) * (p.sleeping ? K.sleepX : 1);
+  return Math.min(1, Math.max(0, f + dt));
+}
+function setHp(p, frac, now = Date.now()) { if (!p) return; p.hpFrac = Math.min(1, Math.max(0, Math.round(frac * 1000) / 1000)); p.hpAt = now; }
+function healHp(p, add, now = Date.now()) { if (!p) return; setHp(p, hpNow(p, now) + add, now); }
+function clinicPrice(lv) { for (const [mx, k] of CONFIG.clinic.tiers) if (lv <= mx) return lv * k; return lv * 20; }
+function clinic(st, who = 'main', now = Date.now()) {
+  const p = who === 'main' ? st : who === 'pair' ? st.pair : (st.roster || [])[who]; if (!p) return { ok: false, msg: '找不到這隻' };
+  if (hpNow(p, now) >= 1) return { ok: false, msg: '牠很健康，不用看醫生～' };
+  const price = clinicPrice(level(p.xp || 0)); if ((st.coins || 0) < price) return { ok: false, msg: `看醫生要 ${price} 金幣，錢不夠` };
+  st.coins -= price; setHp(p, 1, now); return { ok: true, price, msg: `🏥 醫生幫 ${p.name || '牠'} 治好了！花了 ${price} 金幣` };
+}
 function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random) {
   const A = CONFIG.adventure, out = { xp: 0, coins: 0, food: 0, seeds: 0, unlocked: 0, events: [] };
   if (result === 'win' || result === 'loss') st.mood = clamp(st.mood + (result === 'win' ? A.winMood : A.lossMood));
@@ -1085,7 +1115,7 @@ function finishAdventure(st, n, result, full, now = Date.now(), r = Math.random)
       st.adv.stage++; out.unlocked = st.adv.stage; discover(st, now, null); out.events.push('place');
       for (const ev in CONFIG.bossStages) if (CONFIG.bossStages[ev] === n) { const e = discover(st, now, ev); if (e) out.events.push(e); }
     }
-  } else if (result === 'loss') { st.adv.losses++; out.xp = addXP(st, CONFIG.battleLoss.xp); }
+  } else if (result === 'loss') { st.adv.losses++; out.xp = addXP(st, CONFIG.battleLoss.xp); { const lc = Math.floor((st.coins || 0) * CONFIG.clinic.lossCoin); if (lc > 0) { st.coins -= lc; out.lostCoins = lc; } } }   /* V1.95 打輸掉 5% 金幣 */
   return out;
 }
 
@@ -1477,7 +1507,7 @@ function finishBallGame(st, score, now = Date.now()) {
 }
 
 /* ---------------- 小窩：升級、讓多隻寵物住進來 ---------------- */
-const PET_FIELDS = ['acc', 'accAdj', 'nestUntil', 'trainLv', 'relics', 'fosterPaid', 'trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt', 'spot', 'petBond'];
+const PET_FIELDS = ['acc', 'accAdj', 'nestUntil', 'trainLv', 'relics', 'fosterPaid', 'trainLog', 'seed', 'genes', 'sex', 'ascBase', 'awake', 'name', 'hatched', 'stage', 'route', 'xp', 'hunger', 'mood', 'clean', 'energy', 'bond', 'path', 'care', 'events', 'hatchedAt', 'spot', 'petBond', 'hpFrac', 'hpAt'];
 function snapshotPet(st) { const p = {}; for (const k of PET_FIELDS) if (st[k] !== undefined) p[k] = JSON.parse(JSON.stringify(st[k])); p.sleeping = false; return p; }
 function sanitizePet(p, now = Date.now()) { const r = sanitize(Object.assign({ v: 6 }, p, { roster: [], dex: [], pair: null, accOwned: Array.isArray(p && p.acc) ? p.acc : [] }), now); return snapshotPet(r); }   // V1.94.2 小窩／第二隻／寄養的幻獸身上的裝飾不會被清掉（以前讀檔時會被當成「沒擁有」脫掉）
 /* V1.45 神秘老爺爺的家：寄養不想養的幻獸（不佔小窩、數值不會變），每隻付一次錢 */
@@ -1685,8 +1715,9 @@ function claimGoal(st, idx, now = Date.now(), r = Math.random) {
 
 /* ---------------- 雷系：戰鬥中蓄力、羈絆之力 ---------------- */
 function battleCharge(st) { if (st.hatched) st.path.elec += 1; }
-function canBond(st) { return st.coins < CONFIG.bond.cost ? `要 ${CONFIG.bond.cost} 金幣買加油棒才能發動` : null; }
-function battleBond(st, now = Date.now()) { if (canBond(st)) return false; st.coins -= CONFIG.bond.cost; st.bondRestUntil = now + CONFIG.bond.restHours * H; st.bondUses++; st.petBond = (st.petBond || 0) + 1; if (st.hatched) st.path.elec += 3; if (st.bondUses === 1) journal(st, now, '第一次發動羈絆之力！'); return true; }
+function bondCost(st) { return Math.max(CONFIG.bond.cost, Math.round(clinicPrice(level((st && st.xp) || 0)) / 2)); }   // V1.95 加油棒跟著等級變貴（看醫生的一半，最少 10）
+function canBond(st) { const c = bondCost(st); return st.coins < c ? `要 ${c} 金幣買加油棒才能發動` : null; }
+function battleBond(st, now = Date.now()) { if (canBond(st)) return false; st.coins -= bondCost(st); st.bondRestUntil = now + CONFIG.bond.restHours * H; st.bondUses++; st.petBond = (st.petBond || 0) + 1; if (st.hatched) st.path.elec += 3; if (st.bondUses === 1) journal(st, now, '第一次發動羈絆之力！'); return true; }
 
 /* ---------------- 配對 ---------------- */
 function canBreed(st, friend, now = Date.now()) {
@@ -1814,7 +1845,7 @@ function wrapStats(api) {
   return api;
 }
 
-const API = { relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars, dayKey, hourIn, level, rng, makeGenome, CLASSIC_G, encodeGenome, decodeGenome, breedGenome,
+const API = { bondCost, hpNow, setHp, healHp, clinicPrice, clinic, relicCount, equipRelic, unequipRelic, sellRelic, CONFIG, ROUTES, STAGES, ROUTE_EVENT, EVENT_TEXT, clamp, num, chars, dayKey, hourIn, level, rng, makeGenome, CLASSIC_G, encodeGenome, decodeGenome, breedGenome,
   G_SIDE, G_TOP, G_TAIL, G_PAT, G_EYE, EL_LIST, genomeOfSeed, gidOf, genomeFromId, okId, formCode, fresh, sanitize, applyTime, ageHours, journal, claimDaily, canGather, gather,
   act, pet, bondTier, discover, pickRoute, specialDone, stageReq, checkStages, tendencyHint, hatch, creditSteps, stepTier,
   eqStats, eqApply, accUpgrade, eqGift,

@@ -230,12 +230,12 @@ async def main():
         if not await p.evaluate("PF.B.over"):
             await p.evaluate("(()=>{PF.B.me.hp=1;PF.B.foe.hp=PF.B.foe.max;PF.bUI()})()"); await p.wait_for_timeout(200)
             ok('危險時出現羈絆之力按鈕', await p.is_visible('#mvBond')); await p.screenshot(path=f'{OUT}/11b_danger.png')
-            c0 = (await st(p))['coins']; f0 = await p.evaluate("PF.B.foe.hp"); await p.click('#mvBond'); await p.wait_for_timeout(2300)
+            c0 = (await st(p))['coins']; bc = int(await p.evaluate("document.getElementById('mvBondC').textContent")); f0 = await p.evaluate("PF.B.foe.hp"); await p.click('#mvBond'); await p.wait_for_timeout(2300)
             for i in range(8): await p.mouse.click(200, 400); await p.wait_for_timeout(60)
             for _ in range(60):
                 if await p.evaluate("!PF.B.busy||PF.B.over"): break
                 await p.wait_for_timeout(150)
-            s = await st(p); ok('羈絆之力花 10 金幣買加油棒、之後要休息 2 小時', (c0 - s['coins'] == 10 or await p.evaluate('PF.B.over')) and s['bondRestUntil'] > 0, (c0, s['coins']))   # 一擊打倒就會先拿到獎金
+            s = await st(p); ok('羈絆之力花錢買加油棒（跟著等級變貴）、之後要休息 2 小時', (c0 - s['coins'] == bc or await p.evaluate('PF.B.over')) and s['bondRestUntil'] > 0, (c0, s['coins']))   # 一擊打倒就會先拿到獎金
             ok('羈絆之力：連打造成大傷害、每場只能一次', await p.evaluate("PF.B.bondUsed") and f0 - await p.evaluate("PF.B.foe.hp") > 30)
         for _ in range(60):
             if await p.is_visible('#bDone'): break
@@ -243,7 +243,7 @@ async def main():
             await p.wait_for_timeout(200)
         await p.click('#bDone')
         # V1.40：大絕招、超級藥水、場外特訓、雞湯
-        await p.evaluate("PF.debug.set({energy:100,bondRestUntil:0,inv:{food:3,seeds:2,candy:0,potion:0,potion2:1}})"); await p.evaluate("PF.startBattle(1)"); await p.wait_for_timeout(500)
+        await p.evaluate("PF.debug.set({energy:100,bondRestUntil:0,hpFrac:1,inv:{food:3,seeds:2,candy:0,potion:0,potion2:1}})"); await p.evaluate("PF.startBattle(1)"); await p.wait_for_timeout(500)
         ok('戰鬥主選單：技能／防禦／背包／逃跑', await p.is_visible('#mvSkill') and await p.is_visible('#mvBag') and not await p.is_visible('#mvTk'))
         await p.click('#mvSkill'); await p.wait_for_timeout(100); ok('技能有四種', all([await p.is_visible(x) for x in ('#mvTk', '#mvCh', '#mvSp', '#mvUlt')]))
         await p.click('#mpSkill .back'); await p.evaluate("(()=>{PF.B.me.hp=1;PF.B.foe.hp=PF.B.foe.max*9;PF.B.foe.max*=9;PF.bUI()})()")

@@ -12,7 +12,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from import_art import mask_of, downsample, quantize, add_outline, lum, CELL
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SHEETS = ['w1', 'w2', 'w3', 'w4', 'w5', 'w6']
+SHEETS = ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7']
+FREE_COLS = False
 SIZES = {'n': (34, 32), 'b': (42, 40)}
 GROUND = 46
 
@@ -28,6 +29,7 @@ def runs(v, minlen):
 
 
 def cells(path):
+    global FREE_COLS; FREE_COLS = os.path.basename(path) in ('w7.png',)
     a = np.asarray(Image.open(path).convert('RGB')); m = mask_of(a); H, W = m.shape
     rows = runs(ndimage.binary_closing(m.sum(1) > 0, iterations=6), 40)
     out = []
@@ -38,6 +40,9 @@ def cells(path):
             band = np.zeros_like(m); band[y0:y1] = m[y0:y1]; lab, n = ndimage.label(band)
             sz = ndimage.sum(band, lab, range(1, n + 1)); cen = ndimage.center_of_mass(band, lab, range(1, n + 1))
             col_of = [min(7, max(0, int(cx / (W / 8)))) for (cy, cx) in cen]
+            if FREE_COLS:   # V1.95：魔王比較大、沒對齊格線 → 用最大的 8 塊依左右排序當 8 格，小碎片歸到最近的那塊
+                big8 = sorted(sorted(range(n), key=lambda i: -sz[i])[:8], key=lambda i: cen[i][1])
+                col_of = [min(range(8), key=lambda c: abs(cen[i][1] - cen[big8[c]][1])) for i in range(n)]
             row = []
             for c in range(8):
                 ids = [i + 1 for i in range(n) if col_of[i] == c]
